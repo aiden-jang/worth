@@ -2,10 +2,13 @@ import { z } from 'zod';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
-  const parsed = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
-}, 'Invalid date');
+const date = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
+  }, 'Invalid date');
 
 export const listInput = z.object({
   name: shortText(80),
@@ -13,28 +16,33 @@ export const listInput = z.object({
   description: z.string().trim().max(280).default(''),
 });
 
-export const listPatch = listInput.pick({ name: true, description: true }).partial().refine(
-  (value) => Object.keys(value).length > 0,
-);
+export const listPatch = listInput
+  .pick({ name: true, description: true })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0);
 
-export const itemInput = z.object({
-  title: shortText(120),
-  type: z.string().trim().max(60).default(''),
-  note: note.default(''),
-  startedOn: date.nullable().default(null),
-  endedOn: date.nullable().default(null),
-}).refine((value) => !value.startedOn || !value.endedOn || value.startedOn <= value.endedOn, {
-  message: 'End date must follow start date',
-  path: ['endedOn'],
-});
+export const itemInput = z
+  .object({
+    title: shortText(120),
+    type: z.string().trim().max(60).default(''),
+    note: note.default(''),
+    startedOn: date.nullable().default(null),
+    endedOn: date.nullable().default(null),
+  })
+  .refine((value) => !value.startedOn || !value.endedOn || value.startedOn <= value.endedOn, {
+    message: 'End date must follow start date',
+    path: ['endedOn'],
+  });
 
-export const itemPatch = z.object({
-  title: shortText(120).optional(),
-  type: z.string().trim().max(60).optional(),
-  note: note.optional(),
-  startedOn: date.nullable().optional(),
-  endedOn: date.nullable().optional(),
-}).refine((value) => Object.keys(value).length > 0);
+export const itemPatch = z
+  .object({
+    title: shortText(120).optional(),
+    type: z.string().trim().max(60).optional(),
+    note: note.optional(),
+    startedOn: date.nullable().optional(),
+    endedOn: date.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0);
 
 export const logInput = z.object({
   itemId: z.string().uuid().nullable().default(null),
@@ -50,9 +58,11 @@ export const logInput = z.object({
 export const logPatch = logInput.partial().refine((value) => Object.keys(value).length > 0);
 
 export const rankInput = z.object({
-  itemIds: z.array(z.string().uuid()).max(500).refine((ids) => new Set(ids).size === ids.length),
+  itemIds: z
+    .array(z.string().uuid())
+    .max(500)
+    .refine((ids) => new Set(ids).size === ids.length),
   expectedRevision: z.number().int().nonnegative(),
 });
 
 export const shareInput = z.object({ limit: z.union([z.literal(5), z.literal(10), z.literal('all')]) });
-

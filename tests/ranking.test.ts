@@ -3,8 +3,18 @@ import { moveRank, visibleItems } from '../src/shared/ranking';
 import type { Item } from '../src/shared/models';
 
 const item = (id: string, title: string, type = 'Whiskey'): Item => ({
-  id, listId: 'list', title, type, note: '', startedOn: null, endedOn: null, hasPhoto: false,
-  createdAt: 0, updatedAt: 0, logCount: 0, lastLoggedOn: null,
+  id,
+  listId: 'list',
+  title,
+  type,
+  note: '',
+  startedOn: null,
+  endedOn: null,
+  hasPhoto: false,
+  createdAt: 0,
+  updatedAt: 0,
+  logCount: 0,
+  lastLoggedOn: null,
 });
 
 describe('ranking', () => {
@@ -17,16 +27,21 @@ describe('ranking', () => {
   it('filtering does not renumber saved ranks', () => {
     const items = [item('a', 'A'), item('b', 'B', 'Wine'), item('c', 'C')];
     const visible = visibleItems(items, ['b', 'a', 'c'], {
-      search: '', type: 'Whiskey', rankFilter: 'top5', sort: 'rank',
+      search: '',
+      type: 'Whiskey',
+      rankFilter: 'top5',
+      sort: 'rank',
     });
     expect(visible.map((entry) => entry.id)).toEqual(['a', 'c']);
   });
 
   it('keeps unranked items in the full list', () => {
     const visible = visibleItems([item('a', 'A'), item('b', 'B')], ['b'], {
-      search: '', type: 'all', rankFilter: 'all', sort: 'rank',
+      search: '',
+      type: 'all',
+      rankFilter: 'all',
+      sort: 'rank',
     });
     expect(visible.map((entry) => entry.id)).toEqual(['b', 'a']);
   });
 });
-

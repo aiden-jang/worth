@@ -25,22 +25,66 @@ export function ShowPage() {
     }
   }
 
-  if (listQuery.isPending || itemsQuery.isPending) return <main className="show-page show-message">Opening…</main>;
+  if (listQuery.isPending || itemsQuery.isPending)
+    return <main className="show-page show-message">Opening…</main>;
   if (listQuery.isError || itemsQuery.isError || !list || list.kind !== 'collection')
-    return <main className="show-page show-message">This list isn't available. <Link to="/lists">Back to lists</Link></main>;
+    return (
+      <main className="show-page show-message">
+        This list isn't available. <Link to="/lists">Back to lists</Link>
+      </main>
+    );
 
-  return <main className="show-page">
-    <header className="show-header"><Link to={`/lists/${list.id}`}><ArrowLeft size={19} /> Back to list</Link>
-      <span className="show-brand">worth</span><button onClick={() => void toggleFullscreen()} aria-label={full ? 'Exit fullscreen' : 'Enter fullscreen'}>
-        {full ? <ArrowsIn size={21} /> : <ArrowsOut size={21} />}</button></header>
-    <div className="show-intro"><p className="overline">YOUR LIST</p><h1>{list.name}<span>.</span></h1>
-      <div className="show-controls" role="group" aria-label="How many rankings to show">
-        {([5, 10, 'all'] as const).map((value) => <button key={value} className={limit === value ? 'active' : ''}
-          aria-pressed={limit === value} onClick={() => setLimit(value)}>{value === 'all' ? 'All' : `Top ${value}`}</button>)}
-      </div></div>
-    {visible.length ? <ol className="show-ranking">{visible.map((item, index) => <li key={item.id}>
-      <span>{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><small>{item.type}</small>
-    </li>)}</ol> : <div className="show-empty">Nothing ranked yet. <Link to={`/lists/${list.id}`}>Add a rank</Link> to show your list.</div>}
-    <footer className="show-footer">Only the ranking is shown here. Your notes and history stay private.</footer>
-  </main>;
+  return (
+    <main className="show-page">
+      <header className="show-header">
+        <Link to={`/lists/${list.id}`}>
+          <ArrowLeft size={19} /> Back to list
+        </Link>
+        <span className="show-brand">worth</span>
+        <button
+          onClick={() => void toggleFullscreen()}
+          aria-label={full ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {full ? <ArrowsIn size={21} /> : <ArrowsOut size={21} />}
+        </button>
+      </header>
+      <div className="show-intro">
+        <p className="overline">YOUR LIST</p>
+        <h1>
+          {list.name}
+          <span>.</span>
+        </h1>
+        <div className="show-controls" role="group" aria-label="How many rankings to show">
+          {([5, 10, 'all'] as const).map((value) => (
+            <button
+              key={value}
+              className={limit === value ? 'active' : ''}
+              aria-pressed={limit === value}
+              onClick={() => setLimit(value)}
+            >
+              {value === 'all' ? 'All' : `Top ${value}`}
+            </button>
+          ))}
+        </div>
+      </div>
+      {visible.length ? (
+        <ol className="show-ranking">
+          {visible.map((item, index) => (
+            <li key={item.id}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{item.title}</strong>
+              <small>{item.type}</small>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="show-empty">
+          Nothing ranked yet. <Link to={`/lists/${list.id}`}>Add a rank</Link> to show your list.
+        </div>
+      )}
+      <footer className="show-footer">
+        Only the ranking is shown here. Your notes and history stay private.
+      </footer>
+    </main>
+  );
 }

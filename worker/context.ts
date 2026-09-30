@@ -4,4 +4,3 @@ export type AppEnv = {
   Bindings: Env;
   Variables: { ownerId: string; user: AuthUser };
 };
-

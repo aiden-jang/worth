@@ -1,63 +1,81 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
-import { ApiError, itemPhotoKey, logPhotoKey } from '../data';
+import { ApiError, requireItem, requireLog } from '../data';
 import { photoContentType, readBytes } from '../http';
 
-type PhotoOwner = 'items' | 'logs';
+const MAX_PHOTO_BYTES = 900_000;
 
 export function registerPhotoRoutes(api: Hono<AppEnv>): void {
-  for (const table of ['items', 'logs'] as const) registerPhotoOwner(api, table);
+  registerPhotoOwner(api, 'items', 'item_photos', 'item_id');
+  registerPhotoOwner(api, 'logs', 'log_photos', 'log_id');
 }
 
-function registerPhotoOwner(api: Hono<AppEnv>, table: PhotoOwner): void {
-  const path = `/${table}/:id/photo`;
-  const keyFor = table === 'items' ? itemPhotoKey : logPhotoKey;
+function registerPhotoOwner(
+  api: Hono<AppEnv>,
+  pathName: 'items' | 'logs',
+  table: 'item_photos' | 'log_photos',
+  idColumn: 'item_id' | 'log_id',
+): void {
+  const path = `/${pathName}/:id/photo`;
+
+  async function requireOwner(db: D1Database, ownerId: string, id: string): Promise<void> {
+    if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
+    if (pathName === 'items') await requireItem(db, ownerId, id);
+    else await requireLog(db, ownerId, id);
+  }
 
   api.get(path, async (c) => {
-    const id = c.req.param('id');
-    if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    const key = await keyFor(c.env.DB, c.get('ownerId'), id);
-    if (!key) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    const photo = await c.env.PHOTOS.get(key);
+    const id = c.req.param('id') ?? '';
+    await requireOwner(c.env.DB, c.get('ownerId'), id);
+    const photo = await c.env.DB.prepare(
+      `SELECT content_type, data FROM ${table} WHERE ${idColumn} = ? AND owner_id = ?`,
+    )
+      .bind(id, c.get('ownerId'))
+      .first<{ content_type: string; data: number[] }>();
     if (!photo) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    return new Response(photo.body, {
-      headers: { 'Content-Type': photo.httpMetadata?.contentType ?? 'application/octet-stream' },
+    return new Response(new Uint8Array(photo.data), {
+      headers: { 'Content-Type': photo.content_type },
     });
   });
 
   api.put(path, async (c) => {
-    const id = c.req.param('id');
-    if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    const oldKey = await keyFor(c.env.DB, c.get('ownerId'), id);
-    const bytes = await readBytes(c.req.raw, 3 * 1024 * 1024);
+    const id = c.req.param('id') ?? '';
+    await requireOwner(c.env.DB, c.get('ownerId'), id);
+    const bytes = await readBytes(c.req.raw, MAX_PHOTO_BYTES);
     const contentType = photoContentType(bytes);
     const declaredType = c.req.header('content-type')?.split(';')[0]?.toLowerCase();
-    if (declaredType !== contentType) throw new ApiError(415, 'UNSUPPORTED_IMAGE', 'Image type does not match the file');
-    const key = `private/${crypto.randomUUID()}`;
-    await c.env.PHOTOS.put(key, bytes, { httpMetadata: { contentType } });
-    try {
-      await c.env.DB.prepare(`UPDATE ${table} SET photo_key = ?, updated_at = ? WHERE id = ? AND owner_id = ?`)
-        .bind(key, Date.now(), id, c.get('ownerId')).run();
-    } catch (error) {
-      await c.env.PHOTOS.delete(key);
-      throw error;
-    }
-    if (oldKey) c.executionCtx.waitUntil(c.env.PHOTOS.delete(oldKey).catch((error: unknown) => {
-      console.error(JSON.stringify({ event: 'photo_cleanup_failed', message: String(error) }));
-    }));
+    if (declaredType !== contentType)
+      throw new ApiError(415, 'UNSUPPORTED_IMAGE', 'Image type does not match the file');
+    const now = Date.now();
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        `INSERT INTO ${table} (${idColumn}, owner_id, content_type, data, updated_at)
+        VALUES (?, ?, ?, ?, ?) ON CONFLICT(${idColumn}) DO UPDATE SET
+        content_type = excluded.content_type, data = excluded.data, updated_at = excluded.updated_at`,
+      ).bind(id, c.get('ownerId'), contentType, bytes, now),
+      c.env.DB.prepare(`UPDATE ${pathName} SET updated_at = ? WHERE id = ? AND owner_id = ?`).bind(
+        now,
+        id,
+        c.get('ownerId'),
+      ),
+    ]);
     return c.json({ hasPhoto: true });
   });
 
   api.delete(path, async (c) => {
-    const id = c.req.param('id');
-    if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    const key = await keyFor(c.env.DB, c.get('ownerId'), id);
-    if (!key) return c.body(null, 204);
-    await c.env.DB.prepare(`UPDATE ${table} SET photo_key = NULL, updated_at = ? WHERE id = ? AND owner_id = ?`)
-      .bind(Date.now(), id, c.get('ownerId')).run();
-    c.executionCtx.waitUntil(c.env.PHOTOS.delete(key).catch((error: unknown) => {
-      console.error(JSON.stringify({ event: 'photo_cleanup_failed', message: String(error) }));
-    }));
+    const id = c.req.param('id') ?? '';
+    await requireOwner(c.env.DB, c.get('ownerId'), id);
+    await c.env.DB.batch([
+      c.env.DB.prepare(`DELETE FROM ${table} WHERE ${idColumn} = ? AND owner_id = ?`).bind(
+        id,
+        c.get('ownerId'),
+      ),
+      c.env.DB.prepare(`UPDATE ${pathName} SET updated_at = ? WHERE id = ? AND owner_id = ?`).bind(
+        Date.now(),
+        id,
+        c.get('ownerId'),
+      ),
+    ]);
     return c.body(null, 204);
   });
 }

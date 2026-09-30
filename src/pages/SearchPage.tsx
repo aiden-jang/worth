@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MagnifyingGlass, ArrowUpRight } from '@phosphor-icons/react';
 import { Link, useSearchParams } from 'react-router';
@@ -6,18 +6,59 @@ import { api } from '../api';
 
 export function SearchPage() {
   const [params] = useSearchParams();
-  const [query, setQuery] = useState(params.get('q') ?? '');
+  const routeQuery = params.get('q') ?? '';
+  const [query, setQuery] = useState(routeQuery);
+  useEffect(() => setQuery(routeQuery), [routeQuery]);
   const term = query.trim();
-  const results = useQuery({ queryKey: ['search', term], queryFn: () => api.search(term), enabled: term.length >= 2 });
-  return <main className="light-page search-page page-width"><p className="overline">YOUR ARCHIVE, ALL AT ONCE</p><h1>Find something<span>.</span></h1>
-    <label className="global-search"><MagnifyingGlass size={26} /><span className="sr-only">Search all lists</span>
-      <input autoFocus placeholder="A film, a place, a good drink…" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-    {term.length < 2 ? <p className="search-hint">Type at least two characters to search your lists and logs.</p> :
-      results.isPending ? <p className="search-hint">Searching…</p> : results.isError ? <p className="error-banner">Search isn't available right now.</p> :
-      results.data.results.length ? <section className="search-results"><p className="overline">{results.data.results.length} RESULTS</p>
-        {results.data.results.map((result) => <Link key={`${result.kind}-${result.id}`} to={`/lists/${result.listId}`}>
-          <span><small>{result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}</small><strong>{result.title}</strong>
-            {result.detail && <em>{result.detail}</em>}</span><ArrowUpRight size={20} /></Link>)}</section> :
-        <div className="search-empty"><h2>Nothing under that name.</h2><p>Try a shorter search or a different spelling.</p></div>}
-  </main>;
+  const results = useQuery({
+    queryKey: ['search', term],
+    queryFn: () => api.search(term),
+    enabled: term.length >= 2,
+  });
+  return (
+    <main className="light-page search-page page-width">
+      <p className="overline">YOUR ARCHIVE, ALL AT ONCE</p>
+      <h1>
+        Find something<span>.</span>
+      </h1>
+      <label className="global-search">
+        <MagnifyingGlass size={26} />
+        <span className="sr-only">Search all lists</span>
+        <input
+          autoFocus
+          placeholder="A film, a place, a good drink…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </label>
+      {term.length < 2 ? (
+        <p className="search-hint">Type at least two characters to search your lists and logs.</p>
+      ) : results.isPending ? (
+        <p className="search-hint">Searching…</p>
+      ) : results.isError ? (
+        <p className="error-banner">Search isn't available right now.</p>
+      ) : results.data.results.length ? (
+        <section className="search-results">
+          <p className="overline">{results.data.results.length} RESULTS</p>
+          {results.data.results.map((result) => (
+            <Link key={`${result.kind}-${result.id}`} to={`/lists/${result.listId}`}>
+              <span>
+                <small>
+                  {result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}
+                </small>
+                <strong>{result.title}</strong>
+                {result.detail && <em>{result.detail}</em>}
+              </span>
+              <ArrowUpRight size={20} />
+            </Link>
+          ))}
+        </section>
+      ) : (
+        <div className="search-empty">
+          <h2>Nothing under that name.</h2>
+          <p>Try a shorter search or a different spelling.</p>
+        </div>
+      )}
+    </main>
+  );
 }

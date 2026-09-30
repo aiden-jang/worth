@@ -6,35 +6,28 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "vars": {
-    "AUTH_URL": "https://accounts.aidenjang.com"
+    "AUTH_URL": "https://accounts.aidenjang.com",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "worth",
       "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "PHOTOS",
-      "bucket_name": "worth-photos"
-    }
+      "migrations_dir": "migrations",
+    },
   ],
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*"],
   },
   "routes": [
     {
       "pattern": "worth.aidenjang.com",
-      "custom_domain": true
-    }
+      "custom_domain": true,
+    },
   ],
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
-  }
+    "head_sampling_rate": 1,
+  },
 }
-

@@ -3,7 +3,12 @@ import { rankedItems } from '../src/shared/ranking';
 
 export { rankedItems } from '../src/shared/ranking';
 
-export function shareSnapshot(list: ListDetail, items: Item[], limit: 5 | 10 | 'all', now: number): PublicShare {
+export function shareSnapshot(
+  list: ListDetail,
+  items: Item[],
+  limit: 5 | 10 | 'all',
+  now: number,
+): PublicShare {
   const selected = limit === 'all' ? rankedItems(list, items) : rankedItems(list, items).slice(0, limit);
   return {
     title: list.name,
@@ -14,7 +19,10 @@ export function shareSnapshot(list: ListDetail, items: Item[], limit: 5 | 10 | '
 
 export function createShareToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
 }
 
 export function validShareToken(value: string): boolean {

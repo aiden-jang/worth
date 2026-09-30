@@ -47,7 +47,8 @@ export async function readJson<T extends ZodTypeAny>(request: Request, schema: T
     throw new ApiError(400, 'INVALID_JSON', 'Invalid JSON');
   }
   const parsed = schema.safeParse(value);
-  if (!parsed.success) throw new ApiError(400, 'INVALID_INPUT', parsed.error.issues[0]?.message ?? 'Invalid input');
+  if (!parsed.success)
+    throw new ApiError(400, 'INVALID_INPUT', parsed.error.issues[0]?.message ?? 'Invalid input');
   return parsed.data;
 }
 
@@ -76,7 +77,11 @@ export function photoContentType(bytes: Uint8Array): 'image/jpeg' | 'image/png' 
   const has = (...values: number[]) => values.every((value, index) => bytes[index] === value);
   if (has(0xff, 0xd8, 0xff)) return 'image/jpeg';
   if (has(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return 'image/png';
-  if (bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' &&
-    new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP') return 'image/webp';
+  if (
+    bytes.length >= 12 &&
+    new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' &&
+    new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP'
+  )
+    return 'image/webp';
   throw new ApiError(415, 'UNSUPPORTED_IMAGE', 'Use a JPEG, PNG, or WebP image');
 }

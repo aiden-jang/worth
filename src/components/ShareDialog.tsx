@@ -5,7 +5,15 @@ import type { Item, ListDetail } from '../shared/models';
 import { rankedItems } from '../shared/ranking';
 import { api } from '../api';
 
-export function ShareDialog({ list, items, onClose }: { list: ListDetail; items: Item[]; onClose: () => void }) {
+export function ShareDialog({
+  list,
+  items,
+  onClose,
+}: {
+  list: ListDetail;
+  items: Item[];
+  onClose: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
   const [limit, setLimit] = useState<5 | 10 | 'all'>(5);
@@ -14,48 +22,137 @@ export function ShareDialog({ list, items, onClose }: { list: ListDetail; items:
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
   const ranked = rankedItems(list, items);
   const preview = limit === 'all' ? ranked : ranked.slice(0, limit);
-  useEffect(() => { dialog.current?.showModal(); return () => { dialog.current?.close(); }; }, []);
+  useEffect(() => {
+    dialog.current?.showModal();
+    return () => {
+      dialog.current?.close();
+    };
+  }, []);
 
-  const create = useMutation({ mutationFn: () => api.createShare(list.id, limit), onSuccess: ({ token }) => {
-    setLink(`${window.location.origin}/s/${token}`);
-    void client.invalidateQueries({ queryKey: ['shares', list.id] });
-  } });
-  const revoke = useMutation({ mutationFn: api.revokeShare, onSuccess: () => {
-    void client.invalidateQueries({ queryKey: ['shares', list.id] });
-  } });
+  const create = useMutation({
+    mutationFn: () => api.createShare(list.id, limit),
+    onSuccess: ({ token }) => {
+      setLink(`${window.location.origin}/s/${token}`);
+      void client.invalidateQueries({ queryKey: ['shares', list.id] });
+    },
+  });
+  const revoke = useMutation({
+    mutationFn: api.revokeShare,
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['shares', list.id] });
+    },
+  });
 
   async function copy() {
-    try { await navigator.clipboard.writeText(link); setCopied(true); }
-    catch { setCopied(false); }
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
   }
 
-  return <dialog className="share-dialog" ref={dialog} onClose={onClose} onClick={(event) => {
-    if (event.target === dialog.current) dialog.current.close();
-  }}><div className="share-inner"><div className="editor-head"><div><p className="overline">ONLY WHAT YOU CHOOSE</p><h2>Share {list.name}.</h2></div>
-      <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}><X size={22} /></button></div>
-    <p className="share-explainer">This makes a read-only snapshot. Notes, photos, dates, and activity history stay private.</p>
-    <label className="share-limit">Show<select value={limit} onChange={(event) => {
-      const value = event.target.value;
-      setLimit(value === 'all' ? 'all' : value === '10' ? 10 : 5);
-      setLink('');
-    }}><option value={5}>Top 5</option><option value={10}>Top 10</option><option value="all">Full ranking</option></select></label>
-    <div className="share-preview"><span className="overline">LINK PREVIEW</span><h3>{list.name}</h3>
-      {preview.map((item, index) => <div key={item.id}><strong>{String(index + 1).padStart(2, '0')}</strong><span>{item.title}</span><small>{item.type}</small></div>)}
-      {!preview.length && <p>Rank an item first, then it can appear here.</p>}
-    </div>
-    {link ? <div className="created-link"><p><Check size={17} /> Link ready. It expires in 30 days.</p>
-      <div><input readOnly aria-label="Share link" value={link} onFocus={(event) => event.target.select()} />
-        <button className="button button-dark" onClick={() => void copy()}><Copy size={17} /> {copied ? 'Copied' : 'Copy'}</button></div>
-      <small>The link is only shown now. Make a new one if you lose it.</small></div> :
-      <button className="button button-accent share-create" disabled={!preview.length || create.isPending} onClick={() => create.mutate()}>
-        <LinkSimple size={18} /> Create link</button>}
-    {create.isError && <p className="form-error">{create.error.message}</p>}
-    {!!shares.data?.shares.length && <div className="active-shares"><h3>Existing links</h3>
-      {shares.data.shares.filter((share) => !share.revokedAt && share.expiresAt > Date.now()).map((share) =>
-        <div key={share.id}><span>{share.title}<small>Expires {new Date(share.expiresAt).toLocaleDateString()}</small></span>
-          <button className="text-danger" disabled={revoke.isPending} onClick={() => revoke.mutate(share.id)}>Revoke</button></div>)}
-    </div>}
-    {revoke.isError && <p className="form-error">{revoke.error.message}</p>}
-  </div></dialog>;
+  return (
+    <dialog
+      className="share-dialog"
+      ref={dialog}
+      onClose={onClose}
+      onClick={(event) => {
+        if (event.target === dialog.current) dialog.current.close();
+      }}
+    >
+      <div className="share-inner">
+        <div className="editor-head">
+          <div>
+            <p className="overline">ONLY WHAT YOU CHOOSE</p>
+            <h2>Share {list.name}.</h2>
+          </div>
+          <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
+            <X size={22} />
+          </button>
+        </div>
+        <p className="share-explainer">
+          This makes a read-only snapshot. Notes, photos, dates, and activity history stay private.
+        </p>
+        <label className="share-limit">
+          Show
+          <select
+            value={limit}
+            onChange={(event) => {
+              const value = event.target.value;
+              setLimit(value === 'all' ? 'all' : value === '10' ? 10 : 5);
+              setLink('');
+            }}
+          >
+            <option value={5}>Top 5</option>
+            <option value={10}>Top 10</option>
+            <option value="all">Full ranking</option>
+          </select>
+        </label>
+        <div className="share-preview">
+          <span className="overline">LINK PREVIEW</span>
+          <h3>{list.name}</h3>
+          {preview.map((item, index) => (
+            <div key={item.id}>
+              <strong>{String(index + 1).padStart(2, '0')}</strong>
+              <span>{item.title}</span>
+              <small>{item.type}</small>
+            </div>
+          ))}
+          {!preview.length && <p>Rank an item first, then it can appear here.</p>}
+        </div>
+        {link ? (
+          <div className="created-link">
+            <p>
+              <Check size={17} /> Link ready. It expires in 30 days.
+            </p>
+            <div>
+              <input
+                readOnly
+                aria-label="Share link"
+                value={link}
+                onFocus={(event) => event.target.select()}
+              />
+              <button className="button button-dark" onClick={() => void copy()}>
+                <Copy size={17} /> {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+            <small>The link is only shown now. Make a new one if you lose it.</small>
+          </div>
+        ) : (
+          <button
+            className="button button-accent share-create"
+            disabled={!preview.length || create.isPending}
+            onClick={() => create.mutate()}
+          >
+            <LinkSimple size={18} /> Create link
+          </button>
+        )}
+        {create.isError && <p className="form-error">{create.error.message}</p>}
+        {!!shares.data?.shares.length && (
+          <div className="active-shares">
+            <h3>Existing links</h3>
+            {shares.data.shares
+              .filter((share) => !share.revokedAt && share.expiresAt > Date.now())
+              .map((share) => (
+                <div key={share.id}>
+                  <span>
+                    {share.title}
+                    <small>Expires {new Date(share.expiresAt).toLocaleDateString()}</small>
+                  </span>
+                  <button
+                    className="text-danger"
+                    disabled={revoke.isPending}
+                    onClick={() => revoke.mutate(share.id)}
+                  >
+                    Revoke
+                  </button>
+                </div>
+              ))}
+          </div>
+        )}
+        {revoke.isError && <p className="form-error">{revoke.error.message}</p>}
+      </div>
+    </dialog>
+  );
 }
-
