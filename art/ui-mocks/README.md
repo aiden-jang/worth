@@ -17,7 +17,7 @@ Rank is an optional, manually set order within one list. It is not a global scor
 
 ## Generation prompts
 
-Built-in image generation was used for all four saved mocks. An earlier mobile render was discarded because the text contrast was broken.
+Built-in image generation was used for all six saved mocks. An earlier mobile render was discarded because the text contrast was broken.
 
 ### Archive home
 

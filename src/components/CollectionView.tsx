@@ -102,7 +102,7 @@ export function CollectionView({
           </button>
         </div>
         <span className="item-count">
-          {visible.length} of {items.length} items
+          {visible.length} of {items.length} {items.length === 1 ? 'item' : 'items'}
         </span>
       </div>
 

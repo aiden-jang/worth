@@ -124,7 +124,13 @@ export function ListsPage() {
               </span>
               <span className="directory-count">
                 {list.kind === 'collection' ? list.itemCount : list.logCount}{' '}
-                {list.kind === 'collection' ? 'items' : 'logs'}
+                {list.kind === 'collection'
+                  ? list.itemCount === 1
+                    ? 'item'
+                    : 'items'
+                  : list.logCount === 1
+                    ? 'log'
+                    : 'logs'}
               </span>
               <ArrowRight size={20} />
             </Link>
