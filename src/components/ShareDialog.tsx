@@ -104,7 +104,7 @@ export function ShareDialog({
         {link ? (
           <div className="created-link">
             <p>
-              <Check size={17} /> Link ready. It expires in 30 days.
+              <Check size={17} /> Link ready. It expires in 7 days.
             </p>
             <div>
               <input

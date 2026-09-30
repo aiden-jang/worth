@@ -93,13 +93,24 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
 
   const createdShare = await call(`/lists/${list.id}/shares`, 'alice', 'POST', { limit: 5 });
   expect(createdShare.status).toBe(201);
-  const { token, id } = (await createdShare.json()) as { token: string; id: string };
+  const { token, id, expiresAt } = (await createdShare.json()) as {
+    token: string;
+    id: string;
+    expiresAt: number;
+  };
+  expect(expiresAt - Date.now()).toBeGreaterThan(6 * 24 * 60 * 60 * 1000);
+  expect(expiresAt - Date.now()).toBeLessThanOrEqual(7 * 24 * 60 * 60 * 1000);
   const publicResponse = await call(`/public/${token}`, null);
   expect(publicResponse.status).toBe(200);
   const snapshot = await publicResponse.text();
   expect(snapshot).toContain('Booker’s Bourbon');
   expect(snapshot).not.toContain('Private tasting note');
   expect(snapshot).not.toContain(item.id);
+
+  await platform.env.DB.prepare('UPDATE shares SET expires_at = ? WHERE id = ?')
+    .bind(Date.now() - 1, id)
+    .run();
+  expect((await call(`/public/${token}`, null)).status).toBe(404);
 
   expect((await call(`/shares/${id}`, 'bob', 'DELETE')).status).toBe(404);
   expect((await call(`/shares/${id}`, 'alice', 'DELETE')).status).toBe(204);
@@ -185,4 +196,46 @@ test('photos stay private, validate uploads, and disappear with their item', asy
     .bind(item.id)
     .first();
   expect(row).toBeNull();
+});
+
+test('activity logs can be found, edited, and removed without crossing accounts', async () => {
+  const createdList = await call('/lists', 'alice', 'POST', {
+    name: 'Runs',
+    kind: 'activity',
+    description: '',
+  });
+  const list = ((await createdList.json()) as { list: { id: string } }).list;
+  const createdLog = await call(`/lists/${list.id}/logs`, 'alice', 'POST', {
+    itemId: null,
+    title: 'Evening run',
+    happenedOn: '2026-09-30',
+    note: 'Private pace notes',
+    amount: 5.2,
+    unit: 'mi',
+    sets: null,
+    reps: null,
+  });
+  expect(createdLog.status).toBe(201);
+  const log = ((await createdLog.json()) as { log: { id: string } }).log;
+  expect((await call(`/lists/${list.id}/logs`, 'bob')).status).toBe(404);
+  expect((await call(`/logs/${log.id}`, 'bob', 'PATCH', { title: 'Changed' })).status).toBe(404);
+
+  const results = (await (await call('/search?q=Evening', 'alice')).json()) as {
+    results: { id: string; title: string }[];
+  };
+  expect(results.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
+  const overview = (await (await call('/overview', 'alice')).json()) as {
+    lastTimes: { title: string }[];
+  };
+  expect(overview.lastTimes).toContainEqual(expect.objectContaining({ title: 'Evening run' }));
+
+  expect((await call(`/logs/${log.id}`, 'alice', 'PATCH', { amount: 6.1 })).status).toBe(200);
+  const logs = (await (await call(`/lists/${list.id}/logs`, 'alice')).json()) as {
+    logs: { id: string; amount: number }[];
+  };
+  expect(logs.logs).toContainEqual(expect.objectContaining({ id: log.id, amount: 6.1 }));
+  expect((await call(`/logs/${log.id}`, 'alice', 'DELETE')).status).toBe(204);
+  expect(await call(`/lists/${list.id}/logs`, 'alice').then((response) => response.json())).toEqual({
+    logs: [],
+  });
 });

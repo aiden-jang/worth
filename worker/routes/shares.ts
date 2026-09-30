@@ -39,7 +39,7 @@ export function registerShareRoutes(api: Hono<AppEnv>): void {
     if (!snapshot.entries.length)
       throw new ApiError(400, 'EMPTY_RANKING', 'Rank something before sharing this list');
     const token = createShareToken();
-    const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
+    const expiresAt = now + 7 * 24 * 60 * 60 * 1000;
     const id = crypto.randomUUID();
     await c.env.DB.prepare(
       `INSERT INTO shares

@@ -65,7 +65,7 @@ export function ActivityView({
           <option value="name">Name</option>
         </select>
         <span>
-          {visible.length} of {logs.length} logs
+          {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
         </span>
       </div>
       {!visible.length ? (

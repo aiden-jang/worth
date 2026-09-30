@@ -41,9 +41,14 @@ export function ItemEditor({
   const save = useMutation({
     mutationFn: () => (item ? api.updateItem(item.id, form) : api.createItem(listId, form)),
     onSuccess: ({ item: saved }) => {
+      if (!item) {
+        client.setQueryData<{ items: Item[] }>(['items', listId], (current) => ({
+          items: [saved, ...(current?.items ?? [])],
+        }));
+        onCreated(saved.id);
+      }
       void client.invalidateQueries({ queryKey: ['items', listId] });
       void client.invalidateQueries({ queryKey: ['overview'] });
-      if (!item) onCreated(saved.id);
     },
   });
   const remove = useMutation({
