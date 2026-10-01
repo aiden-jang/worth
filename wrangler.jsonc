@@ -12,8 +12,13 @@
     {
       "binding": "DB",
       "database_name": "worth",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "04c5ae25-6c62-4460-aae0-ccd6b36f25c6",
       "migrations_dir": "migrations",
+    },
+    {
+      "binding": "worth",
+      "database_name": "worth",
+      "database_id": "04c5ae25-6c62-4460-aae0-ccd6b36f25c6",
     },
   ],
   "assets": {
