@@ -53,15 +53,15 @@ Empty states should explain the first useful action. They should not manufacture
 
 ## Visual rules
 
-| Use | Direction |
-| --- | --- |
-| Surface | Near-black `#0d0d0e` with charcoal secondary surfaces |
-| Type | Warm ivory `#f4f0e9`, muted stone gray for secondary text |
-| Accent | Muted rust `#a63d38` for selection, one primary action, and meter state |
+| Use        | Direction                                                                  |
+| ---------- | -------------------------------------------------------------------------- |
+| Surface    | Near-black `#0d0d0e` with charcoal secondary surfaces                      |
+| Type       | Warm ivory `#f4f0e9`, muted stone gray for secondary text                  |
+| Accent     | Muted rust `#a63d38` for selection, one primary action, and meter state    |
 | Typography | Modern grotesk for interface and hierarchy; no display serif for hero copy |
-| Layout | Asymmetric grid, generous negative space, precise hairline rules |
-| Shapes | Mostly square corners; use rounding only when a control needs it |
-| Motion | Small state changes, no staged reveal sequences or decorative parallax |
+| Layout     | Asymmetric grid, generous negative space, precise hairline rules           |
+| Shapes     | Mostly square corners; use rounding only when a control needs it           |
+| Motion     | Small state changes, no staged reveal sequences or decorative parallax     |
 
 ## Avoid
 

@@ -1545,8 +1545,8 @@ dialog::backdrop {
 .welcome {
   display: grid;
   min-height: 100vh;
-  grid-template-rows: auto auto 1fr;
-  padding: 0 2vw 2.5rem;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 0 3.25vw;
   background: var(--ink);
   color: var(--paper);
 }
@@ -1554,32 +1554,22 @@ dialog::backdrop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 82px;
-  padding: 0 1.25rem;
+  min-height: 72px;
   border-bottom: 1px solid var(--line);
 }
 .landing-brand {
   color: var(--paper);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.75rem, 2.6vw, 2.65rem);
-  font-weight: 400;
-  letter-spacing: -0.09em;
+  font: 600 0.96rem var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
-.welcome-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-.welcome-top-actions .overline {
-  color: var(--acid);
-}
-.welcome-top-actions a {
+.landing-sign-in {
   color: var(--paper);
   font: 500 0.67rem var(--mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.welcome-top-actions a:hover {
+.landing-sign-in:hover {
   color: var(--acid);
 }
 .welcome-body {
@@ -1587,175 +1577,153 @@ dialog::backdrop {
   max-width: 760px;
   padding: 8vh 0;
 }
-.landing-rail {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 244px;
-  min-height: clamp(420px, 54vh, 610px);
-  padding: 1.65rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.landing-panels {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 6px;
-  padding: 0 1.65rem;
-}
-.landing-panel {
+.landing-meter {
   position: relative;
-  min-height: 100%;
+  display: grid;
+  min-height: clamp(520px, calc(100vh - 198px), 840px);
+  place-items: center;
   overflow: hidden;
-  background-color: var(--raised);
 }
-.landing-panel::after {
+.meter-track {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--line-strong);
+}
+.meter-track::before,
+.meter-track::after {
+  position: absolute;
+  top: -0.45rem;
+  width: 1px;
+  height: 0.9rem;
+  background: var(--line-strong);
   content: '';
-  opacity: 0.34;
-  pointer-events: none;
 }
-.landing-panel span {
+.meter-track::before {
+  left: 0;
+}
+.meter-track::after {
+  right: 0;
+}
+.meter-point {
   position: absolute;
-  z-index: 1;
-  bottom: 0.75rem;
-  left: 0.75rem;
-  color: color-mix(in srgb, var(--paper) 72%, transparent);
-  font: 500 0.56rem var(--mono);
-  letter-spacing: 0.12em;
+  top: -0.55rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--paper);
 }
-.landing-panel.stone {
-  background: #473f39;
+.meter-point-low {
+  left: 17.75%;
 }
-.landing-panel.stone::after {
-  background-image: repeating-linear-gradient(113deg, transparent 0 9px, rgb(15 13 12 / 0.34) 10px 11px);
+.meter-point-high {
+  right: 16%;
+  background: var(--acid);
 }
-.landing-panel.selected {
-  outline: 1px solid var(--acid);
-  outline-offset: -1px;
-  background: #6e211d;
-}
-.landing-panel.selected::after {
-  background-image: repeating-linear-gradient(139deg, transparent 0 7px, rgb(255 228 211 / 0.16) 8px 9px);
-}
-.landing-panel.paper {
-  background: #d7ccbc;
-}
-.landing-panel.paper::after {
-  background-image: repeating-linear-gradient(113deg, transparent 0 8px, rgb(64 50 39 / 0.12) 9px 10px);
-}
-.landing-panel.paper span {
-  color: #302922;
-}
-.landing-panel.graphite {
-  background: #222523;
-}
-.landing-panel.graphite::after {
-  background-image: repeating-linear-gradient(62deg, transparent 0 11px, rgb(255 255 255 / 0.07) 12px 13px);
-}
-.landing-panel.plaster {
-  background: #8d877b;
-}
-.landing-panel.plaster::after {
-  background-image: repeating-linear-gradient(103deg, transparent 0 5px, rgb(29 27 23 / 0.17) 6px 7px);
-}
-.landing-panel.water {
-  background: #182d30;
-}
-.landing-panel.water::after {
-  background-image: repeating-radial-gradient(
-    ellipse at 30% 60%,
-    transparent 0 8px,
-    rgb(169 197 193 / 0.16) 9px 10px
-  );
-}
-.landing-index {
+.meter-caption {
+  position: absolute;
+  top: calc(50% - 6rem);
   display: grid;
-  align-content: center;
-  gap: 0;
-  padding: 0 2rem;
-  border-left: 1px solid var(--line);
-}
-.landing-index > div {
-  display: grid;
-  grid-template-columns: 1.5rem 1fr;
-  gap: 0.5rem;
-  padding: 0.82rem 0;
-  border-bottom: 1px solid var(--line);
-}
-.landing-index > div:first-child {
-  border-top: 1px solid var(--line);
-}
-.landing-index span {
-  color: var(--acid);
-  font: 500 0.58rem var(--mono);
-  letter-spacing: 0.08em;
-}
-.landing-index strong {
+  gap: 0.35rem;
+  z-index: 2;
   color: var(--muted);
-  font: 500 0.68rem var(--mono);
-  letter-spacing: 0.03em;
-  line-height: 1.35;
+  font: 500 0.62rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.landing-close {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.36fr);
-  align-items: end;
-  gap: 4rem;
-  padding: clamp(4rem, 8vw, 8rem) 1.25rem 1.5rem;
+.meter-caption strong {
+  color: var(--paper);
+  font: 400 clamp(1.4rem, 2vw, 2rem) var(--mono);
+  letter-spacing: -0.08em;
 }
-.landing-close h1,
+.meter-caption-low {
+  left: 11.5%;
+  text-align: right;
+}
+.meter-caption-high {
+  right: 11.5%;
+}
+.landing-meter h1,
 .welcome-error h1 {
-  max-width: 9ch;
   margin: 0;
   color: var(--paper);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(4.5rem, 9.4vw, 10.5rem);
-  font-weight: 400;
-  letter-spacing: -0.085em;
-  line-height: 0.8;
+  font-size: clamp(8rem, 20vw, 22rem);
+  font-weight: 500;
+  letter-spacing: -0.13em;
+  line-height: 0.78;
 }
-.welcome-copy {
-  max-width: 47ch;
-  color: var(--muted);
-  font-size: 1rem;
-  line-height: 1.7;
+.landing-message {
+  position: absolute;
+  top: calc(50% + clamp(5rem, 8vw, 8rem));
+  display: grid;
+  justify-items: center;
+  gap: 1.6rem;
+  z-index: 2;
 }
-.welcome-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  margin-top: 2.25rem;
+.landing-message p {
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+  letter-spacing: -0.045em;
 }
-.landing-action {
+.landing-cta {
   display: inline-flex;
+  align-items: center;
   justify-content: space-between;
-  min-width: 190px;
-  padding: 0.72rem 0;
-  border-bottom: 1px solid var(--line-strong);
+  gap: 1.2rem;
+  padding: 0.9rem 1.15rem;
+  background: var(--acid);
   color: var(--paper);
   font: 500 0.67rem var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.landing-action:hover {
-  color: var(--acid);
-  border-color: var(--acid);
+.landing-cta:hover {
+  background: color-mix(in srgb, var(--acid) 84%, var(--paper));
 }
-.landing-action.primary {
-  color: var(--acid);
-  border-color: var(--acid);
+.landing-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
 }
-.landing-copy {
-  max-width: 28ch;
-  margin: 0 0 0.25rem;
+.landing-pillars > div {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+.landing-pillars > div + div {
+  border-left: 1px solid var(--line);
+}
+.landing-pillars span {
+  color: var(--faint);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.1em;
+}
+.landing-pillars strong {
+  color: var(--paper);
+  font: 500 0.67rem var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.landing-pillars p {
+  margin: 0;
   color: var(--muted);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.1rem, 1.5vw, 1.45rem);
-  line-height: 1.28;
+  font-size: 0.8rem;
 }
 .welcome-error {
   display: flex;
   flex-direction: column;
   padding: 2rem 4vw;
+}
+.welcome-error h1 {
+  max-width: 9ch;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(4.5rem, 9.4vw, 10.5rem);
+  font-weight: 400;
+  letter-spacing: -0.085em;
 }
 .welcome-error .brand {
   align-self: flex-start;
@@ -2258,66 +2226,65 @@ dialog::backdrop {
     grid-column: 2;
   }
   .welcome {
-    padding: 0 16px 1.5rem;
+    padding: 0 16px;
   }
   .welcome-top {
     min-height: 62px;
     padding: 0;
   }
-  .welcome-top .overline {
-    display: none;
+  .landing-meter {
+    min-height: max(560px, calc(100vh - 176px));
   }
-  .landing-rail {
-    display: block;
-    min-height: 0;
-    padding: 1rem 0;
+  .landing-meter h1 {
+    font-size: clamp(7rem, 33vw, 10rem);
   }
-  .landing-panels {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 3px;
-    padding: 0;
+  .meter-caption {
+    top: calc(50% - 6.75rem);
+    font-size: 0.5rem;
   }
-  .landing-panel {
-    min-height: 180px;
+  .meter-caption strong {
+    font-size: 1.25rem;
   }
-  .landing-panel span {
-    bottom: 0.5rem;
-    left: 0.5rem;
+  .meter-caption-low {
+    left: 0;
   }
-  .landing-index {
-    grid-template-columns: 1fr 1fr;
-    gap: 0 1rem;
-    margin-top: 1rem;
-    padding: 0;
-    border-top: 1px solid var(--line);
-    border-left: 0;
+  .meter-caption-high {
+    right: 0;
   }
-  .landing-index > div,
-  .landing-index > div:first-child {
-    padding: 0.7rem 0;
-    border-top: 0;
+  .meter-point-low {
+    left: 14%;
   }
-  .landing-index > div:last-child {
-    grid-column: span 2;
+  .meter-point-high {
+    right: 13%;
   }
-  .landing-close {
-    display: block;
-    padding: 3.5rem 0 1rem;
+  .landing-message {
+    top: calc(50% + 4.8rem);
+    gap: 1.3rem;
+    text-align: center;
   }
-  .landing-close h1,
+  .landing-message p {
+    max-width: 16ch;
+    font-size: 1.05rem;
+  }
+  .landing-cta {
+    padding: 0.82rem 1rem;
+  }
+  .landing-pillars > div {
+    gap: 0.4rem;
+    padding: 1rem 0.3rem 1.3rem;
+  }
+  .landing-pillars span {
+    font-size: 0.5rem;
+  }
+  .landing-pillars strong {
+    font-size: 0.57rem;
+  }
+  .landing-pillars p {
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
   .welcome-error h1 {
     font-size: clamp(4rem, 18vw, 6.25rem);
-  }
-  .welcome-actions {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 2rem;
-  }
-  .landing-action {
-    min-width: 0;
-  }
-  .landing-copy {
-    margin-top: 2.5rem;
   }
 }
 

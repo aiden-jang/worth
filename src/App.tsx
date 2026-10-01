@@ -52,71 +52,48 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
     <main className="welcome">
       <header className="welcome-top">
         <span className="landing-brand">worth</span>
-        <div className="welcome-top-actions">
-          <span className="overline">PRIVATE ARCHIVE</span>
-          <a href={loginUrl(authOrigin, returnTo)}>Sign in</a>
-        </div>
+        <a className="landing-sign-in" href={loginUrl(authOrigin, returnTo)}>
+          Sign in
+        </a>
       </header>
-      <section className="landing-rail" aria-label="Worth at a glance">
-        <div className="landing-panels" aria-hidden="true">
-          <div className="landing-panel stone">
-            <span>01</span>
-          </div>
-          <div className="landing-panel selected">
-            <span>02</span>
-          </div>
-          <div className="landing-panel paper">
-            <span>03</span>
-          </div>
-          <div className="landing-panel graphite">
-            <span>04</span>
-          </div>
-          <div className="landing-panel plaster">
-            <span>05</span>
-          </div>
-          <div className="landing-panel water">
-            <span>06</span>
-          </div>
+      <section className="landing-meter" aria-labelledby="landing-title">
+        <div className="meter-caption meter-caption-low">
+          <span>Least likely again</span>
+          <strong>2.1</strong>
         </div>
-        <aside className="landing-index">
-          <div>
-            <span>01</span>
-            <strong>Private by default</strong>
-          </div>
-          <div>
-            <span>02</span>
-            <strong>Collect</strong>
-          </div>
-          <div>
-            <span>03</span>
-            <strong>Log</strong>
-          </div>
-          <div>
-            <span>04</span>
-            <strong>Rank</strong>
-          </div>
-          <div>
-            <span>05</span>
-            <strong>Share on your terms</strong>
-          </div>
-        </aside>
+        <div className="meter-track" aria-hidden="true">
+          <span className="meter-point meter-point-low" />
+          <span className="meter-point meter-point-high" />
+        </div>
+        <div className="meter-caption meter-caption-high">
+          <span>Favorite right now</span>
+          <strong>4.5</strong>
+        </div>
+        <h1 id="landing-title">worth</h1>
+        <div className="landing-message">
+          <p>Keep the things worth keeping.</p>
+          <a className="landing-cta" href={signupUrl(authOrigin, returnTo)}>
+            Start your archive <span>→</span>
+          </a>
+        </div>
       </section>
-      <section className="landing-close">
+      <footer className="landing-pillars" aria-label="What Worth is for">
         <div>
-          <h1>A record of your own.</h1>
-          <div className="welcome-actions">
-            <a className="landing-action primary" href={signupUrl(authOrigin, returnTo)}>
-              Start your archive <span>→</span>
-            </a>
-            <a className="landing-action" href={loginUrl(authOrigin, returnTo)}>
-              Sign in <span>→</span>
-            </a>
-          </div>
+          <span>01</span>
+          <strong>Collect</strong>
+          <p>What you find.</p>
         </div>
-        <p className="landing-copy">
-          A private place for the things you collect, what you have lived, and whatever keeps coming up.
-        </p>
-      </section>
+        <div>
+          <span>02</span>
+          <strong>Log</strong>
+          <p>What happened.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong>Rank</strong>
+          <p>What held up.</p>
+        </div>
+      </footer>
     </main>
   );
 }
