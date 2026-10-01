@@ -1545,7 +1545,7 @@ dialog::backdrop {
 .welcome {
   display: grid;
   min-height: 100vh;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   padding: 2rem 4vw;
   background: var(--ink);
   color: var(--paper);
@@ -1557,8 +1557,21 @@ dialog::backdrop {
   padding-bottom: 1.4rem;
   border-bottom: 1px solid var(--line);
 }
-.welcome-top .overline,
-.welcome-body > .overline {
+.welcome-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.welcome-top-actions .overline {
+  color: var(--acid);
+}
+.welcome-top-actions a {
+  color: var(--paper);
+  font: 500 0.67rem var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.welcome-top-actions a:hover {
   color: var(--acid);
 }
 .welcome-body {
@@ -1566,20 +1579,32 @@ dialog::backdrop {
   max-width: 760px;
   padding: 8vh 0;
 }
+.welcome-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.7fr);
+  align-items: stretch;
+  min-height: min(720px, calc(100vh - 90px));
+}
+.welcome-intro {
+  align-self: center;
+  padding: clamp(5rem, 11vh, 9rem) clamp(2rem, 7vw, 9rem) clamp(5rem, 11vh, 9rem) 0;
+}
+.welcome-intro > .overline {
+  color: var(--acid);
+}
 .welcome h1 {
   max-width: 9ch;
   margin: 1.1rem 0 1.8rem;
-  font-size: clamp(4.5rem, 12vw, 10rem);
+  font-size: clamp(4.5rem, 9.2vw, 9rem);
   font-weight: 700;
   letter-spacing: -0.11em;
   line-height: 0.78;
 }
-.welcome h1 em {
+.welcome h1 span {
   color: var(--acid);
-  font-style: normal;
 }
 .welcome-copy {
-  max-width: 53ch;
+  max-width: 47ch;
   color: var(--muted);
   font-size: 1rem;
   line-height: 1.7;
@@ -1593,20 +1618,102 @@ dialog::backdrop {
 .welcome-foot {
   margin-top: 1.4rem;
   color: var(--faint);
-  font-size: 0.78rem;
+  font: 500 0.62rem var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
-.welcome-index {
+.welcome-specimen {
+  display: grid;
+  grid-template-rows: auto minmax(260px, 1fr) auto auto;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+.welcome-specimen-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
   font: 500 0.61rem var(--mono);
   letter-spacing: 0.1em;
 }
-.welcome-index span:first-child {
+.welcome-specimen-head span:first-child {
   color: var(--acid);
+}
+.welcome-specimen-card {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  min-height: 330px;
+  overflow: hidden;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, transparent 49.6%, var(--line) 50%, transparent 50.4%) 0 0 / 72px 72px,
+    linear-gradient(45deg, transparent 49.6%, var(--line) 50%, transparent 50.4%) 0 0 / 72px 72px,
+    var(--raised);
+}
+.specimen-number {
+  align-self: start;
+  color: color-mix(in srgb, var(--acid) 82%, var(--paper));
+  font: 500 0.68rem var(--mono);
+  letter-spacing: 0.09em;
+}
+.welcome-specimen-card p,
+.welcome-specimen-list p,
+.welcome-specimen-note {
+  margin: 0;
+}
+.welcome-specimen-card p {
+  margin-bottom: 0.5rem;
+  color: var(--faint);
+  font: 500 0.61rem var(--mono);
+  letter-spacing: 0.1em;
+}
+.welcome-specimen-card strong {
+  display: block;
+  color: var(--paper);
+  font-size: clamp(1.75rem, 3vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.92;
+}
+.welcome-specimen-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.welcome-specimen-list > div {
+  display: grid;
+  gap: 0.38rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+  border-right: 1px solid var(--line);
+}
+.welcome-specimen-list > div:last-child {
+  border-right: 0;
+}
+.welcome-specimen-list span {
+  color: var(--acid);
+  font: 500 0.61rem var(--mono);
+  letter-spacing: 0.1em;
+}
+.welcome-specimen-list strong {
+  color: var(--paper);
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+.welcome-specimen-list p,
+.welcome-specimen-note {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.welcome-specimen-note {
+  padding: 1.1rem 1.25rem;
+  border-top: 1px solid var(--line);
 }
 .welcome-error {
   display: flex;
@@ -2115,8 +2222,28 @@ dialog::backdrop {
   .welcome-top .overline {
     display: none;
   }
+  .welcome-hero {
+    display: block;
+    min-height: 0;
+  }
+  .welcome-intro {
+    padding: 5rem 0 4rem;
+  }
   .welcome h1 {
     font-size: clamp(4rem, 19vw, 6rem);
+  }
+  .welcome-specimen {
+    grid-template-rows: auto 290px auto auto;
+    min-height: 0;
+  }
+  .welcome-specimen-card {
+    min-height: 290px;
+  }
+  .welcome-specimen-list > div {
+    padding: 1rem;
+  }
+  .welcome-specimen-note {
+    padding: 1rem;
   }
 }
 

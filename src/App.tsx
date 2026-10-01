@@ -50,37 +50,66 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
   const returnTo = window.location.href;
   return (
     <main className="welcome">
-      <div className="welcome-top">
+      <header className="welcome-top">
         <span className="brand">worth</span>
-        <span className="overline">PRIVATE, BY DEFAULT</span>
-      </div>
-      <div className="welcome-body">
-        <p className="overline">A LIFE LOG, MINUS THE PERFORMANCE</p>
-        <h1>
-          The stuff worth
-          <br />
-          <em>keeping.</em>
-        </h1>
-        <p className="welcome-copy">
-          The places, pours, films, runs, cars, and little routines you want to remember. All in one place.
-          Only yours until you choose to share.
-        </p>
-        <div className="welcome-actions">
-          <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
-            Start your archive
-          </a>
-          <a className="button button-outline-dark" href={loginUrl(authOrigin, returnTo)}>
-            Sign in
-          </a>
+        <div className="welcome-top-actions">
+          <span className="overline">PRIVATE ARCHIVE</span>
+          <a href={loginUrl(authOrigin, returnTo)}>Sign in</a>
         </div>
-        <p className="welcome-foot">No streaks. No feed. Just your own memory with a better search bar.</p>
-      </div>
-      <div className="welcome-index" aria-hidden="true">
-        <span>01 / COLLECT</span>
-        <span>02 / REMEMBER</span>
-        <span>03 / RANK</span>
-        <span>04 / SHARE, IF YOU WANT</span>
-      </div>
+      </header>
+      <section className="welcome-hero">
+        <div className="welcome-intro">
+          <p className="overline">A PLACE TO KEEP TRACK</p>
+          <h1>
+            Keep track
+            <br />
+            of <span>what stays.</span>
+          </h1>
+          <p className="welcome-copy">
+            The things you collect, the things you do, and the ones you keep bringing up. Private until you
+            decide otherwise.
+          </p>
+          <div className="welcome-actions">
+            <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
+              Start your archive
+            </a>
+            <a className="button button-outline-dark" href={loginUrl(authOrigin, returnTo)}>
+              Sign in
+            </a>
+          </div>
+          <p className="welcome-foot">No feed. No streaks. No audience.</p>
+        </div>
+        <section className="welcome-specimen" aria-label="What Worth helps you keep track of">
+          <div className="welcome-specimen-head">
+            <span>YOUR INDEX</span>
+            <span>01 / 03</span>
+          </div>
+          <div className="welcome-specimen-card">
+            <span className="specimen-number">01</span>
+            <div>
+              <p>COLLECT</p>
+              <strong>
+                Things you would
+                <br />
+                find again.
+              </strong>
+            </div>
+          </div>
+          <div className="welcome-specimen-list">
+            <div>
+              <span>02</span>
+              <strong>Log the ordinary.</strong>
+              <p>Runs, routines, meals, whatever.</p>
+            </div>
+            <div>
+              <span>03</span>
+              <strong>Know your favorites.</strong>
+              <p>Rank what you would do again.</p>
+            </div>
+          </div>
+          <p className="welcome-specimen-note">Your records are yours. Share a list only when you mean to.</p>
+        </section>
+      </section>
     </main>
   );
 }
