@@ -32,15 +32,16 @@ export function ListPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const creating = params.get('new') === '1';
+  const focus = params.get('focus');
 
   useEffect(() => {
-    setSelectedId(null);
+    setSelectedId(focus?.startsWith('item:') ? focus.slice('item:'.length) : null);
     setShowSettings(false);
-  }, [listId]);
+  }, [focus, listId]);
 
   function closeEditor() {
     setSelectedId(null);
-    if (creating) setParams({}, { replace: true });
+    if (creating || focus) setParams({}, { replace: true });
   }
 
   if (listQuery.isPending) return <main className="light-page page-width loading-line">Opening list…</main>;
@@ -152,6 +153,7 @@ export function ListPage() {
           loading={logsQuery.isPending}
           error={logsQuery.isError}
           newOpen={creating}
+          focusLogId={focus?.startsWith('log:') ? focus.slice('log:'.length) : null}
           onCloseNew={closeEditor}
           onNew={() => setParams({ new: '1' })}
         />

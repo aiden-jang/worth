@@ -12,6 +12,7 @@ export function ActivityView({
   loading,
   error,
   newOpen,
+  focusLogId,
   onCloseNew,
   onNew,
 }: {
@@ -20,6 +21,7 @@ export function ActivityView({
   loading: boolean;
   error: boolean;
   newOpen: boolean;
+  focusLogId: string | null;
   onCloseNew: () => void;
   onNew: () => void;
 }) {
@@ -42,6 +44,12 @@ export function ActivityView({
     setRepeatTitle('');
     if (newOpen) onCloseNew();
   }
+
+  useEffect(() => {
+    if (!focusLogId) return;
+    const log = logs.find((entry) => entry.id === focusLogId);
+    if (log) setSelected(log);
+  }, [focusLogId, logs]);
 
   if (loading) return <p className="loading-line">Loading activity…</p>;
   if (error) return <p className="error-banner">Couldn't load the activity log. Refresh to try again.</p>;
