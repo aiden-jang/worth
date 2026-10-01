@@ -51,64 +51,71 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
   return (
     <main className="welcome">
       <header className="welcome-top">
-        <span className="brand">worth</span>
+        <span className="landing-brand">worth</span>
         <div className="welcome-top-actions">
           <span className="overline">PRIVATE ARCHIVE</span>
           <a href={loginUrl(authOrigin, returnTo)}>Sign in</a>
         </div>
       </header>
-      <section className="welcome-hero">
-        <div className="welcome-intro">
-          <p className="overline">A PLACE TO KEEP TRACK</p>
-          <h1>
-            Keep track
-            <br />
-            of <span>what stays.</span>
-          </h1>
-          <p className="welcome-copy">
-            The things you collect, the things you do, and the ones you keep bringing up. Private until you
-            decide otherwise.
-          </p>
-          <div className="welcome-actions">
-            <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
-              Start your archive
-            </a>
-            <a className="button button-outline-dark" href={loginUrl(authOrigin, returnTo)}>
-              Sign in
-            </a>
+      <section className="landing-rail" aria-label="Worth at a glance">
+        <div className="landing-panels" aria-hidden="true">
+          <div className="landing-panel stone">
+            <span>01</span>
           </div>
-          <p className="welcome-foot">No feed. No streaks. No audience.</p>
+          <div className="landing-panel selected">
+            <span>02</span>
+          </div>
+          <div className="landing-panel paper">
+            <span>03</span>
+          </div>
+          <div className="landing-panel graphite">
+            <span>04</span>
+          </div>
+          <div className="landing-panel plaster">
+            <span>05</span>
+          </div>
+          <div className="landing-panel water">
+            <span>06</span>
+          </div>
         </div>
-        <section className="welcome-specimen" aria-label="What Worth helps you keep track of">
-          <div className="welcome-specimen-head">
-            <span>YOUR INDEX</span>
-            <span>01 / 03</span>
+        <aside className="landing-index">
+          <div>
+            <span>01</span>
+            <strong>Private by default</strong>
           </div>
-          <div className="welcome-specimen-card">
-            <span className="specimen-number">01</span>
-            <div>
-              <p>COLLECT</p>
-              <strong>
-                Things you would
-                <br />
-                find again.
-              </strong>
-            </div>
+          <div>
+            <span>02</span>
+            <strong>Collect</strong>
           </div>
-          <div className="welcome-specimen-list">
-            <div>
-              <span>02</span>
-              <strong>Log the ordinary.</strong>
-              <p>Runs, routines, meals, whatever.</p>
-            </div>
-            <div>
-              <span>03</span>
-              <strong>Know your favorites.</strong>
-              <p>Rank what you would do again.</p>
-            </div>
+          <div>
+            <span>03</span>
+            <strong>Log</strong>
           </div>
-          <p className="welcome-specimen-note">Your records are yours. Share a list only when you mean to.</p>
-        </section>
+          <div>
+            <span>04</span>
+            <strong>Rank</strong>
+          </div>
+          <div>
+            <span>05</span>
+            <strong>Share on your terms</strong>
+          </div>
+        </aside>
+      </section>
+      <section className="landing-close">
+        <div>
+          <h1>A record of your own.</h1>
+          <div className="welcome-actions">
+            <a className="landing-action primary" href={signupUrl(authOrigin, returnTo)}>
+              Start your archive <span>→</span>
+            </a>
+            <a className="landing-action" href={loginUrl(authOrigin, returnTo)}>
+              Sign in <span>→</span>
+            </a>
+          </div>
+        </div>
+        <p className="landing-copy">
+          A private place for the things you collect, what you have lived, and whatever keeps coming up.
+        </p>
       </section>
     </main>
   );

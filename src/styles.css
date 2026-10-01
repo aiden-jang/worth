@@ -7,7 +7,7 @@
   --paper: #f2f4ee;
   --muted: #98a19f;
   --faint: #66706f;
-  --acid: #c8f45a;
+  --acid: #b8493d;
   --danger: #ff8275;
   --mono: 'DM Mono', monospace;
   color: var(--paper);
@@ -1545,8 +1545,8 @@ dialog::backdrop {
 .welcome {
   display: grid;
   min-height: 100vh;
-  grid-template-rows: auto 1fr;
-  padding: 2rem 4vw;
+  grid-template-rows: auto auto 1fr;
+  padding: 0 2vw 2.5rem;
   background: var(--ink);
   color: var(--paper);
 }
@@ -1554,8 +1554,16 @@ dialog::backdrop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 1.4rem;
+  min-height: 82px;
+  padding: 0 1.25rem;
   border-bottom: 1px solid var(--line);
+}
+.landing-brand {
+  color: var(--paper);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 2.6vw, 2.65rem);
+  font-weight: 400;
+  letter-spacing: -0.09em;
 }
 .welcome-top-actions {
   display: flex;
@@ -1579,29 +1587,131 @@ dialog::backdrop {
   max-width: 760px;
   padding: 8vh 0;
 }
-.welcome-hero {
+.landing-rail {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.7fr);
-  align-items: stretch;
-  min-height: min(720px, calc(100vh - 90px));
+  grid-template-columns: minmax(0, 1fr) 244px;
+  min-height: clamp(420px, 54vh, 610px);
+  padding: 1.65rem 0;
+  border-bottom: 1px solid var(--line);
 }
-.welcome-intro {
-  align-self: center;
-  padding: clamp(5rem, 11vh, 9rem) clamp(2rem, 7vw, 9rem) clamp(5rem, 11vh, 9rem) 0;
+.landing-panels {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 1.65rem;
 }
-.welcome-intro > .overline {
+.landing-panel {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background-color: var(--raised);
+}
+.landing-panel::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.34;
+  pointer-events: none;
+}
+.landing-panel span {
+  position: absolute;
+  z-index: 1;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+  font: 500 0.56rem var(--mono);
+  letter-spacing: 0.12em;
+}
+.landing-panel.stone {
+  background: #473f39;
+}
+.landing-panel.stone::after {
+  background-image: repeating-linear-gradient(113deg, transparent 0 9px, rgb(15 13 12 / 0.34) 10px 11px);
+}
+.landing-panel.selected {
+  outline: 1px solid var(--acid);
+  outline-offset: -1px;
+  background: #6e211d;
+}
+.landing-panel.selected::after {
+  background-image: repeating-linear-gradient(139deg, transparent 0 7px, rgb(255 228 211 / 0.16) 8px 9px);
+}
+.landing-panel.paper {
+  background: #d7ccbc;
+}
+.landing-panel.paper::after {
+  background-image: repeating-linear-gradient(113deg, transparent 0 8px, rgb(64 50 39 / 0.12) 9px 10px);
+}
+.landing-panel.paper span {
+  color: #302922;
+}
+.landing-panel.graphite {
+  background: #222523;
+}
+.landing-panel.graphite::after {
+  background-image: repeating-linear-gradient(62deg, transparent 0 11px, rgb(255 255 255 / 0.07) 12px 13px);
+}
+.landing-panel.plaster {
+  background: #8d877b;
+}
+.landing-panel.plaster::after {
+  background-image: repeating-linear-gradient(103deg, transparent 0 5px, rgb(29 27 23 / 0.17) 6px 7px);
+}
+.landing-panel.water {
+  background: #182d30;
+}
+.landing-panel.water::after {
+  background-image: repeating-radial-gradient(
+    ellipse at 30% 60%,
+    transparent 0 8px,
+    rgb(169 197 193 / 0.16) 9px 10px
+  );
+}
+.landing-index {
+  display: grid;
+  align-content: center;
+  gap: 0;
+  padding: 0 2rem;
+  border-left: 1px solid var(--line);
+}
+.landing-index > div {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0.5rem;
+  padding: 0.82rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.landing-index > div:first-child {
+  border-top: 1px solid var(--line);
+}
+.landing-index span {
   color: var(--acid);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.08em;
 }
-.welcome h1 {
+.landing-index strong {
+  color: var(--muted);
+  font: 500 0.68rem var(--mono);
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+}
+.landing-close {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.36fr);
+  align-items: end;
+  gap: 4rem;
+  padding: clamp(4rem, 8vw, 8rem) 1.25rem 1.5rem;
+}
+.landing-close h1,
+.welcome-error h1 {
   max-width: 9ch;
-  margin: 1.1rem 0 1.8rem;
-  font-size: clamp(4.5rem, 9.2vw, 9rem);
-  font-weight: 700;
-  letter-spacing: -0.11em;
-  line-height: 0.78;
-}
-.welcome h1 span {
-  color: var(--acid);
+  margin: 0;
+  color: var(--paper);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(4.5rem, 9.4vw, 10.5rem);
+  font-weight: 400;
+  letter-spacing: -0.085em;
+  line-height: 0.8;
 }
 .welcome-copy {
   max-width: 47ch;
@@ -1612,112 +1722,43 @@ dialog::backdrop {
 .welcome-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 2rem;
+  gap: 1.25rem;
+  margin-top: 2.25rem;
 }
-.welcome-foot {
-  margin-top: 1.4rem;
-  color: var(--faint);
-  font: 500 0.62rem var(--mono);
-  letter-spacing: 0.07em;
+.landing-action {
+  display: inline-flex;
+  justify-content: space-between;
+  min-width: 190px;
+  padding: 0.72rem 0;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--paper);
+  font: 500 0.67rem var(--mono);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.welcome-specimen {
-  display: grid;
-  grid-template-rows: auto minmax(260px, 1fr) auto auto;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-  background: var(--panel);
-}
-.welcome-specimen-head {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem 1.1rem;
-  border-bottom: 1px solid var(--line);
-  color: var(--faint);
-  font: 500 0.61rem var(--mono);
-  letter-spacing: 0.1em;
-}
-.welcome-specimen-head span:first-child {
+.landing-action:hover {
   color: var(--acid);
+  border-color: var(--acid);
 }
-.welcome-specimen-card {
-  position: relative;
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  min-height: 330px;
-  overflow: hidden;
-  padding: 1.25rem;
-  border-bottom: 1px solid var(--line);
-  background:
-    linear-gradient(135deg, transparent 49.6%, var(--line) 50%, transparent 50.4%) 0 0 / 72px 72px,
-    linear-gradient(45deg, transparent 49.6%, var(--line) 50%, transparent 50.4%) 0 0 / 72px 72px,
-    var(--raised);
-}
-.specimen-number {
-  align-self: start;
-  color: color-mix(in srgb, var(--acid) 82%, var(--paper));
-  font: 500 0.68rem var(--mono);
-  letter-spacing: 0.09em;
-}
-.welcome-specimen-card p,
-.welcome-specimen-list p,
-.welcome-specimen-note {
-  margin: 0;
-}
-.welcome-specimen-card p {
-  margin-bottom: 0.5rem;
-  color: var(--faint);
-  font: 500 0.61rem var(--mono);
-  letter-spacing: 0.1em;
-}
-.welcome-specimen-card strong {
-  display: block;
-  color: var(--paper);
-  font-size: clamp(1.75rem, 3vw, 3.25rem);
-  font-weight: 600;
-  letter-spacing: -0.075em;
-  line-height: 0.92;
-}
-.welcome-specimen-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-.welcome-specimen-list > div {
-  display: grid;
-  gap: 0.38rem;
-  padding: 1.1rem 1.25rem 1.25rem;
-  border-right: 1px solid var(--line);
-}
-.welcome-specimen-list > div:last-child {
-  border-right: 0;
-}
-.welcome-specimen-list span {
+.landing-action.primary {
   color: var(--acid);
-  font: 500 0.61rem var(--mono);
-  letter-spacing: 0.1em;
+  border-color: var(--acid);
 }
-.welcome-specimen-list strong {
-  color: var(--paper);
-  font-size: 0.92rem;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-}
-.welcome-specimen-list p,
-.welcome-specimen-note {
+.landing-copy {
+  max-width: 28ch;
+  margin: 0 0 0.25rem;
   color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1.45;
-}
-.welcome-specimen-note {
-  padding: 1.1rem 1.25rem;
-  border-top: 1px solid var(--line);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.1rem, 1.5vw, 1.45rem);
+  line-height: 1.28;
 }
 .welcome-error {
   display: flex;
   flex-direction: column;
+  padding: 2rem 4vw;
+}
+.welcome-error .brand {
+  align-self: flex-start;
 }
 .boot-screen {
   display: grid;
@@ -2217,33 +2258,66 @@ dialog::backdrop {
     grid-column: 2;
   }
   .welcome {
-    padding: 1.25rem 16px;
+    padding: 0 16px 1.5rem;
+  }
+  .welcome-top {
+    min-height: 62px;
+    padding: 0;
   }
   .welcome-top .overline {
     display: none;
   }
-  .welcome-hero {
+  .landing-rail {
     display: block;
     min-height: 0;
+    padding: 1rem 0;
   }
-  .welcome-intro {
-    padding: 5rem 0 4rem;
+  .landing-panels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    padding: 0;
   }
-  .welcome h1 {
-    font-size: clamp(4rem, 19vw, 6rem);
+  .landing-panel {
+    min-height: 180px;
   }
-  .welcome-specimen {
-    grid-template-rows: auto 290px auto auto;
-    min-height: 0;
+  .landing-panel span {
+    bottom: 0.5rem;
+    left: 0.5rem;
   }
-  .welcome-specimen-card {
-    min-height: 290px;
+  .landing-index {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1rem;
+    margin-top: 1rem;
+    padding: 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
   }
-  .welcome-specimen-list > div {
-    padding: 1rem;
+  .landing-index > div,
+  .landing-index > div:first-child {
+    padding: 0.7rem 0;
+    border-top: 0;
   }
-  .welcome-specimen-note {
-    padding: 1rem;
+  .landing-index > div:last-child {
+    grid-column: span 2;
+  }
+  .landing-close {
+    display: block;
+    padding: 3.5rem 0 1rem;
+  }
+  .landing-close h1,
+  .welcome-error h1 {
+    font-size: clamp(4rem, 18vw, 6.25rem);
+  }
+  .welcome-actions {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .landing-action {
+    min-width: 0;
+  }
+  .landing-copy {
+    margin-top: 2.5rem;
   }
 }
 
