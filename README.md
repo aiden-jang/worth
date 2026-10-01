@@ -15,6 +15,8 @@ Collections hold repeatable things such as drinks, films, restaurants, and cars.
 
 The mocks in [`art/ui-mocks`](art/ui-mocks/README.md) are design references, not bundled example content. Worth starts empty for a new account.
 
+[`DESIGN.md`](DESIGN.md) is the current visual and product-direction source of truth. Use it before changing primary screens or generating new mocks.
+
 ## Run locally
 
 Use Node 22 and pnpm 9. From this directory:
