@@ -90,6 +90,12 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
     expectedRevision: list.rankRevision,
   });
   expect(ranked.status).toBe(200);
+  const rankedOverview = (await (await call('/overview', 'alice')).json()) as {
+    topPicks: { itemId: string; listName: string; rank: number }[];
+  };
+  expect(rankedOverview.topPicks).toContainEqual(
+    expect.objectContaining({ itemId: item.id, listName: 'Drinks', rank: 1 }),
+  );
 
   const createdShare = await call(`/lists/${list.id}/shares`, 'alice', 'POST', { limit: 5 });
   expect(createdShare.status).toBe(201);
@@ -226,12 +232,10 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   expect(results.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
   const overview = (await (await call('/overview', 'alice')).json()) as {
     lastTimes: { title: string }[];
-    rail: { id: string; recordKind: string; photo: unknown }[];
+    recent: { id: string }[];
   };
   expect(overview.lastTimes).toContainEqual(expect.objectContaining({ title: 'Evening run' }));
-  expect(overview.rail).toContainEqual(
-    expect.objectContaining({ id: log.id, recordKind: 'log', photo: null }),
-  );
+  expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id }));
 
   expect((await call(`/logs/${log.id}`, 'alice', 'PATCH', { amount: 6.1 })).status).toBe(200);
   const logs = (await (await call(`/lists/${list.id}/logs`, 'alice')).json()) as {

@@ -194,39 +194,23 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         sets: number | null;
         reps: number | null;
       }>();
-    const { results: rail } = await c.env.DB.prepare(
-      `WITH rail_rows AS (
-        SELECT i.id, i.list_id, l.name AS list_name, 'item' AS record_kind, i.title,
-          COALESCE(MAX(g.happened_on), i.started_on, strftime('%Y-%m-%d', i.created_at / 1000, 'unixepoch')) AS happened_on,
-          CASE WHEN COALESCE(MAX(g.updated_at), 0) > i.updated_at THEN MAX(g.updated_at) ELSE i.updated_at END AS sort_at,
-          ip.item_id AS photo_id, i.updated_at AS photo_version
-        FROM items i
-        JOIN lists l ON l.id = i.list_id
-        LEFT JOIN logs g ON g.item_id = i.id AND g.owner_id = i.owner_id
-        LEFT JOIN item_photos ip ON ip.item_id = i.id AND ip.owner_id = i.owner_id
-        WHERE i.owner_id = ?
-        GROUP BY i.id
-        UNION ALL
-        SELECT g.id, g.list_id, l.name AS list_name, 'log' AS record_kind, g.title, g.happened_on,
-          g.updated_at AS sort_at, lp.log_id AS photo_id, g.updated_at AS photo_version
-        FROM logs g
-        JOIN lists l ON l.id = g.list_id
-        LEFT JOIN log_photos lp ON lp.log_id = g.id AND lp.owner_id = g.owner_id
-        WHERE g.owner_id = ? AND g.item_id IS NULL
-      )
-      SELECT id, list_id, list_name, record_kind, title, happened_on, photo_id, photo_version
-      FROM rail_rows ORDER BY sort_at DESC LIMIT 7`,
+    const { results: topPicks } = await c.env.DB.prepare(
+      `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type,
+      CAST(r.key AS INTEGER) + 1 AS rank
+      FROM lists l
+      JOIN json_each(l.ranked_ids) r
+      JOIN items i ON i.id = r.value AND i.owner_id = l.owner_id
+      WHERE l.owner_id = ? AND CAST(r.key AS INTEGER) = 0
+      ORDER BY l.updated_at DESC LIMIT 5`,
     )
-      .bind(ownerId, ownerId)
+      .bind(ownerId)
       .all<{
-        id: string;
         list_id: string;
         list_name: string;
-        record_kind: 'item' | 'log';
+        item_id: string;
         title: string;
-        happened_on: string;
-        photo_id: string | null;
-        photo_version: number;
+        type: string;
+        rank: number;
       }>();
     const { results: lastTimes } = await c.env.DB.prepare(
       `SELECT title, MAX(happened_on) AS happened_on
@@ -234,13 +218,6 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     )
       .bind(ownerId)
       .all<{ title: string; happened_on: string }>();
-    const highlight = await c.env.DB.prepare(
-      `SELECT i.id, i.list_id, i.title, i.started_on FROM items i
-      JOIN item_photos p ON p.item_id = i.id
-      WHERE i.owner_id = ? ORDER BY p.updated_at DESC LIMIT 1`,
-    )
-      .bind(ownerId)
-      .first<{ id: string; list_id: string; title: string; started_on: string | null }>();
     return c.json({
       lists,
       recent: recent.map((row) => ({
@@ -255,30 +232,15 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         sets: row.sets,
         reps: row.reps,
       })),
-      rail: rail.map((row) => ({
-        id: row.id,
+      topPicks: topPicks.map((row) => ({
         listId: row.list_id,
         listName: row.list_name,
-        recordKind: row.record_kind,
+        itemId: row.item_id,
         title: row.title,
-        happenedOn: row.happened_on,
-        photo: row.photo_id
-          ? {
-              kind: row.record_kind === 'item' ? ('items' as const) : ('logs' as const),
-              id: row.id,
-              version: row.photo_version,
-            }
-          : null,
+        type: row.type,
+        rank: row.rank,
       })),
       lastTimes: lastTimes.map((row) => ({ title: row.title, happenedOn: row.happened_on })),
-      highlight: highlight
-        ? {
-            id: highlight.id,
-            listId: highlight.list_id,
-            title: highlight.title,
-            startedOn: highlight.started_on,
-          }
-        : null,
     });
   });
 

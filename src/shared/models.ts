@@ -76,19 +76,17 @@ export interface RecentEntry {
 export interface Overview {
   lists: ListSummary[];
   recent: RecentEntry[];
-  rail: ArchiveFrame[];
+  topPicks: RankedPick[];
   lastTimes: { title: string; happenedOn: string }[];
-  highlight: { id: string; listId: string; title: string; startedOn: string | null } | null;
 }
 
-export interface ArchiveFrame {
-  id: string;
+export interface RankedPick {
   listId: string;
   listName: string;
-  recordKind: 'item' | 'log';
+  itemId: string;
   title: string;
-  happenedOn: string;
-  photo: { kind: 'items' | 'logs'; id: string; version: number } | null;
+  type: string;
+  rank: number;
 }
 
 export interface SearchResult {
