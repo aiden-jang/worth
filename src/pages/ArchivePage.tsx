@@ -63,18 +63,23 @@ export function ArchivePage() {
                 <Link to={`/lists/${data.highlight.listId}`} className="feature-photo">
                   <img src={`/api/items/${data.highlight.id}/photo`} alt={data.highlight.title} />
                   <span className="feature-caption">
+                    <small>FROM YOUR ARCHIVE</small>
                     <strong>{data.highlight.title}</strong>
-                    <small>
+                    <em>
                       {data.highlight.startedOn
                         ? `Since ${dateLabel(data.highlight.startedOn)}`
                         : 'From your collection'}
-                    </small>
+                    </em>
                   </span>
                 </Link>
               ) : (
                 <div className="archive-still">
-                  <span className="overline">A PLACE TO KEEP IT</span>
-                  <p>The little things add up.</p>
+                  <span className="overline">PRIVATE ARCHIVE</span>
+                  <p>
+                    Keep the good
+                    <br />
+                    parts close.
+                  </p>
                   <span className="still-mark">w.</span>
                 </div>
               )}

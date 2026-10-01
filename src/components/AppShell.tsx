@@ -20,7 +20,6 @@ export function AppShell({
   const dialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   if (location.pathname.endsWith('/show')) return <>{children}</>;
-  const dark = location.pathname === '/';
 
   function openAdd() {
     if (lists.isPending) return;
@@ -36,7 +35,7 @@ export function AppShell({
   }
 
   return (
-    <div className={dark ? 'app-shell app-shell-dark' : 'app-shell'}>
+    <div className="app-shell app-shell-dark">
       <header className="site-header">
         <Link to="/" className="brand" aria-label="Worth, archive home">
           worth

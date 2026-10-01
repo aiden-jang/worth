@@ -16,9 +16,6 @@ importers:
       '@fontsource/dm-sans':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/instrument-serif':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -861,12 +858,6 @@ packages:
     resolution:
       {
         integrity: sha512-lYJtMXXO28q1z+yz+z8XKd0s4hXaa9QdkETzkyD760sidCv5heI86weYA0sx0Nc4pAMAQTUuyf4gO44cYKKS9g==,
-      }
-
-  '@fontsource/instrument-serif@5.3.0':
-    resolution:
-      {
-        integrity: sha512-mDiaIg0u67sYV59fie92Wz4sM8UiVlbL7fLxnFPCKkX15DMASEnQTREbaP5S5/3DCcsoAOcQ0sV9E4AeY4QqYQ==,
       }
 
   '@img/colour@1.1.0':
@@ -2907,8 +2898,6 @@ snapshots:
   '@fontsource/dm-mono@5.3.0': {}
 
   '@fontsource/dm-sans@5.3.0': {}
-
-  '@fontsource/instrument-serif@5.3.0': {}
 
   '@img/colour@1.1.0': {}
 
