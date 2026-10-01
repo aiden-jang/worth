@@ -14,8 +14,8 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO items
-      (id, list_id, owner_id, title, type, note, started_on, ended_on, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, owner_id, title, type, note, decision, started_on, ended_on, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -24,6 +24,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         input.title,
         input.type,
         input.note,
+        input.decision,
         input.startedOn,
         input.endedOn,
         now,
@@ -47,6 +48,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       title: patch.title ?? item.title,
       type: patch.type ?? item.type,
       note: patch.note ?? item.note,
+      decision: patch.decision === undefined ? item.decision : patch.decision,
       startedOn: patch.startedOn === undefined ? item.startedOn : patch.startedOn,
       endedOn: patch.endedOn === undefined ? item.endedOn : patch.endedOn,
     });
@@ -54,13 +56,14 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid item');
     const value = merged.data;
     await c.env.DB.prepare(
-      `UPDATE items SET title = ?, type = ?, note = ?, started_on = ?, ended_on = ?,
+      `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, started_on = ?, ended_on = ?,
       updated_at = ? WHERE id = ? AND owner_id = ?`,
     )
       .bind(
         value.title,
         value.type,
         value.note,
+        value.decision,
         value.startedOn,
         value.endedOn,
         Date.now(),
@@ -194,24 +197,29 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         sets: number | null;
         reps: number | null;
       }>();
-    const { results: topPicks } = await c.env.DB.prepare(
-      `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type,
-      CAST(r.key AS INTEGER) + 1 AS rank
-      FROM lists l
-      JOIN json_each(l.ranked_ids) r
-      JOIN items i ON i.id = r.value AND i.owner_id = l.owner_id
-      WHERE l.owner_id = ? AND CAST(r.key AS INTEGER) = 0
-      ORDER BY l.updated_at DESC LIMIT 5`,
-    )
-      .bind(ownerId)
-      .all<{
+    const decisionPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type, i.decision
+      FROM items i
+      JOIN lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
+      WHERE i.owner_id = ? AND i.decision = ?
+      ORDER BY l.updated_at DESC, i.updated_at DESC LIMIT 5`;
+    const [favoritesQuery, notAgainQuery] = await Promise.all([
+      c.env.DB.prepare(decisionPickQuery).bind(ownerId, 'favorite').all<{
         list_id: string;
         list_name: string;
         item_id: string;
         title: string;
         type: string;
-        rank: number;
-      }>();
+        decision: 'favorite';
+      }>(),
+      c.env.DB.prepare(decisionPickQuery).bind(ownerId, 'would_not_again').all<{
+        list_id: string;
+        list_name: string;
+        item_id: string;
+        title: string;
+        type: string;
+        decision: 'would_not_again';
+      }>(),
+    ]);
     const { results: lastTimes } = await c.env.DB.prepare(
       `SELECT title, MAX(happened_on) AS happened_on
       FROM logs WHERE owner_id = ? AND item_id IS NULL GROUP BY title ORDER BY happened_on DESC LIMIT 4`,
@@ -232,13 +240,21 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         sets: row.sets,
         reps: row.reps,
       })),
-      topPicks: topPicks.map((row) => ({
+      favorites: favoritesQuery.results.map((row) => ({
         listId: row.list_id,
         listName: row.list_name,
         itemId: row.item_id,
         title: row.title,
         type: row.type,
-        rank: row.rank,
+        decision: row.decision,
+      })),
+      notAgain: notAgainQuery.results.map((row) => ({
+        listId: row.list_id,
+        listName: row.list_name,
+        itemId: row.item_id,
+        title: row.title,
+        type: row.type,
+        decision: row.decision,
       })),
       lastTimes: lastTimes.map((row) => ({ title: row.title, happenedOn: row.happened_on })),
     });

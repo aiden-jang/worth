@@ -22,6 +22,9 @@ export function ShareDialog({
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
   const ranked = rankedItems(list, items);
   const preview = limit === 'all' ? ranked : ranked.slice(0, limit);
+  const activeShares = (shares.data?.shares ?? []).filter(
+    (share) => !share.revokedAt && share.expiresAt > Date.now(),
+  );
   useEffect(() => {
     dialog.current?.showModal();
     return () => {
@@ -64,18 +67,18 @@ export function ShareDialog({
       <div className="share-inner">
         <div className="editor-head">
           <div>
-            <p className="overline">ONLY WHAT YOU CHOOSE</p>
-            <h2>Share {list.name}.</h2>
+            <p className="overline">RANKING ONLY</p>
+            <h2>{list.name}</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
             <X size={22} />
           </button>
         </div>
         <p className="share-explainer">
-          This makes a read-only snapshot. Notes, photos, dates, and activity history stay private.
+          The link shows the ranking. Notes, photos, dates, and history stay private.
         </p>
         <label className="share-limit">
-          Show
+          Include
           <select
             value={limit}
             onChange={(event) => {
@@ -90,7 +93,7 @@ export function ShareDialog({
           </select>
         </label>
         <div className="share-preview">
-          <span className="overline">LINK PREVIEW</span>
+          <span className="overline">PREVIEW</span>
           <h3>{list.name}</h3>
           {preview.map((item, index) => (
             <div key={item.id}>
@@ -117,7 +120,7 @@ export function ShareDialog({
                 <Copy size={17} /> {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <small>The link is only shown now. Make a new one if you lose it.</small>
+            <small>This link only appears once. Make another if you lose it.</small>
           </div>
         ) : (
           <button
@@ -129,26 +132,24 @@ export function ShareDialog({
           </button>
         )}
         {create.isError && <p className="form-error">{create.error.message}</p>}
-        {!!shares.data?.shares.length && (
+        {!!activeShares.length && (
           <div className="active-shares">
-            <h3>Existing links</h3>
-            {shares.data.shares
-              .filter((share) => !share.revokedAt && share.expiresAt > Date.now())
-              .map((share) => (
-                <div key={share.id}>
-                  <span>
-                    {share.title}
-                    <small>Expires {new Date(share.expiresAt).toLocaleDateString()}</small>
-                  </span>
-                  <button
-                    className="text-danger"
-                    disabled={revoke.isPending}
-                    onClick={() => revoke.mutate(share.id)}
-                  >
-                    Revoke
-                  </button>
-                </div>
-              ))}
+            <h3>Active links</h3>
+            {activeShares.map((share) => (
+              <div key={share.id}>
+                <span>
+                  {share.title}
+                  <small>Expires {new Date(share.expiresAt).toLocaleDateString()}</small>
+                </span>
+                <button
+                  className="text-danger"
+                  disabled={revoke.isPending}
+                  onClick={() => revoke.mutate(share.id)}
+                >
+                  Revoke
+                </button>
+              </div>
+            ))}
           </div>
         )}
         {revoke.isError && <p className="form-error">{revoke.error.message}</p>}

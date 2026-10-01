@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { moveRank, visibleItems } from '../src/shared/ranking';
 import type { Item } from '../src/shared/models';
 
-const item = (id: string, title: string, type = 'Whiskey'): Item => ({
+const item = (id: string, title: string, type = 'Whiskey', decision: Item['decision'] = null): Item => ({
   id,
   listId: 'list',
   title,
   type,
   note: '',
+  decision,
   startedOn: null,
   endedOn: null,
   hasPhoto: false,
@@ -30,6 +31,7 @@ describe('ranking', () => {
       search: '',
       type: 'Whiskey',
       rankFilter: 'top5',
+      decisionFilter: 'all',
       sort: 'rank',
     });
     expect(visible.map((entry) => entry.id)).toEqual(['a', 'c']);
@@ -40,8 +42,42 @@ describe('ranking', () => {
       search: '',
       type: 'all',
       rankFilter: 'all',
+      decisionFilter: 'all',
       sort: 'rank',
     });
     expect(visible.map((entry) => entry.id)).toEqual(['b', 'a']);
+  });
+
+  it('filters personal calls without changing rank order', () => {
+    const items = [
+      item('a', 'A', 'Whiskey', 'would_not_again'),
+      item('b', 'B', 'Wine', 'favorite'),
+      item('c', 'C'),
+    ];
+    const favorites = visibleItems(items, ['b', 'a'], {
+      search: '',
+      type: 'all',
+      rankFilter: 'all',
+      decisionFilter: 'favorite',
+      sort: 'rank',
+    });
+    const notAgain = visibleItems(items, ['b', 'a'], {
+      search: '',
+      type: 'all',
+      rankFilter: 'all',
+      decisionFilter: 'would_not_again',
+      sort: 'rank',
+    });
+    const unrankedFavorites = visibleItems(items, ['b', 'a'], {
+      search: '',
+      type: 'all',
+      rankFilter: 'unranked',
+      decisionFilter: 'favorite',
+      sort: 'rank',
+    });
+
+    expect(favorites.map((entry) => entry.id)).toEqual(['b']);
+    expect(notAgain.map((entry) => entry.id)).toEqual(['a']);
+    expect(unrankedFavorites).toEqual([]);
   });
 });

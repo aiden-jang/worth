@@ -6,7 +6,14 @@ import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
 import { PhotoControl } from './PhotoControl';
 
-const emptyItem: ItemInput = { title: '', type: '', note: '', startedOn: null, endedOn: null };
+const emptyItem: ItemInput = {
+  title: '',
+  type: '',
+  note: '',
+  decision: null,
+  startedOn: null,
+  endedOn: null,
+};
 
 export function ItemEditor({
   listId,
@@ -100,7 +107,7 @@ export function ItemEditor({
 
   return (
     <dialog
-      className="editor-dialog"
+      className="editor-dialog item-editor-dialog"
       ref={dialog}
       onClose={onClose}
       onClick={(event) => {
@@ -126,7 +133,7 @@ export function ItemEditor({
             listId={listId}
           />
         )}
-        <form className="editor-form" onSubmit={saveItem}>
+        <form className="editor-form record-form" onSubmit={saveItem}>
           <label>
             Name
             <input
@@ -157,6 +164,37 @@ export function ItemEditor({
               placeholder="What made it worth keeping?"
             />
           </label>
+          <fieldset className="item-decision">
+            <legend>
+              Your call <span className="optional">optional</span>
+            </legend>
+            <div role="group" aria-label="Item decision">
+              <button
+                type="button"
+                className={form.decision === 'favorite' ? 'active' : ''}
+                aria-pressed={form.decision === 'favorite'}
+                onClick={() => setForm({ ...form, decision: 'favorite' })}
+              >
+                Favorite
+              </button>
+              <button
+                type="button"
+                className={form.decision === 'would_not_again' ? 'active' : ''}
+                aria-pressed={form.decision === 'would_not_again'}
+                onClick={() => setForm({ ...form, decision: 'would_not_again' })}
+              >
+                Would not again
+              </button>
+              <button
+                type="button"
+                className={form.decision === null ? 'active' : ''}
+                aria-pressed={form.decision === null}
+                onClick={() => setForm({ ...form, decision: null })}
+              >
+                No call yet
+              </button>
+            </div>
+          </fieldset>
           <div className="date-pair">
             <label>
               From <span className="optional">optional</span>
@@ -253,6 +291,7 @@ function fromItem(item: Item): ItemInput {
     title: item.title,
     type: item.type,
     note: item.note,
+    decision: item.decision,
     startedOn: item.startedOn,
     endedOn: item.endedOn,
   };

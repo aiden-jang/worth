@@ -1,10 +1,13 @@
-import { useRef, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { logoutUrl, siteFooterLinks } from '@aidenjang/auth-client';
-import { ArrowRight, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, CaretDown, Plus, X } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
 import { api } from '../api';
+import { preferredQuickCaptureList } from '../shared/quick-capture';
+
+const quickCaptureStorageKey = 'worth:quick-capture-list';
 
 export function AppShell({
   children,
@@ -19,7 +22,27 @@ export function AppShell({
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
+  const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : window.sessionStorage.getItem(quickCaptureStorageKey),
+  );
   if (location.pathname.endsWith('/show')) return <>{children}</>;
+
+  const quickCaptureList = preferredQuickCaptureList(
+    location.pathname,
+    rememberedListId,
+    lists.data?.lists ?? [],
+  );
+
+  function rememberList(listId: string) {
+    window.sessionStorage.setItem(quickCaptureStorageKey, listId);
+    setRememberedListId(listId);
+  }
+
+  function openList(listId: string) {
+    rememberList(listId);
+    dialog.current?.close();
+    navigate(`/lists/${listId}?new=1`);
+  }
 
   function openAdd() {
     if (lists.isPending) return;
@@ -29,6 +52,10 @@ export function AppShell({
     }
     if (!lists.data?.lists.length) {
       navigate('/lists?create=1');
+      return;
+    }
+    if (quickCaptureList) {
+      openList(quickCaptureList.id);
       return;
     }
     dialog.current?.showModal();
@@ -55,15 +82,32 @@ export function AppShell({
           >
             Account
           </a>
-          <button className="button button-accent header-add" onClick={openAdd} disabled={lists.isPending}>
-            <Plus size={17} weight="bold" /> Add
-          </button>
+          <div className={quickCaptureList ? 'quick-capture quick-capture-ready' : 'quick-capture'}>
+            <button
+              className="button button-accent header-add"
+              onClick={openAdd}
+              disabled={lists.isPending}
+              aria-label={quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add to a list'}
+            >
+              <Plus size={17} weight="bold" />
+              {quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add'}
+            </button>
+            {quickCaptureList && (
+              <button
+                className="quick-capture-picker"
+                aria-label="Choose another list"
+                onClick={() => dialog.current?.showModal()}
+              >
+                <CaretDown size={14} weight="bold" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
       {children}
       <footer className="site-footer">
         <span>worth</span>
-        <span>Private until you say otherwise.</span>
+        <span>Private by default.</span>
         {siteFooterLinks(authOrigin).map((link) => (
           <a
             key={link.href}
@@ -85,8 +129,8 @@ export function AppShell({
       >
         <div className="dialog-head">
           <div>
-            <p className="overline">QUICK ADD</p>
-            <h2>Where does it go?</h2>
+            <p className="overline">ADD TO</p>
+            <h2>Pick a list.</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
             <X size={20} />
@@ -94,13 +138,7 @@ export function AppShell({
         </div>
         <div className="add-list-choices">
           {lists.data?.lists.map((list) => (
-            <button
-              key={list.id}
-              onClick={() => {
-                dialog.current?.close();
-                navigate(`/lists/${list.id}?new=1`);
-              }}
-            >
+            <button key={list.id} onClick={() => openList(list.id)}>
               <span>
                 {list.name}
                 <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>

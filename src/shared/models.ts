@@ -1,4 +1,5 @@
 export type ListKind = 'collection' | 'activity';
+export type ItemDecision = 'favorite' | 'would_not_again';
 
 export interface ListSummary {
   id: string;
@@ -21,6 +22,7 @@ export interface Item {
   title: string;
   type: string;
   note: string;
+  decision: ItemDecision | null;
   startedOn: string | null;
   endedOn: string | null;
   hasPhoto: boolean;
@@ -76,17 +78,18 @@ export interface RecentEntry {
 export interface Overview {
   lists: ListSummary[];
   recent: RecentEntry[];
-  topPicks: RankedPick[];
+  favorites: DecisionPick[];
+  notAgain: DecisionPick[];
   lastTimes: { title: string; happenedOn: string }[];
 }
 
-export interface RankedPick {
+export interface DecisionPick {
   listId: string;
   listName: string;
   itemId: string;
   title: string;
   type: string;
-  rank: number;
+  decision: ItemDecision;
 }
 
 export interface SearchResult {

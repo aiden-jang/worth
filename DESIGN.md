@@ -12,10 +12,10 @@ The product has three jobs:
 
 The central interaction is a personal measure of value. A person can rank a wine, a movie, a restaurant, a car, or any other collection item without pretending those rankings are objective.
 
-The same collection can show both ends of the scale:
+Rank order and a personal call are separate. Rank says how items compare. An optional call says whether an item is a favorite or something they would not do again. The app must never infer either call from rank position.
 
-- **Favorite right now** for what they would choose again.
-- **Least likely again** for what they would skip next time.
+- **Favorite** for what they would choose again.
+- **Would not again** for what they would skip next time.
 
 Neither label deletes the record. Keeping a disappointing experience is useful context, especially when choosing again later.
 
@@ -27,18 +27,27 @@ The landing page should have one visual idea: a horizontal value meter passing t
 
 The meter has two small endpoints:
 
-- A muted rust point for **Favorite right now**.
-- A warm ivory point for **Least likely again**.
+- A muted rust point for **Favorite**.
+- A warm ivory point for **Would not again**.
 
-The page contains only:
+The hero contains:
 
 1. The `WORTH` wordmark and a sign-in link.
 2. The meter and its two endpoint labels.
 3. `Keep the things worth keeping.`
 4. One primary action: `Start your archive →`.
-5. A quiet footer line for `COLLECT`, `LOG`, and `RANK`.
+5. A short explanation: `A private archive for what you tried, did, kept, and would not do again.`
 
-The meter may react to hover or keyboard focus, but it should not turn into a demo or a carousel. Signed-out content is illustrative and generic. Do not show fake profiles, fake photos, fabricated personal histories, or a sample activity feed.
+Below the hero, show one clearly labeled `EXAMPLE` ranked index. It may switch between a collection and an
+activity example so visitors can understand the product without an account. It must use generic example data,
+not fake profiles, testimonials, photos, usage metrics, or personal histories. The proof section should show
+the ranking, a small note about private context, and the difference between a collection and an activity log.
+
+Finish with a quiet privacy line and `COLLECT`, `LOG`, and `RANK`.
+
+The meter remains the hero's visual idea. The example index is a product proof, not a carousel or a separate
+feature tour. Signed-out content is illustrative and generic. Do not show fake profiles, fake photos,
+fabricated personal histories, or a sample activity feed.
 
 ## Signed-in home
 
@@ -50,6 +59,10 @@ The home screen uses the same dark surface, thin rules, warm type, and one rust 
 - Bottom: low-key totals or recent activity, only when real data exists.
 
 Empty states should explain the first useful action. They should not manufacture a busy dashboard.
+
+## Data ownership
+
+People can download their lists, items, logs, ranks, and personal calls as JSON. The export is deliberately records-only. Photos remain in Worth and are never represented as a backup.
 
 ## Visual rules
 

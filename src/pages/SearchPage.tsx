@@ -18,9 +18,7 @@ export function SearchPage() {
   return (
     <main className="light-page search-page page-width">
       <p className="overline">YOUR ARCHIVE, ALL AT ONCE</p>
-      <h1>
-        Find something<span>.</span>
-      </h1>
+      <h1>Find something</h1>
       <label className="global-search">
         <MagnifyingGlass size={26} />
         <span className="sr-only">Search all lists</span>
@@ -41,7 +39,10 @@ export function SearchPage() {
         <section className="search-results">
           <p className="overline">{results.data.results.length} RESULTS</p>
           {results.data.results.map((result) => (
-            <Link key={`${result.kind}-${result.id}`} to={`/lists/${result.listId}`}>
+            <Link
+              key={`${result.kind}-${result.id}`}
+              to={`/lists/${result.listId}?focus=${result.kind}:${result.id}`}
+            >
               <span>
                 <small>
                   {result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}

@@ -20,6 +20,7 @@ const item = (id: string, title: string): Item => ({
   title,
   type: 'Whiskey',
   note: 'Never share this note',
+  decision: 'would_not_again',
   startedOn: null,
   endedOn: null,
   hasPhoto: true,

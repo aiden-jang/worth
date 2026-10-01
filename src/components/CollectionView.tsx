@@ -2,11 +2,23 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SquaresFour, ListBullets, Rows, Plus } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
-import { moveRank, visibleItems, type ItemSort, type RankFilter } from '../shared/ranking';
+import {
+  moveRank,
+  visibleItems,
+  type DecisionFilter,
+  type ItemSort,
+  type RankFilter,
+} from '../shared/ranking';
 import { api, RequestError } from '../api';
 import { formatDate } from '../format';
 
 type View = 'gallery' | 'list' | 'compact';
+
+function decisionLabel(item: Item): string | null {
+  if (item.decision === 'favorite') return 'Favorite';
+  if (item.decision === 'would_not_again') return 'Would not again';
+  return null;
+}
 
 export function CollectionView({
   list,
@@ -22,15 +34,28 @@ export function CollectionView({
   const client = useQueryClient();
   const [view, setView] = useState<View>(() => {
     const saved = window.localStorage.getItem(`worth:view:${list.id}`);
-    return saved === 'gallery' || saved === 'list' || saved === 'compact' ? saved : 'list';
+    return saved === 'gallery' || saved === 'list' || saved === 'compact' ? saved : 'compact';
   });
   const [search, setSearch] = useState('');
   const [type, setType] = useState('all');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
+  const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
   const [sort, setSort] = useState<ItemSort>('rank');
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
-  const visible = visibleItems(items, list.rankedIds, { search, type, rankFilter, sort });
+  const visible = visibleItems(items, list.rankedIds, {
+    search,
+    type,
+    rankFilter,
+    decisionFilter,
+    sort,
+  });
   const ranks = new Map(list.rankedIds.map((id, index) => [id, index + 1]));
+  const rankedItems = list.rankedIds
+    .map((id) => items.find((item) => item.id === id))
+    .filter((item): item is Item => Boolean(item));
+  const favorite = items.find((item) => item.decision === 'favorite');
+  const wouldNotAgain = items.find((item) => item.decision === 'would_not_again');
+  const primarySignal = favorite ?? rankedItems[0];
 
   const rank = useMutation({
     mutationFn: ({ itemId, position }: { itemId: string; position: number | null }) =>
@@ -106,6 +131,28 @@ export function CollectionView({
         </span>
       </div>
 
+      {primarySignal || wouldNotAgain ? (
+        <section className="collection-signal" aria-label="Ranking summary">
+          {primarySignal && (
+            <div className={favorite ? 'signal-favorite' : ''}>
+              <span>{favorite ? 'Favorite' : 'Top ranked'}</span>
+              <strong>{primarySignal.title}</strong>
+            </div>
+          )}
+          {wouldNotAgain && (
+            <div className="signal-negative">
+              <span>Would not again</span>
+              <strong>{wouldNotAgain.title}</strong>
+            </div>
+          )}
+          <p>
+            {rankedItems.length} ranked {rankedItems.length === 1 ? 'item' : 'items'}
+          </p>
+        </section>
+      ) : items.length > 0 ? (
+        <p className="collection-rank-hint">Rank a few things when you know where they stand.</p>
+      ) : null}
+
       <div className="collection-filters">
         <label className="filter-search">
           <span className="sr-only">Search this list</span>
@@ -135,6 +182,17 @@ export function CollectionView({
             <option value="top5">Top 5</option>
             <option value="top10">Top 10</option>
             <option value="unranked">Unranked</option>
+          </select>
+        </label>
+        <label>
+          <span className="sr-only">Your call</span>
+          <select
+            value={decisionFilter}
+            onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
+          >
+            <option value="all">All calls</option>
+            <option value="favorite">Favorites</option>
+            <option value="would_not_again">Would not again</option>
           </select>
         </label>
         <label>
@@ -172,6 +230,7 @@ export function CollectionView({
                 <th scope="col">Rank</th>
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
+                <th scope="col">Call</th>
                 <th scope="col">Last logged</th>
                 <th scope="col">Times</th>
               </tr>
@@ -186,6 +245,7 @@ export function CollectionView({
                     </button>
                   </td>
                   <td>{item.type || '—'}</td>
+                  <td>{decisionLabel(item) ?? '—'}</td>
                   <td>{formatDate(item.lastLoggedOn)}</td>
                   <td>{item.logCount || '—'}</td>
                 </tr>
@@ -204,6 +264,7 @@ export function CollectionView({
                 <span>
                   {item.type || 'Item'}
                   {item.lastLoggedOn ? ` · Last logged ${formatDate(item.lastLoggedOn)}` : ''}
+                  {decisionLabel(item) ? ` · ${decisionLabel(item)}` : ''}
                 </span>
                 {item.note && <small>{item.note}</small>}
               </button>
@@ -229,7 +290,7 @@ export function CollectionView({
                 )}
                 <span className="gallery-title">
                   <strong>{item.title}</strong>
-                  <small>{item.type || 'Item'}</small>
+                  <small>{[item.type || 'Item', decisionLabel(item)].filter(Boolean).join(' · ')}</small>
                 </span>
               </button>
               <div className="gallery-rank">{rankControl(item)}</div>

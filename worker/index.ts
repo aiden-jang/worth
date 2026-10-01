@@ -7,6 +7,7 @@ import { registerListRoutes } from './routes/lists';
 import { registerRecordRoutes } from './routes/records';
 import { registerShareRoutes, registerPublicShareRoute } from './routes/shares';
 import { registerPhotoRoutes } from './routes/photos';
+import { registerExportRoutes } from './routes/export';
 
 const app = new Hono<AppEnv>();
 const publicApi = new Hono<AppEnv>();
@@ -45,6 +46,7 @@ registerListRoutes(privateApi);
 registerRecordRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
+registerExportRoutes(privateApi);
 
 app.route('/api', publicApi);
 app.route('/api', privateApi);

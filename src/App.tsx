@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { Route, Routes } from 'react-router';
@@ -13,6 +14,45 @@ import { PublicSharePage } from './pages/PublicSharePage';
 const authOrigin =
   import.meta.env.VITE_AUTH_URL ??
   (import.meta.env.DEV ? 'http://localhost:34100' : 'https://accounts.aidenjang.com');
+
+const landingExamples = [
+  {
+    id: 'drinks',
+    name: 'Drinks',
+    itemLabel: 'COLLECTION',
+    favorite: 'Dry Riesling',
+    detail: 'A short private note, only for you.',
+    items: [
+      ['Dry Riesling', 'Wine'],
+      ['Highball', 'Whiskey'],
+      ['Cold brew', 'Coffee'],
+    ],
+  },
+  {
+    id: 'runs',
+    name: 'Runs',
+    itemLabel: 'ACTIVITY',
+    favorite: 'Lake loop',
+    detail: '5.2 mi, logged when it happened.',
+    items: [
+      ['Lake loop', '5.2 mi'],
+      ['Easy four', '4.0 mi'],
+      ['After work', '3.1 mi'],
+    ],
+  },
+  {
+    id: 'places',
+    name: 'Places',
+    itemLabel: 'COLLECTION',
+    favorite: 'Corner table',
+    detail: 'Keep the context that makes a place worth returning to.',
+    items: [
+      ['Corner table', 'Restaurant'],
+      ['Late lunch', 'Restaurant'],
+      ['Window seat', 'Coffee'],
+    ],
+  },
+] as const;
 
 export function App() {
   return (
@@ -48,6 +88,8 @@ function PrivateApp() {
 
 function Welcome({ authOrigin }: { authOrigin: string }) {
   const returnTo = window.location.href;
+  const [exampleId, setExampleId] = useState<(typeof landingExamples)[number]['id']>('drinks');
+  const example = landingExamples.find((entry) => entry.id === exampleId) ?? landingExamples[0];
   return (
     <main className="welcome">
       <header className="welcome-top">
@@ -72,26 +114,77 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
         <h1 id="landing-title">worth</h1>
         <div className="landing-message">
           <p>Keep the things worth keeping.</p>
+          <small>A private archive for what you tried, did, kept, and would not do again.</small>
           <a className="landing-cta" href={signupUrl(authOrigin, returnTo)}>
             Start your archive <span>→</span>
           </a>
         </div>
       </section>
-      <footer className="landing-pillars" aria-label="What Worth is for">
-        <div>
-          <span>01</span>
-          <strong>Collect</strong>
-          <p>What you find.</p>
+      <section className="landing-proof" aria-labelledby="landing-proof-title">
+        <header className="landing-proof-head">
+          <div>
+            <p className="overline">INSIDE WORTH</p>
+            <h2 id="landing-proof-title">The list is only the beginning.</h2>
+          </div>
+          <p>Rank what held up. Keep the reason. Find it when it matters again.</p>
+        </header>
+        <div className="landing-example-switch" role="group" aria-label="Preview example lists">
+          {landingExamples.map((entry) => (
+            <button
+              className={entry.id === example.id ? 'active' : ''}
+              key={entry.id}
+              aria-pressed={entry.id === example.id}
+              onClick={() => setExampleId(entry.id)}
+            >
+              {entry.name}
+            </button>
+          ))}
         </div>
-        <div>
-          <span>02</span>
-          <strong>Log</strong>
-          <p>What happened.</p>
+        <div className="landing-sample" aria-label={`Example ${example.name} list`}>
+          <header className="landing-sample-head">
+            <div>
+              <span>{example.itemLabel} / EXAMPLE</span>
+              <strong>{example.name}</strong>
+            </div>
+            <div>
+              <span>Favorite right now</span>
+              <strong>{example.favorite}</strong>
+            </div>
+          </header>
+          <ol>
+            {example.items.map(([title, detail], index) => (
+              <li key={title}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{title}</strong>
+                <small>{detail}</small>
+              </li>
+            ))}
+          </ol>
+          <aside>
+            <span>PRIVATE CONTEXT</span>
+            <p>{example.detail}</p>
+            <small>Notes, dates, and photos stay yours.</small>
+          </aside>
         </div>
-        <div>
-          <span>03</span>
-          <strong>Rank</strong>
-          <p>What held up.</p>
+      </section>
+      <footer className="landing-close">
+        <p>Private by default. Share only a ranked snapshot when you choose.</p>
+        <div className="landing-pillars" aria-label="What Worth is for">
+          <div>
+            <span>01</span>
+            <strong>Collect</strong>
+            <p>What you find.</p>
+          </div>
+          <div>
+            <span>02</span>
+            <strong>Log</strong>
+            <p>What happened.</p>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Rank</strong>
+            <p>What held up.</p>
+          </div>
         </div>
       </footer>
     </main>

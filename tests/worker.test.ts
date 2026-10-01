@@ -17,7 +17,7 @@ let platform: PlatformProxy<Env>;
 
 beforeAll(async () => {
   platform = await getPlatformProxy<Env>({ persist: false, remoteBindings: false });
-  for (const file of ['0001_initial.sql', '0002_photo_storage.sql']) {
+  for (const file of ['0001_initial.sql', '0002_photo_storage.sql', '0003_item_decisions.sql']) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
       .split(';')
@@ -72,6 +72,7 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
     title: 'Booker’s Bourbon',
     type: 'Whiskey',
     note: 'Private tasting note',
+    decision: 'favorite',
     startedOn: null,
     endedOn: null,
   });
@@ -91,11 +92,28 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
   });
   expect(ranked.status).toBe(200);
   const rankedOverview = (await (await call('/overview', 'alice')).json()) as {
-    topPicks: { itemId: string; listName: string; rank: number }[];
+    favorites: { itemId: string; listName: string }[];
   };
-  expect(rankedOverview.topPicks).toContainEqual(
-    expect.objectContaining({ itemId: item.id, listName: 'Drinks', rank: 1 }),
+  expect(rankedOverview.favorites).toContainEqual(
+    expect.objectContaining({ itemId: item.id, listName: 'Drinks' }),
   );
+
+  const changedDecision = await call(`/items/${item.id}`, 'alice', 'PATCH', {
+    decision: 'would_not_again',
+  });
+  expect(changedDecision.status).toBe(200);
+  expect(((await changedDecision.json()) as { item: { decision: string | null } }).item.decision).toBe(
+    'would_not_again',
+  );
+  const noFavorites = (await (await call('/overview', 'alice')).json()) as {
+    favorites: unknown[];
+    notAgain: { itemId: string; listName: string }[];
+  };
+  expect(noFavorites.favorites).toEqual([]);
+  expect(noFavorites.notAgain).toContainEqual(
+    expect.objectContaining({ itemId: item.id, listName: 'Drinks' }),
+  );
+  expect((await call(`/items/${item.id}`, 'alice', 'PATCH', { decision: 'maybe' })).status).toBe(400);
 
   const createdShare = await call(`/lists/${list.id}/shares`, 'alice', 'POST', { limit: 5 });
   expect(createdShare.status).toBe(201);
@@ -141,6 +159,68 @@ test('cross-origin writes fail before reaching private data', async () => {
   );
   expect(response.status).toBe(403);
   expect(response.headers.get('Cache-Control')).toContain('no-store');
+});
+
+test('record exports are owner-scoped and do not include photo binaries', async () => {
+  const createdList = await call('/lists', 'exporter', 'POST', {
+    name: 'Wines',
+    kind: 'collection',
+    description: '',
+  });
+  const list = ((await createdList.json()) as { list: { id: string } }).list;
+
+  const createdItem = await call(`/lists/${list.id}/items`, 'exporter', 'POST', {
+    title: 'Ridge Monte Bello',
+    type: 'Cabernet',
+    note: 'Save for a long dinner.',
+    decision: 'favorite',
+    startedOn: null,
+    endedOn: null,
+  });
+  const item = ((await createdItem.json()) as { item: { id: string } }).item;
+  const createdLog = await call(`/lists/${list.id}/logs`, 'exporter', 'POST', {
+    itemId: item.id,
+    title: 'Opened with friends',
+    happenedOn: '2026-09-28',
+    note: '',
+    amount: null,
+    unit: '',
+    sets: null,
+    reps: null,
+  });
+  expect(createdLog.status).toBe(201);
+
+  const response = await call('/export/records', 'exporter');
+  expect(response.status).toBe(200);
+  expect(response.headers.get('content-type')).toContain('application/json');
+  expect(response.headers.get('content-disposition')).toMatch(
+    /^attachment; filename="worth-records-\d{4}-\d{2}-\d{2}\.json"$/,
+  );
+
+  const exported = (await response.json()) as {
+    schemaVersion: number;
+    photosExcluded: boolean;
+    lists: Array<{ id: string }>;
+    items: Array<{ title: string; decision: string | null; note: string }>;
+    logs: Array<{ title: string; hasPhoto: boolean }>;
+  };
+  expect(exported.schemaVersion).toBe(1);
+  expect(exported.photosExcluded).toBe(true);
+  expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
+  expect(exported.items).toEqual([
+    expect.objectContaining({
+      title: 'Ridge Monte Bello',
+      decision: 'favorite',
+      note: 'Save for a long dinner.',
+    }),
+  ]);
+  expect(exported.logs).toEqual([expect.objectContaining({ title: 'Opened with friends', hasPhoto: false })]);
+
+  const otherOwner = await call('/export/records', 'someoneelse');
+  const otherExport = (await otherOwner.json()) as { lists: unknown[]; items: unknown[]; logs: unknown[] };
+  expect(otherExport.lists).toEqual([]);
+  expect(otherExport.items).toEqual([]);
+  expect(otherExport.logs).toEqual([]);
 });
 
 test('photos stay private, validate uploads, and disappear with their item', async () => {
@@ -231,10 +311,12 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   };
   expect(results.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
   const overview = (await (await call('/overview', 'alice')).json()) as {
-    lastTimes: { title: string }[];
+    lastTimes: { title: string; happenedOn: string }[];
     recent: { id: string }[];
   };
-  expect(overview.lastTimes).toContainEqual(expect.objectContaining({ title: 'Evening run' }));
+  expect(overview.lastTimes).toContainEqual(
+    expect.objectContaining({ title: 'Evening run', happenedOn: '2026-09-30' }),
+  );
   expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id }));
 
   expect((await call(`/logs/${log.id}`, 'alice', 'PATCH', { amount: 6.1 })).status).toBe(200);

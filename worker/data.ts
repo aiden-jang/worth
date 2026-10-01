@@ -1,4 +1,13 @@
-import type { Item, ListDetail, ListSummary, Log, ShareSummary } from '../src/shared/models';
+import type { Item, ItemDecision, ListDetail, ListSummary, Log, ShareSummary } from '../src/shared/models';
+
+export type RecordExport = {
+  schemaVersion: 1;
+  exportedAt: string;
+  photosExcluded: true;
+  lists: ListDetail[];
+  items: Item[];
+  logs: Log[];
+};
 
 export class ApiError extends Error {
   constructor(
@@ -28,6 +37,7 @@ type ItemRow = {
   title: string;
   type: string;
   note: string;
+  decision: ItemDecision | null;
   started_on: string | null;
   ended_on: string | null;
   has_photo: number;
@@ -114,6 +124,7 @@ function mapItem(row: ItemRow): Item {
     title: row.title,
     type: row.type,
     note: row.note,
+    decision: row.decision,
     startedOn: row.started_on,
     endedOn: row.ended_on,
     hasPhoto: Boolean(row.has_photo),
@@ -125,7 +136,7 @@ function mapItem(row: ItemRow): Item {
 }
 
 const itemQuery = `
-  SELECT i.id, i.list_id, i.title, i.type, i.note, i.started_on, i.ended_on,
+  SELECT i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
     i.created_at, i.updated_at,
     EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id = i.id) AS has_photo,
     (SELECT COUNT(*) FROM logs g WHERE g.item_id = i.id) AS log_count,
@@ -205,4 +216,26 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
     expiresAt: row.expires_at,
     revokedAt: row.revoked_at,
   }));
+}
+
+export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
+  const [listResult, itemResult, logResult] = await Promise.all([
+    db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId).all<ListRow>(),
+    db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId).all<ItemRow>(),
+    db
+      .prepare(
+        `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
+        FROM logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
+      )
+      .bind(ownerId)
+      .all<LogRow>(),
+  ]);
+  return {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    photosExcluded: true,
+    lists: listResult.results.map(mapList),
+    items: itemResult.results.map(mapItem),
+    logs: logResult.results.map(mapLog),
+  };
 }

@@ -1,6 +1,7 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
   Item,
+  ItemDecision,
   ListDetail,
   ListSummary,
   Log,
@@ -84,6 +85,7 @@ export interface ItemInput {
   title: string;
   type: string;
   note: string;
+  decision: ItemDecision | null;
   startedOn: string | null;
   endedOn: string | null;
 }

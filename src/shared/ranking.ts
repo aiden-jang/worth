@@ -18,6 +18,7 @@ export function moveRank(rankedIds: string[], itemId: string, position: number |
 
 export type ItemSort = 'rank' | 'recent' | 'name' | 'times';
 export type RankFilter = 'all' | 'top5' | 'top10' | 'unranked';
+export type DecisionFilter = 'all' | 'favorite' | 'would_not_again';
 
 export function visibleItems(
   items: Item[],
@@ -26,6 +27,7 @@ export function visibleItems(
     search: string;
     type: string;
     rankFilter: RankFilter;
+    decisionFilter: DecisionFilter;
     sort: ItemSort;
   },
 ): Item[] {
@@ -36,9 +38,10 @@ export function visibleItems(
     if (options.type !== 'all' && item.type !== options.type) return false;
     if (search && !`${item.title} ${item.type} ${item.note}`.toLocaleLowerCase().includes(search))
       return false;
-    if (options.rankFilter === 'unranked') return position === undefined;
-    if (options.rankFilter === 'top5') return position !== undefined && position < 5;
-    if (options.rankFilter === 'top10') return position !== undefined && position < 10;
+    if (options.rankFilter === 'unranked' && position !== undefined) return false;
+    if (options.rankFilter === 'top5' && (position === undefined || position >= 5)) return false;
+    if (options.rankFilter === 'top10' && (position === undefined || position >= 10)) return false;
+    if (options.decisionFilter !== 'all' && item.decision !== options.decisionFilter) return false;
     return true;
   });
   return filtered.sort((a, b) => {

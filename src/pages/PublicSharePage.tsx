@@ -29,17 +29,25 @@ export function PublicSharePage() {
         <span>SHARED LIST</span>
       </header>
       <section className="public-content">
-        <p className="overline">A SHORT LIST FROM SOMEONE</p>
-        <h1>
-          {share.title}
-          <span>.</span>
-        </h1>
+        <div className="public-content-head">
+          <div>
+            <p className="overline">RANKED LIST</p>
+            <h1>{share.title}</h1>
+          </div>
+          {share.entries[0] && (
+            <aside className="public-favorite">
+              <span>Favorite right now</span>
+              <strong>{share.entries[0].title}</strong>
+              {share.entries[0].type && <small>{share.entries[0].type}</small>}
+            </aside>
+          )}
+        </div>
         <ol>
           {share.entries.map((entry) => (
             <li key={`${entry.rank}-${entry.title}`}>
               <span>{String(entry.rank).padStart(2, '0')}</span>
               <strong>{entry.title}</strong>
-              <small>{entry.type}</small>
+              {entry.type && <small>{entry.type}</small>}
             </li>
           ))}
         </ol>

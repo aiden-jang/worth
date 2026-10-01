@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
+const itemDecision = z.enum(['favorite', 'would_not_again']).nullable();
 const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -26,6 +27,7 @@ export const itemInput = z
     title: shortText(120),
     type: z.string().trim().max(60).default(''),
     note: note.default(''),
+    decision: itemDecision.default(null),
     startedOn: date.nullable().default(null),
     endedOn: date.nullable().default(null),
   })
@@ -39,6 +41,7 @@ export const itemPatch = z
     title: shortText(120).optional(),
     type: z.string().trim().max(60).optional(),
     note: note.optional(),
+    decision: itemDecision.optional(),
     startedOn: date.nullable().optional(),
     endedOn: date.nullable().optional(),
   })

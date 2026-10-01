@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
 import type { Log } from '../shared/models';
 import { api, type LogInput } from '../api';
-import { formatDate, today } from '../format';
+import { formatDate, formatElapsedDays, today } from '../format';
 import { PhotoControl } from './PhotoControl';
 
 export function ActivityView({
@@ -38,6 +38,10 @@ export function ActivityView({
           ? a.happenedOn.localeCompare(b.happenedOn)
           : b.happenedOn.localeCompare(a.happenedOn),
     );
+  const lastLog = logs.reduce<Log | null>(
+    (latest, log) => (!latest || log.happenedOn > latest.happenedOn ? log : latest),
+    null,
+  );
 
   function close() {
     setSelected(null);
@@ -56,6 +60,18 @@ export function ActivityView({
 
   return (
     <section className="activity-view">
+      {lastLog && (
+        <section className="activity-summary" aria-label="Latest activity">
+          <div>
+            <span>Last done</span>
+            <strong>{lastLog.title}</strong>
+          </div>
+          <div>
+            <span>{formatElapsedDays(lastLog.happenedOn)}</span>
+            <small>{formatDate(lastLog.happenedOn)}</small>
+          </div>
+        </section>
+      )}
       <div className="activity-tools">
         <input
           aria-label="Search activity"
@@ -90,7 +106,10 @@ export function ActivityView({
         <div className="activity-rows">
           {visible.map((log) => (
             <article className="activity-row" key={log.id}>
-              <span className="activity-date">{formatDate(log.happenedOn)}</span>
+              <span className="activity-date">
+                {formatElapsedDays(log.happenedOn)}
+                <small>{formatDate(log.happenedOn)}</small>
+              </span>
               <button className="activity-main" onClick={() => setSelected(log)}>
                 <strong>{log.title}</strong>
                 <small>{formatMetric(log) || log.note || 'View detail'}</small>
@@ -168,7 +187,7 @@ function ActivityEditor({
 
   return (
     <dialog
-      className="editor-dialog"
+      className="editor-dialog activity-editor-dialog"
       ref={dialog}
       onClose={onClose}
       onClick={(event) => {
@@ -194,7 +213,7 @@ function ActivityEditor({
             listId={listId}
           />
         )}
-        <form className="editor-form" onSubmit={submit}>
+        <form className="editor-form record-form" onSubmit={submit}>
           <label>
             What
             <input

@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, DownloadSimple, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind } from '../shared/models';
@@ -20,8 +20,9 @@ export function ListsPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const creating = params.get('create') === '1';
+  const requestedKind = params.get('kind');
   const [name, setName] = useState('');
-  const [kind, setKind] = useState<ListKind>('collection');
+  const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
   const create = useMutation({
     mutationFn: api.createList,
@@ -32,11 +33,15 @@ export function ListsPage() {
     },
   });
 
+  useEffect(() => {
+    if (requestedKind === 'collection' || requestedKind === 'activity') setKind(requestedKind);
+  }, [requestedKind]);
+
   function chooseSuggestion(suggestion: (typeof suggestions)[number]) {
     setName(suggestion.name);
     setKind(suggestion.kind);
     setDescription(suggestion.description);
-    setParams({ create: '1' });
+    setParams({ create: '1', kind: suggestion.kind });
   }
 
   function submit(event: FormEvent) {
@@ -50,22 +55,30 @@ export function ListsPage() {
       <div className="page-head">
         <div>
           <p className="overline">YOUR ARCHIVE</p>
-          <h1>
-            Lists<span>.</span>
-          </h1>
+          <h1>Lists</h1>
           <p>Keep similar things together. Rank a collection, or just log what happened.</p>
         </div>
-        <button className="button button-accent" onClick={() => setParams({ create: '1' })}>
-          <Plus size={18} /> New list
-        </button>
+        <div className="list-page-actions">
+          <a
+            className="button button-outline"
+            href="/api/export/records"
+            title="Downloads lists, items, and logs as JSON. Photos are not included."
+          >
+            <DownloadSimple size={18} /> Download records
+          </a>
+          <button className="button button-accent" onClick={() => setParams({ create: '1' })}>
+            <Plus size={18} /> New list
+          </button>
+          <small>JSON only. Photos stay in Worth.</small>
+        </div>
       </div>
 
       {creating && (
         <section className="create-panel" aria-label="Create a list">
           <div className="panel-title">
             <div>
-              <p className="overline">A NEW CORNER OF YOUR ARCHIVE</p>
-              <h2>What are you keeping?</h2>
+              <p className="overline">NEW LIST</p>
+              <h2>Name the list.</h2>
             </div>
             <button className="icon-button" aria-label="Close" onClick={() => setParams({})}>
               <X size={20} />
@@ -119,18 +132,21 @@ export function ListsPage() {
             <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
               <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
               <span className="directory-name">
-                {list.name}
+                <strong>{list.name}</strong>
                 <small>{list.description || (list.kind === 'collection' ? 'Collection' : 'Activity')}</small>
               </span>
-              <span className="directory-count">
-                {list.kind === 'collection' ? list.itemCount : list.logCount}{' '}
-                {list.kind === 'collection'
-                  ? list.itemCount === 1
-                    ? 'item'
-                    : 'items'
-                  : list.logCount === 1
-                    ? 'log'
-                    : 'logs'}
+              <span className="directory-meta">
+                <small>{list.kind}</small>
+                <strong>
+                  {list.kind === 'collection' ? list.itemCount : list.logCount}{' '}
+                  {list.kind === 'collection'
+                    ? list.itemCount === 1
+                      ? 'item'
+                      : 'items'
+                    : list.logCount === 1
+                      ? 'log'
+                      : 'logs'}
+                </strong>
               </span>
               <ArrowRight size={20} />
             </Link>

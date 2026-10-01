@@ -58,17 +58,14 @@ export function ListPage() {
   const selected = items.find((item) => item.id === selectedId) ?? null;
 
   return (
-    <main className="light-page list-page page-width">
+    <main className={`light-page list-page page-width ${list.kind}-list-page`}>
       <Link className="back-link" to="/lists">
         <ArrowLeft size={16} /> All lists
       </Link>
       <section className="list-page-head">
         <div>
           <p className="overline">{list.kind === 'collection' ? 'YOUR COLLECTION' : 'YOUR ACTIVITY'}</p>
-          <h1>
-            {list.name}
-            <span>.</span>
-          </h1>
+          <h1>{list.name}</h1>
           <p>
             {list.description ||
               (list.kind === 'collection' ? 'Things you want to remember.' : 'A record of when it happened.')}
@@ -203,7 +200,10 @@ function ListSettings({
   return (
     <section className="settings-panel">
       <div className="panel-title">
-        <h2>List settings</h2>
+        <div>
+          <p className="overline">LIST SETTINGS</p>
+          <h2>{name}</h2>
+        </div>
         <button className="icon-button" aria-label="Close settings" onClick={onClose}>
           <X size={19} />
         </button>
@@ -231,15 +231,19 @@ function ListSettings({
         </button>
         {update.isError && <p className="form-error">{update.error.message}</p>}
       </form>
-      <button
-        className="text-danger"
-        disabled={remove.isPending}
-        onClick={() => {
-          if (window.confirm(`Delete ${name} and everything in it? This cannot be undone.`)) remove.mutate();
-        }}
-      >
-        Delete this list
-      </button>
+      <div className="settings-danger">
+        <span>This removes every item and log in this list.</span>
+        <button
+          className="text-danger"
+          disabled={remove.isPending}
+          onClick={() => {
+            if (window.confirm(`Delete ${name} and everything in it? This cannot be undone.`))
+              remove.mutate();
+          }}
+        >
+          Delete this list
+        </button>
+      </div>
       {remove.isError && <p className="form-error">{remove.error.message}</p>}
     </section>
   );

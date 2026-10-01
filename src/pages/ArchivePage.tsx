@@ -3,6 +3,8 @@ import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../api';
+import { formatElapsedDays } from '../format';
+import type { DecisionPick } from '../shared/models';
 
 const dateLabel = (value: string) =>
   new Intl.DateTimeFormat('en-US', {
@@ -91,31 +93,38 @@ export function ArchivePage() {
             </section>
             <aside className="archive-shortlist" aria-labelledby="shortlist-heading">
               <header className="workspace-head">
-                <p id="shortlist-heading">Your shortlist</p>
+                <p id="shortlist-heading">Your calls</p>
                 <Link to="/lists">
                   Lists <ArrowRight size={15} />
                 </Link>
               </header>
-              {data.topPicks.length ? (
-                <ol className="shortlist-items">
-                  {data.topPicks.map((pick) => (
-                    <li key={pick.itemId}>
-                      <span>{String(pick.rank).padStart(2, '0')}</span>
-                      <Link to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
-                        <strong>{pick.title}</strong>
-                        <small>
-                          {pick.listName}
-                          {pick.type ? ` · ${pick.type}` : ''}
-                        </small>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
+              {data.favorites.length || data.notAgain.length ? (
+                <div className="shortlist-groups">
+                  <DecisionList label="Favorites" code="FAV" picks={data.favorites} />
+                  <DecisionList label="Would not again" code="NO" picks={data.notAgain} />
+                </div>
               ) : (
-                <div className="workspace-empty">Rank a collection to keep its first pick close.</div>
+                <div className="workspace-empty">Mark a favorite in any collection to keep it close.</div>
               )}
             </aside>
           </div>
+          {data.lastTimes.length > 0 && (
+            <section className="archive-last-times" aria-labelledby="last-times-heading">
+              <header>
+                <p id="last-times-heading">Last done</p>
+                <span>From activity logs</span>
+              </header>
+              <ol>
+                {data.lastTimes.map((entry) => (
+                  <li key={entry.title}>
+                    <strong>{entry.title}</strong>
+                    <time dateTime={entry.happenedOn}>{formatElapsedDays(entry.happenedOn)}</time>
+                    <small>{dateLabel(entry.happenedOn).toUpperCase()}</small>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
           <footer className="archive-totals" aria-label="Archive totals">
             <div>
               <span>Records</span>
@@ -136,6 +145,29 @@ export function ArchivePage() {
   );
 }
 
+function DecisionList({ label, code, picks }: { label: string; code: string; picks: DecisionPick[] }) {
+  if (!picks.length) return null;
+  return (
+    <section className="shortlist-group" aria-label={label}>
+      <p>{label}</p>
+      <ol className="shortlist-items">
+        {picks.map((pick) => (
+          <li key={pick.itemId}>
+            <span>{code}</span>
+            <Link to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
+              <strong>{pick.title}</strong>
+              <small>
+                {pick.listName}
+                {pick.type ? ` · ${pick.type}` : ''}
+              </small>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function EmptyArchive() {
   return (
     <section className="empty-archive page-width">
@@ -143,12 +175,17 @@ function EmptyArchive() {
       <div>
         <h2>Start with one thing.</h2>
         <p>
-          Make a list for anything you want to find, revisit, or avoid next time. Add the first record when it
-          comes to mind.
+          Start with a collection for things you want to compare, or an activity for things you want to log
+          over time.
         </p>
-        <Link className="button button-accent" to="/lists?create=1">
-          Create your first list <ArrowRight size={18} />
-        </Link>
+        <div className="empty-archive-actions">
+          <Link className="button button-accent" to="/lists?create=1&kind=collection">
+            Start a collection <ArrowRight size={18} />
+          </Link>
+          <Link className="button button-outline" to="/lists?create=1&kind=activity">
+            Start an activity <ArrowRight size={18} />
+          </Link>
+        </div>
       </div>
       <div className="empty-kinds">
         <span>DRINKS</span>

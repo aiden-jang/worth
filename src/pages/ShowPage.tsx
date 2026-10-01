@@ -49,11 +49,17 @@ export function ShowPage() {
         </button>
       </header>
       <div className="show-intro">
-        <p className="overline">YOUR LIST</p>
-        <h1>
-          {list.name}
-          <span>.</span>
-        </h1>
+        <div className="show-intro-copy">
+          <p className="overline">YOUR RANKED LIST</p>
+          <h1>{list.name}</h1>
+        </div>
+        {ranked[0] && (
+          <aside className="show-favorite">
+            <span>Favorite right now</span>
+            <strong>{ranked[0].title}</strong>
+            {ranked[0].type && <small>{ranked[0].type}</small>}
+          </aside>
+        )}
         <div className="show-controls" role="group" aria-label="How many rankings to show">
           {([5, 10, 'all'] as const).map((value) => (
             <button
@@ -82,9 +88,7 @@ export function ShowPage() {
           Nothing ranked yet. <Link to={`/lists/${list.id}`}>Add a rank</Link> to show your list.
         </div>
       )}
-      <footer className="show-footer">
-        Only the ranking is shown here. Your notes and history stay private.
-      </footer>
+      <footer className="show-footer">Ranking only. Notes and history stay private.</footer>
     </main>
   );
 }

@@ -74,35 +74,46 @@ export function PhotoControl({
     <div className="photo-control">
       {hasPhoto && <img src={`/api/${kind}/${id}/photo?v=${version}`} alt="Your uploaded memory" />}
       <div className="photo-actions">
-        <label className="button button-outline">
-          <Camera size={17} /> {hasPhoto ? 'Replace photo' : 'Add a photo'}
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            hidden
-            disabled={upload.isPending}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) upload.mutate(file);
-              event.target.value = '';
-            }}
-          />
-        </label>
-        {hasPhoto && (
-          <button
-            className="icon-button"
-            aria-label="Remove photo"
-            disabled={remove.isPending}
-            onClick={() => {
-              if (window.confirm('Remove this photo?')) remove.mutate();
-            }}
-          >
-            <Trash size={18} />
-          </button>
-        )}
+        <p className="photo-state">{hasPhoto ? 'Private photo' : 'No photo attached'}</p>
+        <div className="photo-buttons">
+          <label className="button button-outline">
+            <Camera size={17} /> {hasPhoto ? 'Replace photo' : 'Add a photo'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              disabled={upload.isPending}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) upload.mutate(file);
+                event.target.value = '';
+              }}
+            />
+          </label>
+          {hasPhoto && (
+            <button
+              className="icon-button"
+              aria-label="Remove photo"
+              disabled={remove.isPending}
+              onClick={() => {
+                if (window.confirm('Remove this photo?')) remove.mutate();
+              }}
+            >
+              <Trash size={18} />
+            </button>
+          )}
+        </div>
       </div>
-      {upload.isPending && <p className="muted">Uploading photo…</p>}
-      {error && <p className="form-error">{error}</p>}
+      {upload.isPending && (
+        <p className="muted" role="status">
+          Uploading photo…
+        </p>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
