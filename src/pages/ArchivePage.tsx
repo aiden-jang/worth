@@ -108,6 +108,33 @@ export function ArchivePage() {
               )}
             </aside>
           </div>
+          <section className="archive-lists" aria-labelledby="archive-lists-heading">
+            <header className="workspace-head">
+              <p id="archive-lists-heading">Your lists</p>
+              <Link to="/lists">
+                Manage lists <ArrowRight size={15} />
+              </Link>
+            </header>
+            <ol>
+              {data.lists.map((list, index) => {
+                const count = list.kind === 'collection' ? list.itemCount : list.logCount;
+                const noun = list.kind === 'collection' ? 'item' : 'log';
+                return (
+                  <li key={list.id}>
+                    <Link to={`/lists/${list.id}`}>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <strong>{list.name}</strong>
+                      <small>{list.kind}</small>
+                      <em>
+                        {count} {count === 1 ? noun : `${noun}s`}
+                      </em>
+                      <ArrowRight size={17} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
           {data.lastTimes.length > 0 && (
             <section className="archive-last-times" aria-labelledby="last-times-heading">
               <header>

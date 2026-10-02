@@ -371,6 +371,68 @@ textarea::placeholder {
 .archive-shortlist {
   border-left: 1px solid var(--line);
 }
+.archive-lists {
+  border-bottom: 1px solid var(--line);
+}
+.archive-lists ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.archive-lists li {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+.archive-lists li:last-child {
+  border-right: 0;
+}
+.archive-lists a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 96px;
+  padding: 1rem 1.35rem;
+  transition: background-color 160ms ease;
+}
+.archive-lists a:hover {
+  background: var(--raised);
+}
+.archive-lists a > span {
+  color: var(--acid);
+  font: 500 0.61rem var(--mono);
+}
+.archive-lists a strong {
+  overflow: hidden;
+  color: var(--paper);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.archive-lists a small,
+.archive-lists a em {
+  grid-column: 2;
+  color: var(--faint);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.archive-lists a em {
+  color: var(--muted);
+  font-style: normal;
+}
+.archive-lists a svg {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  color: var(--muted);
+}
+.archive-lists a:hover svg {
+  color: var(--acid);
+}
 .workspace-head {
   display: flex;
   align-items: center;
@@ -498,7 +560,7 @@ textarea::placeholder {
   letter-spacing: -0.08em;
 }
 .shortlist-group:last-child .shortlist-items > li > span {
-  color: var(--rust);
+  color: var(--acid);
 }
 .shortlist-items a {
   display: grid;
@@ -1029,7 +1091,7 @@ select:focus {
   color: var(--acid);
 }
 .collection-signal .signal-negative span {
-  color: var(--rust);
+  color: var(--acid);
 }
 .collection-signal p {
   padding-bottom: 0.2rem;
@@ -1583,8 +1645,8 @@ dialog::backdrop {
   color: var(--paper);
 }
 .item-decision button:nth-child(2).active {
-  border-color: var(--rust);
-  color: var(--rust);
+  border-color: var(--acid);
+  color: var(--acid);
 }
 .item-editor-dialog .photo-control,
 .activity-editor-dialog .photo-control {
@@ -2619,6 +2681,17 @@ dialog::backdrop {
   }
   .archive-totals strong {
     font-size: 1.35rem;
+  }
+  .archive-lists li {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .archive-lists li:last-child {
+    border-bottom: 0;
+  }
+  .archive-lists a {
+    min-height: 82px;
+    padding: 0.9rem 1rem;
   }
   .empty-archive {
     display: block;
