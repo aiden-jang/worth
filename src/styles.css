@@ -1793,6 +1793,16 @@ dialog::backdrop {
   margin-top: 2.25rem;
   border-top: 1px solid var(--line-strong);
 }
+.add-list-group + .add-list-group {
+  margin-top: 1.4rem;
+}
+.add-list-group > p {
+  margin: 1rem 0 0.4rem;
+  color: var(--faint);
+  font: 500 0.6rem var(--mono);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
 .add-list-choices button {
   display: flex;
   width: 100%;

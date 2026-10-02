@@ -32,6 +32,8 @@ export function AppShell({
     rememberedListId,
     lists.data?.lists ?? [],
   );
+  const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
 
   function rememberList(listId: string) {
     window.sessionStorage.setItem(quickCaptureStorageKey, listId);
@@ -137,20 +139,42 @@ export function AppShell({
           </button>
         </div>
         <div className="add-list-choices">
-          {lists.data?.lists.map((list) => (
-            <button key={list.id} onClick={() => openList(list.id)}>
-              <span>
-                {list.name}
-                <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>
-              </span>
-              <ArrowRight size={18} />
-            </button>
-          ))}
+          {collectionLists.length > 0 && (
+            <ListPickerGroup label="Collections" lists={collectionLists} onOpen={openList} />
+          )}
+          {activityLists.length > 0 && (
+            <ListPickerGroup label="Activity" lists={activityLists} onOpen={openList} />
+          )}
         </div>
         <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
           Create a new list <ArrowRight size={16} />
         </Link>
       </dialog>
     </div>
+  );
+}
+
+function ListPickerGroup({
+  label,
+  lists,
+  onOpen,
+}: {
+  label: string;
+  lists: { id: string; name: string; kind: 'collection' | 'activity' }[];
+  onOpen: (id: string) => void;
+}) {
+  return (
+    <section className="add-list-group" aria-label={label}>
+      <p>{label}</p>
+      {lists.map((list) => (
+        <button key={list.id} onClick={() => onOpen(list.id)}>
+          <span>
+            {list.name}
+            <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>
+          </span>
+          <ArrowRight size={18} />
+        </button>
+      ))}
+    </section>
   );
 }
