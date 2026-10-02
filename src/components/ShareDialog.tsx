@@ -4,6 +4,14 @@ import { Check, Copy, LinkSimple, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
 import { rankedItems } from '../shared/ranking';
 import { api } from '../api';
+import { ConfirmDialog } from './ConfirmDialog';
+
+function expiryLabel(expiresAt: number): string {
+  const days = Math.max(0, Math.ceil((expiresAt - Date.now()) / 86_400_000));
+  if (days === 0) return 'Expires today';
+  if (days === 1) return 'Expires tomorrow';
+  return `Expires in ${days} days`;
+}
 
 export function ShareDialog({
   list,
@@ -19,6 +27,7 @@ export function ShareDialog({
   const [limit, setLimit] = useState<5 | 10 | 'all'>(5);
   const [link, setLink] = useState('');
   const [copied, setCopied] = useState(false);
+  const [shareToRevoke, setShareToRevoke] = useState<string | null>(null);
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
   const ranked = rankedItems(list, items);
   const preview = limit === 'all' ? ranked : ranked.slice(0, limit);
@@ -42,6 +51,7 @@ export function ShareDialog({
   const revoke = useMutation({
     mutationFn: api.revokeShare,
     onSuccess: () => {
+      setShareToRevoke(null);
       void client.invalidateQueries({ queryKey: ['shares', list.id] });
     },
   });
@@ -139,12 +149,12 @@ export function ShareDialog({
               <div key={share.id}>
                 <span>
                   {share.title}
-                  <small>Expires {new Date(share.expiresAt).toLocaleDateString()}</small>
+                  <small>{expiryLabel(share.expiresAt)}</small>
                 </span>
                 <button
                   className="text-danger"
                   disabled={revoke.isPending}
-                  onClick={() => revoke.mutate(share.id)}
+                  onClick={() => setShareToRevoke(share.id)}
                 >
                   Revoke
                 </button>
@@ -154,6 +164,18 @@ export function ShareDialog({
         )}
         {revoke.isError && <p className="form-error">{revoke.error.message}</p>}
       </div>
+      {shareToRevoke && (
+        <ConfirmDialog
+          eyebrow="REVOKE LINK"
+          title="Revoke this shared ranking?"
+          description="Anyone with this link will lose access immediately. You can always create a new link later."
+          confirmLabel="Revoke link"
+          pending={revoke.isPending}
+          error={revoke.isError ? revoke.error.message : undefined}
+          onConfirm={() => revoke.mutate(shareToRevoke)}
+          onClose={() => setShareToRevoke(null)}
+        />
+      )}
     </dialog>
   );
 }
