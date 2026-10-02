@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SquaresFour, ListBullets, Rows, Plus } from '@phosphor-icons/react';
+import { SquaresFour, ListBullets, Rows, Plus, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
 import {
   moveRank,
@@ -49,6 +49,12 @@ export function CollectionView({
     decisionFilter,
     sort,
   });
+  const hasFilters =
+    search.trim().length > 0 ||
+    type !== 'all' ||
+    rankFilter !== 'all' ||
+    decisionFilter !== 'all' ||
+    sort !== 'rank';
   const ranks = new Map(list.rankedIds.map((id, index) => [id, index + 1]));
   const rankedItems = list.rankedIds
     .map((id) => items.find((item) => item.id === id))
@@ -73,6 +79,14 @@ export function CollectionView({
   function chooseView(next: View) {
     setView(next);
     window.localStorage.setItem(`worth:view:${list.id}`, next);
+  }
+
+  function clearFilters() {
+    setSearch('');
+    setType('all');
+    setRankFilter('all');
+    setDecisionFilter('all');
+    setSort('rank');
   }
 
   function rankControl(item: Item) {
@@ -204,6 +218,11 @@ export function CollectionView({
             <option value="times">Most times</option>
           </select>
         </label>
+        {hasFilters && (
+          <button className="clear-filters" type="button" onClick={clearFilters}>
+            <X size={14} /> Clear filters
+          </button>
+        )}
       </div>
       {rank.isError && <p className="form-error">{rank.error.message}</p>}
 
@@ -218,6 +237,11 @@ export function CollectionView({
           {!items.length && (
             <button className="button button-dark" onClick={onAdd}>
               <Plus size={17} /> Add item
+            </button>
+          )}
+          {items.length > 0 && hasFilters && (
+            <button className="button button-outline" type="button" onClick={clearFilters}>
+              Clear filters
             </button>
           )}
         </div>
