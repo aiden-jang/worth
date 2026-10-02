@@ -51,9 +51,13 @@ export function SearchPage() {
       {term.length < 2 ? (
         <p className="search-hint">Type at least two characters to search your lists and logs.</p>
       ) : results.isPending ? (
-        <p className="search-hint">Searching…</p>
+        <p className="search-hint" role="status">
+          Searching…
+        </p>
       ) : results.isError ? (
-        <p className="error-banner">Search isn't available right now.</p>
+        <div className="error-banner" role="alert">
+          Search isn't available right now. <button onClick={() => void results.refetch()}>Try again</button>
+        </div>
       ) : results.data.results.length ? (
         <section className="search-results">
           <p className="overline">{results.data.results.length} RESULTS</p>
