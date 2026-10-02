@@ -38,9 +38,11 @@ export function ArchivePage() {
     <main className="archive-page">
       <h1 className="sr-only">Archive</h1>
       {overview.isPending ? (
-        <div className="page-width loading-line">Opening your archive…</div>
+        <div className="page-width loading-line" role="status">
+          Opening your archive…
+        </div>
       ) : overview.isError ? (
-        <div className="page-width error-banner">
+        <div className="page-width error-banner" role="alert">
           Couldn't load your archive. <button onClick={() => void overview.refetch()}>Try again</button>
         </div>
       ) : !data?.lists.length ? (

@@ -125,7 +125,7 @@ export function ListPage() {
           {itemsQuery.isPending || logsQuery.isPending ? (
             <p className="loading-line">Loading collection…</p>
           ) : itemsQuery.isError || logsQuery.isError ? (
-            <p className="error-banner">
+            <p className="error-banner" role="alert">
               Couldn't load this collection.{' '}
               <button
                 onClick={() => {

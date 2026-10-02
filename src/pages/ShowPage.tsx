@@ -39,7 +39,11 @@ export function ShowPage() {
   }
 
   if (listQuery.isPending || itemsQuery.isPending)
-    return <main className="show-page show-message">Opening…</main>;
+    return (
+      <main className="show-page show-message" role="status">
+        Opening…
+      </main>
+    );
   if (listQuery.isError || itemsQuery.isError || !list || list.kind !== 'collection')
     return (
       <main className="show-page show-message">

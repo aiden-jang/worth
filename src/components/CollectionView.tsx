@@ -151,7 +151,7 @@ export function CollectionView({
             <Rows size={18} /> Compact
           </button>
         </div>
-        <span className="item-count">
+        <span className="item-count" role="status">
           {visible.length} of {items.length} {items.length === 1 ? 'item' : 'items'}
         </span>
       </div>

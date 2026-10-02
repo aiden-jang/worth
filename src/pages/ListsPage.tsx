@@ -123,9 +123,11 @@ export function ListsPage() {
       )}
 
       {lists.isPending ? (
-        <p className="loading-line">Loading your lists…</p>
+        <p className="loading-line" role="status">
+          Loading your lists…
+        </p>
       ) : lists.isError ? (
-        <p className="error-banner">
+        <p className="error-banner" role="alert">
           Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
         </p>
       ) : lists.data?.lists.length ? (

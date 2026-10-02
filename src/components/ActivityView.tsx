@@ -103,7 +103,7 @@ export function ActivityView({
           <option value="oldest">Oldest first</option>
           <option value="name">Name</option>
         </select>
-        <span>
+        <span role="status">
           {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
         </span>
       </div>
