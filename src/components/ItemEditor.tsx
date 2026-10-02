@@ -59,6 +59,8 @@ export function ItemEditor({
         onCreated(saved.id);
       }
       void client.invalidateQueries({ queryKey: ['items', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
   });
@@ -67,6 +69,7 @@ export function ItemEditor({
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['items', listId] });
       void client.invalidateQueries({ queryKey: ['logs', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
       dialog.current?.close();
@@ -88,6 +91,8 @@ export function ItemEditor({
       setLogNote('');
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['items', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
   });
@@ -96,6 +101,8 @@ export function ItemEditor({
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['items', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
   });

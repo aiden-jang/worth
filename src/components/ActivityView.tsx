@@ -169,6 +169,8 @@ function ActivityEditor({
     mutationFn: () => (log ? api.updateLog(log.id, form) : api.createLog(listId, form)),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['logs', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       dialog.current?.close();
     },
@@ -177,6 +179,8 @@ function ActivityEditor({
     mutationFn: () => api.deleteLog(log!.id),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['logs', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       dialog.current?.close();
     },
