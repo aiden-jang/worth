@@ -43,7 +43,7 @@ export function PublicSharePage() {
           </div>
           {share.entries[0] && (
             <aside className="public-favorite">
-              <span>Favorite right now</span>
+              <span>Top of this snapshot</span>
               <strong>{share.entries[0].title}</strong>
               {share.entries[0].type && <small>{share.entries[0].type}</small>}
             </aside>

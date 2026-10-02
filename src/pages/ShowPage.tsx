@@ -15,6 +15,8 @@ export function ShowPage() {
   const list = listQuery.data?.list;
   const ranked = list ? rankedItems(list, itemsQuery.data?.items ?? []) : [];
   const visible = limit === 'all' ? ranked : ranked.slice(0, limit);
+  const favorite = ranked.find((item) => item.decision === 'favorite');
+  const primaryItem = favorite ?? ranked[0];
 
   useEffect(() => {
     const syncFullscreen = () => setFull(Boolean(document.fullscreenElement));
@@ -76,11 +78,11 @@ export function ShowPage() {
           <p className="overline">YOUR RANKED LIST</p>
           <h1>{list.name}</h1>
         </div>
-        {ranked[0] && (
+        {primaryItem && (
           <aside className="show-favorite">
-            <span>Favorite right now</span>
-            <strong>{ranked[0].title}</strong>
-            {ranked[0].type && <small>{ranked[0].type}</small>}
+            <span>{favorite ? 'Favorite' : 'Top ranked'}</span>
+            <strong>{primaryItem.title}</strong>
+            {primaryItem.type && <small>{primaryItem.type}</small>}
           </aside>
         )}
         <div className="show-controls" role="group" aria-label="How many rankings to show">
