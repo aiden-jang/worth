@@ -173,6 +173,9 @@ function ActivityEditor({
   const client = useQueryClient();
   const [form, setForm] = useState<LogInput>(log ? fromLog(log) : emptyLog(initialTitle));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const originalForm = log ? fromLog(log) : emptyLog(initialTitle);
+  const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
   useEffect(() => {
     dialog.current?.showModal();
     return () => {
@@ -205,13 +208,25 @@ function ActivityEditor({
     save.mutate();
   }
 
+  function requestClose() {
+    if (hasUnsavedChanges) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    dialog.current?.close();
+  }
+
   return (
     <dialog
       className="editor-dialog activity-editor-dialog"
       ref={dialog}
       onClose={onClose}
+      onCancel={(event) => {
+        event.preventDefault();
+        requestClose();
+      }}
       onClick={(event) => {
-        if (event.target === dialog.current) dialog.current.close();
+        if (event.target === dialog.current) requestClose();
       }}
     >
       <div className="editor-inner">
@@ -220,7 +235,7 @@ function ActivityEditor({
             <p className="overline">{log ? 'ACTIVITY DETAIL' : 'QUICK LOG'}</p>
             <h2>{log ? log.title : 'What happened?'}</h2>
           </div>
-          <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
+          <button className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
           </button>
         </div>
@@ -339,6 +354,19 @@ function ActivityEditor({
             error={remove.isError ? remove.error.message : undefined}
             onConfirm={() => remove.mutate()}
             onClose={() => setConfirmingDelete(false)}
+          />
+        )}
+        {confirmingDiscard && (
+          <ConfirmDialog
+            eyebrow="DISCARD CHANGES"
+            title="Leave without saving?"
+            description="Your changes to this private activity log will be lost."
+            confirmLabel="Discard changes"
+            onConfirm={() => {
+              setConfirmingDiscard(false);
+              dialog.current?.close();
+            }}
+            onClose={() => setConfirmingDiscard(false)}
           />
         )}
       </div>

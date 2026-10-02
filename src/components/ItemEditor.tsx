@@ -32,12 +32,15 @@ export function ItemEditor({
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
   const [form, setForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
+  const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
   const history = logs.filter((log) => log.itemId === item?.id);
+  const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(savedForm) || Boolean(logNote.trim());
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -46,8 +49,10 @@ export function ItemEditor({
     };
   }, []);
   useEffect(() => {
-    setForm(item ? fromItem(item) : emptyItem);
-  }, [item?.id]);
+    const nextForm = item ? fromItem(item) : emptyItem;
+    setForm(nextForm);
+    setSavedForm(nextForm);
+  }, [item?.id, item?.updatedAt]);
 
   const save = useMutation({
     mutationFn: () => (item ? api.updateItem(item.id, form) : api.createItem(listId, form)),
@@ -57,6 +62,10 @@ export function ItemEditor({
           items: [saved, ...(current?.items ?? [])],
         }));
         onCreated(saved.id);
+      } else {
+        const nextForm = fromItem(saved);
+        setForm(nextForm);
+        setSavedForm(nextForm);
       }
       void client.invalidateQueries({ queryKey: ['items', listId] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
@@ -116,13 +125,25 @@ export function ItemEditor({
     addLog.mutate();
   }
 
+  function requestClose() {
+    if (hasUnsavedChanges) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    dialog.current?.close();
+  }
+
   return (
     <dialog
       className="editor-dialog item-editor-dialog"
       ref={dialog}
       onClose={onClose}
+      onCancel={(event) => {
+        event.preventDefault();
+        requestClose();
+      }}
       onClick={(event) => {
-        if (event.target === dialog.current) dialog.current.close();
+        if (event.target === dialog.current) requestClose();
       }}
     >
       <div className="editor-inner">
@@ -131,7 +152,7 @@ export function ItemEditor({
             <p className="overline">{item ? 'ITEM DETAIL' : 'NEW ITEM'}</p>
             <h2>{item ? item.title : 'Keep this one.'}</h2>
           </div>
-          <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
+          <button className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
           </button>
         </div>
@@ -312,6 +333,19 @@ export function ItemEditor({
               else deleteLog.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
             }}
             onClose={() => setDeleteTarget(null)}
+          />
+        )}
+        {confirmingDiscard && (
+          <ConfirmDialog
+            eyebrow="DISCARD CHANGES"
+            title="Leave without saving?"
+            description="Your changes to this private record will be lost."
+            confirmLabel="Discard changes"
+            onConfirm={() => {
+              setConfirmingDiscard(false);
+              dialog.current?.close();
+            }}
+            onClose={() => setConfirmingDiscard(false)}
           />
         )}
       </div>
