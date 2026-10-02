@@ -2172,8 +2172,9 @@ dialog::backdrop {
 }
 .meter-caption strong {
   color: var(--paper);
-  font: 400 clamp(1.4rem, 2vw, 2rem) var(--mono);
-  letter-spacing: -0.08em;
+  font: 500 clamp(0.82rem, 1.2vw, 1rem) var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 .meter-caption-low {
   left: 11.5%;

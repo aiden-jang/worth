@@ -100,16 +100,16 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
       </header>
       <section className="landing-meter" aria-labelledby="landing-title">
         <div className="meter-caption meter-caption-low">
-          <span>Least likely again</span>
-          <strong>2.1</strong>
+          <span>Personal call</span>
+          <strong>Would not again</strong>
         </div>
         <div className="meter-track" aria-hidden="true">
           <span className="meter-point meter-point-low" />
           <span className="meter-point meter-point-high" />
         </div>
         <div className="meter-caption meter-caption-high">
-          <span>Favorite right now</span>
-          <strong>4.5</strong>
+          <span>Personal call</span>
+          <strong>Favorite</strong>
         </div>
         <h1 id="landing-title">worth</h1>
         <div className="landing-message">
