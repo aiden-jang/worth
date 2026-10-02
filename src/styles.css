@@ -329,6 +329,19 @@ img {
 .archive-search input {
   font-size: 0.92rem;
 }
+.search-clear {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 0;
+  place-items: center;
+  background: transparent;
+  color: var(--faint);
+}
+.search-clear:hover {
+  color: var(--paper);
+}
 .archive-search input::placeholder,
 input::placeholder,
 textarea::placeholder {

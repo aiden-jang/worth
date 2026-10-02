@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MagnifyingGlass, ArrowUpRight } from '@phosphor-icons/react';
+import { MagnifyingGlass, ArrowUpRight, X } from '@phosphor-icons/react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
 
 export function SearchPage() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const routeQuery = params.get('q') ?? '';
   const [query, setQuery] = useState(routeQuery);
   useEffect(() => setQuery(routeQuery), [routeQuery]);
@@ -26,8 +26,25 @@ export function SearchPage() {
           autoFocus
           placeholder="A film, a place, a good drink…"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            const next = event.target.value;
+            setQuery(next);
+            setParams(next.trim() ? { q: next } : {}, { replace: true });
+          }}
         />
+        {query && (
+          <button
+            className="search-clear"
+            type="button"
+            aria-label="Clear search"
+            onClick={() => {
+              setQuery('');
+              setParams({}, { replace: true });
+            }}
+          >
+            <X size={18} />
+          </button>
+        )}
       </label>
       {term.length < 2 ? (
         <p className="search-hint">Type at least two characters to search your lists and logs.</p>
