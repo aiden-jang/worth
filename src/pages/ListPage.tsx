@@ -7,6 +7,7 @@ import { CollectionView } from '../components/CollectionView';
 import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -175,6 +176,7 @@ function ListSettings({
   const client = useQueryClient();
   const [nextName, setNextName] = useState(name);
   const [nextDescription, setNextDescription] = useState(description);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const update = useMutation({
     mutationFn: () => api.updateList(listId, { name: nextName, description: nextDescription }),
     onSuccess: () => {
@@ -233,18 +235,23 @@ function ListSettings({
       </form>
       <div className="settings-danger">
         <span>This removes every item and log in this list.</span>
-        <button
-          className="text-danger"
-          disabled={remove.isPending}
-          onClick={() => {
-            if (window.confirm(`Delete ${name} and everything in it? This cannot be undone.`))
-              remove.mutate();
-          }}
-        >
+        <button className="text-danger" disabled={remove.isPending} onClick={() => setConfirmingDelete(true)}>
           Delete this list
         </button>
       </div>
       {remove.isError && <p className="form-error">{remove.error.message}</p>}
+      {confirmingDelete && (
+        <ConfirmDialog
+          eyebrow="DELETE LIST"
+          title={`Delete ${name}?`}
+          description="This permanently removes every item, log, rank, note, and private photo in this list."
+          confirmLabel="Delete list"
+          pending={remove.isPending}
+          error={remove.isError ? remove.error.message : undefined}
+          onConfirm={() => remove.mutate()}
+          onClose={() => setConfirmingDelete(false)}
+        />
+      )}
     </section>
   );
 }

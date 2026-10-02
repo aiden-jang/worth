@@ -186,6 +186,15 @@ img {
 .button-accent:hover:not(:disabled) {
   background: #cb6458;
 }
+.button-danger {
+  border-color: color-mix(in srgb, var(--danger) 72%, transparent);
+  background: transparent;
+  color: var(--danger);
+}
+.button-danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 13%, transparent);
+}
 .button-dark {
   border-color: var(--paper);
   background: var(--paper);
@@ -1456,7 +1465,8 @@ dialog::backdrop {
 }
 .editor-dialog,
 .share-dialog,
-.add-dialog {
+.add-dialog,
+.confirm-dialog {
   width: min(760px, calc(100% - 32px));
   max-height: min(820px, calc(100vh - 32px));
   overflow-y: auto;
@@ -1468,8 +1478,45 @@ dialog::backdrop {
 }
 .editor-inner,
 .share-inner,
-.add-dialog {
+.add-dialog,
+.confirm-inner {
   padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+.confirm-dialog {
+  width: min(500px, calc(100% - 32px));
+}
+.confirm-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line-strong);
+}
+.confirm-head .overline {
+  color: var(--danger);
+}
+.confirm-head h2 {
+  max-width: 12ch;
+  margin: 0.6rem 0 0;
+  color: var(--paper);
+  font-size: clamp(2.15rem, 7vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.08em;
+  line-height: 0.86;
+}
+.confirm-inner > p:not(.overline, .form-error) {
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 2rem;
 }
 .editor-form {
   display: grid;

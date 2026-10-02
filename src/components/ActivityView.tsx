@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
 import type { Log } from '../shared/models';
 import { api, type LogInput } from '../api';
 import { formatDate, formatElapsedDays, today } from '../format';
+import { ConfirmDialog } from './ConfirmDialog';
 import { PhotoControl } from './PhotoControl';
 
 export function ActivityView({
@@ -157,6 +158,7 @@ function ActivityEditor({
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
   const [form, setForm] = useState<LogInput>(log ? fromLog(log) : emptyLog(initialTitle));
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   useEffect(() => {
     dialog.current?.showModal();
     return () => {
@@ -303,14 +305,24 @@ function ActivityEditor({
           <button
             className="text-danger"
             disabled={remove.isPending}
-            onClick={() => {
-              if (window.confirm(`Delete this ${log.title} log?`)) remove.mutate();
-            }}
+            onClick={() => setConfirmingDelete(true)}
           >
             <Trash size={16} /> Delete log
           </button>
         )}
         {remove.isError && <p className="form-error">{remove.error.message}</p>}
+        {log && confirmingDelete && (
+          <ConfirmDialog
+            eyebrow="DELETE LOG"
+            title={`Delete ${log.title}?`}
+            description="This permanently removes this activity log and its private photo, if it has one."
+            confirmLabel="Delete log"
+            pending={remove.isPending}
+            error={remove.isError ? remove.error.message : undefined}
+            onConfirm={() => remove.mutate()}
+            onClose={() => setConfirmingDelete(false)}
+          />
+        )}
       </div>
     </dialog>
   );

@@ -4,6 +4,7 @@ import { Plus, Trash, X } from '@phosphor-icons/react';
 import type { Item, Log } from '../shared/models';
 import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
+import { ConfirmDialog } from './ConfirmDialog';
 import { PhotoControl } from './PhotoControl';
 
 const emptyItem: ItemInput = {
@@ -33,6 +34,9 @@ export function ItemEditor({
   const [form, setForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<
+    { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
+  >(null);
   const history = logs.filter((log) => log.itemId === item?.id);
 
   useEffect(() => {
@@ -254,9 +258,7 @@ export function ItemEditor({
                   <button
                     className="icon-button"
                     aria-label={`Delete log from ${formatDate(log.happenedOn)}`}
-                    onClick={() => {
-                      if (window.confirm('Delete this log?')) deleteLog.mutate(log.id);
-                    }}
+                    onClick={() => setDeleteTarget({ kind: 'log', id: log.id, title: 'this log' })}
                   >
                     <Trash size={17} />
                   </button>
@@ -271,16 +273,40 @@ export function ItemEditor({
         {item && (
           <button
             className="text-danger"
-            onClick={() => {
-              if (window.confirm(`Delete ${item.title} and its logs? This cannot be undone.`))
-                remove.mutate();
-            }}
+            onClick={() => setDeleteTarget({ kind: 'item', title: item.title })}
             disabled={remove.isPending}
           >
             Delete item
           </button>
         )}
         {remove.isError && <p className="form-error">{remove.error.message}</p>}
+        {deleteTarget && (
+          <ConfirmDialog
+            eyebrow={deleteTarget.kind === 'item' ? 'DELETE ITEM' : 'DELETE LOG'}
+            title={`Delete ${deleteTarget.title}?`}
+            description={
+              deleteTarget.kind === 'item'
+                ? 'This permanently removes the item, every log attached to it, and all of their private photos.'
+                : 'This permanently removes this log and its private photo, if it has one.'
+            }
+            confirmLabel={deleteTarget.kind === 'item' ? 'Delete item' : 'Delete log'}
+            pending={deleteTarget.kind === 'item' ? remove.isPending : deleteLog.isPending}
+            error={
+              deleteTarget.kind === 'item'
+                ? remove.isError
+                  ? remove.error.message
+                  : undefined
+                : deleteLog.isError
+                  ? deleteLog.error.message
+                  : undefined
+            }
+            onConfirm={() => {
+              if (deleteTarget.kind === 'item') remove.mutate();
+              else deleteLog.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+            }}
+            onClose={() => setDeleteTarget(null)}
+          />
+        )}
       </div>
     </dialog>
   );
