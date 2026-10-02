@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SquaresFour, ListBullets, Rows, Plus, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
@@ -41,6 +41,17 @@ export function CollectionView({
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
   const [sort, setSort] = useState<ItemSort>('rank');
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(`worth:view:${list.id}`);
+    setView(saved === 'gallery' || saved === 'list' || saved === 'compact' ? saved : 'compact');
+    setSearch('');
+    setType('all');
+    setRankFilter('all');
+    setDecisionFilter('all');
+    setSort('rank');
+  }, [list.id]);
+
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
   const visible = visibleItems(items, list.rankedIds, {
     search,
