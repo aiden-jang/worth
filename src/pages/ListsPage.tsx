@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, DownloadSimple, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
-import type { ListKind } from '../shared/models';
+import type { ListKind, ListSummary } from '../shared/models';
 
 const suggestions: { name: string; kind: ListKind; description: string }[] = [
   { name: 'Drinks', kind: 'collection', description: 'Wines, whiskeys, and the occasional good idea.' },
@@ -24,6 +24,8 @@ export function ListsPage() {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
+  const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const create = useMutation({
     mutationFn: api.createList,
     onSuccess: ({ list }) => {
@@ -127,31 +129,22 @@ export function ListsPage() {
           Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
         </p>
       ) : lists.data?.lists.length ? (
-        <section className="list-directory" aria-label="Your lists">
-          {lists.data.lists.map((list, index) => (
-            <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
-              <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="directory-name">
-                <strong>{list.name}</strong>
-                <small>{list.description || (list.kind === 'collection' ? 'Collection' : 'Activity')}</small>
-              </span>
-              <span className="directory-meta">
-                <small>{list.kind}</small>
-                <strong>
-                  {list.kind === 'collection' ? list.itemCount : list.logCount}{' '}
-                  {list.kind === 'collection'
-                    ? list.itemCount === 1
-                      ? 'item'
-                      : 'items'
-                    : list.logCount === 1
-                      ? 'log'
-                      : 'logs'}
-                </strong>
-              </span>
-              <ArrowRight size={20} />
-            </Link>
-          ))}
-        </section>
+        <div className="list-groups">
+          {collectionLists.length > 0 && (
+            <ListDirectory
+              heading="Collections"
+              detail="Things you can compare, rank, and revisit."
+              lists={collectionLists}
+            />
+          )}
+          {activityLists.length > 0 && (
+            <ListDirectory
+              heading="Activity"
+              detail="Things you want to log over time."
+              lists={activityLists}
+            />
+          )}
+        </div>
       ) : (
         <section className="list-suggestions">
           <p className="overline">A FEW PLACES TO START</p>
@@ -169,5 +162,51 @@ export function ListsPage() {
         </section>
       )}
     </main>
+  );
+}
+
+function ListDirectory({
+  heading,
+  detail,
+  lists,
+}: {
+  heading: string;
+  detail: string;
+  lists: ListSummary[];
+}) {
+  return (
+    <section className="list-directory" aria-labelledby={`${heading.toLowerCase()}-heading`}>
+      <header className="list-directory-head">
+        <div>
+          <p className="overline" id={`${heading.toLowerCase()}-heading`}>
+            {heading}
+          </p>
+          <span>{detail}</span>
+        </div>
+        <strong>{lists.length}</strong>
+      </header>
+      <div>
+        {lists.map((list, index) => {
+          const count = list.kind === 'collection' ? list.itemCount : list.logCount;
+          const noun = list.kind === 'collection' ? 'item' : 'log';
+          return (
+            <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
+              <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="directory-name">
+                <strong>{list.name}</strong>
+                <small>{list.description || (list.kind === 'collection' ? 'Collection' : 'Activity')}</small>
+              </span>
+              <span className="directory-meta">
+                <small>{list.kind}</small>
+                <strong>
+                  {count} {count === 1 ? noun : `${noun}s`}
+                </strong>
+              </span>
+              <ArrowRight size={20} />
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
