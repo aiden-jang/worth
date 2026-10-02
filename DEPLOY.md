@@ -20,8 +20,7 @@ The auth service already allows HTTPS return URLs under `*.aidenjang.com` and sh
 
 Before the first automated deployment, add these repository secrets in GitHub Actions:
 
-- `CLOUDFLARE_API_TOKEN`: scoped to the Cloudflare account. It needs Workers Scripts Edit and D1 Edit. Give it Workers Routes Edit for `aidenjang.com` if the custom domain route needs to be created or changed.
-- `CLOUDFLARE_ACCOUNT_ID`: the ID of the Cloudflare account that owns the Worker and D1 database.
+- `CLOUDFLARE_API_TOKEN`: scoped to the Cloudflare account. It needs Workers Scripts Edit and D1 Edit. Give it Workers Routes Edit for `aidenjang.com` if the custom domain route needs to be created or changed. Wrangler infers the account from this scoped token.
 
 Do not store either value in the repo.
 
