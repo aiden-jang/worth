@@ -15,6 +15,8 @@ export function SearchPage() {
     queryFn: () => api.search(term),
     enabled: term.length >= 2,
   });
+  const itemResults = results.data?.results.filter((result) => result.kind === 'item') ?? [];
+  const logResults = results.data?.results.filter((result) => result.kind === 'log') ?? [];
   return (
     <main className="light-page search-page page-width">
       <p className="overline">YOUR ARCHIVE, ALL AT ONCE</p>
@@ -55,21 +57,8 @@ export function SearchPage() {
       ) : results.data.results.length ? (
         <section className="search-results">
           <p className="overline">{results.data.results.length} RESULTS</p>
-          {results.data.results.map((result) => (
-            <Link
-              key={`${result.kind}-${result.id}`}
-              to={`/lists/${result.listId}?focus=${result.kind}:${result.id}`}
-            >
-              <span>
-                <small>
-                  {result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}
-                </small>
-                <strong>{result.title}</strong>
-                {result.detail && <em>{result.detail}</em>}
-              </span>
-              <ArrowUpRight size={20} />
-            </Link>
-          ))}
+          {itemResults.length > 0 && <SearchGroup label="Items" results={itemResults} />}
+          {logResults.length > 0 && <SearchGroup label="Activity logs" results={logResults} />}
         </section>
       ) : (
         <div className="search-empty">
@@ -78,5 +67,41 @@ export function SearchPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function SearchGroup({
+  label,
+  results,
+}: {
+  label: string;
+  results: {
+    id: string;
+    listId: string;
+    listName: string;
+    kind: 'item' | 'log';
+    title: string;
+    detail: string;
+  }[];
+}) {
+  return (
+    <section className="search-group" aria-label={label}>
+      <p>{label}</p>
+      {results.map((result) => (
+        <Link
+          key={`${result.kind}-${result.id}`}
+          to={`/lists/${result.listId}?focus=${result.kind}:${result.id}`}
+        >
+          <span>
+            <small>
+              {result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}
+            </small>
+            <strong>{result.title}</strong>
+            {result.detail && <em>{result.detail}</em>}
+          </span>
+          <ArrowUpRight size={20} />
+        </Link>
+      ))}
+    </section>
   );
 }

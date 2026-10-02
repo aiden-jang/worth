@@ -1974,7 +1974,18 @@ dialog::backdrop {
 .search-results > .overline {
   padding: 1rem 0;
 }
-.search-results > a {
+.search-group > p {
+  margin: 0;
+  padding: 0.9rem 0;
+  color: var(--muted);
+  font: 500 0.61rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.search-group + .search-group {
+  margin-top: 1.5rem;
+}
+.search-group > a {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1985,11 +1996,11 @@ dialog::backdrop {
     padding 160ms ease,
     background-color 160ms ease;
 }
-.search-results > a:hover {
+.search-group > a:hover {
   padding-inline: 1.15rem;
   background: var(--raised);
 }
-.search-results > a span {
+.search-group > a span {
   min-width: 0;
 }
 .search-results small {
@@ -2019,7 +2030,7 @@ dialog::backdrop {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.search-results svg {
+.search-group svg {
   flex: 0 0 auto;
   color: var(--acid);
 }
