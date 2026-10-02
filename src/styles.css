@@ -2464,6 +2464,12 @@ dialog::backdrop {
   font: 700 0.9rem var(--mono);
   letter-spacing: 0.18em;
 }
+.show-fullscreen-error {
+  width: min(calc(100% - 96px), 1200px);
+  margin: 0.75rem auto 0;
+  color: var(--danger);
+  font: 500 0.68rem/1.5 var(--mono);
+}
 .show-intro {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);

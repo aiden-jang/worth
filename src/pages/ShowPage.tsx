@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowsOut, ArrowsIn } from '@phosphor-icons/react';
 import { Link, useParams } from 'react-router';
@@ -9,19 +9,32 @@ export function ShowPage() {
   const { listId = '' } = useParams();
   const [limit, setLimit] = useState<5 | 10 | 'all'>('all');
   const [full, setFull] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState('');
   const listQuery = useQuery({ queryKey: ['list', listId], queryFn: () => api.list(listId) });
   const itemsQuery = useQuery({ queryKey: ['items', listId], queryFn: () => api.items(listId) });
   const list = listQuery.data?.list;
   const ranked = list ? rankedItems(list, itemsQuery.data?.items ?? []) : [];
   const visible = limit === 'all' ? ranked : ranked.slice(0, limit);
 
+  useEffect(() => {
+    const syncFullscreen = () => setFull(Boolean(document.fullscreenElement));
+    syncFullscreen();
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
+
   async function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      setFull(false);
-    } else {
-      await document.documentElement.requestFullscreen();
-      setFull(true);
+    setFullscreenError('');
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        setFullscreenError('Fullscreen is not available in this browser.');
+      }
+    } catch {
+      setFullscreenError('Could not enter fullscreen. Check your browser permissions and try again.');
     }
   }
 
@@ -44,10 +57,16 @@ export function ShowPage() {
         <button
           onClick={() => void toggleFullscreen()}
           aria-label={full ? 'Exit fullscreen' : 'Enter fullscreen'}
+          aria-describedby={fullscreenError ? 'fullscreen-error' : undefined}
         >
           {full ? <ArrowsIn size={21} /> : <ArrowsOut size={21} />}
         </button>
       </header>
+      {fullscreenError && (
+        <p className="show-fullscreen-error" id="fullscreen-error" role="status">
+          {fullscreenError}
+        </p>
+      )}
       <div className="show-intro">
         <div className="show-intro-copy">
           <p className="overline">YOUR RANKED LIST</p>
