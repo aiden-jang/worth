@@ -12,6 +12,7 @@ export function ActivityView({
   logs,
   loading,
   error,
+  onRetry,
   newOpen,
   focusLogId,
   onCloseNew,
@@ -21,6 +22,7 @@ export function ActivityView({
   logs: Log[];
   loading: boolean;
   error: boolean;
+  onRetry: () => void;
   newOpen: boolean;
   focusLogId: string | null;
   onCloseNew: () => void;
@@ -57,7 +59,12 @@ export function ActivityView({
   }, [focusLogId, logs]);
 
   if (loading) return <p className="loading-line">Loading activity…</p>;
-  if (error) return <p className="error-banner">Couldn't load the activity log. Refresh to try again.</p>;
+  if (error)
+    return (
+      <p className="error-banner" role="alert">
+        Couldn't load the activity log. <button onClick={onRetry}>Try again</button>
+      </p>
+    );
 
   return (
     <section className="activity-view">

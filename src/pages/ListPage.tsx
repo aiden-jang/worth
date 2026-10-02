@@ -150,6 +150,7 @@ export function ListPage() {
           logs={logs}
           loading={logsQuery.isPending}
           error={logsQuery.isError}
+          onRetry={() => void logsQuery.refetch()}
           newOpen={creating}
           focusLogId={focus?.startsWith('log:') ? focus.slice('log:'.length) : null}
           onCloseNew={closeEditor}
