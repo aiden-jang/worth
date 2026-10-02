@@ -177,11 +177,15 @@ function ListSettings({
   const [nextName, setNextName] = useState(name);
   const [nextDescription, setNextDescription] = useState(description);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const cleanName = nextName.trim();
+  const cleanDescription = nextDescription.trim();
+  const hasChanges = cleanName !== name || cleanDescription !== description;
   const update = useMutation({
-    mutationFn: () => api.updateList(listId, { name: nextName, description: nextDescription }),
+    mutationFn: () => api.updateList(listId, { name: cleanName, description: cleanDescription }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
       onClose();
     },
   });
@@ -196,7 +200,7 @@ function ListSettings({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    update.mutate();
+    if (cleanName && hasChanges) update.mutate();
   }
 
   return (
@@ -218,6 +222,7 @@ function ListSettings({
             maxLength={80}
             value={nextName}
             onChange={(event) => setNextName(event.target.value)}
+            aria-describedby={update.isError ? 'list-settings-error' : undefined}
           />
         </label>
         <label>
@@ -228,10 +233,14 @@ function ListSettings({
             onChange={(event) => setNextDescription(event.target.value)}
           />
         </label>
-        <button className="button button-dark" disabled={update.isPending}>
+        <button className="button button-dark" disabled={!cleanName || !hasChanges || update.isPending}>
           Save changes
         </button>
-        {update.isError && <p className="form-error">{update.error.message}</p>}
+        {update.isError && (
+          <p className="form-error" id="list-settings-error" role="alert">
+            {update.error.message}
+          </p>
+        )}
       </form>
       <div className="settings-danger">
         <span>This removes every item and log in this list.</span>
