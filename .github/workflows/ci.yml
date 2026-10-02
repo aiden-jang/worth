@@ -25,7 +25,7 @@ jobs:
 
   deploy:
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WORTH_READY == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-worth
