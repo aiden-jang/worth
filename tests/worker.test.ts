@@ -328,6 +328,10 @@ test('activity logs can be found, edited, and removed without crossing accounts'
     results: { id: string; title: string }[];
   };
   expect(results.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
+  const noteResults = (await (await call('/search?q=pace', 'alice')).json()) as {
+    results: { id: string; title: string }[];
+  };
+  expect(noteResults.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
   const overview = (await (await call('/overview', 'alice')).json()) as {
     lastTimes: { id: string; listId: string; listName: string; title: string; happenedOn: string }[];
     recent: { id: string }[];

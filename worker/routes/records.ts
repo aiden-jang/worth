@@ -290,18 +290,22 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const { results: items } = await c.env.DB.prepare(
       `SELECT i.id, i.list_id, l.name AS list_name,
       i.title, i.type AS detail FROM items i JOIN lists l ON l.id = i.list_id
-      WHERE i.owner_id = ? AND (i.title LIKE ? ESCAPE '\\' OR i.type LIKE ? ESCAPE '\\')
+      WHERE i.owner_id = ? AND (
+        i.title LIKE ? ESCAPE '\\' OR i.type LIKE ? ESCAPE '\\' OR i.note LIKE ? ESCAPE '\\'
+      )
       ORDER BY i.updated_at DESC LIMIT 40`,
     )
-      .bind(ownerId, pattern, pattern)
+      .bind(ownerId, pattern, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     const { results: logs } = await c.env.DB.prepare(
       `SELECT g.id, g.list_id, l.name AS list_name,
       g.title, g.happened_on AS detail FROM logs g JOIN lists l ON l.id = g.list_id
-      WHERE g.owner_id = ? AND g.item_id IS NULL AND g.title LIKE ? ESCAPE '\\'
+      WHERE g.owner_id = ? AND g.item_id IS NULL AND (
+        g.title LIKE ? ESCAPE '\\' OR g.note LIKE ? ESCAPE '\\'
+      )
       ORDER BY g.happened_on DESC LIMIT 40`,
     )
-      .bind(ownerId, pattern)
+      .bind(ownerId, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     return c.json({
       results: [
