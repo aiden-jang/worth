@@ -67,6 +67,7 @@ export interface RecentEntry {
   listId: string;
   listName: string;
   kind: ListKind;
+  itemId: string | null;
   title: string;
   happenedOn: string;
   amount: number | null;

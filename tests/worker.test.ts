@@ -334,7 +334,7 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   expect(noteResults.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
   const overview = (await (await call('/overview', 'alice')).json()) as {
     lastTimes: { id: string; listId: string; listName: string; title: string; happenedOn: string }[];
-    recent: { id: string }[];
+    recent: { id: string; itemId: string | null }[];
   };
   expect(overview.lastTimes).toContainEqual(
     expect.objectContaining({
@@ -354,7 +354,7 @@ test('activity logs can be found, edited, and removed without crossing accounts'
       happenedOn: '2026-10-01',
     }),
   );
-  expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id }));
+  expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id, itemId: null }));
 
   expect((await call(`/logs/${log.id}`, 'alice', 'PATCH', { amount: 6.1 })).status).toBe(200);
   const logs = (await (await call(`/lists/${list.id}/logs`, 'alice')).json()) as {

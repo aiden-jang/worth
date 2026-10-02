@@ -179,7 +179,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const ownerId = c.get('ownerId');
     const lists = await listLists(c.env.DB, ownerId);
     const { results: recent } = await c.env.DB.prepare(
-      `SELECT g.id, g.list_id, l.name AS list_name, l.kind,
+      `SELECT g.id, g.list_id, g.item_id, l.name AS list_name, l.kind,
       COALESCE(i.title, g.title) AS title, g.happened_on, g.amount, g.unit, g.sets, g.reps
       FROM logs g JOIN lists l ON l.id = g.list_id LEFT JOIN items i ON i.id = g.item_id
       WHERE g.owner_id = ? ORDER BY g.happened_on DESC, g.created_at DESC LIMIT 12`,
@@ -188,6 +188,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       .all<{
         id: string;
         list_id: string;
+        item_id: string | null;
         list_name: string;
         kind: 'collection' | 'activity';
         title: string;
@@ -246,6 +247,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         listId: row.list_id,
         listName: row.list_name,
         kind: row.kind,
+        itemId: row.item_id,
         title: row.title,
         happenedOn: row.happened_on,
         amount: row.amount,

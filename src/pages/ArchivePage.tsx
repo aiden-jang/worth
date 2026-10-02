@@ -80,7 +80,9 @@ export function ArchivePage() {
                     <li key={entry.id}>
                       <span className="activity-marker" aria-hidden="true" />
                       <time dateTime={entry.happenedOn}>{dateLabel(entry.happenedOn).toUpperCase()}</time>
-                      <Link to={`/lists/${entry.listId}`}>
+                      <Link
+                        to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
+                      >
                         <strong>{entry.title}</strong>
                         <span>{activityDetail(entry)}</span>
                       </Link>
