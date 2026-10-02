@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
-import { api } from '../api';
+import { api, RequestError } from '../api';
 
 export function PublicSharePage() {
   const { token = '' } = useParams();
@@ -10,15 +10,22 @@ export function PublicSharePage() {
     retry: false,
   });
   if (query.isPending) return <main className="public-page public-message">Opening list…</main>;
-  if (query.isError)
+  if (query.isError) {
+    const unavailable = query.error instanceof RequestError && [404, 410].includes(query.error.status);
     return (
       <main className="public-page public-message">
         <span className="brand">worth</span>
-        <h1>This link is no longer available.</h1>
-        <p>It may have expired or been removed.</p>
+        <h1>{unavailable ? 'This link is no longer available.' : "Couldn't open this shared list."}</h1>
+        <p>{unavailable ? 'It may have expired or been removed.' : 'Check your connection and try again.'}</p>
+        {!unavailable && (
+          <button className="button button-outline" onClick={() => void query.refetch()}>
+            Try again
+          </button>
+        )}
         <Link to="/">Back to Worth</Link>
       </main>
     );
+  }
   const { share } = query.data;
   return (
     <main className="public-page">
