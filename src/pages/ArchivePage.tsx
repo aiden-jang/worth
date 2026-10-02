@@ -13,8 +13,17 @@ const dateLabel = (value: string) =>
     timeZone: 'UTC',
   }).format(new Date(`${value}T00:00:00Z`));
 
-function activityDetail(entry: { listName: string; amount: number | null; unit: string }) {
-  return entry.amount === null ? entry.listName : `${entry.listName} · ${entry.amount} ${entry.unit}`;
+function activityDetail(entry: {
+  listName: string;
+  amount: number | null;
+  unit: string;
+  sets: number | null;
+  reps: number | null;
+}) {
+  const metrics = [];
+  if (entry.amount !== null) metrics.push(`${entry.amount}${entry.unit ? ` ${entry.unit}` : ''}`);
+  if (entry.sets !== null && entry.reps !== null) metrics.push(`${entry.sets} × ${entry.reps}`);
+  return metrics.length ? `${entry.listName} · ${metrics.join(' · ')}` : entry.listName;
 }
 
 export function ArchivePage() {
