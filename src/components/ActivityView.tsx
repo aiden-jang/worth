@@ -175,7 +175,8 @@ function ActivityEditor({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const originalForm = log ? fromLog(log) : emptyLog(initialTitle);
-  const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
+  const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
+  const hasUnsavedChanges = hasLogChanges;
   useEffect(() => {
     dialog.current?.showModal();
     return () => {
@@ -183,7 +184,10 @@ function ActivityEditor({
     };
   }, []);
   const save = useMutation({
-    mutationFn: () => (log ? api.updateLog(log.id, form) : api.createLog(listId, form)),
+    mutationFn: () => {
+      const input = cleanLogInput(form);
+      return log ? api.updateLog(log.id, input) : api.createLog(listId, input);
+    },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
@@ -330,7 +334,10 @@ function ActivityEditor({
             />
           </label>
           {save.isError && <p className="form-error">{save.error.message}</p>}
-          <button className="button button-dark" disabled={save.isPending}>
+          <button
+            className="button button-dark"
+            disabled={!form.title.trim() || save.isPending || Boolean(log && !hasLogChanges)}
+          >
             {log ? 'Save changes' : 'Save log'}
           </button>
         </form>
@@ -398,6 +405,10 @@ function fromLog(log: Log): LogInput {
     sets: log.sets,
     reps: log.reps,
   };
+}
+
+function cleanLogInput(input: LogInput): LogInput {
+  return { ...input, title: input.title.trim(), unit: input.unit.trim(), note: input.note.trim() };
 }
 
 function formatMetric(log: Log): string {

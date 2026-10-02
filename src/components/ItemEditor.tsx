@@ -40,7 +40,8 @@ export function ItemEditor({
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
   const history = logs.filter((log) => log.itemId === item?.id);
-  const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(savedForm) || Boolean(logNote.trim());
+  const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
+  const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim());
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -55,7 +56,10 @@ export function ItemEditor({
   }, [item?.id, item?.updatedAt]);
 
   const save = useMutation({
-    mutationFn: () => (item ? api.updateItem(item.id, form) : api.createItem(listId, form)),
+    mutationFn: () => {
+      const input = cleanItemInput(form);
+      return item ? api.updateItem(item.id, input) : api.createItem(listId, input);
+    },
     onSuccess: ({ item: saved }) => {
       if (!item) {
         client.setQueryData<{ items: Item[] }>(['items', listId], (current) => ({
@@ -90,7 +94,7 @@ export function ItemEditor({
         itemId: item!.id,
         title: '',
         happenedOn: logDate,
-        note: logNote,
+        note: logNote.trim(),
         amount: null,
         unit: '',
         sets: null,
@@ -246,7 +250,10 @@ export function ItemEditor({
             </label>
           </div>
           {save.isError && <p className="form-error">{save.error.message}</p>}
-          <button className="button button-dark" disabled={save.isPending}>
+          <button
+            className="button button-dark"
+            disabled={!form.title.trim() || save.isPending || Boolean(item && !hasItemChanges)}
+          >
             {item ? 'Save changes' : 'Add item'}
           </button>
         </form>
@@ -362,4 +369,8 @@ function fromItem(item: Item): ItemInput {
     startedOn: item.startedOn,
     endedOn: item.endedOn,
   };
+}
+
+function cleanItemInput(input: ItemInput): ItemInput {
+  return { ...input, title: input.title.trim(), type: input.type.trim(), note: input.note.trim() };
 }
