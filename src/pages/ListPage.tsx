@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api } from '../api';
+import { api, RequestError } from '../api';
 import { CollectionView } from '../components/CollectionView';
 import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
@@ -46,7 +46,21 @@ export function ListPage() {
   }
 
   if (listQuery.isPending) return <main className="light-page page-width loading-line">Opening list…</main>;
-  if (listQuery.isError || !list)
+  if (listQuery.isError) {
+    const missing = listQuery.error instanceof RequestError && listQuery.error.status === 404;
+    return (
+      <main className="light-page page-width error-page">
+        <h1>{missing ? 'List not found.' : "Couldn't open this list."}</h1>
+        {!missing && (
+          <button className="button button-outline" onClick={() => void listQuery.refetch()}>
+            Try again
+          </button>
+        )}
+        <Link to="/lists">Back to lists</Link>
+      </main>
+    );
+  }
+  if (!list)
     return (
       <main className="light-page page-width error-page">
         <h1>List not found.</h1>
