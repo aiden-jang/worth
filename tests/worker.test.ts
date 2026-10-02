@@ -356,12 +356,22 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   );
   expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id, itemId: null }));
 
+  await platform.env.DB.prepare('UPDATE lists SET updated_at = 0 WHERE id = ?').bind(list.id).run();
   expect((await call(`/logs/${log.id}`, 'alice', 'PATCH', { amount: 6.1 })).status).toBe(200);
+  const listAfterLogUpdate = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
+    list: { updatedAt: number };
+  };
+  expect(listAfterLogUpdate.list.updatedAt).toBeGreaterThan(0);
   const logs = (await (await call(`/lists/${list.id}/logs`, 'alice')).json()) as {
     logs: { id: string; amount: number }[];
   };
   expect(logs.logs).toContainEqual(expect.objectContaining({ id: log.id, amount: 6.1 }));
+  await platform.env.DB.prepare('UPDATE lists SET updated_at = 0 WHERE id = ?').bind(list.id).run();
   expect((await call(`/logs/${log.id}`, 'alice', 'DELETE')).status).toBe(204);
+  const listAfterLogDelete = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
+    list: { updatedAt: number };
+  };
+  expect(listAfterLogDelete.list.updatedAt).toBeGreaterThan(0);
   expect(await call(`/lists/${list.id}/logs`, 'alice').then((response) => response.json())).toEqual({
     logs: [],
   });

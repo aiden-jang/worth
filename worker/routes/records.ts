@@ -55,27 +55,34 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     if (!merged.success)
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid item');
     const value = merged.data;
-    await c.env.DB.prepare(
-      `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, started_on = ?, ended_on = ?,
-      updated_at = ? WHERE id = ? AND owner_id = ?`,
-    )
-      .bind(
+    const now = Date.now();
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, started_on = ?, ended_on = ?,
+          updated_at = ? WHERE id = ? AND owner_id = ?`,
+      ).bind(
         value.title,
         value.type,
         value.note,
         value.decision,
         value.startedOn,
         value.endedOn,
-        Date.now(),
+        now,
         item.id,
         c.get('ownerId'),
-      )
-      .run();
+      ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        item.listId,
+        c.get('ownerId'),
+      ),
+    ]);
     return c.json({ item: await requireItem(c.env.DB, c.get('ownerId'), item.id) });
   });
 
   api.delete('/items/:itemId', async (c) => {
     const item = await requireItem(c.env.DB, c.get('ownerId'), c.req.param('itemId'));
+    const now = Date.now();
     await c.env.DB.batch([
       c.env.DB.prepare('DELETE FROM items WHERE id = ? AND owner_id = ?').bind(item.id, c.get('ownerId')),
       c.env.DB.prepare(
@@ -85,7 +92,12 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         )
       ), rank_revision = rank_revision + 1, updated_at = ?
       WHERE id = ? AND owner_id = ? AND EXISTS (SELECT 1 FROM json_each(lists.ranked_ids) WHERE value = ?)`,
-      ).bind(item.id, Date.now(), item.listId, c.get('ownerId'), item.id),
+      ).bind(item.id, now, item.listId, c.get('ownerId'), item.id),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        item.listId,
+        c.get('ownerId'),
+      ),
     ]);
     return c.body(null, 204);
   });
@@ -146,11 +158,12 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid log');
     const value = merged.data;
     await validateLogTarget(c.env.DB, c.get('ownerId'), list.id, list.kind, value.itemId, value.title);
-    await c.env.DB.prepare(
-      `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
-      unit = ?, sets = ?, reps = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
-    )
-      .bind(
+    const now = Date.now();
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
+          unit = ?, sets = ?, reps = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
+      ).bind(
         value.itemId,
         value.title,
         value.happenedOn,
@@ -159,19 +172,30 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         value.unit,
         value.sets,
         value.reps,
-        Date.now(),
+        now,
         log.id,
         c.get('ownerId'),
-      )
-      .run();
+      ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        list.id,
+        c.get('ownerId'),
+      ),
+    ]);
     return c.json({ log: await requireLog(c.env.DB, c.get('ownerId'), log.id) });
   });
 
   api.delete('/logs/:logId', async (c) => {
     const log = await requireLog(c.env.DB, c.get('ownerId'), c.req.param('logId'));
-    await c.env.DB.prepare('DELETE FROM logs WHERE id = ? AND owner_id = ?')
-      .bind(log.id, c.get('ownerId'))
-      .run();
+    const now = Date.now();
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM logs WHERE id = ? AND owner_id = ?').bind(log.id, c.get('ownerId')),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        log.listId,
+        c.get('ownerId'),
+      ),
+    ]);
     return c.body(null, 204);
   });
 
