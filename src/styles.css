@@ -2905,6 +2905,9 @@ dialog::backdrop {
   .collection-filters .clear-filters {
     justify-self: start;
   }
+  .activity-tools .clear-filters {
+    justify-self: start;
+  }
   .activity-tools > span {
     justify-self: end;
   }

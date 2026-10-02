@@ -32,8 +32,14 @@ export function ActivityView({
   const [repeatTitle, setRepeatTitle] = useState('');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'name'>('newest');
+  const [period, setPeriod] = useState<'all' | '30d' | 'year'>('all');
+  const periodStart = activityPeriodStart(period);
   const visible = logs
-    .filter((log) => `${log.title} ${log.note}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
+    .filter(
+      (log) =>
+        `${log.title} ${log.note}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()) &&
+        (!periodStart || log.happenedOn >= periodStart),
+    )
     .sort((a, b) =>
       sort === 'name'
         ? a.title.localeCompare(b.title)
@@ -45,13 +51,21 @@ export function ActivityView({
     (latest, log) => (!latest || log.happenedOn > latest.happenedOn ? log : latest),
     null,
   );
+  const hasFilters = Boolean(query.trim()) || sort !== 'newest' || period !== 'all';
 
   useEffect(() => {
     setSelected(null);
     setRepeatTitle('');
     setQuery('');
     setSort('newest');
+    setPeriod('all');
   }, [listId]);
+
+  function clearFilters() {
+    setQuery('');
+    setSort('newest');
+    setPeriod('all');
+  }
 
   function close() {
     setSelected(null);
@@ -103,6 +117,20 @@ export function ActivityView({
           <option value="oldest">Oldest first</option>
           <option value="name">Name</option>
         </select>
+        <select
+          aria-label="Time period"
+          value={period}
+          onChange={(event) => setPeriod(event.target.value as typeof period)}
+        >
+          <option value="all">All time</option>
+          <option value="30d">Last 30 days</option>
+          <option value="year">This year</option>
+        </select>
+        {hasFilters && (
+          <button className="clear-filters" type="button" onClick={clearFilters}>
+            Clear filters
+          </button>
+        )}
         <span role="status">
           {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
         </span>
@@ -114,6 +142,11 @@ export function ActivityView({
           {!logs.length && (
             <button className="button button-dark" onClick={onNew}>
               <Plus size={17} /> Add first log
+            </button>
+          )}
+          {logs.length > 0 && hasFilters && (
+            <button className="button button-outline" type="button" onClick={clearFilters}>
+              Clear filters
             </button>
           )}
         </div>
@@ -156,6 +189,14 @@ export function ActivityView({
       )}
     </section>
   );
+}
+
+function activityPeriodStart(period: 'all' | '30d' | 'year'): string | null {
+  if (period === 'all') return null;
+  if (period === 'year') return `${today().slice(0, 4)}-01-01`;
+  const date = new Date(`${today()}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 29);
+  return date.toISOString().slice(0, 10);
 }
 
 function ActivityEditor({
