@@ -264,7 +264,12 @@ test('photos stay private, validate uploads, and disappear with their item', asy
   expect((await upload('bob', png)).status).toBe(404);
   expect((await upload('alice', png, 'image/jpeg')).status).toBe(415);
   expect((await upload('alice', new Uint8Array(900_001))).status).toBe(413);
+  await platform.env.DB.prepare('UPDATE lists SET updated_at = 0 WHERE id = ?').bind(list.id).run();
   expect((await upload('alice', png)).status).toBe(200);
+  const listAfterPhotoUpload = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
+    list: { updatedAt: number };
+  };
+  expect(listAfterPhotoUpload.list.updatedAt).toBeGreaterThan(0);
 
   const ownerPhoto = await call(path, 'alice');
   expect(ownerPhoto.status).toBe(200);

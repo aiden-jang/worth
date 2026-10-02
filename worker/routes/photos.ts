@@ -18,10 +18,11 @@ function registerPhotoOwner(
 ): void {
   const path = `/${pathName}/:id/photo`;
 
-  async function requireOwner(db: D1Database, ownerId: string, id: string): Promise<void> {
+  async function requireOwner(db: D1Database, ownerId: string, id: string): Promise<string> {
     if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
-    if (pathName === 'items') await requireItem(db, ownerId, id);
-    else await requireLog(db, ownerId, id);
+    const record =
+      pathName === 'items' ? await requireItem(db, ownerId, id) : await requireLog(db, ownerId, id);
+    return record.listId;
   }
 
   api.get(path, async (c) => {
@@ -40,7 +41,7 @@ function registerPhotoOwner(
 
   api.put(path, async (c) => {
     const id = c.req.param('id') ?? '';
-    await requireOwner(c.env.DB, c.get('ownerId'), id);
+    const listId = await requireOwner(c.env.DB, c.get('ownerId'), id);
     const bytes = await readBytes(c.req.raw, MAX_PHOTO_BYTES);
     const contentType = photoContentType(bytes);
     const declaredType = c.req.header('content-type')?.split(';')[0]?.toLowerCase();
@@ -58,21 +59,32 @@ function registerPhotoOwner(
         id,
         c.get('ownerId'),
       ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        listId,
+        c.get('ownerId'),
+      ),
     ]);
     return c.json({ hasPhoto: true });
   });
 
   api.delete(path, async (c) => {
     const id = c.req.param('id') ?? '';
-    await requireOwner(c.env.DB, c.get('ownerId'), id);
+    const listId = await requireOwner(c.env.DB, c.get('ownerId'), id);
+    const now = Date.now();
     await c.env.DB.batch([
       c.env.DB.prepare(`DELETE FROM ${table} WHERE ${idColumn} = ? AND owner_id = ?`).bind(
         id,
         c.get('ownerId'),
       ),
       c.env.DB.prepare(`UPDATE ${pathName} SET updated_at = ? WHERE id = ? AND owner_id = ?`).bind(
-        Date.now(),
+        now,
         id,
+        c.get('ownerId'),
+      ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        listId,
         c.get('ownerId'),
       ),
     ]);
