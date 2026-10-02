@@ -41,6 +41,7 @@ export function CollectionView({
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
   const [sort, setSort] = useState<ItemSort>('rank');
+  const [rankStatus, setRankStatus] = useState('');
 
   useEffect(() => {
     const saved = window.localStorage.getItem(`worth:view:${list.id}`);
@@ -50,6 +51,7 @@ export function CollectionView({
     setRankFilter('all');
     setDecisionFilter('all');
     setSort('rank');
+    setRankStatus('');
   }, [list.id]);
 
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
@@ -78,12 +80,15 @@ export function CollectionView({
     mutationFn: ({ itemId, position }: { itemId: string; position: number | null }) =>
       api.rank(list.id, moveRank(list.rankedIds, itemId, position), list.rankRevision),
     onSuccess: ({ list: next }) => {
+      setRankStatus('Ranking saved.');
       client.setQueryData(['list', list.id], { list: next });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
     onError: (error) => {
-      if (error instanceof RequestError && error.status === 409)
+      if (error instanceof RequestError && error.status === 409) {
+        setRankStatus('The ranking changed in another tab, so the latest order has been restored.');
         void client.invalidateQueries({ queryKey: ['list', list.id] });
+      }
     },
   });
 
@@ -108,12 +113,13 @@ export function CollectionView({
         aria-label={`Rank ${item.title}`}
         value={current ?? 'none'}
         disabled={rank.isPending}
-        onChange={(event) =>
+        onChange={(event) => {
+          setRankStatus('');
           rank.mutate({
             itemId: item.id,
             position: event.target.value === 'none' ? null : Number(event.target.value),
-          })
-        }
+          });
+        }}
       >
         <option value="none">—</option>
         {Array.from({ length: Math.min(items.length, 500) }, (_, index) => (
@@ -235,7 +241,16 @@ export function CollectionView({
           </button>
         )}
       </div>
-      {rank.isError && <p className="form-error">{rank.error.message}</p>}
+      {rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409) && (
+        <p className="form-error" role="alert">
+          {rank.error.message}
+        </p>
+      )}
+      {rankStatus && (
+        <p className="collection-rank-status" role="status">
+          {rankStatus}
+        </p>
+      )}
 
       {!visible.length ? (
         <div className="empty-list">

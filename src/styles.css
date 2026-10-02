@@ -1137,6 +1137,13 @@ select:focus {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.collection-rank-status {
+  margin: 0;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font: 500 0.67rem/1.5 var(--mono);
+}
 .collection-signal strong {
   display: block;
   overflow: hidden;
