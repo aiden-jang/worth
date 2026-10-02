@@ -46,6 +46,13 @@ export function ActivityView({
     null,
   );
 
+  useEffect(() => {
+    setSelected(null);
+    setRepeatTitle('');
+    setQuery('');
+    setSort('newest');
+  }, [listId]);
+
   function close() {
     setSelected(null);
     setRepeatTitle('');
