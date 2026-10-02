@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, Trash } from '@phosphor-icons/react';
 import { api } from '../api';
+import { ConfirmDialog } from './ConfirmDialog';
 
 async function preparePhoto(file: File): Promise<Blob> {
   const maxBytes = 900_000;
@@ -52,6 +53,7 @@ export function PhotoControl({
 }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const upload = useMutation({
     mutationFn: async (file: File) => api.uploadPhoto(kind, id, await preparePhoto(file)),
     onSuccess: () => {
@@ -64,6 +66,7 @@ export function PhotoControl({
   const remove = useMutation({
     mutationFn: () => api.deletePhoto(kind, id),
     onSuccess: () => {
+      setConfirmingRemoval(false);
       void client.invalidateQueries({ queryKey: [kind, listId] });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
@@ -95,9 +98,7 @@ export function PhotoControl({
               className="icon-button"
               aria-label="Remove photo"
               disabled={remove.isPending}
-              onClick={() => {
-                if (window.confirm('Remove this photo?')) remove.mutate();
-              }}
+              onClick={() => setConfirmingRemoval(true)}
             >
               <Trash size={18} />
             </button>
@@ -113,6 +114,18 @@ export function PhotoControl({
         <p className="form-error" role="alert">
           {error}
         </p>
+      )}
+      {confirmingRemoval && (
+        <ConfirmDialog
+          eyebrow="REMOVE PHOTO"
+          title="Remove this photo?"
+          description="This permanently removes the private photo from this record. The record and its notes stay intact."
+          confirmLabel="Remove photo"
+          pending={remove.isPending}
+          error={remove.isError ? remove.error.message : undefined}
+          onConfirm={() => remove.mutate()}
+          onClose={() => setConfirmingRemoval(false)}
+        />
       )}
     </div>
   );

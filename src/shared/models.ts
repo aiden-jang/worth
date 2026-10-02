@@ -80,7 +80,15 @@ export interface Overview {
   recent: RecentEntry[];
   favorites: DecisionPick[];
   notAgain: DecisionPick[];
-  lastTimes: { title: string; happenedOn: string }[];
+  lastTimes: LastTime[];
+}
+
+export interface LastTime {
+  id: string;
+  listId: string;
+  listName: string;
+  title: string;
+  happenedOn: string;
 }
 
 export interface DecisionPick {

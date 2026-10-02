@@ -306,16 +306,49 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   expect((await call(`/lists/${list.id}/logs`, 'bob')).status).toBe(404);
   expect((await call(`/logs/${log.id}`, 'bob', 'PATCH', { title: 'Changed' })).status).toBe(404);
 
+  const createdSecondList = await call('/lists', 'alice', 'POST', {
+    name: 'Training',
+    kind: 'activity',
+    description: '',
+  });
+  const secondList = ((await createdSecondList.json()) as { list: { id: string } }).list;
+  const createdSecondLog = await call(`/lists/${secondList.id}/logs`, 'alice', 'POST', {
+    itemId: null,
+    title: 'Evening run',
+    happenedOn: '2026-10-01',
+    note: '',
+    amount: null,
+    unit: '',
+    sets: null,
+    reps: null,
+  });
+  const secondLog = ((await createdSecondLog.json()) as { log: { id: string } }).log;
+
   const results = (await (await call('/search?q=Evening', 'alice')).json()) as {
     results: { id: string; title: string }[];
   };
   expect(results.results).toContainEqual(expect.objectContaining({ id: log.id, title: 'Evening run' }));
   const overview = (await (await call('/overview', 'alice')).json()) as {
-    lastTimes: { title: string; happenedOn: string }[];
+    lastTimes: { id: string; listId: string; listName: string; title: string; happenedOn: string }[];
     recent: { id: string }[];
   };
   expect(overview.lastTimes).toContainEqual(
-    expect.objectContaining({ title: 'Evening run', happenedOn: '2026-09-30' }),
+    expect.objectContaining({
+      id: log.id,
+      listId: list.id,
+      listName: 'Runs',
+      title: 'Evening run',
+      happenedOn: '2026-09-30',
+    }),
+  );
+  expect(overview.lastTimes).toContainEqual(
+    expect.objectContaining({
+      id: secondLog.id,
+      listId: secondList.id,
+      listName: 'Training',
+      title: 'Evening run',
+      happenedOn: '2026-10-01',
+    }),
   );
   expect(overview.recent).toContainEqual(expect.objectContaining({ id: log.id }));
 

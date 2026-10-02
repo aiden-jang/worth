@@ -143,10 +143,14 @@ export function ArchivePage() {
               </header>
               <ol>
                 {data.lastTimes.map((entry) => (
-                  <li key={entry.title}>
-                    <strong>{entry.title}</strong>
-                    <time dateTime={entry.happenedOn}>{formatElapsedDays(entry.happenedOn)}</time>
-                    <small>{dateLabel(entry.happenedOn).toUpperCase()}</small>
+                  <li key={entry.id}>
+                    <Link to={`/lists/${entry.listId}?focus=log:${entry.id}`}>
+                      <strong>{entry.title}</strong>
+                      <time dateTime={entry.happenedOn}>{formatElapsedDays(entry.happenedOn)}</time>
+                      <small>
+                        {entry.listName} · {dateLabel(entry.happenedOn).toUpperCase()}
+                      </small>
+                    </Link>
                   </li>
                 ))}
               </ol>

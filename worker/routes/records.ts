@@ -221,11 +221,24 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       }>(),
     ]);
     const { results: lastTimes } = await c.env.DB.prepare(
-      `SELECT title, MAX(happened_on) AS happened_on
-      FROM logs WHERE owner_id = ? AND item_id IS NULL GROUP BY title ORDER BY happened_on DESC LIMIT 4`,
+      `WITH latest_activity AS (
+        SELECT g.id, g.list_id, g.title, g.happened_on,
+        ROW_NUMBER() OVER (
+          PARTITION BY g.list_id, g.title
+          ORDER BY g.happened_on DESC, g.created_at DESC
+        ) AS position
+        FROM logs g
+        WHERE g.owner_id = ? AND g.item_id IS NULL
+      )
+      SELECT a.id, a.list_id, l.name AS list_name, a.title, a.happened_on
+      FROM latest_activity a
+      JOIN lists l ON l.id = a.list_id AND l.owner_id = ?
+      WHERE a.position = 1
+      ORDER BY a.happened_on DESC
+      LIMIT 4`,
     )
-      .bind(ownerId)
-      .all<{ title: string; happened_on: string }>();
+      .bind(ownerId, ownerId)
+      .all<{ id: string; list_id: string; list_name: string; title: string; happened_on: string }>();
     return c.json({
       lists,
       recent: recent.map((row) => ({
@@ -256,7 +269,13 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         type: row.type,
         decision: row.decision,
       })),
-      lastTimes: lastTimes.map((row) => ({ title: row.title, happenedOn: row.happened_on })),
+      lastTimes: lastTimes.map((row) => ({
+        id: row.id,
+        listId: row.list_id,
+        listName: row.list_name,
+        title: row.title,
+        happenedOn: row.happened_on,
+      })),
     });
   });
 

@@ -605,11 +605,22 @@ textarea::placeholder {
 }
 .archive-last-times li {
   min-width: 0;
-  padding: 1.15rem 1.5rem;
   border-right: 1px solid var(--line);
 }
 .archive-last-times li:last-child {
   border-right: 0;
+}
+.archive-last-times a {
+  display: block;
+  min-height: 100%;
+  padding: 1.15rem 1.5rem;
+  transition: background-color 160ms ease;
+}
+.archive-last-times a:hover {
+  background: var(--raised);
+}
+.archive-last-times a:hover strong {
+  color: var(--acid);
 }
 .archive-last-times strong,
 .archive-last-times time,
