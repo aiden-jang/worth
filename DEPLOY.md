@@ -16,7 +16,14 @@ The auth service already allows HTTPS return URLs under `*.aidenjang.com` and sh
 
 ## Routine deploys
 
-`pnpm run deploy` runs the full check, applies remote D1 migrations, then deploys the built Worker. It changes production data, so use it only when you mean to ship. The GitHub workflow checks in one job and runs `pnpm run deploy:only` in a dependent job on pushes to `main`; it is gated by the repository variable `WORTH_READY=true`. Set that variable only after the first deploy and smoke test. Add a `CLOUDFLARE_API_TOKEN` secret with Workers Scripts Edit and D1 Edit permissions. Do not store the token in the repo.
+`pnpm run deploy` runs the full check, applies remote D1 migrations, then deploys the built Worker. It changes production data, so use it only when you mean to ship. The GitHub workflow checks in one job and runs `pnpm run deploy:only` in a dependent job on pushes to `main`; it is gated by the repository variable `WORTH_READY=true`. Set that variable only after the first deploy and smoke test.
+
+Before enabling that variable, add these repository secrets in GitHub Actions:
+
+- `CLOUDFLARE_API_TOKEN`: scoped to the Cloudflare account. It needs Workers Scripts Edit and D1 Edit. Give it Workers Routes Edit for `aidenjang.com` if the custom domain route needs to be created or changed.
+- `CLOUDFLARE_ACCOUNT_ID`: the ID of the Cloudflare account that owns the Worker and D1 database.
+
+Do not store either value in the repo.
 
 `pnpm run db:migrate:local` changes only the local D1. `pnpm run db:migrate:remote` changes production D1. Neither command runs automatically in `pnpm run dev`.
 
