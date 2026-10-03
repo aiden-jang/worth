@@ -100,7 +100,7 @@ export function ListPage() {
           <button
             className="icon-button settings-button"
             aria-label="List settings"
-            onClick={() => setShowSettings((value) => !value)}
+            onClick={() => setShowSettings(true)}
           >
             <GearSix size={20} />
           </button>
@@ -192,6 +192,7 @@ function ListSettings({
   const [nextName, setNextName] = useState(name);
   const [nextDescription, setNextDescription] = useState(description);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const cleanName = nextName.trim();
   const cleanDescription = nextDescription.trim();
   const hasChanges = cleanName !== name || cleanDescription !== description;
@@ -218,6 +219,14 @@ function ListSettings({
     if (cleanName && hasChanges) update.mutate();
   }
 
+  function requestClose() {
+    if (hasChanges) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    onClose();
+  }
+
   return (
     <section className="settings-panel">
       <div className="panel-title">
@@ -225,7 +234,7 @@ function ListSettings({
           <p className="overline">LIST SETTINGS</p>
           <h2>{name}</h2>
         </div>
-        <button className="icon-button" aria-label="Close settings" onClick={onClose}>
+        <button className="icon-button" aria-label="Close settings" onClick={requestClose}>
           <X size={19} />
         </button>
       </div>
@@ -274,6 +283,19 @@ function ListSettings({
           error={remove.isError ? remove.error.message : undefined}
           onConfirm={() => remove.mutate()}
           onClose={() => setConfirmingDelete(false)}
+        />
+      )}
+      {confirmingDiscard && (
+        <ConfirmDialog
+          eyebrow="DISCARD CHANGES"
+          title="Leave list settings?"
+          description="Your changes to this list's name and description will be lost."
+          confirmLabel="Discard changes"
+          onConfirm={() => {
+            setConfirmingDiscard(false);
+            onClose();
+          }}
+          onClose={() => setConfirmingDiscard(false)}
         />
       )}
     </section>
