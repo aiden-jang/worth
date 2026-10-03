@@ -184,6 +184,7 @@ export function ActivityView({
           listId={listId}
           log={newOpen ? null : selected}
           initialTitle={repeatTitle}
+          existingTitles={logs.map((entry) => entry.title)}
           onClose={close}
         />
       )}
@@ -203,11 +204,13 @@ function ActivityEditor({
   listId,
   log,
   initialTitle,
+  existingTitles,
   onClose,
 }: {
   listId: string;
   log: Log | null;
   initialTitle: string;
+  existingTitles: string[];
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -301,9 +304,19 @@ function ActivityEditor({
               autoFocus={!log}
               maxLength={120}
               value={form.title}
+              list={`activity-titles-${listId}`}
               onChange={(event) => setForm({ ...form, title: event.target.value })}
               placeholder="Evening run, haircut, bench press…"
             />
+            {existingTitles.length > 0 && (
+              <datalist id={`activity-titles-${listId}`}>
+                {Array.from(new Set(existingTitles))
+                  .sort()
+                  .map((title) => (
+                    <option key={title} value={title} />
+                  ))}
+              </datalist>
+            )}
           </label>
           <label>
             When
