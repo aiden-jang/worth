@@ -34,6 +34,7 @@ export function ListPage() {
   const [showShare, setShowShare] = useState(false);
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
+  const focusLogId = focus?.startsWith('log:') ? focus.slice('log:'.length) : null;
 
   useEffect(() => {
     setSelectedId(focus?.startsWith('item:') ? focus.slice('item:'.length) : null);
@@ -70,7 +71,10 @@ export function ListPage() {
 
   const items = itemsQuery.data?.items ?? [];
   const logs = logsQuery.data?.logs ?? [];
-  const selected = items.find((item) => item.id === selectedId) ?? null;
+  const focusedLog = focusLogId ? (logs.find((log) => log.id === focusLogId) ?? null) : null;
+  const selected =
+    items.find((item) => item.id === selectedId) ??
+    (focusedLog?.itemId ? (items.find((item) => item.id === focusedLog.itemId) ?? null) : null);
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
@@ -150,6 +154,7 @@ export function ListPage() {
               item={creating ? null : selected}
               items={items}
               logs={logs}
+              focusLogId={focusLogId}
               onClose={closeEditor}
               onCreated={(id) => {
                 setParams({}, { replace: true });

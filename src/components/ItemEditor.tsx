@@ -21,6 +21,7 @@ export function ItemEditor({
   item,
   items,
   logs,
+  focusLogId,
   onClose,
   onCreated,
 }: {
@@ -28,6 +29,7 @@ export function ItemEditor({
   item: Item | null;
   items: Item[];
   logs: Log[];
+  focusLogId: string | null;
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
@@ -58,6 +60,11 @@ export function ItemEditor({
     setForm(nextForm);
     setSavedForm(nextForm);
   }, [item?.id, item?.updatedAt]);
+  useEffect(() => {
+    if (!focusLogId || !item) return;
+    const focusedLog = logs.find((log) => log.id === focusLogId && log.itemId === item.id);
+    if (focusedLog) setEditingLog(focusedLog);
+  }, [focusLogId, item, logs]);
 
   const save = useMutation({
     mutationFn: () => {
