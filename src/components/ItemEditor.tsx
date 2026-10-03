@@ -41,6 +41,7 @@ export function ItemEditor({
   const [logNote, setLogNote] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [editingLog, setEditingLog] = useState<Log | null>(null);
+  const [handledFocusLogId, setHandledFocusLogId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
@@ -61,10 +62,13 @@ export function ItemEditor({
     setSavedForm(nextForm);
   }, [item?.id, item?.updatedAt]);
   useEffect(() => {
-    if (!focusLogId || !item) return;
+    if (!focusLogId || focusLogId === handledFocusLogId || !item) return;
     const focusedLog = logs.find((log) => log.id === focusLogId && log.itemId === item.id);
-    if (focusedLog) setEditingLog(focusedLog);
-  }, [focusLogId, item, logs]);
+    if (focusedLog) {
+      setEditingLog(focusedLog);
+      setHandledFocusLogId(focusLogId);
+    }
+  }, [focusLogId, handledFocusLogId, item, logs]);
 
   const save = useMutation({
     mutationFn: () => {
