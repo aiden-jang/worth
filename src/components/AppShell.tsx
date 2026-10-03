@@ -65,7 +65,7 @@ export function AppShell({
 
   return (
     <div className="app-shell app-shell-dark">
-      <header className="site-header">
+      <aside className="app-rail">
         <Link to="/" className="brand" aria-label="Worth, archive home">
           worth
         </Link>
@@ -76,7 +76,7 @@ export function AppShell({
           <NavLink to="/lists">Lists</NavLink>
           <NavLink to="/search">Search</NavLink>
         </nav>
-        <div className="header-actions">
+        <div className="rail-actions">
           <a
             className="account-link"
             href={new URL('/account', authOrigin).toString()}
@@ -105,23 +105,25 @@ export function AppShell({
             )}
           </div>
         </div>
-      </header>
-      {children}
-      <footer className="site-footer">
-        <span>worth</span>
-        <span>Private by default.</span>
-        {siteFooterLinks(authOrigin).map((link) => (
-          <a
-            key={link.href}
-            href={link.href}
-            target={link.external ? '_blank' : undefined}
-            rel={link.external ? 'noreferrer' : undefined}
-          >
-            {link.label}
-          </a>
-        ))}
-        <a href={logoutUrl(authOrigin, window.location.origin)}>Sign out</a>
-      </footer>
+      </aside>
+      <div className="app-content">
+        {children}
+        <footer className="site-footer">
+          <span>worth</span>
+          <span>Private by default.</span>
+          {siteFooterLinks(authOrigin).map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noreferrer' : undefined}
+            >
+              {link.label}
+            </a>
+          ))}
+          <a href={logoutUrl(authOrigin, window.location.origin)}>Sign out</a>
+        </footer>
+      </div>
       <dialog
         className="add-dialog"
         ref={dialog}
