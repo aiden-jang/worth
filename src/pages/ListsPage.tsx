@@ -62,6 +62,14 @@ export function ListsPage() {
     setParams({});
   }
 
+  function discardDraft() {
+    setName('');
+    setDescription('');
+    setKind(requestedKind === 'activity' ? 'activity' : 'collection');
+    setConfirmingDiscard(false);
+    setParams({});
+  }
+
   return (
     <main className="light-page lists-page page-width">
       <div className="page-head">
@@ -136,10 +144,7 @@ export function ListsPage() {
               description="The name and description you entered will be lost."
               cancelLabel="Keep editing"
               confirmLabel="Discard draft"
-              onConfirm={() => {
-                setConfirmingDiscard(false);
-                setParams({});
-              }}
+              onConfirm={discardDraft}
               onClose={() => setConfirmingDiscard(false)}
             />
           )}
