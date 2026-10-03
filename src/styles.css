@@ -1735,7 +1735,8 @@ dialog::backdrop {
   color: var(--acid);
 }
 .item-editor-dialog .photo-control,
-.activity-editor-dialog .photo-control {
+.activity-editor-dialog .photo-control,
+.collection-log-dialog .photo-control {
   padding-bottom: 1.6rem;
   border-bottom: 1px solid var(--line);
 }
@@ -1822,6 +1823,10 @@ dialog::backdrop {
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.history-actions {
+  display: flex;
+  gap: 0.35rem;
 }
 .add-list-choices {
   max-height: 48vh;

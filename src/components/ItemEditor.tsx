@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash, X } from '@phosphor-icons/react';
+import { PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
 import type { Item, Log } from '../shared/models';
 import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
@@ -38,6 +38,7 @@ export function ItemEditor({
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [editingLog, setEditingLog] = useState<Log | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
@@ -301,13 +302,24 @@ export function ItemEditor({
                 <div key={log.id} className="history-row">
                   <span>{formatDate(log.happenedOn)}</span>
                   <p>{log.note || 'No note'}</p>
-                  <button
-                    className="icon-button"
-                    aria-label={`Delete log from ${formatDate(log.happenedOn)}`}
-                    onClick={() => setDeleteTarget({ kind: 'log', id: log.id, title: 'this log' })}
-                  >
-                    <Trash size={17} />
-                  </button>
+                  <div className="history-actions">
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label={`Edit log from ${formatDate(log.happenedOn)}`}
+                      onClick={() => setEditingLog(log)}
+                    >
+                      <PencilSimple size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label={`Delete log from ${formatDate(log.happenedOn)}`}
+                      onClick={() => setDeleteTarget({ kind: 'log', id: log.id, title: 'this log' })}
+                    >
+                      <Trash size={17} />
+                    </button>
+                  </div>
                 </div>
               ))}
               {!history.length && (
@@ -358,6 +370,124 @@ export function ItemEditor({
             eyebrow="DISCARD CHANGES"
             title="Leave without saving?"
             description="Your changes to this private record will be lost."
+            confirmLabel="Discard changes"
+            onConfirm={() => {
+              setConfirmingDiscard(false);
+              dialog.current?.close();
+            }}
+            onClose={() => setConfirmingDiscard(false)}
+          />
+        )}
+        {editingLog && (
+          <CollectionLogEditor log={editingLog} listId={listId} onClose={() => setEditingLog(null)} />
+        )}
+      </div>
+    </dialog>
+  );
+}
+
+function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: string; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const client = useQueryClient();
+  const [happenedOn, setHappenedOn] = useState(log.happenedOn);
+  const [note, setNote] = useState(log.note);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const cleanNote = note.trim();
+  const hasChanges = happenedOn !== log.happenedOn || cleanNote !== log.note;
+
+  useEffect(() => {
+    dialog.current?.showModal();
+    return () => {
+      dialog.current?.close();
+    };
+  }, []);
+
+  const save = useMutation({
+    mutationFn: () => api.updateLog(log.id, { happenedOn, note: cleanNote }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['logs', listId] });
+      void client.invalidateQueries({ queryKey: ['items', listId] });
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+      dialog.current?.close();
+    },
+  });
+
+  function requestClose() {
+    if (hasChanges) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    dialog.current?.close();
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    save.mutate();
+  }
+
+  return (
+    <dialog
+      className="editor-dialog collection-log-dialog"
+      ref={dialog}
+      onClose={onClose}
+      onCancel={(event) => {
+        event.preventDefault();
+        requestClose();
+      }}
+      onClick={(event) => {
+        if (event.target === dialog.current) requestClose();
+      }}
+    >
+      <div className="editor-inner">
+        <div className="editor-head">
+          <div>
+            <p className="overline">REVISIT DETAIL</p>
+            <h2>{formatDate(log.happenedOn)}</h2>
+          </div>
+          <button type="button" className="icon-button" aria-label="Close" onClick={requestClose}>
+            <X size={22} />
+          </button>
+        </div>
+        <PhotoControl
+          kind="logs"
+          id={log.id}
+          hasPhoto={log.hasPhoto}
+          version={log.updatedAt}
+          listId={listId}
+        />
+        <form className="editor-form record-form" onSubmit={submit}>
+          <label>
+            When
+            <input
+              type="date"
+              required
+              autoFocus
+              value={happenedOn}
+              onChange={(event) => setHappenedOn(event.target.value)}
+            />
+          </label>
+          <label>
+            Private note <span className="optional">optional</span>
+            <textarea
+              rows={4}
+              maxLength={4000}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="What stood out this time?"
+            />
+          </label>
+          {save.isError && <p className="form-error">{save.error.message}</p>}
+          <button className="button button-dark" disabled={!happenedOn || !hasChanges || save.isPending}>
+            Save changes
+          </button>
+        </form>
+        {confirmingDiscard && (
+          <ConfirmDialog
+            eyebrow="DISCARD CHANGES"
+            title="Leave without saving?"
+            description="Your changes to this private revisit log will be lost."
             confirmLabel="Discard changes"
             onConfirm={() => {
               setConfirmingDiscard(false);
