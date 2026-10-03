@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
-import { moveRank, visibleItems } from '../shared/ranking';
+import {
+  moveRank,
+  visibleItems,
+  type DecisionFilter,
+  type ItemSort,
+  type RankFilter,
+} from '../shared/ranking';
 import { api, RequestError } from '../api';
 import { formatDate } from '../format';
 
@@ -43,7 +49,12 @@ export function CollectionView({
   const [title, setTitle] = useState('');
   const [browse, setBrowse] = useState<BrowseMode>('all');
   const [showSearch, setShowSearch] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState('');
+  const [type, setType] = useState('all');
+  const [rankFilter, setRankFilter] = useState<RankFilter>('all');
+  const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
+  const [sort, setSort] = useState<ItemSort>('rank');
   const [status, setStatus] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -51,7 +62,12 @@ export function CollectionView({
     setTitle('');
     setBrowse('all');
     setShowSearch(false);
+    setShowFilters(false);
     setSearch('');
+    setType('all');
+    setRankFilter('all');
+    setDecisionFilter('all');
+    setSort('rank');
     setStatus('');
     setSelectedId(null);
   }, [list.id]);
@@ -106,13 +122,16 @@ export function CollectionView({
   });
 
   const rankedIds = new Set(list.rankedIds);
+  const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
+  const hasAdvancedFilters =
+    type !== 'all' || rankFilter !== 'all' || decisionFilter !== 'all' || sort !== 'rank';
   const ranks = useMemo(() => new Map(list.rankedIds.map((id, index) => [id, index + 1])), [list.rankedIds]);
   const ordered = visibleItems(items, list.rankedIds, {
     search,
-    type: 'all',
-    rankFilter: 'all',
-    decisionFilter: 'all',
-    sort: 'rank',
+    type,
+    rankFilter,
+    decisionFilter,
+    sort,
   });
   const visible = ordered.filter((item) => {
     if (browse === 'kept') return item.decision === 'favorite';
@@ -148,15 +167,26 @@ export function CollectionView({
               : 'Start with one thing worth remembering.'}
           </p>
         </div>
-        <button
-          className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
-          type="button"
-          aria-expanded={showSearch}
-          aria-controls="collection-search"
-          onClick={() => setShowSearch((current) => !current)}
-        >
-          <MagnifyingGlass size={16} /> Search
-        </button>
+        <div className="collection-utilities">
+          <button
+            className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
+            type="button"
+            aria-expanded={showSearch}
+            aria-controls="collection-search"
+            onClick={() => setShowSearch((current) => !current)}
+          >
+            <MagnifyingGlass size={16} /> Search
+          </button>
+          <button
+            className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
+            type="button"
+            aria-expanded={showFilters}
+            aria-controls="collection-filters"
+            onClick={() => setShowFilters((current) => !current)}
+          >
+            Filter{hasAdvancedFilters ? ' ·' : ''}
+          </button>
+        </div>
       </header>
 
       <form className="quick-capture" onSubmit={submit}>
@@ -197,6 +227,65 @@ export function CollectionView({
           {search && (
             <button type="button" onClick={() => setSearch('')}>
               <X size={15} /> Clear
+            </button>
+          )}
+        </div>
+      )}
+      {showFilters && (
+        <div className="collection-advanced-filters" id="collection-filters">
+          {types.length > 0 && (
+            <label>
+              <span>Type</span>
+              <select value={type} onChange={(event) => setType(event.target.value)}>
+                <option value="all">Everything</option>
+                {types.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label>
+            <span>Rank</span>
+            <select value={rankFilter} onChange={(event) => setRankFilter(event.target.value as RankFilter)}>
+              <option value="all">Any position</option>
+              <option value="top5">Top 5</option>
+              <option value="top10">Top 10</option>
+              <option value="unranked">Not ranked</option>
+            </select>
+          </label>
+          <label>
+            <span>Your call</span>
+            <select
+              value={decisionFilter}
+              onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
+            >
+              <option value="all">Any call</option>
+              <option value="favorite">Favorite</option>
+              <option value="would_not_again">Would not again</option>
+            </select>
+          </label>
+          <label>
+            <span>Order</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
+              <option value="rank">My rank</option>
+              <option value="recent">Last opened</option>
+              <option value="name">Name</option>
+              <option value="times">Most visits</option>
+            </select>
+          </label>
+          {hasAdvancedFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setType('all');
+                setRankFilter('all');
+                setDecisionFilter('all');
+                setSort('rank');
+              }}
+            >
+              Clear filters
             </button>
           )}
         </div>
