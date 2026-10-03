@@ -4,6 +4,7 @@ import { ArrowRight, DownloadSimple, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 const suggestions: { name: string; kind: ListKind; description: string }[] = [
   { name: 'Drinks', kind: 'collection', description: 'Wines, whiskeys, and the occasional good idea.' },
@@ -24,6 +25,7 @@ export function ListsPage() {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const create = useMutation({
@@ -50,6 +52,14 @@ export function ListsPage() {
     event.preventDefault();
     if (!name.trim()) return;
     create.mutate({ name: name.trim(), kind, description: description.trim() });
+  }
+
+  function requestCloseCreate() {
+    if (name.trim() || description.trim()) {
+      setConfirmingDiscard(true);
+      return;
+    }
+    setParams({});
   }
 
   return (
@@ -82,7 +92,7 @@ export function ListsPage() {
               <p className="overline">NEW LIST</p>
               <h2>Name the list.</h2>
             </div>
-            <button className="icon-button" aria-label="Close" onClick={() => setParams({})}>
+            <button className="icon-button" aria-label="Close" onClick={requestCloseCreate}>
               <X size={20} />
             </button>
           </div>
@@ -119,6 +129,20 @@ export function ListsPage() {
               Create list <ArrowRight size={18} />
             </button>
           </form>
+          {confirmingDiscard && (
+            <ConfirmDialog
+              eyebrow="DISCARD DRAFT"
+              title="Leave this list draft?"
+              description="The name and description you entered will be lost."
+              cancelLabel="Keep editing"
+              confirmLabel="Discard draft"
+              onConfirm={() => {
+                setConfirmingDiscard(false);
+                setParams({});
+              }}
+              onClose={() => setConfirmingDiscard(false)}
+            />
+          )}
         </section>
       )}
 
