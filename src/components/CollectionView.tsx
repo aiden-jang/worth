@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
+import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
 import {
   moveRank,
   visibleItems,
@@ -25,12 +26,6 @@ function decisionLabel(item: Item): string | null {
   if (item.decision === 'favorite') return 'Favorite';
   if (item.decision === 'would_not_again') return 'Would not again';
   return null;
-}
-
-function wasOpenedLongAgo(item: Item): boolean {
-  if (!item.lastLoggedOn) return true;
-  const lastOpened = new Date(`${item.lastLoggedOn}T12:00:00`).getTime();
-  return Number.isNaN(lastOpened) || lastOpened < Date.now() - 1000 * 60 * 60 * 24 * 120;
 }
 
 export function CollectionView({
@@ -311,7 +306,7 @@ export function CollectionView({
               onClick={() => selectBrowse(mode.id)}
             >
               {mode.label}
-              <small>{browseCount(mode.id, items)}</small>
+              <small>{collectionBrowseCount(mode.id, items)}</small>
             </button>
           ))}
         </nav>
@@ -392,13 +387,6 @@ export function CollectionView({
       </div>
     </section>
   );
-}
-
-function browseCount(mode: BrowseMode, items: Item[]): number {
-  if (mode === 'kept') return items.filter((item) => item.decision === 'favorite').length;
-  if (mode === 'revisited') return items.filter((item) => item.logCount > 1).length;
-  if (mode === 'not-opened-lately') return items.filter(wasOpenedLongAgo).length;
-  return items.length;
 }
 
 function IndexRows({
