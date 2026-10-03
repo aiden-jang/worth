@@ -2863,20 +2863,33 @@ dialog::backdrop {
     bottom: 0;
     left: 0;
     z-index: 30;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
     justify-content: space-around;
     height: 58px;
     border-top: 1px solid var(--line);
     background: #0b0e10;
   }
   .main-nav a {
+    border-left: 0;
+    padding-left: 0;
     justify-content: center;
     min-width: 0;
     flex: 1;
     font-size: 0.61rem;
   }
+  .main-nav a.active {
+    border-left-color: transparent;
+  }
   .main-nav a.active::after {
+    position: absolute;
     top: 0;
+    left: 50%;
+    width: 18px;
+    height: 2px;
     bottom: auto;
+    transform: translateX(-50%);
   }
   .rail-collections {
     display: none;
