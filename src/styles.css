@@ -227,7 +227,7 @@ img {
   padding: 0.45rem 0.7rem;
   font-size: 0.64rem;
 }
-.quick-capture {
+.collection-capture {
   display: flex;
   align-items: stretch;
 }
@@ -1176,10 +1176,10 @@ select:focus {
   grid-template-columns: minmax(0, 1fr) auto;
   margin-top: 1.5rem;
 }
-.quick-capture label {
+.collection-capture label {
   min-width: 0;
 }
-.quick-capture input {
+.collection-capture input {
   width: 100%;
   min-height: 74px;
   border: 1px solid var(--line-strong);
@@ -1192,16 +1192,16 @@ select:focus {
   font-weight: 500;
   letter-spacing: -0.045em;
 }
-.quick-capture input::placeholder {
+.collection-capture input::placeholder {
   color: var(--faint);
   opacity: 1;
 }
-.quick-capture input:focus {
+.collection-capture input:focus {
   position: relative;
   border-color: var(--acid);
   outline: 0;
 }
-.quick-capture-submit {
+.collection-capture-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1216,16 +1216,16 @@ select:focus {
   font-weight: 700;
   letter-spacing: 0.01em;
 }
-.quick-capture-submit:hover:not(:disabled) {
+.collection-capture-submit:hover:not(:disabled) {
   background: #cf594c;
 }
-.quick-capture-submit:disabled {
+.collection-capture-submit:disabled {
   cursor: not-allowed;
   border-color: var(--line);
   background: var(--panel);
   color: var(--faint);
 }
-.quick-capture > p {
+.collection-capture > p {
   grid-column: 1 / -1;
   margin: 0.6rem 0 0;
   color: var(--muted);
@@ -3335,14 +3335,14 @@ dialog::backdrop {
   .collection-advanced-filters select {
     width: 100%;
   }
-  .quick-capture {
+  .collection-capture {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .quick-capture input {
+  .collection-capture input {
     min-height: 64px;
     padding-inline: 1rem;
   }
-  .quick-capture-submit {
+  .collection-capture-submit {
     min-width: auto;
     padding-inline: 1rem;
   }

@@ -189,7 +189,7 @@ export function CollectionView({
         </div>
       </header>
 
-      <form className="quick-capture" onSubmit={submit}>
+      <form className="collection-capture" onSubmit={submit}>
         <label>
           <span className="sr-only">What did you try?</span>
           <input
