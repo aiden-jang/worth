@@ -128,6 +128,10 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
           </div>
           <p>Rank what held up. Keep the reason. Find it when it matters again.</p>
         </header>
+        <figure className="landing-editorial">
+          <img src="/images/worth-roadside-diner-v1.png" alt="A quiet roadside diner at blue hour" />
+          <figcaption>Editorial illustration — not from a user archive.</figcaption>
+        </figure>
         <div className="landing-example-switch" role="group" aria-label="Preview example lists">
           {landingExamples.map((entry) => (
             <button

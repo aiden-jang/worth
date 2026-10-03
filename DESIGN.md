@@ -81,7 +81,11 @@ People can download their lists, items, logs, ranks, and personal calls as JSON.
 - Green accents, neon color, blue gradients, glassmorphism, or glossy effects.
 - Paper textures, fake film grain, vintage archive styling, and decorative material panels.
 - Generic rounded SaaS cards, bento grids, or dense dashboard widgets.
-- Fake photos, stock lifestyle scenes, testimonials, streaks, or social mechanics.
+- Fake photos, stock lifestyle scenes, testimonials, streaks, or social mechanics in personal archive screens.
+
+The signed-out introduction may use a clearly labeled editorial illustration. It must never be presented as a
+member's record, memory, review, or archive photo.
+
 - Oversized slogans that explain every feature at once.
 
 ## Implementation checks
