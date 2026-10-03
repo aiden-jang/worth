@@ -74,6 +74,14 @@ export function CollectionView({
     if (!focusCapture) return;
     requestAnimationFrame(() => captureRef.current?.focus());
   }, [focusCapture, list.id]);
+  useEffect(() => {
+    if (!selectedId) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedId(null);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [selectedId]);
 
   const create = useMutation({
     mutationFn: (nextTitle: string) =>
@@ -210,6 +218,12 @@ export function CollectionView({
         <p>Rank it later if you want.</p>
       </form>
       {create.isError && <p className="form-error collection-capture-error">{create.error.message}</p>}
+      {(decide.isError ||
+        (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
+        <p className="form-error collection-capture-error" role="alert">
+          {decide.isError ? decide.error.message : rank.error?.message}
+        </p>
+      )}
       {status && (
         <p className="collection-capture-status" role="status">
           {status}
@@ -447,6 +461,11 @@ function IndexRows({
                   type="button"
                   className={item.decision === 'favorite' ? 'active' : ''}
                   aria-pressed={item.decision === 'favorite'}
+                  aria-label={
+                    item.decision === 'favorite'
+                      ? `Remove favorite from ${item.title}`
+                      : `Favorite ${item.title}`
+                  }
                   disabled={decisionPending}
                   onClick={() => onDecide(item, 'favorite')}
                 >
@@ -456,6 +475,11 @@ function IndexRows({
                   type="button"
                   className={item.decision === 'would_not_again' ? 'active' : ''}
                   aria-pressed={item.decision === 'would_not_again'}
+                  aria-label={
+                    item.decision === 'would_not_again'
+                      ? `Remove would not again from ${item.title}`
+                      : `Mark ${item.title} as would not again`
+                  }
                   disabled={decisionPending}
                   onClick={() => onDecide(item, 'would_not_again')}
                 >
