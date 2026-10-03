@@ -22,12 +22,24 @@ export function ListsPage() {
   const [params, setParams] = useSearchParams();
   const creating = params.get('create') === '1';
   const requestedKind = params.get('kind');
+  const listScope: ListKind | null =
+    requestedKind === 'collection' || requestedKind === 'activity' ? requestedKind : null;
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
+  const visibleActivityLists = listScope === 'collection' ? [] : activityLists;
+  const pageTitle =
+    listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
+  const pageDescription =
+    listScope === 'collection'
+      ? 'Things you want to remember, compare, and keep close.'
+      : listScope === 'activity'
+        ? 'A quiet record of what happened and when.'
+        : 'Keep similar things together. Rank a collection, or just log what happened.';
   const create = useMutation({
     mutationFn: api.createList,
     onSuccess: ({ list }) => {
@@ -48,6 +60,10 @@ export function ListsPage() {
     setParams({ create: '1', kind: suggestion.kind });
   }
 
+  function openCreate() {
+    setParams(listScope ? { create: '1', kind: listScope } : { create: '1' });
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) return;
@@ -59,7 +75,7 @@ export function ListsPage() {
       setConfirmingDiscard(true);
       return;
     }
-    setParams({});
+    setParams(listScope ? { kind: listScope } : {});
   }
 
   function discardDraft() {
@@ -67,7 +83,7 @@ export function ListsPage() {
     setDescription('');
     setKind(requestedKind === 'activity' ? 'activity' : 'collection');
     setConfirmingDiscard(false);
-    setParams({});
+    setParams(listScope ? { kind: listScope } : {});
   }
 
   return (
@@ -75,8 +91,8 @@ export function ListsPage() {
       <div className="page-head">
         <div>
           <p className="overline">YOUR ARCHIVE</p>
-          <h1>Lists</h1>
-          <p>Keep similar things together. Rank a collection, or just log what happened.</p>
+          <h1>{pageTitle}</h1>
+          <p>{pageDescription}</p>
         </div>
         <div className="list-page-actions">
           <a
@@ -86,8 +102,13 @@ export function ListsPage() {
           >
             <DownloadSimple size={18} /> Download records
           </a>
-          <button className="button button-accent" onClick={() => setParams({ create: '1' })}>
-            <Plus size={18} /> New list
+          <button className="button button-accent" onClick={openCreate}>
+            <Plus size={18} />{' '}
+            {listScope === 'activity'
+              ? 'New activity'
+              : listScope === 'collection'
+                ? 'New collection'
+                : 'New list'}
           </button>
           <small>JSON only. Photos stay in Worth.</small>
         </div>
@@ -159,40 +180,57 @@ export function ListsPage() {
         <p className="error-banner" role="alert">
           Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
         </p>
-      ) : lists.data?.lists.length ? (
+      ) : lists.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
         <div className="list-groups">
-          {collectionLists.length > 0 && (
+          {visibleCollectionLists.length > 0 && (
             <ListDirectory
               heading="Collections"
               detail="Things you can compare, rank, and revisit."
-              lists={collectionLists}
+              lists={visibleCollectionLists}
             />
           )}
-          {activityLists.length > 0 && (
+          {visibleActivityLists.length > 0 && (
             <ListDirectory
               heading="Activity"
               detail="Things you want to log over time."
-              lists={activityLists}
+              lists={visibleActivityLists}
             />
           )}
         </div>
       ) : (
-        <section className="list-suggestions">
-          <p className="overline">A FEW PLACES TO START</p>
-          <div>
-            {suggestions.map((suggestion) => (
-              <button key={suggestion.name} onClick={() => chooseSuggestion(suggestion)}>
-                <span>
-                  {suggestion.name}
-                  <small>{suggestion.kind}</small>
-                </span>
-                <Plus size={18} />
-              </button>
-            ))}
-          </div>
-        </section>
+        <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />
       )}
     </main>
+  );
+}
+
+function EmptyListScope({
+  scope,
+  onChoose,
+}: {
+  scope: ListKind | null;
+  onChoose: (suggestion: (typeof suggestions)[number]) => void;
+}) {
+  const scopedSuggestions = scope
+    ? suggestions.filter((suggestion) => suggestion.kind === scope)
+    : suggestions;
+  return (
+    <section className="list-suggestions">
+      <p className="overline">
+        {scope ? `NO ${scope === 'collection' ? 'COLLECTIONS' : 'ACTIVITIES'} YET` : 'A FEW PLACES TO START'}
+      </p>
+      <div>
+        {scopedSuggestions.map((suggestion) => (
+          <button key={suggestion.name} onClick={() => onChoose(suggestion)}>
+            <span>
+              {suggestion.name}
+              <small>{suggestion.kind}</small>
+            </span>
+            <Plus size={18} />
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

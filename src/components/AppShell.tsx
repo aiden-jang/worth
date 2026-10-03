@@ -34,6 +34,7 @@ export function AppShell({
   );
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const listScope = new URLSearchParams(location.search).get('kind');
 
   function rememberList(listId: string) {
     window.sessionStorage.setItem(quickCaptureStorageKey, listId);
@@ -73,8 +74,25 @@ export function AppShell({
           <NavLink end to="/">
             Archive
           </NavLink>
-          <NavLink to="/lists">Lists</NavLink>
-          <NavLink to="/search">Search</NavLink>
+          <NavLink
+            to="/lists?kind=collection"
+            className={() =>
+              location.pathname === '/lists' && listScope === 'collection' ? 'active' : undefined
+            }
+          >
+            Collections
+          </NavLink>
+          <NavLink
+            to="/lists?kind=activity"
+            className={() =>
+              location.pathname === '/lists' && listScope === 'activity' ? 'active' : undefined
+            }
+          >
+            Activity
+          </NavLink>
+          <NavLink className="rail-utility-link" to="/search">
+            Search
+          </NavLink>
         </nav>
         {collectionLists.length > 0 && (
           <nav className="rail-collections" aria-label="Your collections">
