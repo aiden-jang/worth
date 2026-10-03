@@ -36,11 +36,13 @@ function wasOpenedLongAgo(item: Item): boolean {
 export function CollectionView({
   list,
   items,
+  focusCapture,
   onOpenDetails,
   onLogRevisit,
 }: {
   list: ListDetail;
   items: Item[];
+  focusCapture: boolean;
   onOpenDetails: (id: string) => void;
   onLogRevisit: (id: string) => void;
 }) {
@@ -71,6 +73,10 @@ export function CollectionView({
     setStatus('');
     setSelectedId(null);
   }, [list.id]);
+  useEffect(() => {
+    if (!focusCapture) return;
+    requestAnimationFrame(() => captureRef.current?.focus());
+  }, [focusCapture, list.id]);
 
   const create = useMutation({
     mutationFn: (nextTitle: string) =>

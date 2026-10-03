@@ -40,10 +40,10 @@ export function AppShell({
     setRememberedListId(listId);
   }
 
-  function openList(listId: string) {
-    rememberList(listId);
+  function openList(list: { id: string; kind: 'collection' | 'activity' }) {
+    rememberList(list.id);
     dialog.current?.close();
-    navigate(`/lists/${listId}?new=1`);
+    navigate(`/lists/${list.id}${list.kind === 'collection' ? '?capture=1' : '?new=1'}`);
   }
 
   function openAdd() {
@@ -57,7 +57,7 @@ export function AppShell({
       return;
     }
     if (quickCaptureList) {
-      openList(quickCaptureList.id);
+      openList(quickCaptureList);
       return;
     }
     dialog.current?.showModal();
@@ -161,13 +161,13 @@ function ListPickerGroup({
 }: {
   label: string;
   lists: { id: string; name: string; kind: 'collection' | 'activity' }[];
-  onOpen: (id: string) => void;
+  onOpen: (list: { id: string; kind: 'collection' | 'activity' }) => void;
 }) {
   return (
     <section className="add-list-group" aria-label={label}>
       <p>{label}</p>
       {lists.map((list) => (
-        <button key={list.id} onClick={() => onOpen(list.id)}>
+        <button key={list.id} onClick={() => onOpen(list)}>
           <span>
             {list.name}
             <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>

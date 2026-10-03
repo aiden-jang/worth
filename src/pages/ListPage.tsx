@@ -35,6 +35,7 @@ export function ListPage() {
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
   const focusLogComposer = params.get('log') === '1';
+  const focusCapture = params.get('capture') === '1';
   const focusLogId = focus?.startsWith('log:') ? focus.slice('log:'.length) : null;
 
   useEffect(() => {
@@ -147,6 +148,7 @@ export function ListPage() {
             <CollectionView
               list={list}
               items={items}
+              focusCapture={focusCapture}
               onOpenDetails={setSelectedId}
               onLogRevisit={(id) => {
                 setSelectedId(id);
