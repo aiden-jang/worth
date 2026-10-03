@@ -19,12 +19,14 @@ const emptyItem: ItemInput = {
 export function ItemEditor({
   listId,
   item,
+  items,
   logs,
   onClose,
   onCreated,
 }: {
   listId: string;
   item: Item | null;
+  items: Item[];
   logs: Log[];
   onClose: () => void;
   onCreated: (id: string) => void;
@@ -40,6 +42,7 @@ export function ItemEditor({
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
   const history = logs.filter((log) => log.itemId === item?.id);
+  const typeSuggestions = Array.from(new Set(items.map((entry) => entry.type).filter(Boolean))).sort();
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
   const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim());
 
@@ -186,9 +189,17 @@ export function ItemEditor({
             <input
               maxLength={60}
               value={form.type}
+              list={`item-types-${listId}`}
               onChange={(event) => setForm({ ...form, type: event.target.value })}
               placeholder="Whiskey, wine, film…"
             />
+            {typeSuggestions.length > 0 && (
+              <datalist id={`item-types-${listId}`}>
+                {typeSuggestions.map((suggestion) => (
+                  <option key={suggestion} value={suggestion} />
+                ))}
+              </datalist>
+            )}
           </label>
           <label>
             Private note <span className="optional">never included in shares</span>

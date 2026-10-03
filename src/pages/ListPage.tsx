@@ -148,6 +148,7 @@ export function ListPage() {
             <ItemEditor
               listId={listId}
               item={creating ? null : selected}
+              items={items}
               logs={logs}
               onClose={closeEditor}
               onCreated={(id) => {
