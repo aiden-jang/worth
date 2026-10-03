@@ -227,7 +227,7 @@ img {
   padding: 0.45rem 0.7rem;
   font-size: 0.64rem;
 }
-.collection-capture {
+.quick-capture {
   display: flex;
   align-items: stretch;
 }
@@ -1170,7 +1170,7 @@ select:focus {
 .collection-search-toggle.active {
   color: var(--acid);
 }
-.quick-capture {
+.collection-capture {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

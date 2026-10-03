@@ -201,7 +201,7 @@ export function CollectionView({
             disabled={create.isPending}
           />
         </label>
-        <button className="quick-capture-submit" disabled={!title.trim() || create.isPending}>
+        <button className="collection-capture-submit" disabled={!title.trim() || create.isPending}>
           {create.isPending ? 'Keeping…' : 'Keep it'} <ArrowRight size={17} />
         </button>
         <p>Rank it later if you want.</p>
