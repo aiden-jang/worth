@@ -422,6 +422,7 @@ function ActivityEditor({
             eyebrow="DISCARD CHANGES"
             title="Leave without saving?"
             description="Your changes to this private activity log will be lost."
+            cancelLabel="Keep editing"
             confirmLabel="Discard changes"
             onConfirm={() => {
               setConfirmingDiscard(false);

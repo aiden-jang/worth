@@ -296,6 +296,7 @@ function ListSettings({
           eyebrow="DISCARD CHANGES"
           title="Leave list settings?"
           description="Your changes to this list's name and description will be lost."
+          cancelLabel="Keep editing"
           confirmLabel="Discard changes"
           onConfirm={() => {
             setConfirmingDiscard(false);

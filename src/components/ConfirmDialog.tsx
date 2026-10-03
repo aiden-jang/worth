@@ -6,6 +6,7 @@ export function ConfirmDialog({
   eyebrow = 'CONFIRM',
   title,
   description,
+  cancelLabel = 'Cancel',
   confirmLabel,
   pending = false,
   error,
@@ -15,6 +16,7 @@ export function ConfirmDialog({
   eyebrow?: string;
   title: string;
   description: string;
+  cancelLabel?: string;
   confirmLabel: string;
   pending?: boolean;
   error?: string;
@@ -57,7 +59,7 @@ export function ConfirmDialog({
             onClick={() => dialog.current?.close()}
             disabled={pending}
           >
-            Keep it
+            {cancelLabel}
           </button>
           <button className="button button-danger" onClick={onConfirm} disabled={pending} autoFocus>
             {pending ? 'Deleting…' : confirmLabel}

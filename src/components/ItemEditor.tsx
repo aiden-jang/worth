@@ -382,6 +382,7 @@ export function ItemEditor({
             eyebrow="DISCARD CHANGES"
             title="Leave without saving?"
             description="Your changes to this private record will be lost."
+            cancelLabel="Keep editing"
             confirmLabel="Discard changes"
             onConfirm={() => {
               setConfirmingDiscard(false);
@@ -500,6 +501,7 @@ function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: strin
             eyebrow="DISCARD CHANGES"
             title="Leave without saving?"
             description="Your changes to this private revisit log will be lost."
+            cancelLabel="Keep editing"
             confirmLabel="Discard changes"
             onConfirm={() => {
               setConfirmingDiscard(false);
