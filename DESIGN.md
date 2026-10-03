@@ -8,6 +8,15 @@ The product has three jobs:
 - **Log** what happened with enough context to make it useful later.
 - **Rank** what held up, what did not, and what to revisit.
 
+## Capture should stay lightweight
+
+Worth must work for someone who only wants to remember a name and, sometimes, where it stands. The fastest
+useful flow is: add a name → optionally rank it → leave. Notes, photos, dates, types, personal calls, and
+revisit history are optional layers of context, never requirements for creating or keeping a record.
+
+Every primary screen should preserve this low-effort path. Detail views can invite richer reflection without
+making the archive feel like a journal that needs to be filled out.
+
 ## Core idea
 
 The central interaction is a personal measure of value. A person can rank a wine, a movie, a restaurant, a car, or any other collection item without pretending those rankings are objective.
