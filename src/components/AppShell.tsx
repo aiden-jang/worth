@@ -76,6 +76,18 @@ export function AppShell({
           <NavLink to="/lists">Lists</NavLink>
           <NavLink to="/search">Search</NavLink>
         </nav>
+        {collectionLists.length > 0 && (
+          <nav className="rail-collections" aria-label="Your collections">
+            <p>Collections</p>
+            {collectionLists.slice(0, 8).map((list) => (
+              <NavLink key={list.id} to={`/lists/${list.id}`}>
+                <span>{list.name}</span>
+                <small>{list.itemCount}</small>
+              </NavLink>
+            ))}
+            {collectionLists.length > 8 && <Link to="/lists">All lists</Link>}
+          </nav>
+        )}
         <div className="rail-actions">
           <a
             className="account-link"

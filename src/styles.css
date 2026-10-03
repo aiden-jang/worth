@@ -156,6 +156,44 @@ img {
   border-left-color: var(--acid);
   color: var(--paper);
 }
+.rail-collections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 2.5rem;
+}
+.rail-collections > p {
+  margin: 0 0 0.55rem 0.75rem;
+  color: var(--faint);
+  font: 500 0.6rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rail-collections a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 0;
+  border-left: 2px solid transparent;
+  padding: 0.38rem 0.2rem 0.38rem 0.75rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.rail-collections a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rail-collections a small {
+  color: var(--faint);
+  font: 500 0.58rem var(--mono);
+}
+.rail-collections a:hover,
+.rail-collections a.active {
+  border-left-color: var(--acid);
+  color: var(--paper);
+}
 .rail-actions {
   display: flex;
   flex-direction: column;
@@ -2839,6 +2877,9 @@ dialog::backdrop {
   .main-nav a.active::after {
     top: 0;
     bottom: auto;
+  }
+  .rail-collections {
+    display: none;
   }
   .rail-actions {
     flex-direction: row;
