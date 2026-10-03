@@ -106,6 +106,7 @@ export interface SearchResult {
   listId: string;
   listName: string;
   kind: 'item' | 'log';
+  itemId: string | null;
   title: string;
   detail: string;
 }

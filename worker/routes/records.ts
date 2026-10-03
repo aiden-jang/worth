@@ -324,7 +324,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       .bind(ownerId, pattern, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     const { results: logs } = await c.env.DB.prepare(
-      `SELECT g.id, g.list_id, l.name AS list_name,
+      `SELECT g.id, g.list_id, g.item_id, l.name AS list_name,
       COALESCE(i.title, g.title) AS title, g.happened_on AS detail
       FROM logs g
       JOIN lists l ON l.id = g.list_id
@@ -335,7 +335,14 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       ORDER BY g.happened_on DESC LIMIT 40`,
     )
       .bind(ownerId, pattern, pattern)
-      .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
+      .all<{
+        id: string;
+        list_id: string;
+        item_id: string | null;
+        list_name: string;
+        title: string;
+        detail: string;
+      }>();
     return c.json({
       results: [
         ...items.map((row) => ({
@@ -345,6 +352,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
           title: row.title,
           detail: row.detail,
           kind: 'item' as const,
+          itemId: null,
         })),
         ...logs.map((row) => ({
           id: row.id,
@@ -353,6 +361,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
           title: row.title,
           detail: row.detail,
           kind: 'log' as const,
+          itemId: row.item_id,
         })),
       ],
     });

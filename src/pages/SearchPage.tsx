@@ -84,6 +84,7 @@ function SearchGroup({
     listId: string;
     listName: string;
     kind: 'item' | 'log';
+    itemId: string | null;
     title: string;
     detail: string;
   }[];
@@ -98,7 +99,7 @@ function SearchGroup({
         >
           <span>
             <small>
-              {result.listName} / {result.kind === 'log' ? 'LOG' : 'ITEM'}
+              {result.listName} / {result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}
             </small>
             <strong>{result.title}</strong>
             {result.detail && <em>{result.detail}</em>}
