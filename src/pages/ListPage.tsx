@@ -34,6 +34,7 @@ export function ListPage() {
   const [showShare, setShowShare] = useState(false);
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
+  const focusLogComposer = params.get('log') === '1';
   const focusLogId = focus?.startsWith('log:') ? focus.slice('log:'.length) : null;
 
   useEffect(() => {
@@ -108,9 +109,11 @@ export function ListPage() {
           >
             <GearSix size={20} />
           </button>
-          <button className="button button-accent" onClick={() => setParams({ new: '1' })}>
-            <Plus size={18} /> {list.kind === 'collection' ? 'Add item' : 'Add log'}
-          </button>
+          {list.kind === 'activity' && (
+            <button className="button button-accent" onClick={() => setParams({ new: '1' })}>
+              <Plus size={18} /> Add log
+            </button>
+          )}
         </div>
       </section>
 
@@ -144,8 +147,11 @@ export function ListPage() {
             <CollectionView
               list={list}
               items={items}
-              onSelect={setSelectedId}
-              onAdd={() => setParams({ new: '1' })}
+              onOpenDetails={setSelectedId}
+              onLogRevisit={(id) => {
+                setSelectedId(id);
+                setParams({ focus: `item:${id}`, log: '1' });
+              }}
             />
           )}
           {(creating || selected) && (
@@ -155,6 +161,7 @@ export function ListPage() {
               items={items}
               logs={logs}
               focusLogId={focusLogId}
+              focusLogComposer={focusLogComposer}
               onClose={closeEditor}
               onCreated={(id) => {
                 setParams({}, { replace: true });

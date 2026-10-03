@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SquaresFour, ListBullets, Rows, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import type { Item, ListDetail } from '../shared/models';
-import {
-  moveRank,
-  visibleItems,
-  type DecisionFilter,
-  type ItemSort,
-  type RankFilter,
-} from '../shared/ranking';
+import { moveRank, visibleItems } from '../shared/ranking';
 import { api, RequestError } from '../api';
 import { formatDate } from '../format';
 
-type View = 'gallery' | 'list' | 'compact';
+type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately';
+
+const browseModes: { id: BrowseMode; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'kept', label: 'Kept' },
+  { id: 'revisited', label: 'Revisited' },
+  { id: 'not-opened-lately', label: 'Not opened lately' },
+];
 
 function decisionLabel(item: Item): string | null {
   if (item.decision === 'favorite') return 'Favorite';
@@ -20,334 +21,393 @@ function decisionLabel(item: Item): string | null {
   return null;
 }
 
+function wasOpenedLongAgo(item: Item): boolean {
+  if (!item.lastLoggedOn) return true;
+  const lastOpened = new Date(`${item.lastLoggedOn}T12:00:00`).getTime();
+  return Number.isNaN(lastOpened) || lastOpened < Date.now() - 1000 * 60 * 60 * 24 * 120;
+}
+
 export function CollectionView({
   list,
   items,
-  onSelect,
-  onAdd,
+  onOpenDetails,
+  onLogRevisit,
 }: {
   list: ListDetail;
   items: Item[];
-  onSelect: (id: string) => void;
-  onAdd: () => void;
+  onOpenDetails: (id: string) => void;
+  onLogRevisit: (id: string) => void;
 }) {
   const client = useQueryClient();
-  const [view, setView] = useState<View>(() => {
-    const saved = window.localStorage.getItem(`worth:view:${list.id}`);
-    return saved === 'gallery' || saved === 'list' || saved === 'compact' ? saved : 'compact';
-  });
+  const captureRef = useRef<HTMLInputElement>(null);
+  const [title, setTitle] = useState('');
+  const [browse, setBrowse] = useState<BrowseMode>('all');
+  const [showSearch, setShowSearch] = useState(false);
   const [search, setSearch] = useState('');
-  const [type, setType] = useState('all');
-  const [rankFilter, setRankFilter] = useState<RankFilter>('all');
-  const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
-  const [sort, setSort] = useState<ItemSort>('rank');
-  const [rankStatus, setRankStatus] = useState('');
+  const [status, setStatus] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(`worth:view:${list.id}`);
-    setView(saved === 'gallery' || saved === 'list' || saved === 'compact' ? saved : 'compact');
+    setTitle('');
+    setBrowse('all');
+    setShowSearch(false);
     setSearch('');
-    setType('all');
-    setRankFilter('all');
-    setDecisionFilter('all');
-    setSort('rank');
-    setRankStatus('');
+    setStatus('');
+    setSelectedId(null);
   }, [list.id]);
 
-  const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
-  const visible = visibleItems(items, list.rankedIds, {
-    search,
-    type,
-    rankFilter,
-    decisionFilter,
-    sort,
+  const create = useMutation({
+    mutationFn: (nextTitle: string) =>
+      api.createItem(list.id, {
+        title: nextTitle,
+        type: '',
+        note: '',
+        decision: null,
+        startedOn: null,
+        endedOn: null,
+      }),
+    onSuccess: ({ item }) => {
+      setTitle('');
+      setBrowse('all');
+      setSelectedId(item.id);
+      setStatus(`${item.title} was kept in ${list.name}.`);
+      void client.invalidateQueries({ queryKey: ['items', list.id] });
+      void client.invalidateQueries({ queryKey: ['list', list.id] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+      captureRef.current?.focus();
+    },
   });
-  const hasFilters =
-    search.trim().length > 0 ||
-    type !== 'all' ||
-    rankFilter !== 'all' ||
-    decisionFilter !== 'all' ||
-    sort !== 'rank';
-  const ranks = new Map(list.rankedIds.map((id, index) => [id, index + 1]));
-  const rankedItems = list.rankedIds
-    .map((id) => items.find((item) => item.id === id))
-    .filter((item): item is Item => Boolean(item));
-  const favorite = items.find((item) => item.decision === 'favorite');
-  const wouldNotAgain = items.find((item) => item.decision === 'would_not_again');
-  const primarySignal = favorite ?? rankedItems[0];
+
+  const decide = useMutation({
+    mutationFn: ({ item, decision }: { item: Item; decision: Item['decision'] }) =>
+      api.updateItem(item.id, { decision }),
+    onSuccess: ({ item }) => {
+      setStatus(item.decision ? `${item.title}: ${decisionLabel(item)}.` : `${item.title}: no call yet.`);
+      void client.invalidateQueries({ queryKey: ['items', list.id] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+  });
 
   const rank = useMutation({
-    mutationFn: ({ itemId, position }: { itemId: string; position: number | null }) =>
-      api.rank(list.id, moveRank(list.rankedIds, itemId, position), list.rankRevision),
+    mutationFn: ({ item, position }: { item: Item; position: number | null }) =>
+      api.rank(list.id, moveRank(list.rankedIds, item.id, position), list.rankRevision),
     onSuccess: ({ list: next }) => {
-      setRankStatus('Ranking saved.');
+      setStatus('Ranking saved.');
       client.setQueryData(['list', list.id], { list: next });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
     onError: (error) => {
       if (error instanceof RequestError && error.status === 409) {
-        setRankStatus('The ranking changed in another tab, so the latest order has been restored.');
+        setStatus('The ranking changed in another tab, so the latest order has been restored.');
         void client.invalidateQueries({ queryKey: ['list', list.id] });
       }
     },
   });
 
-  function chooseView(next: View) {
-    setView(next);
-    window.localStorage.setItem(`worth:view:${list.id}`, next);
+  const rankedIds = new Set(list.rankedIds);
+  const ranks = useMemo(() => new Map(list.rankedIds.map((id, index) => [id, index + 1])), [list.rankedIds]);
+  const ordered = visibleItems(items, list.rankedIds, {
+    search,
+    type: 'all',
+    rankFilter: 'all',
+    decisionFilter: 'all',
+    sort: 'rank',
+  });
+  const visible = ordered.filter((item) => {
+    if (browse === 'kept') return item.decision === 'favorite';
+    if (browse === 'revisited') return item.logCount > 1;
+    if (browse === 'not-opened-lately') return wasOpenedLongAgo(item);
+    return true;
+  });
+  const ranked = visible.filter((item) => rankedIds.has(item.id));
+  const unranked = visible.filter((item) => !rankedIds.has(item.id));
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanTitle = title.trim();
+    if (cleanTitle) {
+      setStatus('');
+      create.mutate(cleanTitle);
+    }
   }
 
-  function clearFilters() {
-    setSearch('');
-    setType('all');
-    setRankFilter('all');
-    setDecisionFilter('all');
-    setSort('rank');
-  }
-
-  function rankControl(item: Item) {
-    const current = ranks.get(item.id);
-    return (
-      <select
-        className="rank-select"
-        aria-label={`Rank ${item.title}`}
-        value={current ?? 'none'}
-        disabled={rank.isPending}
-        onChange={(event) => {
-          setRankStatus('');
-          rank.mutate({
-            itemId: item.id,
-            position: event.target.value === 'none' ? null : Number(event.target.value),
-          });
-        }}
-      >
-        <option value="none">—</option>
-        {Array.from({ length: Math.min(items.length, 500) }, (_, index) => (
-          <option value={index + 1} key={index + 1}>
-            #{index + 1}
-          </option>
-        ))}
-      </select>
-    );
+  function selectBrowse(next: BrowseMode) {
+    setBrowse(next);
+    setStatus('');
   }
 
   return (
-    <section className="collection-view" aria-label={`${list.name} items`}>
-      <div className="collection-toolbar">
-        <div className="view-switch" role="group" aria-label="List view">
-          <button
-            className={view === 'gallery' ? 'active' : ''}
-            aria-pressed={view === 'gallery'}
-            onClick={() => chooseView('gallery')}
-          >
-            <SquaresFour size={18} /> Gallery
-          </button>
-          <button
-            className={view === 'list' ? 'active' : ''}
-            aria-pressed={view === 'list'}
-            onClick={() => chooseView('list')}
-          >
-            <ListBullets size={18} /> List
-          </button>
-          <button
-            className={view === 'compact' ? 'active' : ''}
-            aria-pressed={view === 'compact'}
-            onClick={() => chooseView('compact')}
-          >
-            <Rows size={18} /> Compact
-          </button>
-        </div>
-        <span className="item-count" role="status">
-          {visible.length} of {items.length} {items.length === 1 ? 'item' : 'items'}
-        </span>
-      </div>
-
-      {primarySignal || wouldNotAgain ? (
-        <section className="collection-signal" aria-label="Ranking summary">
-          {primarySignal && (
-            <div className={favorite ? 'signal-favorite' : ''}>
-              <span>{favorite ? 'Favorite' : 'Top ranked'}</span>
-              <strong>{primarySignal.title}</strong>
-            </div>
-          )}
-          {wouldNotAgain && (
-            <div className="signal-negative">
-              <span>Would not again</span>
-              <strong>{wouldNotAgain.title}</strong>
-            </div>
-          )}
-          <p>
-            {rankedItems.length} ranked {rankedItems.length === 1 ? 'item' : 'items'}
+    <section className="collection-workspace" aria-label={`${list.name} collection`}>
+      <header className="collection-index-head">
+        <div>
+          <p className="overline">YOUR INDEX</p>
+          <p className="collection-index-summary">
+            {items.length
+              ? `${items.length} ${items.length === 1 ? 'thing' : 'things'} kept here.`
+              : 'Start with one thing worth remembering.'}
           </p>
-        </section>
-      ) : items.length > 0 ? (
-        <p className="collection-rank-hint">Rank a few things when you know where they stand.</p>
-      ) : null}
+        </div>
+        <button
+          className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
+          type="button"
+          aria-expanded={showSearch}
+          aria-controls="collection-search"
+          onClick={() => setShowSearch((current) => !current)}
+        >
+          <MagnifyingGlass size={16} /> Search
+        </button>
+      </header>
 
-      <div className="collection-filters">
-        <label className="filter-search">
-          <span className="sr-only">Search this list</span>
+      <form className="quick-capture" onSubmit={submit}>
+        <label>
+          <span className="sr-only">What did you try?</span>
           <input
-            placeholder={`Search ${list.name.toLowerCase()}`}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            ref={captureRef}
+            value={title}
+            maxLength={160}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="What did you try?"
+            disabled={create.isPending}
           />
         </label>
-        {types.length > 0 && (
-          <label>
-            <span className="sr-only">Type</span>
-            <select value={type} onChange={(event) => setType(event.target.value)}>
-              <option value="all">All types</option>
-              {types.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label>
-          <span className="sr-only">Rank filter</span>
-          <select value={rankFilter} onChange={(event) => setRankFilter(event.target.value as RankFilter)}>
-            <option value="all">All ranks</option>
-            <option value="top5">Top 5</option>
-            <option value="top10">Top 10</option>
-            <option value="unranked">Unranked</option>
-          </select>
-        </label>
-        <label>
-          <span className="sr-only">Your call</span>
-          <select
-            value={decisionFilter}
-            onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
-          >
-            <option value="all">All calls</option>
-            <option value="favorite">Favorites</option>
-            <option value="would_not_again">Would not again</option>
-          </select>
-        </label>
-        <label>
-          <span className="sr-only">Sort items</span>
-          <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
-            <option value="rank">My rank</option>
-            <option value="recent">Last logged</option>
-            <option value="name">Name</option>
-            <option value="times">Most times</option>
-          </select>
-        </label>
-        {hasFilters && (
-          <button className="clear-filters" type="button" onClick={clearFilters}>
-            <X size={14} /> Clear filters
-          </button>
-        )}
-      </div>
-      {rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409) && (
-        <p className="form-error" role="alert">
-          {rank.error.message}
-        </p>
-      )}
-      {rankStatus && (
-        <p className="collection-rank-status" role="status">
-          {rankStatus}
+        <button className="quick-capture-submit" disabled={!title.trim() || create.isPending}>
+          {create.isPending ? 'Keeping…' : 'Keep it'} <ArrowRight size={17} />
+        </button>
+        <p>Rank it later if you want.</p>
+      </form>
+      {create.isError && <p className="form-error collection-capture-error">{create.error.message}</p>}
+      {status && (
+        <p className="collection-capture-status" role="status">
+          {status}
         </p>
       )}
 
-      {!visible.length ? (
-        <div className="empty-list">
-          <h2>{items.length ? 'Nothing matches.' : 'Start with one thing.'}</h2>
-          <p>
-            {items.length
-              ? 'Try a different search or filter.'
-              : `Add the first item to ${list.name}. You can rank it later.`}
-          </p>
-          {!items.length && (
-            <button className="button button-dark" onClick={onAdd}>
-              <Plus size={17} /> Add item
+      {showSearch && (
+        <div className="collection-search" id="collection-search">
+          <label>
+            <span className="sr-only">Search {list.name}</span>
+            <input
+              autoFocus
+              value={search}
+              placeholder={`Search ${list.name.toLowerCase()}`}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          {search && (
+            <button type="button" onClick={() => setSearch('')}>
+              <X size={15} /> Clear
             </button>
           )}
-          {items.length > 0 && hasFilters && (
-            <button className="button button-outline" type="button" onClick={clearFilters}>
-              Clear filters
-            </button>
-          )}
-        </div>
-      ) : view === 'compact' ? (
-        <div className="table-scroll">
-          <table className="compact-table">
-            <caption className="sr-only">All matching items in {list.name}</caption>
-            <thead>
-              <tr>
-                <th scope="col">Rank</th>
-                <th scope="col">Name</th>
-                <th scope="col">Type</th>
-                <th scope="col">Call</th>
-                <th scope="col">Last logged</th>
-                <th scope="col">Times</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((item) => (
-                <tr key={item.id}>
-                  <td>{rankControl(item)}</td>
-                  <td>
-                    <button className="table-name" onClick={() => onSelect(item.id)}>
-                      {item.title}
-                    </button>
-                  </td>
-                  <td>{item.type || '—'}</td>
-                  <td>{decisionLabel(item) ?? '—'}</td>
-                  <td>{formatDate(item.lastLoggedOn)}</td>
-                  <td>{item.logCount || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : view === 'list' ? (
-        <div className="expanded-list">
-          {visible.map((item) => (
-            <article className="expanded-row" key={item.id}>
-              <div className="expanded-rank">{rankControl(item)}</div>
-              {item.hasPhoto && <img src={`/api/items/${item.id}/photo`} alt="" loading="lazy" />}
-              <button className="expanded-content" onClick={() => onSelect(item.id)}>
-                <strong>{item.title}</strong>
-                <span>
-                  {item.type || 'Item'}
-                  {item.lastLoggedOn ? ` · Last logged ${formatDate(item.lastLoggedOn)}` : ''}
-                  {decisionLabel(item) ? ` · ${decisionLabel(item)}` : ''}
-                </span>
-                {item.note && <small>{item.note}</small>}
-              </button>
-              <span className="expanded-times">
-                {item.logCount
-                  ? `${item.logCount} ${item.logCount === 1 ? 'time' : 'times'}`
-                  : 'Not logged yet'}
-              </span>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="gallery-grid">
-          {visible.map((item) => (
-            <article className="gallery-card" key={item.id}>
-              <button onClick={() => onSelect(item.id)} className="gallery-open">
-                {item.hasPhoto ? (
-                  <img src={`/api/items/${item.id}/photo`} alt="" loading="lazy" />
-                ) : (
-                  <span className="gallery-blank">
-                    <span>{item.title.slice(0, 1)}</span>
-                  </span>
-                )}
-                <span className="gallery-title">
-                  <strong>{item.title}</strong>
-                  <small>{[item.type || 'Item', decisionLabel(item)].filter(Boolean).join(' · ')}</small>
-                </span>
-              </button>
-              <div className="gallery-rank">{rankControl(item)}</div>
-            </article>
-          ))}
         </div>
       )}
+
+      <div className="collection-index-layout">
+        <nav className="collection-browse" aria-label="Browse collection">
+          <span>Show</span>
+          {browseModes.map((mode) => (
+            <button
+              type="button"
+              key={mode.id}
+              className={browse === mode.id ? 'active' : ''}
+              aria-pressed={browse === mode.id}
+              onClick={() => selectBrowse(mode.id)}
+            >
+              {mode.label}
+              <small>{browseCount(mode.id, items)}</small>
+            </button>
+          ))}
+        </nav>
+
+        <div className="collection-index">
+          {!visible.length ? (
+            <div className="collection-index-empty">
+              <h2>{items.length ? 'Nothing here yet.' : 'Keep the first one.'}</h2>
+              <p>
+                {items.length
+                  ? 'Try another view or search for a different name.'
+                  : 'A name is enough. Add context whenever it becomes useful.'}
+              </p>
+              {items.length > 0 && (browse !== 'all' || search) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBrowse('all');
+                    setSearch('');
+                  }}
+                >
+                  Show everything
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {ranked.length > 0 && (
+                <IndexRows
+                  items={ranked}
+                  ranks={ranks}
+                  rankSlots={items.length}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onOpenDetails={onOpenDetails}
+                  onLogRevisit={onLogRevisit}
+                  onDecide={(item, decision) => {
+                    setStatus('');
+                    decide.mutate({ item, decision: item.decision === decision ? null : decision });
+                  }}
+                  decisionPending={decide.isPending}
+                  onRank={(item, position) => {
+                    setStatus('');
+                    rank.mutate({ item, position });
+                  }}
+                  rankPending={rank.isPending}
+                />
+              )}
+              {unranked.length > 0 && (
+                <section className="collection-unranked" aria-labelledby="unranked-heading">
+                  {ranked.length > 0 && <p id="unranked-heading">Not ranked yet</p>}
+                  <IndexRows
+                    items={unranked}
+                    ranks={ranks}
+                    rankSlots={items.length}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    onOpenDetails={onOpenDetails}
+                    onLogRevisit={onLogRevisit}
+                    onDecide={(item, decision) => {
+                      setStatus('');
+                      decide.mutate({ item, decision: item.decision === decision ? null : decision });
+                    }}
+                    decisionPending={decide.isPending}
+                    onRank={(item, position) => {
+                      setStatus('');
+                      rank.mutate({ item, position });
+                    }}
+                    rankPending={rank.isPending}
+                  />
+                </section>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </section>
+  );
+}
+
+function browseCount(mode: BrowseMode, items: Item[]): number {
+  if (mode === 'kept') return items.filter((item) => item.decision === 'favorite').length;
+  if (mode === 'revisited') return items.filter((item) => item.logCount > 1).length;
+  if (mode === 'not-opened-lately') return items.filter(wasOpenedLongAgo).length;
+  return items.length;
+}
+
+function IndexRows({
+  items,
+  ranks,
+  rankSlots,
+  selectedId,
+  onSelect,
+  onOpenDetails,
+  onLogRevisit,
+  onDecide,
+  decisionPending,
+  onRank,
+  rankPending,
+}: {
+  items: Item[];
+  ranks: Map<string, number>;
+  rankSlots: number;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  onOpenDetails: (id: string) => void;
+  onLogRevisit: (id: string) => void;
+  onDecide: (item: Item, decision: Item['decision']) => void;
+  decisionPending: boolean;
+  onRank: (item: Item, position: number | null) => void;
+  rankPending: boolean;
+}) {
+  return (
+    <ol className="collection-index-rows">
+      {items.map((item) => {
+        const rank = ranks.get(item.id);
+        const call = decisionLabel(item);
+        const selected = selectedId === item.id;
+        return (
+          <li className={selected ? 'selected' : ''} key={item.id}>
+            <div className="collection-index-row">
+              <span className="collection-row-rank">{rank ? String(rank).padStart(2, '0') : '—'}</span>
+              <button
+                type="button"
+                aria-expanded={selected}
+                onClick={() => onSelect(selected ? null : item.id)}
+              >
+                <strong>{item.title}</strong>
+                <span>
+                  {call ||
+                    (item.lastLoggedOn ? `Last opened ${formatDate(item.lastLoggedOn)}` : 'No details yet')}
+                </span>
+              </button>
+              <span className="collection-row-context">
+                {item.note || (item.logCount > 1 ? `${item.logCount} visits` : '')}
+              </span>
+            </div>
+            {selected && (
+              <div className="collection-action-tray" aria-label={`Actions for ${item.title}`}>
+                <button
+                  type="button"
+                  className={item.decision === 'favorite' ? 'active' : ''}
+                  aria-pressed={item.decision === 'favorite'}
+                  disabled={decisionPending}
+                  onClick={() => onDecide(item, 'favorite')}
+                >
+                  Favorite
+                </button>
+                <button
+                  type="button"
+                  className={item.decision === 'would_not_again' ? 'active' : ''}
+                  aria-pressed={item.decision === 'would_not_again'}
+                  disabled={decisionPending}
+                  onClick={() => onDecide(item, 'would_not_again')}
+                >
+                  Would not again
+                </button>
+                <label className="collection-rank-placement">
+                  <span>Place</span>
+                  <select
+                    aria-label={`Place ${item.title} in your ranking`}
+                    value={rank ?? 'none'}
+                    disabled={rankPending}
+                    onChange={(event) =>
+                      onRank(item, event.target.value === 'none' ? null : Number(event.target.value))
+                    }
+                  >
+                    <option value="none">Unranked</option>
+                    {Array.from({ length: rankSlots }, (_, index) => (
+                      <option key={index + 1} value={index + 1}>
+                        #{String(index + 1).padStart(2, '0')}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" onClick={() => onOpenDetails(item.id)}>
+                  Add a note
+                </button>
+                <button type="button" onClick={() => onLogRevisit(item.id)}>
+                  Log revisit
+                </button>
+                <button
+                  type="button"
+                  className="collection-open-details"
+                  onClick={() => onOpenDetails(item.id)}
+                >
+                  Details <ArrowRight size={15} />
+                </button>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ol>
   );
 }

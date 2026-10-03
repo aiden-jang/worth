@@ -22,6 +22,7 @@ export function ItemEditor({
   items,
   logs,
   focusLogId,
+  focusLogComposer,
   onClose,
   onCreated,
 }: {
@@ -30,10 +31,12 @@ export function ItemEditor({
   items: Item[];
   logs: Log[];
   focusLogId: string | null;
+  focusLogComposer: boolean;
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const logNoteInput = useRef<HTMLInputElement>(null);
   const client = useQueryClient();
   const [form, setForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
   const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
@@ -69,6 +72,13 @@ export function ItemEditor({
       setHandledFocusLogId(focusLogId);
     }
   }, [focusLogId, handledFocusLogId, item, logs]);
+  useEffect(() => {
+    if (!focusLogComposer || !item) return;
+    requestAnimationFrame(() => {
+      logNoteInput.current?.scrollIntoView({ block: 'center' });
+      logNoteInput.current?.focus();
+    });
+  }, [focusLogComposer, item]);
 
   const save = useMutation({
     mutationFn: () => {
@@ -298,6 +308,7 @@ export function ItemEditor({
                 onChange={(event) => setLogDate(event.target.value)}
               />
               <input
+                ref={logNoteInput}
                 value={logNote}
                 maxLength={4000}
                 aria-label="Note"
