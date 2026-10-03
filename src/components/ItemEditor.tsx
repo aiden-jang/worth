@@ -23,6 +23,7 @@ export function ItemEditor({
   logs,
   focusLogId,
   focusLogComposer,
+  focusNoteComposer,
   onClose,
   onCreated,
 }: {
@@ -32,11 +33,13 @@ export function ItemEditor({
   logs: Log[];
   focusLogId: string | null;
   focusLogComposer: boolean;
+  focusNoteComposer: boolean;
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const logNoteInput = useRef<HTMLInputElement>(null);
+  const itemNoteInput = useRef<HTMLTextAreaElement>(null);
   const client = useQueryClient();
   const [form, setForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
   const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
@@ -79,6 +82,13 @@ export function ItemEditor({
       logNoteInput.current?.focus();
     });
   }, [focusLogComposer, item]);
+  useEffect(() => {
+    if (!focusNoteComposer || !item) return;
+    requestAnimationFrame(() => {
+      itemNoteInput.current?.scrollIntoView({ block: 'center' });
+      itemNoteInput.current?.focus();
+    });
+  }, [focusNoteComposer, item]);
 
   const save = useMutation({
     mutationFn: () => {
@@ -227,6 +237,7 @@ export function ItemEditor({
           <label>
             Private note <span className="optional">never included in shares</span>
             <textarea
+              ref={itemNoteInput}
               rows={3}
               maxLength={4000}
               value={form.note}

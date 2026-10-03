@@ -38,12 +38,14 @@ export function CollectionView({
   items,
   focusCapture,
   onOpenDetails,
+  onAddNote,
   onLogRevisit,
 }: {
   list: ListDetail;
   items: Item[];
   focusCapture: boolean;
   onOpenDetails: (id: string) => void;
+  onAddNote: (id: string) => void;
   onLogRevisit: (id: string) => void;
 }) {
   const client = useQueryClient();
@@ -345,6 +347,7 @@ export function CollectionView({
                   selectedId={selectedId}
                   onSelect={setSelectedId}
                   onOpenDetails={onOpenDetails}
+                  onAddNote={onAddNote}
                   onLogRevisit={onLogRevisit}
                   onDecide={(item, decision) => {
                     setStatus('');
@@ -368,6 +371,7 @@ export function CollectionView({
                     selectedId={selectedId}
                     onSelect={setSelectedId}
                     onOpenDetails={onOpenDetails}
+                    onAddNote={onAddNote}
                     onLogRevisit={onLogRevisit}
                     onDecide={(item, decision) => {
                       setStatus('');
@@ -404,6 +408,7 @@ function IndexRows({
   selectedId,
   onSelect,
   onOpenDetails,
+  onAddNote,
   onLogRevisit,
   onDecide,
   decisionPending,
@@ -416,6 +421,7 @@ function IndexRows({
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onOpenDetails: (id: string) => void;
+  onAddNote: (id: string) => void;
   onLogRevisit: (id: string) => void;
   onDecide: (item: Item, decision: Item['decision']) => void;
   decisionPending: boolean;
@@ -485,7 +491,7 @@ function IndexRows({
                     ))}
                   </select>
                 </label>
-                <button type="button" onClick={() => onOpenDetails(item.id)}>
+                <button type="button" onClick={() => onAddNote(item.id)}>
                   Add a note
                 </button>
                 <button type="button" onClick={() => onLogRevisit(item.id)}>

@@ -35,6 +35,7 @@ export function ListPage() {
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
   const focusLogComposer = params.get('log') === '1';
+  const focusNoteComposer = params.get('note') === '1';
   const focusCapture = params.get('capture') === '1';
   const focusLogId = focus?.startsWith('log:') ? focus.slice('log:'.length) : null;
 
@@ -150,6 +151,10 @@ export function ListPage() {
               items={items}
               focusCapture={focusCapture}
               onOpenDetails={setSelectedId}
+              onAddNote={(id) => {
+                setSelectedId(id);
+                setParams({ focus: `item:${id}`, note: '1' });
+              }}
               onLogRevisit={(id) => {
                 setSelectedId(id);
                 setParams({ focus: `item:${id}`, log: '1' });
@@ -164,6 +169,7 @@ export function ListPage() {
               logs={logs}
               focusLogId={focusLogId}
               focusLogComposer={focusLogComposer}
+              focusNoteComposer={focusNoteComposer}
               onClose={closeEditor}
               onCreated={(id) => {
                 setParams({}, { replace: true });
