@@ -111,8 +111,9 @@ export function ItemEditor({
         sets: null,
         reps: null,
       }),
-    onSuccess: () => {
+    onSuccess: ({ log }) => {
       setLogNote('');
+      setEditingLog(log);
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['items', listId] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
