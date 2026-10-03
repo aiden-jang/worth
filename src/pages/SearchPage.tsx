@@ -62,7 +62,7 @@ export function SearchPage() {
         <section className="search-results">
           <p className="overline">{results.data.results.length} RESULTS</p>
           {itemResults.length > 0 && <SearchGroup label="Items" results={itemResults} />}
-          {logResults.length > 0 && <SearchGroup label="Activity logs" results={logResults} />}
+          {logResults.length > 0 && <SearchGroup label="Logs" results={logResults} />}
         </section>
       ) : (
         <div className="search-empty">

@@ -115,6 +115,27 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
   );
   expect((await call(`/items/${item.id}`, 'alice', 'PATCH', { decision: 'maybe' })).status).toBe(400);
 
+  const revisit = await call(`/lists/${list.id}/logs`, 'alice', 'POST', {
+    itemId: item.id,
+    title: '',
+    happenedOn: '2026-09-28',
+    note: 'The finish held up better the second time.',
+    amount: null,
+    unit: '',
+    sets: null,
+    reps: null,
+  });
+  expect(revisit.status).toBe(201);
+  const revisitLog = ((await revisit.json()) as { log: { id: string } }).log;
+  const revisitSearch = await call('/search?q=finish', 'alice');
+  expect(revisitSearch.status).toBe(200);
+  expect(((await revisitSearch.json()) as { results: unknown[] }).results).toContainEqual(
+    expect.objectContaining({ id: revisitLog.id, kind: 'log', title: 'Booker’s Bourbon' }),
+  );
+  expect(((await (await call('/search?q=finish', 'bob')).json()) as { results: unknown[] }).results).toEqual(
+    [],
+  );
+
   const createdShare = await call(`/lists/${list.id}/shares`, 'alice', 'POST', { limit: 5 });
   expect(createdShare.status).toBe(201);
   const { token, id, expiresAt } = (await createdShare.json()) as {
