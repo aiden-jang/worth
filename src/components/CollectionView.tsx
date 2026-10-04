@@ -89,7 +89,8 @@ export function CollectionView({
         target?.isContentEditable ||
         target?.tagName === 'INPUT' ||
         target?.tagName === 'TEXTAREA' ||
-        target?.tagName === 'SELECT'
+        target?.tagName === 'SELECT' ||
+        target?.closest('button, a, [role="button"]')
       )
         return;
       event.preventDefault();
