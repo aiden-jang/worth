@@ -6,11 +6,31 @@ import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
-const suggestions: { name: string; kind: ListKind; description: string }[] = [
-  { name: 'Drinks', kind: 'collection', description: 'Wines, whiskeys, and the occasional good idea.' },
-  { name: 'Movies', kind: 'collection', description: 'The ones you would watch again.' },
-  { name: 'Places', kind: 'collection', description: 'Restaurants and stops worth remembering.' },
-  { name: 'Cars', kind: 'collection', description: 'The ones you owned, drove, or loved.' },
+const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
+  {
+    name: 'Drinks',
+    kind: 'collection',
+    description: 'Wines, whiskeys, and the occasional good idea.',
+    cover: '/art/starter-covers/drinks-v1.webp',
+  },
+  {
+    name: 'Movies',
+    kind: 'collection',
+    description: 'The ones you would watch again.',
+    cover: '/art/starter-covers/movies-v1.webp',
+  },
+  {
+    name: 'Places',
+    kind: 'collection',
+    description: 'Restaurants and stops worth remembering.',
+    cover: '/art/starter-covers/places-v1.webp',
+  },
+  {
+    name: 'Cars',
+    kind: 'collection',
+    description: 'The ones you owned, drove, or loved.',
+    cover: '/art/starter-covers/cars-v1.webp',
+  },
   { name: 'Runs', kind: 'activity', description: 'Distance, pace, and when you went.' },
   { name: 'Upkeep', kind: 'activity', description: 'Haircuts, nails, and other little resets.' },
 ];
@@ -221,9 +241,14 @@ function EmptyListScope({
       </p>
       <div>
         {scopedSuggestions.map((suggestion) => (
-          <button key={suggestion.name} onClick={() => onChoose(suggestion)}>
-            <span>
-              {suggestion.name}
+          <button
+            className={suggestion.cover ? 'starter-card has-cover' : 'starter-card'}
+            key={suggestion.name}
+            onClick={() => onChoose(suggestion)}
+          >
+            {suggestion.cover && <img src={suggestion.cover} alt="" />}
+            <span className="starter-card-copy">
+              <strong>{suggestion.name}</strong>
               <small>{suggestion.kind}</small>
             </span>
             <Plus size={18} />
