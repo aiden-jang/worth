@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, RequestError } from '../api';
 import { CollectionView } from '../components/CollectionView';
 import { ActivityView } from '../components/ActivityView';
@@ -14,6 +14,7 @@ import { starterCollectionCover } from '../shared/starter-covers';
 export function ListPage() {
   const { listId = '' } = useParams();
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const listQuery = useQuery({
     queryKey: ['list', listId],
@@ -86,6 +87,10 @@ export function ListPage() {
         ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
         : starterCollectionCover(list.name)
       : null;
+  const coverError =
+    location.state && typeof location.state === 'object' && 'coverError' in location.state
+      ? String(location.state.coverError)
+      : '';
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
@@ -130,6 +135,11 @@ export function ListPage() {
           )}
         </div>
       </section>
+      {coverError && (
+        <p className="collection-cover-notice" role="status">
+          Collection saved. {coverError}
+        </p>
+      )}
 
       {showSettings && (
         <ListSettings

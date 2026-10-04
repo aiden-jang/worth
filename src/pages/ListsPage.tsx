@@ -6,6 +6,7 @@ import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { starterCollectionCover } from '../shared/starter-covers';
+import { preparePhoto } from '../shared/photos';
 
 type CollectionOrder = 'recent' | 'name' | 'items';
 
@@ -58,6 +59,7 @@ export function ListsPage() {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useState('');
@@ -84,12 +86,32 @@ export function ListsPage() {
         ? 'A quiet record of what happened and when.'
         : 'Keep similar things together. Rank a collection, or just log what happened.';
   const create = useMutation({
-    mutationFn: api.createList,
-    onSuccess: ({ list }) => {
+    mutationFn: async (input: {
+      name: string;
+      kind: ListKind;
+      description: string;
+      coverFile: File | null;
+    }) => {
+      const created = await api.createList(input);
+      if (!input.coverFile || input.kind !== 'collection') return { ...created, coverError: '' };
+      try {
+        await api.uploadListCover(created.list.id, await preparePhoto(input.coverFile));
+        return { ...created, coverError: '' };
+      } catch (error) {
+        return {
+          ...created,
+          coverError:
+            error instanceof Error
+              ? error.message
+              : 'The collection was saved, but its cover could not upload.',
+        };
+      }
+    },
+    onSuccess: ({ list, coverError }) => {
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
-      navigate(`/lists/${list.id}`);
+      navigate(`/lists/${list.id}`, { state: coverError ? { coverError } : undefined });
     },
   });
 
@@ -115,7 +137,7 @@ export function ListsPage() {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) return;
-    create.mutate({ name: name.trim(), kind, description: description.trim() });
+    create.mutate({ name: name.trim(), kind, description: description.trim(), coverFile });
   }
 
   function requestCloseCreate() {
@@ -129,6 +151,7 @@ export function ListsPage() {
   function discardDraft() {
     setName('');
     setDescription('');
+    setCoverFile(null);
     setKind(requestedKind === 'activity' ? 'activity' : 'collection');
     setConfirmingDiscard(false);
     setParams(listScope ? { kind: listScope } : {});
@@ -187,7 +210,14 @@ export function ListsPage() {
             </label>
             <label>
               Type
-              <select value={kind} onChange={(event) => setKind(event.target.value as ListKind)}>
+              <select
+                value={kind}
+                onChange={(event) => {
+                  const nextKind = event.target.value as ListKind;
+                  setKind(nextKind);
+                  if (nextKind === 'activity') setCoverFile(null);
+                }}
+              >
                 <option value="collection">Collection: things you can revisit and rank</option>
                 <option value="activity">Activity: things you log over time</option>
               </select>
@@ -201,6 +231,19 @@ export function ListsPage() {
                 placeholder="A line to remind yourself what belongs here"
               />
             </label>
+            {kind === 'collection' && (
+              <label className="form-wide collection-cover-picker">
+                Cover photo <span className="optional">optional · private</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                />
+                <small>
+                  {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
+                </small>
+              </label>
+            )}
             {create.isError && <p className="form-error">{create.error.message}</p>}
             <button className="button button-dark" disabled={create.isPending}>
               Create list <ArrowRight size={18} />

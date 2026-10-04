@@ -903,6 +903,18 @@ textarea::placeholder {
 .form-wide {
   grid-column: 1 / -1;
 }
+.collection-cover-picker input[type='file'] {
+  width: 100%;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.collection-cover-picker small {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
 .create-panel .panel-title .overline,
 .settings-panel .panel-title .overline {
   color: var(--acid);
@@ -1449,6 +1461,11 @@ select:focus {
   border: 1px solid var(--line-strong);
   object-fit: cover;
   filter: saturate(0.76) contrast(0.94);
+}
+.collection-cover-notice {
+  margin: -0.8rem 0 0;
+  color: var(--muted);
+  font: 500 0.68rem/1.5 var(--mono);
 }
 .list-head-actions {
   display: flex;
