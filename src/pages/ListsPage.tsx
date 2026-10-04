@@ -9,6 +9,14 @@ import { starterCollectionCover } from '../shared/starter-covers';
 
 type CollectionOrder = 'recent' | 'name' | 'items';
 
+const collectionOrderStorageKey = 'worth:collection-order';
+
+function savedCollectionOrder(): CollectionOrder {
+  if (typeof window === 'undefined') return 'recent';
+  const value = window.localStorage.getItem(collectionOrderStorageKey);
+  return value === 'name' || value === 'items' || value === 'recent' ? value : 'recent';
+}
+
 const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
   {
     name: 'Drinks',
@@ -51,7 +59,7 @@ export function ListsPage() {
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
-  const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>('recent');
+  const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useState('');
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
@@ -88,6 +96,10 @@ export function ListsPage() {
   useEffect(() => {
     if (requestedKind === 'collection' || requestedKind === 'activity') setKind(requestedKind);
   }, [requestedKind]);
+
+  useEffect(() => {
+    window.localStorage.setItem(collectionOrderStorageKey, collectionOrder);
+  }, [collectionOrder]);
 
   function chooseSuggestion(suggestion: (typeof suggestions)[number]) {
     setName(suggestion.name);
