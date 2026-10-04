@@ -945,6 +945,16 @@ textarea::placeholder {
   grid-column: 1 / -1;
   margin: 0;
 }
+.collection-cover-header-action {
+  display: grid;
+  gap: 0.35rem;
+}
+.collection-cover-header-error {
+  max-width: 190px;
+  color: var(--danger);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
 .settings-danger > span {
   color: var(--faint);
   font-size: 0.75rem;

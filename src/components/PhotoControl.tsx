@@ -227,3 +227,42 @@ export function CollectionCoverControl({
     </section>
   );
 }
+
+export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: string; hasCoverPhoto: boolean }) {
+  const client = useQueryClient();
+  const [error, setError] = useState('');
+  const upload = useMutation({
+    mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
+    onSuccess: () => {
+      setError('');
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+    onError: (failure) => setError(failure.message),
+  });
+
+  return (
+    <div className="collection-cover-header-action">
+      <label className="button button-outline">
+        <Camera size={18} /> {upload.isPending ? 'Uploading…' : hasCoverPhoto ? 'Replace cover' : 'Add cover'}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+          disabled={upload.isPending}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) upload.mutate(file);
+            event.target.value = '';
+          }}
+        />
+      </label>
+      {error && (
+        <span className="collection-cover-header-error" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}

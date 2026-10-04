@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
+import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, RequestError } from '../api';
 import { CollectionView } from '../components/CollectionView';
@@ -8,7 +8,7 @@ import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { CollectionCoverControl } from '../components/PhotoControl';
+import { CollectionCoverButton, CollectionCoverControl } from '../components/PhotoControl';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -106,9 +106,7 @@ export function ListPage() {
             </button>
           )}
           {list.kind === 'collection' && (
-            <button className="button button-outline" onClick={() => setShowSettings(true)}>
-              <Camera size={18} /> {list.hasCoverPhoto ? 'Cover' : 'Add cover'}
-            </button>
+            <CollectionCoverButton listId={list.id} hasCoverPhoto={list.hasCoverPhoto} />
           )}
           <button
             className="icon-button settings-button"
