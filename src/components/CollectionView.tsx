@@ -75,6 +75,30 @@ export function CollectionView({
     requestAnimationFrame(() => captureRef.current?.focus());
   }, [focusCapture, list.id]);
   useEffect(() => {
+    const focusCapture = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.key.toLocaleLowerCase() !== 'c'
+      )
+        return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable ||
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT'
+      )
+        return;
+      event.preventDefault();
+      captureRef.current?.focus();
+    };
+    window.addEventListener('keydown', focusCapture);
+    return () => window.removeEventListener('keydown', focusCapture);
+  }, [list.id]);
+  useEffect(() => {
     if (!selectedId) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSelectedId(null);
@@ -217,7 +241,7 @@ export function CollectionView({
         <button className="collection-capture-submit" disabled={!title.trim() || create.isPending}>
           {create.isPending ? 'Keeping…' : 'Keep it'} <ArrowRight size={17} />
         </button>
-        <p>Rank it later if you want.</p>
+        <p>Rank it later if you want. Press C to add from anywhere on this page.</p>
       </form>
       {create.isError && <p className="form-error collection-capture-error">{create.error.message}</p>}
       {(decide.isError ||
