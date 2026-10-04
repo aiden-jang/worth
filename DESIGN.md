@@ -62,10 +62,18 @@ fabricated personal histories, or a sample activity feed.
 
 The home screen uses the same dark surface, thin rules, warm type, and one rust active state. It is a private workspace, not a hero page.
 
-- Left rail: Today, Collections, Activity, Ranked, Shared.
+- Left rail: Archive, Collections, Activity, Patterns, Search.
 - Main area: one day or date-led activity rail made from the user's actual records.
 - Right rail: a short ranked list from the user's collections.
 - Bottom: low-key totals or recent activity, only when real data exists.
+
+Collections are a visual directory once they exist. The optional Drinks, Movies, Places, and Cars starting points
+may retain their bundled starter cover. Any personal collection may have one private uploaded cover, which always
+takes precedence and is visible only behind the signed-in archive routes. Covers are never included in exports or
+public ranking snapshots.
+
+Patterns is a quiet reading of real data: record count, revisits, personal calls, most returned item, newest
+collection, and most-kept collection. It must not add scores, streaks, goal-setting, or recommendations.
 
 Empty states should explain the first useful action. They should not manufacture a busy dashboard.
 
@@ -91,6 +99,7 @@ People can download their lists, items, logs, ranks, and personal calls as JSON.
 - Paper textures, fake film grain, vintage archive styling, and decorative material panels.
 - Generic rounded SaaS cards, bento grids, or dense dashboard widgets.
 - Fake photos, stock lifestyle scenes, testimonials, streaks, or social mechanics in personal archive screens.
+- Treating a starter cover as a user's memory or showing any personal cover outside its protected archive route.
 
 The signed-out introduction may use a clearly labeled editorial illustration. It must never be presented as a
 member's record, memory, review, or archive photo.
