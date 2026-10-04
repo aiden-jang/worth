@@ -1030,20 +1030,38 @@ select:focus {
   padding-inline: 1.15rem;
   background: var(--raised);
 }
-.directory-row.has-cover {
+.collection-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.collection-directory-card {
   position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  min-height: clamp(224px, 22vw, 310px);
+  gap: 1rem;
   isolation: isolate;
   overflow: hidden;
-  background: var(--ink);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 1.35rem;
+  background: var(--panel);
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
 }
-.directory-row.has-cover::before {
+.collection-directory-card::before {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(90deg, rgb(8 10 11 / 92%), rgb(8 10 11 / 72%) 65%, rgb(8 10 11 / 88%));
+  background: linear-gradient(180deg, rgb(8 10 11 / 4%) 10%, rgb(8 10 11 / 92%) 100%);
   content: '';
 }
-.directory-row.has-cover > img {
+.collection-directory-card > img {
   position: absolute;
   z-index: -2;
   inset: 0;
@@ -1055,16 +1073,52 @@ select:focus {
     transform 360ms ease,
     filter 180ms ease;
 }
-.directory-row.has-cover:hover {
-  background: var(--ink);
+.collection-directory-card:hover {
+  border-color: var(--line-strong);
+  color: var(--acid);
 }
-.directory-row.has-cover:hover > img {
-  transform: scale(1.025);
+.collection-directory-card:hover > img {
+  transform: scale(1.035);
   filter: saturate(0.76) contrast(0.95) brightness(0.76);
 }
-.directory-row.has-cover > :not(img) {
+.collection-directory-card > :not(img) {
   position: relative;
   z-index: 1;
+}
+.collection-directory-index {
+  align-self: start;
+  color: var(--acid);
+  font: 500 0.66rem var(--mono);
+  letter-spacing: 0.1em;
+}
+.collection-directory-copy {
+  min-width: 0;
+}
+.collection-directory-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--paper);
+  font-size: clamp(1.85rem, 3vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-directory-copy small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font:
+    400 0.72rem 'DM Sans',
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-directory-card svg {
+  color: var(--acid);
 }
 .directory-index {
   color: var(--acid);
@@ -3322,6 +3376,13 @@ dialog::backdrop {
     grid-template-columns: 42px minmax(0, 1fr) 22px;
     gap: 0.7rem;
     min-height: 92px;
+  }
+  .collection-directory-grid {
+    grid-template-columns: 1fr;
+  }
+  .collection-directory-card {
+    min-height: 214px;
+    padding: 1.1rem;
   }
   .patterns-head h1 {
     font-size: clamp(3.8rem, 17vw, 5.7rem);

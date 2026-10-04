@@ -268,6 +268,8 @@ function ListDirectory({
   detail: string;
   lists: ListSummary[];
 }) {
+  const isCollectionDirectory = lists[0]?.kind === 'collection';
+
   return (
     <section className="list-directory" aria-labelledby={`${heading.toLowerCase()}-heading`}>
       <header className="list-directory-head">
@@ -279,33 +281,52 @@ function ListDirectory({
         </div>
         <strong>{lists.length}</strong>
       </header>
-      <div>
-        {lists.map((list, index) => {
-          const count = list.kind === 'collection' ? list.itemCount : list.logCount;
-          const noun = list.kind === 'collection' ? 'item' : 'log';
-          return (
+      {isCollectionDirectory ? (
+        <div className="collection-directory-grid">
+          {lists.map((list, index) => (
             <Link
               to={`/lists/${list.id}`}
-              className={list.hasCoverPhoto ? 'directory-row has-cover' : 'directory-row'}
+              className={
+                list.hasCoverPhoto ? 'collection-directory-card has-cover' : 'collection-directory-card'
+              }
               key={list.id}
             >
               {list.hasCoverPhoto && <img src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`} alt="" />}
-              <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="directory-name">
+              <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="collection-directory-copy">
                 <strong>{list.name}</strong>
-                <small>{list.description || (list.kind === 'collection' ? 'Collection' : 'Activity')}</small>
+                <small>
+                  {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
+                  {list.description ? ` · ${list.description}` : ''}
+                </small>
               </span>
-              <span className="directory-meta">
-                <small>{list.kind}</small>
-                <strong>
-                  {count} {count === 1 ? noun : `${noun}s`}
-                </strong>
-              </span>
-              <ArrowRight size={20} />
+              <ArrowRight size={20} aria-hidden="true" />
             </Link>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {lists.map((list, index) => {
+            const count = list.logCount;
+            return (
+              <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
+                <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
+                <span className="directory-name">
+                  <strong>{list.name}</strong>
+                  <small>{list.description || 'Activity'}</small>
+                </span>
+                <span className="directory-meta">
+                  <small>{list.kind}</small>
+                  <strong>
+                    {count} {count === 1 ? 'log' : 'logs'}
+                  </strong>
+                </span>
+                <ArrowRight size={20} />
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
