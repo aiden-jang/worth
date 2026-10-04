@@ -32,7 +32,7 @@ export function ActivityView({
   const [repeatTitle, setRepeatTitle] = useState('');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'name'>('newest');
-  const [period, setPeriod] = useState<'all' | '30d' | 'year'>('all');
+  const [period, setPeriod] = useState<'all' | '7d' | '30d' | 'year'>('all');
   const periodStart = activityPeriodStart(period);
   const visible = logs
     .filter(
@@ -123,6 +123,7 @@ export function ActivityView({
           onChange={(event) => setPeriod(event.target.value as typeof period)}
         >
           <option value="all">All time</option>
+          <option value="7d">Last 7 days</option>
           <option value="30d">Last 30 days</option>
           <option value="year">This year</option>
         </select>
@@ -192,11 +193,11 @@ export function ActivityView({
   );
 }
 
-function activityPeriodStart(period: 'all' | '30d' | 'year'): string | null {
+function activityPeriodStart(period: 'all' | '7d' | '30d' | 'year'): string | null {
   if (period === 'all') return null;
   if (period === 'year') return `${today().slice(0, 4)}-01-01`;
   const date = new Date(`${today()}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() - 29);
+  date.setUTCDate(date.getUTCDate() - (period === '7d' ? 6 : 29));
   return date.toISOString().slice(0, 10);
 }
 
