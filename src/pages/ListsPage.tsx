@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { starterCollectionCover } from '../shared/starter-covers';
 
 const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
   {
@@ -284,26 +285,29 @@ function ListDirectory({
       </header>
       {isCollectionDirectory ? (
         <div className="collection-directory-grid">
-          {lists.map((list, index) => (
-            <Link
-              to={`/lists/${list.id}`}
-              className={
-                list.hasCoverPhoto ? 'collection-directory-card has-cover' : 'collection-directory-card'
-              }
-              key={list.id}
-            >
-              {list.hasCoverPhoto && <img src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`} alt="" />}
-              <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="collection-directory-copy">
-                <strong>{list.name}</strong>
-                <small>
-                  {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                  {list.description ? ` · ${list.description}` : ''}
-                </small>
-              </span>
-              <ArrowRight size={20} aria-hidden="true" />
-            </Link>
-          ))}
+          {lists.map((list, index) => {
+            const cover = list.hasCoverPhoto
+              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              : starterCollectionCover(list.name);
+            return (
+              <Link
+                to={`/lists/${list.id}`}
+                className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
+                key={list.id}
+              >
+                {cover && <img src={cover} alt="" />}
+                <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+                <span className="collection-directory-copy">
+                  <strong>{list.name}</strong>
+                  <small>
+                    {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
+                    {list.description ? ` · ${list.description}` : ''}
+                  </small>
+                </span>
+                <ArrowRight size={20} aria-hidden="true" />
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <div>

@@ -5,6 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { formatElapsedDays } from '../format';
 import type { DecisionPick } from '../shared/models';
+import { starterCollectionCover } from '../shared/starter-covers';
 
 const dateLabel = (value: string) =>
   new Intl.DateTimeFormat('en-US', {
@@ -132,16 +133,15 @@ export function ArchivePage() {
               {data.lists.map((list, index) => {
                 const count = list.kind === 'collection' ? list.itemCount : list.logCount;
                 const noun = list.kind === 'collection' ? 'item' : 'log';
+                const cover = list.hasCoverPhoto
+                  ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+                  : list.kind === 'collection'
+                    ? starterCollectionCover(list.name)
+                    : null;
                 return (
                   <li key={list.id}>
-                    <Link to={`/lists/${list.id}`} className={list.hasCoverPhoto ? 'has-cover' : undefined}>
-                      {list.hasCoverPhoto && (
-                        <img
-                          className="archive-list-cover"
-                          src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`}
-                          alt=""
-                        />
-                      )}
+                    <Link to={`/lists/${list.id}`} className={cover ? 'has-cover' : undefined}>
+                      {cover && <img className="archive-list-cover" src={cover} alt="" />}
                       <span className="archive-list-index">{String(index + 1).padStart(2, '0')}</span>
                       <span className="archive-list-identity">
                         <strong>{list.name}</strong>
