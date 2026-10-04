@@ -1031,6 +1031,38 @@ select:focus {
   font: 400 2rem/1 var(--mono);
   letter-spacing: -0.11em;
 }
+.list-directory-summary {
+  display: flex;
+  align-items: end;
+  gap: 1.25rem;
+}
+.list-directory-summary > strong {
+  color: var(--paper);
+  font: 400 2rem/1 var(--mono);
+  letter-spacing: -0.11em;
+}
+.collection-directory-order {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--faint);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.collection-directory-order select {
+  min-width: 144px;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  padding: 0.2rem 1.25rem 0.25rem 0;
+  background: transparent;
+  color: var(--paper);
+  font:
+    500 0.68rem 'DM Sans',
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .directory-row {
   grid-template-columns: 66px minmax(0, 1fr) minmax(112px, auto) 32px;
   gap: 1.3rem;
@@ -3398,6 +3430,17 @@ dialog::backdrop {
   .collection-directory-card {
     min-height: 214px;
     padding: 1.1rem;
+  }
+  .list-directory-head {
+    align-items: start;
+  }
+  .list-directory-summary {
+    align-items: end;
+    gap: 0.8rem;
+  }
+  .collection-directory-order select {
+    min-width: 122px;
+    max-width: 122px;
   }
   .patterns-head h1 {
     font-size: clamp(3.8rem, 17vw, 5.7rem);

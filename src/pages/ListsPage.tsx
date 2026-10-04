@@ -7,6 +7,8 @@ import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { starterCollectionCover } from '../shared/starter-covers';
 
+type CollectionOrder = 'recent' | 'name' | 'items';
+
 const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
   {
     name: 'Drinks',
@@ -49,10 +51,17 @@ export function ListsPage() {
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>('recent');
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
   const visibleActivityLists = listScope === 'collection' ? [] : activityLists;
+  const orderedCollectionLists = [...visibleCollectionLists].sort((left, right) => {
+    if (collectionOrder === 'name') return left.name.localeCompare(right.name);
+    if (collectionOrder === 'items')
+      return right.itemCount - left.itemCount || right.updatedAt - left.updatedAt;
+    return right.updatedAt - left.updatedAt;
+  });
   const pageTitle =
     listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
   const pageDescription =
@@ -208,7 +217,9 @@ export function ListsPage() {
             <ListDirectory
               heading="Collections"
               detail="Things you can compare, rank, and revisit."
-              lists={visibleCollectionLists}
+              lists={orderedCollectionLists}
+              collectionOrder={collectionOrder}
+              onCollectionOrderChange={setCollectionOrder}
             />
           )}
           {visibleActivityLists.length > 0 && (
@@ -265,10 +276,14 @@ function ListDirectory({
   heading,
   detail,
   lists,
+  collectionOrder,
+  onCollectionOrderChange,
 }: {
   heading: string;
   detail: string;
   lists: ListSummary[];
+  collectionOrder?: CollectionOrder;
+  onCollectionOrderChange?: (order: CollectionOrder) => void;
 }) {
   const isCollectionDirectory = lists[0]?.kind === 'collection';
 
@@ -281,7 +296,23 @@ function ListDirectory({
           </p>
           <span>{detail}</span>
         </div>
-        <strong>{lists.length}</strong>
+        <div className="list-directory-summary">
+          {isCollectionDirectory && collectionOrder && onCollectionOrderChange && (
+            <label className="collection-directory-order">
+              <span>Order</span>
+              <select
+                aria-label="Order collections"
+                value={collectionOrder}
+                onChange={(event) => onCollectionOrderChange(event.target.value as CollectionOrder)}
+              >
+                <option value="recent">Recently updated</option>
+                <option value="name">Name</option>
+                <option value="items">Most kept</option>
+              </select>
+            </label>
+          )}
+          <strong>{lists.length}</strong>
+        </div>
       </header>
       {isCollectionDirectory ? (
         <div className="collection-directory-grid">
