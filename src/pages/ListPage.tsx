@@ -238,6 +238,7 @@ function ListSettings({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       onClose();
     },
   });
@@ -246,6 +247,7 @@ function ListSettings({
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       onDeleted();
     },
   });

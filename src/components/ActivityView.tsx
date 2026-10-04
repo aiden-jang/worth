@@ -237,6 +237,7 @@ function ActivityEditor({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       dialog.current?.close();
     },
   });
@@ -247,6 +248,7 @@ function ActivityEditor({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       dialog.current?.close();
     },
   });

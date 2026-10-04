@@ -65,6 +65,7 @@ export function ListsPage() {
     onSuccess: ({ list }) => {
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       navigate(`/lists/${list.id}`);
     },
   });

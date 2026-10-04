@@ -102,6 +102,7 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       captureRef.current?.focus();
     },
   });
@@ -113,6 +114,7 @@ export function CollectionView({
       setStatus(item.decision ? `${item.title}: ${decisionLabel(item)}.` : `${item.title}: no call yet.`);
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
     },
   });
 

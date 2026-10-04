@@ -110,6 +110,7 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
     },
   });
   const remove = useMutation({
@@ -120,6 +121,7 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       dialog.current?.close();
     },
   });
@@ -143,6 +145,7 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
     },
   });
   const deleteLog = useMutation({
@@ -153,6 +156,7 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
     },
   });
 
@@ -445,6 +449,7 @@ function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: strin
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
       dialog.current?.close();
     },
   });
