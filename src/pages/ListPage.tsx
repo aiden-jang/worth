@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
+import { ArrowLeft, Camera, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, RequestError } from '../api';
 import { CollectionView } from '../components/CollectionView';
@@ -103,6 +103,11 @@ export function ListPage() {
           {list.kind === 'collection' && (
             <button className="button button-outline" onClick={() => setShowShare(true)}>
               <ShareNetwork size={18} /> Share
+            </button>
+          )}
+          {list.kind === 'collection' && (
+            <button className="button button-outline" onClick={() => setShowSettings(true)}>
+              <Camera size={18} /> {list.hasCoverPhoto ? 'Cover' : 'Add cover'}
             </button>
           )}
           <button
