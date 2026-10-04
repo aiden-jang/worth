@@ -417,7 +417,9 @@ test('photos stay private, validate uploads, and disappear with their item', asy
   };
   expect(listAfterCoverUpload.list.hasCoverPhoto).toBe(true);
   expect((await call(coverPath, 'bob')).status).toBe(404);
-  expect(Buffer.from(await (await call(coverPath, 'alice')).arrayBuffer())).toEqual(png);
+  const coverResponse = await call(coverPath, 'alice');
+  expect(coverResponse.headers.get('Cache-Control')).toContain('private');
+  expect(Buffer.from(await coverResponse.arrayBuffer())).toEqual(png);
   expect((await call(coverPath, 'alice', 'DELETE')).status).toBe(204);
   const listAfterCoverRemoval = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
     list: { hasCoverPhoto: boolean };

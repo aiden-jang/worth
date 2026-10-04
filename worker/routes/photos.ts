@@ -23,7 +23,9 @@ function registerListCover(api: Hono<AppEnv>): void {
       .bind(id, c.get('ownerId'))
       .first<{ content_type: string; data: number[] }>();
     if (!photo) throw new ApiError(404, 'NOT_FOUND', 'Cover photo not found');
-    return new Response(new Uint8Array(photo.data), { headers: { 'Content-Type': photo.content_type } });
+    return new Response(new Uint8Array(photo.data), {
+      headers: { 'Content-Type': photo.content_type, 'Cache-Control': 'private, no-store' },
+    });
   });
 
   api.put(path, async (c) => {
@@ -97,7 +99,7 @@ function registerPhotoOwner(
       .first<{ content_type: string; data: number[] }>();
     if (!photo) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
     return new Response(new Uint8Array(photo.data), {
-      headers: { 'Content-Type': photo.content_type },
+      headers: { 'Content-Type': photo.content_type, 'Cache-Control': 'private, no-store' },
     });
   });
 
