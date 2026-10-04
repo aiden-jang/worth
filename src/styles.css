@@ -1859,6 +1859,11 @@ select:focus {
   padding: 1.15rem 0;
   border-bottom: 1px solid var(--line);
 }
+.activity-shortcut-hint {
+  margin: 0.65rem 0 0;
+  color: var(--faint);
+  font: 500 0.65rem/1.45 var(--mono);
+}
 .activity-summary {
   display: flex;
   align-items: end;

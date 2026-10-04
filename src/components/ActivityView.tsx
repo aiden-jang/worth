@@ -79,6 +79,31 @@ export function ActivityView({
     if (log) setSelected(log);
   }, [focusLogId, logs]);
 
+  useEffect(() => {
+    const openNewLog = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.key.toLocaleLowerCase() !== 'a'
+      )
+        return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable ||
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT'
+      )
+        return;
+      event.preventDefault();
+      onNew();
+    };
+    window.addEventListener('keydown', openNewLog);
+    return () => window.removeEventListener('keydown', openNewLog);
+  }, [onNew]);
+
   if (loading) return <p className="loading-line">Loading activity…</p>;
   if (error)
     return (
@@ -136,6 +161,7 @@ export function ActivityView({
           {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
         </span>
       </div>
+      <p className="activity-shortcut-hint">Press A to log from anywhere on this page.</p>
       {!visible.length ? (
         <div className="empty-list">
           <h2>{logs.length ? 'Nothing matches.' : 'Nothing here yet.'}</h2>
