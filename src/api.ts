@@ -41,6 +41,7 @@ function json(method: string, body: unknown): RequestInit {
 export const api = {
   me: () => request<{ user: AuthUser | null }>('/me'),
   overview: () => request<Overview>('/overview'),
+  patterns: () => request<import('./shared/models').ArchivePatterns>('/patterns'),
   lists: () => request<{ lists: ListSummary[] }>('/lists'),
   list: (id: string) => request<{ list: ListDetail }>(`/lists/${id}`),
   createList: (body: { name: string; kind: 'collection' | 'activity'; description: string }) =>

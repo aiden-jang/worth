@@ -90,6 +90,7 @@ export function AppShell({
           >
             Activity
           </NavLink>
+          <NavLink to="/patterns">Patterns</NavLink>
           <NavLink className="rail-utility-link" to="/search">
             Search
           </NavLink>

@@ -10,6 +10,7 @@ import { ListPage } from './pages/ListPage';
 import { SearchPage } from './pages/SearchPage';
 import { ShowPage } from './pages/ShowPage';
 import { PublicSharePage } from './pages/PublicSharePage';
+import { PatternsPage } from './pages/PatternsPage';
 
 const authOrigin =
   import.meta.env.VITE_AUTH_URL ??
@@ -78,6 +79,7 @@ function PrivateApp() {
         <Route path="/lists/:listId" element={<ListPage />} />
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/patterns" element={<PatternsPage />} />
         <Route path="*" element={<ArchivePage />} />
       </Routes>
     </AppShell>

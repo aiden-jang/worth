@@ -85,6 +85,27 @@ export interface Overview {
   lastTimes: LastTime[];
 }
 
+export interface ArchivePatterns {
+  totalRecords: number;
+  totalCollections: number;
+  totalActivities: number;
+  revisitCount: number;
+  favoriteCount: number;
+  notAgainCount: number;
+  mostReturned: {
+    listId: string;
+    itemId: string;
+    listName: string;
+    title: string;
+    count: number;
+  } | null;
+  newestCollection: {
+    id: string;
+    name: string;
+    itemCount: number;
+  } | null;
+}
+
 export interface LastTime {
   id: string;
   listId: string;

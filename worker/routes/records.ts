@@ -305,6 +305,79 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     });
   });
 
+  api.get('/patterns', async (c) => {
+    const ownerId = c.get('ownerId');
+    const [summary, mostReturned, newestCollection] = await Promise.all([
+      c.env.DB.prepare(
+        `SELECT
+          (SELECT COUNT(*) FROM items WHERE owner_id = ?) + (SELECT COUNT(*) FROM logs WHERE owner_id = ?) AS total_records,
+          (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'collection') AS total_collections,
+          (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'activity') AS total_activities,
+          (SELECT COUNT(*) FROM logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
+          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
+          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count`,
+      )
+        .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
+        .first<{
+          total_records: number;
+          total_collections: number;
+          total_activities: number;
+          revisit_count: number;
+          favorite_count: number;
+          not_again_count: number;
+        }>(),
+      c.env.DB.prepare(
+        `SELECT l.id AS list_id, i.id AS item_id, l.name AS list_name, i.title, COUNT(*) AS revisit_count
+        FROM logs g
+        JOIN items i ON i.id = g.item_id AND i.owner_id = g.owner_id
+        JOIN lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
+        WHERE g.owner_id = ? AND g.item_id IS NOT NULL
+        GROUP BY i.id
+        ORDER BY revisit_count DESC, MAX(g.happened_on) DESC, i.title ASC
+        LIMIT 1`,
+      )
+        .bind(ownerId)
+        .first<{
+          list_id: string;
+          item_id: string;
+          list_name: string;
+          title: string;
+          revisit_count: number;
+        }>(),
+      c.env.DB.prepare(
+        `SELECT l.id, l.name, COUNT(i.id) AS item_count
+        FROM lists l
+        LEFT JOIN items i ON i.list_id = l.id
+        WHERE l.owner_id = ? AND l.kind = 'collection'
+        GROUP BY l.id
+        ORDER BY l.created_at DESC
+        LIMIT 1`,
+      )
+        .bind(ownerId)
+        .first<{ id: string; name: string; item_count: number }>(),
+    ]);
+    return c.json({
+      totalRecords: summary?.total_records ?? 0,
+      totalCollections: summary?.total_collections ?? 0,
+      totalActivities: summary?.total_activities ?? 0,
+      revisitCount: summary?.revisit_count ?? 0,
+      favoriteCount: summary?.favorite_count ?? 0,
+      notAgainCount: summary?.not_again_count ?? 0,
+      mostReturned: mostReturned
+        ? {
+            listId: mostReturned.list_id,
+            itemId: mostReturned.item_id,
+            listName: mostReturned.list_name,
+            title: mostReturned.title,
+            count: mostReturned.revisit_count,
+          }
+        : null,
+      newestCollection: newestCollection
+        ? { id: newestCollection.id, name: newestCollection.name, itemCount: newestCollection.item_count }
+        : null,
+    });
+  });
+
   api.get('/search', async (c) => {
     const term = (c.req.query('q') ?? '').trim();
     if (term.length < 2 || term.length > 40)

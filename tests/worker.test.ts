@@ -187,6 +187,62 @@ test('cross-origin writes fail before reaching private data', async () => {
   expect(response.headers.get('Cache-Control')).toContain('no-store');
 });
 
+test('patterns summarize only the signed-in owner’s archive', async () => {
+  const createdList = await call('/lists', 'patterns', 'POST', {
+    name: 'Places',
+    kind: 'collection',
+    description: '',
+  });
+  const list = ((await createdList.json()) as { list: { id: string } }).list;
+  const createdItem = await call(`/lists/${list.id}/items`, 'patterns', 'POST', {
+    title: 'Cafe Maki',
+    type: 'Cafe',
+    note: '',
+    decision: 'favorite',
+    startedOn: null,
+    endedOn: null,
+  });
+  const item = ((await createdItem.json()) as { item: { id: string } }).item;
+  for (const happenedOn of ['2026-09-01', '2026-09-15']) {
+    expect(
+      (
+        await call(`/lists/${list.id}/logs`, 'patterns', 'POST', {
+          itemId: item.id,
+          title: '',
+          happenedOn,
+          note: '',
+          amount: null,
+          unit: '',
+          sets: null,
+          reps: null,
+        })
+      ).status,
+    ).toBe(201);
+  }
+
+  const response = await call('/patterns', 'patterns');
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual(
+    expect.objectContaining({
+      totalRecords: 3,
+      totalCollections: 1,
+      totalActivities: 0,
+      revisitCount: 2,
+      favoriteCount: 1,
+      notAgainCount: 0,
+      mostReturned: expect.objectContaining({ title: 'Cafe Maki', count: 2 }),
+      newestCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
+    }),
+  );
+  expect((await call('/patterns', 'someoneelse')).status).toBe(200);
+  expect(
+    (await (await call('/patterns', 'someoneelse')).json()) as {
+      totalRecords: number;
+      mostReturned: unknown;
+    },
+  ).toEqual(expect.objectContaining({ totalRecords: 0, mostReturned: null }));
+});
+
 test('record exports are owner-scoped and do not include photo binaries', async () => {
   const createdList = await call('/lists', 'exporter', 'POST', {
     name: 'Wines',
