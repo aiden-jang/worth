@@ -9,6 +9,7 @@ import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { CollectionCoverButton, CollectionCoverControl } from '../components/PhotoControl';
+import { starterCollectionCover } from '../shared/starter-covers';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -79,6 +80,12 @@ export function ListPage() {
   const selected =
     items.find((item) => item.id === selectedId) ??
     (focusedLog?.itemId ? (items.find((item) => item.id === focusedLog.itemId) ?? null) : null);
+  const collectionCover =
+    list.kind === 'collection'
+      ? list.hasCoverPhoto
+        ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+        : starterCollectionCover(list.name)
+      : null;
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
@@ -94,6 +101,7 @@ export function ListPage() {
               (list.kind === 'collection' ? 'Things you want to remember.' : 'A record of when it happened.')}
           </p>
         </div>
+        {collectionCover && <img className="collection-title-cover" src={collectionCover} alt="" />}
         <div className="list-head-actions">
           {list.kind === 'collection' && (
             <Link className="button button-outline" to={`/lists/${list.id}/show`}>
