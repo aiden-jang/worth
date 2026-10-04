@@ -477,11 +477,27 @@ textarea::placeholder {
 .archive-lists a:hover {
   background: var(--raised);
 }
-.archive-lists a > span {
+.archive-lists a.has-cover {
+  grid-template-columns: 52px auto minmax(0, 1fr) auto;
+}
+.archive-list-cover {
+  grid-column: 1;
+  grid-row: 1;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--line-strong);
+  object-fit: cover;
+  filter: saturate(0.74) contrast(0.94);
+}
+.archive-list-index {
   color: var(--acid);
   font: 500 0.61rem var(--mono);
 }
-.archive-lists a strong {
+.archive-list-identity {
+  min-width: 0;
+}
+.archive-list-identity strong {
+  display: block;
   overflow: hidden;
   color: var(--paper);
   font-size: 1.15rem;
@@ -490,21 +506,20 @@ textarea::placeholder {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.archive-lists a small,
-.archive-lists a em {
-  grid-column: 2;
+.archive-list-identity small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.28rem;
   color: var(--faint);
   font: 500 0.58rem var(--mono);
   letter-spacing: 0.08em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
-}
-.archive-lists a em {
-  color: var(--muted);
-  font-style: normal;
+  white-space: nowrap;
 }
 .archive-lists a svg {
-  grid-column: 3;
-  grid-row: 1 / span 2;
+  grid-column: -1;
+  grid-row: 1;
   color: var(--muted);
 }
 .archive-lists a:hover svg {

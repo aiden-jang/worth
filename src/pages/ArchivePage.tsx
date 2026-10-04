@@ -134,13 +134,21 @@ export function ArchivePage() {
                 const noun = list.kind === 'collection' ? 'item' : 'log';
                 return (
                   <li key={list.id}>
-                    <Link to={`/lists/${list.id}`}>
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{list.name}</strong>
-                      <small>{list.kind}</small>
-                      <em>
-                        {count} {count === 1 ? noun : `${noun}s`}
-                      </em>
+                    <Link to={`/lists/${list.id}`} className={list.hasCoverPhoto ? 'has-cover' : undefined}>
+                      {list.hasCoverPhoto && (
+                        <img
+                          className="archive-list-cover"
+                          src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`}
+                          alt=""
+                        />
+                      )}
+                      <span className="archive-list-index">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="archive-list-identity">
+                        <strong>{list.name}</strong>
+                        <small>
+                          {list.kind} · {count} {count === 1 ? noun : `${noun}s`}
+                        </small>
+                      </span>
                       <ArrowRight size={17} />
                     </Link>
                   </li>
