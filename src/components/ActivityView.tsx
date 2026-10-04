@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
 import type { Log } from '../shared/models';
@@ -153,30 +153,39 @@ export function ActivityView({
         </div>
       ) : (
         <div className="activity-rows">
-          {visible.map((log) => (
-            <article className="activity-row" key={log.id}>
-              <span className="activity-date">
-                {formatElapsedDays(log.happenedOn)}
-                <small>{formatDate(log.happenedOn)}</small>
-              </span>
-              <button className="activity-main" onClick={() => setSelected(log)}>
-                <strong>{log.title}</strong>
-                <small>{formatMetric(log) || log.note || 'View detail'}</small>
-              </button>
-              {log.hasPhoto && (
-                <img src={`/api/logs/${log.id}/photo?v=${log.updatedAt}`} alt="" loading="lazy" />
-              )}
-              <button
-                className="activity-again"
-                onClick={() => {
-                  setRepeatTitle(log.title);
-                  onNew();
-                }}
-              >
-                Again <ArrowRight size={15} />
-              </button>
-            </article>
-          ))}
+          {visible.map((log, index) => {
+            const previous = visible[index - 1];
+            const month = activityMonthLabel(log.happenedOn);
+            const showMonth =
+              sort !== 'name' && (!previous || activityMonthLabel(previous.happenedOn) !== month);
+            return (
+              <Fragment key={log.id}>
+                {showMonth && <p className="activity-month">{month}</p>}
+                <article className="activity-row">
+                  <span className="activity-date">
+                    {formatElapsedDays(log.happenedOn)}
+                    <small>{formatDate(log.happenedOn)}</small>
+                  </span>
+                  <button className="activity-main" onClick={() => setSelected(log)}>
+                    <strong>{log.title}</strong>
+                    <small>{formatMetric(log) || log.note || 'View detail'}</small>
+                  </button>
+                  {log.hasPhoto && (
+                    <img src={`/api/logs/${log.id}/photo?v=${log.updatedAt}`} alt="" loading="lazy" />
+                  )}
+                  <button
+                    className="activity-again"
+                    onClick={() => {
+                      setRepeatTitle(log.title);
+                      onNew();
+                    }}
+                  >
+                    Again <ArrowRight size={15} />
+                  </button>
+                </article>
+              </Fragment>
+            );
+          })}
         </div>
       )}
       {(newOpen || selected) && (
@@ -199,6 +208,12 @@ function activityPeriodStart(period: 'all' | '7d' | '30d' | 'year'): string | nu
   const date = new Date(`${today()}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() - (period === '7d' ? 6 : 29));
   return date.toISOString().slice(0, 10);
+}
+
+function activityMonthLabel(value: string): string {
+  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(`${value}T00:00:00Z`),
+  );
 }
 
 function ActivityEditor({

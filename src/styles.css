@@ -1927,6 +1927,18 @@ select:focus {
 .activity-rows {
   border-top: 1px solid var(--line);
 }
+.activity-month {
+  margin: 1.8rem 0 0;
+  padding: 0 0 0.65rem;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font: 500 0.65rem var(--mono);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.activity-rows > .activity-month:first-child {
+  margin-top: 0;
+}
 .activity-row {
   display: grid;
   grid-template-columns: 122px minmax(0, 1fr) auto auto;
