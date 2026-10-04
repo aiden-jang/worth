@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, DownloadSimple, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, DownloadSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
@@ -52,11 +52,16 @@ export function ListsPage() {
   const [description, setDescription] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>('recent');
+  const [collectionQuery, setCollectionQuery] = useState('');
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
   const visibleActivityLists = listScope === 'collection' ? [] : activityLists;
-  const orderedCollectionLists = [...visibleCollectionLists].sort((left, right) => {
+  const matchingCollectionLists = visibleCollectionLists.filter((list) => {
+    const query = collectionQuery.trim().toLocaleLowerCase();
+    return !query || `${list.name} ${list.description}`.toLocaleLowerCase().includes(query);
+  });
+  const orderedCollectionLists = [...matchingCollectionLists].sort((left, right) => {
     if (collectionOrder === 'name') return left.name.localeCompare(right.name);
     if (collectionOrder === 'items')
       return right.itemCount - left.itemCount || right.updatedAt - left.updatedAt;
@@ -218,8 +223,11 @@ export function ListsPage() {
               heading="Collections"
               detail="Things you can compare, rank, and revisit."
               lists={orderedCollectionLists}
+              isCollectionDirectory
               collectionOrder={collectionOrder}
               onCollectionOrderChange={setCollectionOrder}
+              collectionQuery={collectionQuery}
+              onCollectionQueryChange={setCollectionQuery}
             />
           )}
           {visibleActivityLists.length > 0 && (
@@ -276,17 +284,21 @@ function ListDirectory({
   heading,
   detail,
   lists,
+  isCollectionDirectory = false,
   collectionOrder,
   onCollectionOrderChange,
+  collectionQuery,
+  onCollectionQueryChange,
 }: {
   heading: string;
   detail: string;
   lists: ListSummary[];
+  isCollectionDirectory?: boolean;
   collectionOrder?: CollectionOrder;
   onCollectionOrderChange?: (order: CollectionOrder) => void;
+  collectionQuery?: string;
+  onCollectionQueryChange?: (query: string) => void;
 }) {
-  const isCollectionDirectory = lists[0]?.kind === 'collection';
-
   return (
     <section className="list-directory" aria-labelledby={`${heading.toLowerCase()}-heading`}>
       <header className="list-directory-head">
@@ -297,49 +309,81 @@ function ListDirectory({
           <span>{detail}</span>
         </div>
         <div className="list-directory-summary">
-          {isCollectionDirectory && collectionOrder && onCollectionOrderChange && (
-            <label className="collection-directory-order">
-              <span>Order</span>
-              <select
-                aria-label="Order collections"
-                value={collectionOrder}
-                onChange={(event) => onCollectionOrderChange(event.target.value as CollectionOrder)}
-              >
-                <option value="recent">Recently updated</option>
-                <option value="name">Name</option>
-                <option value="items">Most kept</option>
-              </select>
-            </label>
+          {isCollectionDirectory && collectionOrder && onCollectionOrderChange && onCollectionQueryChange && (
+            <div className="collection-directory-controls">
+              <div className="collection-directory-search">
+                <MagnifyingGlass size={15} aria-hidden="true" />
+                <label className="sr-only" htmlFor="collection-directory-search">
+                  Find a collection
+                </label>
+                <input
+                  id="collection-directory-search"
+                  value={collectionQuery}
+                  onChange={(event) => onCollectionQueryChange(event.target.value)}
+                  placeholder="Find a collection"
+                />
+                {collectionQuery && (
+                  <button
+                    type="button"
+                    aria-label="Clear collection search"
+                    onClick={() => onCollectionQueryChange('')}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <label className="collection-directory-order">
+                <span>Order</span>
+                <select
+                  aria-label="Order collections"
+                  value={collectionOrder}
+                  onChange={(event) => onCollectionOrderChange(event.target.value as CollectionOrder)}
+                >
+                  <option value="recent">Recently updated</option>
+                  <option value="name">Name</option>
+                  <option value="items">Most kept</option>
+                </select>
+              </label>
+            </div>
           )}
           <strong>{lists.length}</strong>
         </div>
       </header>
       {isCollectionDirectory ? (
-        <div className="collection-directory-grid">
-          {lists.map((list, index) => {
-            const cover = list.hasCoverPhoto
-              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-              : starterCollectionCover(list.name);
-            return (
-              <Link
-                to={`/lists/${list.id}`}
-                className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
-                key={list.id}
-              >
-                {cover && <img src={cover} alt="" />}
-                <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
-                <span className="collection-directory-copy">
-                  <strong>{list.name}</strong>
-                  <small>
-                    {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                    {list.description ? ` · ${list.description}` : ''}
-                  </small>
-                </span>
-                <ArrowRight size={20} aria-hidden="true" />
-              </Link>
-            );
-          })}
-        </div>
+        lists.length ? (
+          <div className="collection-directory-grid">
+            {lists.map((list, index) => {
+              const cover = list.hasCoverPhoto
+                ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+                : starterCollectionCover(list.name);
+              return (
+                <Link
+                  to={`/lists/${list.id}`}
+                  className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
+                  key={list.id}
+                >
+                  {cover && <img src={cover} alt="" />}
+                  <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="collection-directory-copy">
+                    <strong>{list.name}</strong>
+                    <small>
+                      {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
+                      {list.description ? ` · ${list.description}` : ''}
+                    </small>
+                  </span>
+                  <ArrowRight size={20} aria-hidden="true" />
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="collection-directory-empty">
+            <p>No collections match that name.</p>
+            {onCollectionQueryChange && (
+              <button onClick={() => onCollectionQueryChange('')}>Clear search</button>
+            )}
+          </div>
+        )
       ) : (
         <div>
           {lists.map((list, index) => {

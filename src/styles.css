@@ -1036,6 +1036,11 @@ select:focus {
   align-items: end;
   gap: 1.25rem;
 }
+.collection-directory-controls {
+  display: flex;
+  align-items: end;
+  gap: 1.05rem;
+}
 .list-directory-summary > strong {
   color: var(--paper);
   font: 400 2rem/1 var(--mono);
@@ -1063,6 +1068,43 @@ select:focus {
   letter-spacing: 0;
   text-transform: none;
 }
+.collection-directory-search {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--faint);
+}
+.collection-directory-search:focus-within {
+  border-color: var(--acid);
+  color: var(--acid);
+}
+.collection-directory-search input {
+  width: 138px;
+  min-width: 0;
+  border: 0;
+  padding: 0.35rem 0.3rem 0.35rem 0.45rem;
+  background: transparent;
+  color: var(--paper);
+  font:
+    400 0.72rem 'DM Sans',
+    Arial,
+    sans-serif;
+}
+.collection-directory-search input::placeholder {
+  color: var(--faint);
+}
+.collection-directory-search button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0.2rem;
+  background: transparent;
+  color: var(--muted);
+}
+.collection-directory-search button:hover {
+  color: var(--acid);
+}
 .directory-row {
   grid-template-columns: 66px minmax(0, 1fr) minmax(112px, auto) 32px;
   gap: 1.3rem;
@@ -1082,6 +1124,30 @@ select:focus {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
+}
+.collection-directory-empty {
+  display: grid;
+  justify-items: start;
+  gap: 0.85rem;
+  min-height: 180px;
+  padding: 2rem 1.35rem;
+  border-bottom: 1px solid var(--line);
+}
+.collection-directory-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+.collection-directory-empty button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--paper);
+  font: 500 0.67rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.collection-directory-empty button:hover {
+  color: var(--acid);
 }
 .collection-directory-card {
   position: relative;
@@ -3437,6 +3503,14 @@ dialog::backdrop {
   .list-directory-summary {
     align-items: end;
     gap: 0.8rem;
+  }
+  .collection-directory-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+  }
+  .collection-directory-search input {
+    width: 112px;
   }
   .collection-directory-order select {
     min-width: 122px;
