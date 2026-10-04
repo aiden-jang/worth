@@ -15,6 +15,7 @@ export function SearchPage() {
     queryFn: () => api.search(term),
     enabled: term.length >= 2,
   });
+  const listResults = results.data?.results.filter((result) => result.kind === 'list') ?? [];
   const itemResults = results.data?.results.filter((result) => result.kind === 'item') ?? [];
   const logResults = results.data?.results.filter((result) => result.kind === 'log') ?? [];
   return (
@@ -61,6 +62,7 @@ export function SearchPage() {
       ) : results.data.results.length ? (
         <section className="search-results">
           <p className="overline">{results.data.results.length} RESULTS</p>
+          {listResults.length > 0 && <SearchGroup label="Lists" results={listResults} />}
           {itemResults.length > 0 && <SearchGroup label="Items" results={itemResults} />}
           {logResults.length > 0 && <SearchGroup label="Logs" results={logResults} />}
         </section>
@@ -83,7 +85,7 @@ function SearchGroup({
     id: string;
     listId: string;
     listName: string;
-    kind: 'item' | 'log';
+    kind: 'list' | 'item' | 'log';
     itemId: string | null;
     title: string;
     detail: string;
@@ -95,11 +97,17 @@ function SearchGroup({
       {results.map((result) => (
         <Link
           key={`${result.kind}-${result.id}`}
-          to={`/lists/${result.listId}?focus=${result.kind}:${result.id}`}
+          to={
+            result.kind === 'list'
+              ? `/lists/${result.listId}`
+              : `/lists/${result.listId}?focus=${result.kind}:${result.id}`
+          }
         >
           <span>
             <small>
-              {result.listName} / {result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}
+              {result.kind === 'list'
+                ? `LIST / ${result.detail || 'ARCHIVE'}`
+                : `${result.listName} / ${result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}`}
             </small>
             <strong>{result.title}</strong>
             {result.detail && <em>{result.detail}</em>}

@@ -84,6 +84,12 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
   expect(createdItem.status).toBe(201);
   const item = ((await createdItem.json()) as { item: { id: string } }).item;
 
+  const listSearch = await call('/search?q=drinks', 'alice');
+  expect(listSearch.status).toBe(200);
+  expect(((await listSearch.json()) as { results: unknown[] }).results).toContainEqual(
+    expect.objectContaining({ id: list.id, kind: 'list', title: 'Drinks' }),
+  );
+
   expect((await call(`/lists/${list.id}`, 'bob')).status).toBe(404);
   expect((await call(`/items/${item.id}`, 'bob')).status).toBe(404);
   expect(((await call('/lists', 'bob').then((res) => res.json())) as { lists: unknown[] }).lists).toEqual([]);

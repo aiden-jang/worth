@@ -127,7 +127,7 @@ export interface SearchResult {
   id: string;
   listId: string;
   listName: string;
-  kind: 'item' | 'log';
+  kind: 'list' | 'item' | 'log';
   itemId: string | null;
   title: string;
   detail: string;

@@ -386,6 +386,13 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     if (new TextEncoder().encode(pattern).length > 50)
       throw new ApiError(400, 'INVALID_QUERY', 'Search with a shorter phrase');
     const ownerId = c.get('ownerId');
+    const { results: lists } = await c.env.DB.prepare(
+      `SELECT id, name, kind, description FROM lists
+      WHERE owner_id = ? AND (name LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\')
+      ORDER BY updated_at DESC LIMIT 20`,
+    )
+      .bind(ownerId, pattern, pattern)
+      .all<{ id: string; name: string; kind: 'collection' | 'activity'; description: string }>();
     const { results: items } = await c.env.DB.prepare(
       `SELECT i.id, i.list_id, l.name AS list_name,
       i.title, i.type AS detail FROM items i JOIN lists l ON l.id = i.list_id
@@ -418,6 +425,15 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       }>();
     return c.json({
       results: [
+        ...lists.map((row) => ({
+          id: row.id,
+          listId: row.id,
+          listName: row.name,
+          title: row.name,
+          detail: row.description || row.kind,
+          kind: 'list' as const,
+          itemId: null,
+        })),
         ...items.map((row) => ({
           id: row.id,
           listId: row.list_id,
