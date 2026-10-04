@@ -6,6 +6,8 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
 import { api } from '../api';
 import { preferredQuickCaptureList } from '../shared/quick-capture';
+import { starterCollectionCover } from '../shared/starter-covers';
+import type { ListSummary } from '../shared/models';
 
 const quickCaptureStorageKey = 'worth:quick-capture-list';
 
@@ -193,21 +195,30 @@ function ListPickerGroup({
   onOpen,
 }: {
   label: string;
-  lists: { id: string; name: string; kind: 'collection' | 'activity' }[];
+  lists: ListSummary[];
   onOpen: (list: { id: string; kind: 'collection' | 'activity' }) => void;
 }) {
   return (
     <section className="add-list-group" aria-label={label}>
       <p>{label}</p>
-      {lists.map((list) => (
-        <button key={list.id} onClick={() => onOpen(list)}>
-          <span>
-            {list.name}
-            <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>
-          </span>
-          <ArrowRight size={18} />
-        </button>
-      ))}
+      {lists.map((list) => {
+        const cover =
+          list.kind === 'collection'
+            ? list.hasCoverPhoto
+              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              : starterCollectionCover(list.name)
+            : null;
+        return (
+          <button key={list.id} onClick={() => onOpen(list)}>
+            {cover && <img className="add-list-cover" src={cover} alt="" />}
+            <span>
+              {list.name}
+              <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>
+            </span>
+            <ArrowRight size={18} />
+          </button>
+        );
+      })}
     </section>
   );
 }

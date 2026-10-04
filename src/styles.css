@@ -2350,6 +2350,19 @@ dialog::backdrop {
   color: var(--paper);
   text-align: left;
 }
+.add-list-cover {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  margin-right: 0.85rem;
+  border: 1px solid var(--line-strong);
+  object-fit: cover;
+  filter: saturate(0.76) contrast(0.94);
+}
+.add-list-choices button > span {
+  min-width: 0;
+  margin-right: auto;
+}
 .add-list-choices button:hover {
   padding-inline: 0.8rem;
   background: var(--raised);
