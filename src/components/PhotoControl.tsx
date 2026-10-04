@@ -198,6 +198,7 @@ export function CollectionCoverControl({
 export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: string; hasCoverPhoto: boolean }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const upload = useMutation({
     mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
     onSuccess: () => {
@@ -208,27 +209,64 @@ export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: strin
     },
     onError: (failure) => setError(failure.message),
   });
+  const remove = useMutation({
+    mutationFn: () => api.deleteListCover(listId),
+    onSuccess: () => {
+      setError('');
+      setConfirmingRemoval(false);
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+    onError: (failure) => setError(failure.message),
+  });
 
   return (
     <div className="collection-cover-header-action">
-      <label className="button button-outline">
-        <Camera size={18} /> {upload.isPending ? 'Uploading…' : hasCoverPhoto ? 'Replace cover' : 'Add cover'}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          hidden
-          disabled={upload.isPending}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) upload.mutate(file);
-            event.target.value = '';
-          }}
-        />
-      </label>
+      <div className="collection-cover-header-buttons">
+        <label className="button button-outline">
+          <Camera size={18} />{' '}
+          {upload.isPending ? 'Uploading…' : hasCoverPhoto ? 'Replace cover' : 'Add cover'}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            disabled={upload.isPending}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) upload.mutate(file);
+              event.target.value = '';
+            }}
+          />
+        </label>
+        {hasCoverPhoto && (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Remove collection cover"
+            disabled={remove.isPending}
+            onClick={() => setConfirmingRemoval(true)}
+          >
+            <Trash size={18} />
+          </button>
+        )}
+      </div>
       {error && (
         <span className="collection-cover-header-error" role="alert">
           {error}
         </span>
+      )}
+      {confirmingRemoval && (
+        <ConfirmDialog
+          eyebrow="REMOVE COVER"
+          title="Remove this collection cover?"
+          description="This permanently removes the private cover image. Your collection and records stay intact."
+          confirmLabel="Remove cover"
+          pending={remove.isPending}
+          error={remove.isError ? remove.error.message : undefined}
+          onConfirm={() => remove.mutate()}
+          onClose={() => setConfirmingRemoval(false)}
+        />
       )}
     </div>
   );

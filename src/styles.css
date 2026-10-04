@@ -978,6 +978,12 @@ textarea::placeholder {
   display: grid;
   gap: 0.35rem;
 }
+.collection-cover-header-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
 .collection-cover-header-error {
   max-width: 190px;
   color: var(--danger);
