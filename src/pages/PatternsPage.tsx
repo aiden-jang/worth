@@ -84,6 +84,21 @@ export function PatternsPage() {
                 <p>Create a collection when you want something to compare or revisit.</p>
               )}
             </article>
+            <article>
+              <p className="overline">MOST KEPT IN</p>
+              {data.mostKeptCollection ? (
+                <Link to={`/lists/${data.mostKeptCollection.id}`}>
+                  <strong>{data.mostKeptCollection.name}</strong>
+                  <span>
+                    {data.mostKeptCollection.itemCount}{' '}
+                    {data.mostKeptCollection.itemCount === 1 ? 'item' : 'items'} kept so far
+                  </span>
+                  <ArrowRight size={18} />
+                </Link>
+              ) : (
+                <p>Keep a few things in a collection and it will appear here.</p>
+              )}
+            </article>
             <article className="pattern-archive-scope">
               <p className="overline">ARCHIVE SHAPE</p>
               <strong>{data.totalCollections + data.totalActivities}</strong>

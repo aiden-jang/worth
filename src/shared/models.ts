@@ -104,6 +104,11 @@ export interface ArchivePatterns {
     name: string;
     itemCount: number;
   } | null;
+  mostKeptCollection: {
+    id: string;
+    name: string;
+    itemCount: number;
+  } | null;
 }
 
 export interface LastTime {

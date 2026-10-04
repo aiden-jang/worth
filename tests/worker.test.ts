@@ -238,6 +238,7 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
       notAgainCount: 0,
       mostReturned: expect.objectContaining({ title: 'Cafe Maki', count: 2 }),
       newestCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
+      mostKeptCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
     }),
   );
   expect((await call('/patterns', 'someoneelse')).status).toBe(200);
@@ -246,7 +247,7 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
       totalRecords: number;
       mostReturned: unknown;
     },
-  ).toEqual(expect.objectContaining({ totalRecords: 0, mostReturned: null }));
+  ).toEqual(expect.objectContaining({ totalRecords: 0, mostReturned: null, mostKeptCollection: null }));
 });
 
 test('record exports are owner-scoped and do not include photo binaries', async () => {

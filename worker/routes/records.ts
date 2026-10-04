@@ -307,7 +307,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
 
   api.get('/patterns', async (c) => {
     const ownerId = c.get('ownerId');
-    const [summary, mostReturned, newestCollection] = await Promise.all([
+    const [summary, mostReturned, newestCollection, mostKeptCollection] = await Promise.all([
       c.env.DB.prepare(
         `SELECT
           (SELECT COUNT(*) FROM items WHERE owner_id = ?) + (SELECT COUNT(*) FROM logs WHERE owner_id = ?) AS total_records,
@@ -355,6 +355,17 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       )
         .bind(ownerId)
         .first<{ id: string; name: string; item_count: number }>(),
+      c.env.DB.prepare(
+        `SELECT l.id, l.name, COUNT(i.id) AS item_count
+        FROM lists l
+        JOIN items i ON i.list_id = l.id AND i.owner_id = l.owner_id
+        WHERE l.owner_id = ? AND l.kind = 'collection'
+        GROUP BY l.id
+        ORDER BY item_count DESC, l.updated_at DESC, l.name ASC
+        LIMIT 1`,
+      )
+        .bind(ownerId)
+        .first<{ id: string; name: string; item_count: number }>(),
     ]);
     return c.json({
       totalRecords: summary?.total_records ?? 0,
@@ -374,6 +385,13 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         : null,
       newestCollection: newestCollection
         ? { id: newestCollection.id, name: newestCollection.name, itemCount: newestCollection.item_count }
+        : null,
+      mostKeptCollection: mostKeptCollection
+        ? {
+            id: mostKeptCollection.id,
+            name: mostKeptCollection.name,
+            itemCount: mostKeptCollection.item_count,
+          }
         : null,
     });
   });
