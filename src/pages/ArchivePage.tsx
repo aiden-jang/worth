@@ -60,13 +60,18 @@ export function ArchivePage() {
       ) : (
         <section className="archive-dashboard page-width">
           <header className="archive-dashboard-head">
-            <div className="archive-day" aria-label={`${weekday}, ${month} ${dayNumber}`}>
-              <strong>{dayNumber}</strong>
-              <span>
-                {month}
-                <br />
-                {weekday}
-              </span>
+            <div className="archive-day-block">
+              <div className="archive-day" aria-label={`${weekday}, ${month} ${dayNumber}`}>
+                <strong>{dayNumber}</strong>
+                <span>
+                  {month}
+                  <br />
+                  {weekday}
+                </span>
+              </div>
+              <Link className="archive-pattern-link" to="/patterns">
+                Read patterns <ArrowRight size={15} />
+              </Link>
             </div>
             <form className="archive-search" onSubmit={search} role="search">
               <MagnifyingGlass size={18} />

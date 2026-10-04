@@ -420,6 +420,23 @@ textarea::placeholder {
   gap: 2rem;
   padding-bottom: clamp(2rem, 4vw, 4rem);
 }
+.archive-day-block {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+}
+.archive-pattern-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font: 500 0.64rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.archive-pattern-link:hover {
+  color: var(--acid);
+}
 .archive-day {
   display: flex;
   align-items: center;
