@@ -130,3 +130,100 @@ export function PhotoControl({
     </div>
   );
 }
+
+export function CollectionCoverControl({
+  listId,
+  hasCoverPhoto,
+  version,
+}: {
+  listId: string;
+  hasCoverPhoto: boolean;
+  version: number;
+}) {
+  const client = useQueryClient();
+  const [error, setError] = useState('');
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const upload = useMutation({
+    mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
+    onSuccess: () => {
+      setError('');
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+    onError: (failure) => setError(failure.message),
+  });
+  const remove = useMutation({
+    mutationFn: () => api.deleteListCover(listId),
+    onSuccess: () => {
+      setConfirmingRemoval(false);
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+    onError: (failure) => setError(failure.message),
+  });
+
+  return (
+    <section className="collection-cover-control" aria-label="Collection cover">
+      <div>
+        <p className="overline">COLLECTION COVER</p>
+        <p>
+          {hasCoverPhoto ? 'A private cover for this collection.' : 'Add an optional private cover photo.'}
+        </p>
+      </div>
+      {hasCoverPhoto && <img src={`/api/lists/${listId}/cover?v=${version}`} alt="Collection cover" />}
+      <div className="photo-actions">
+        <p className="photo-state">{hasCoverPhoto ? 'Private cover' : 'No cover attached'}</p>
+        <div className="photo-buttons">
+          <label className="button button-outline">
+            <Camera size={17} /> {hasCoverPhoto ? 'Replace cover' : 'Add a cover'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              disabled={upload.isPending}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) upload.mutate(file);
+                event.target.value = '';
+              }}
+            />
+          </label>
+          {hasCoverPhoto && (
+            <button
+              className="icon-button"
+              aria-label="Remove collection cover"
+              disabled={remove.isPending}
+              onClick={() => setConfirmingRemoval(true)}
+            >
+              <Trash size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+      {upload.isPending && (
+        <p className="muted" role="status">
+          Uploading cover…
+        </p>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {confirmingRemoval && (
+        <ConfirmDialog
+          eyebrow="REMOVE COVER"
+          title="Remove this collection cover?"
+          description="This permanently removes the private cover image. Your collection and records stay intact."
+          confirmLabel="Remove cover"
+          pending={remove.isPending}
+          error={remove.isError ? remove.error.message : undefined}
+          onConfirm={() => remove.mutate()}
+          onClose={() => setConfirmingRemoval(false)}
+        />
+      )}
+    </section>
+  );
+}

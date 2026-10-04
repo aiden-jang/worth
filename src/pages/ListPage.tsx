@@ -8,6 +8,7 @@ import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { CollectionCoverControl } from '../components/PhotoControl';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -124,6 +125,9 @@ export function ListPage() {
           listId={listId}
           name={list.name}
           description={list.description}
+          isCollection={list.kind === 'collection'}
+          hasCoverPhoto={list.hasCoverPhoto}
+          updatedAt={list.updatedAt}
           onClose={() => setShowSettings(false)}
           onDeleted={() => navigate('/lists')}
         />
@@ -200,12 +204,18 @@ function ListSettings({
   listId,
   name,
   description,
+  isCollection,
+  hasCoverPhoto,
+  updatedAt,
   onClose,
   onDeleted,
 }: {
   listId: string;
   name: string;
   description: string;
+  isCollection: boolean;
+  hasCoverPhoto: boolean;
+  updatedAt: number;
   onClose: () => void;
   onDeleted: () => void;
 }) {
@@ -287,6 +297,9 @@ function ListSettings({
           </p>
         )}
       </form>
+      {isCollection && (
+        <CollectionCoverControl listId={listId} hasCoverPhoto={hasCoverPhoto} version={updatedAt} />
+      )}
       <div className="settings-danger">
         <span>This removes every item and log in this list.</span>
         <button className="text-danger" disabled={remove.isPending} onClick={() => setConfirmingDelete(true)}>

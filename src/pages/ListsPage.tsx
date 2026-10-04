@@ -284,7 +284,12 @@ function ListDirectory({
           const count = list.kind === 'collection' ? list.itemCount : list.logCount;
           const noun = list.kind === 'collection' ? 'item' : 'log';
           return (
-            <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
+            <Link
+              to={`/lists/${list.id}`}
+              className={list.hasCoverPhoto ? 'directory-row has-cover' : 'directory-row'}
+              key={list.id}
+            >
+              {list.hasCoverPhoto && <img src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`} alt="" />}
               <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
               <span className="directory-name">
                 <strong>{list.name}</strong>

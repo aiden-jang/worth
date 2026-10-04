@@ -17,7 +17,12 @@ let platform: PlatformProxy<Env>;
 
 beforeAll(async () => {
   platform = await getPlatformProxy<Env>({ persist: false, remoteBindings: false });
-  for (const file of ['0001_initial.sql', '0002_photo_storage.sql', '0003_item_decisions.sql']) {
+  for (const file of [
+    '0001_initial.sql',
+    '0002_photo_storage.sql',
+    '0003_item_decisions.sql',
+    '0004_list_photos.sql',
+  ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
       .split(';')
@@ -301,6 +306,39 @@ test('photos stay private, validate uploads, and disappear with their item', asy
 
   const itemResponse = await call(`/items/${item.id}`, 'alice');
   expect(((await itemResponse.json()) as { item: { hasPhoto: boolean } }).item.hasPhoto).toBe(true);
+
+  const coverPath = `/lists/${list.id}/cover`;
+  async function uploadCover(user: string, bytes: Uint8Array, contentType = 'image/png') {
+    return await app.request(
+      `https://worth.test/api${coverPath}`,
+      {
+        method: 'PUT',
+        headers: {
+          Cookie: `preview_user=${user}`,
+          Origin: 'https://worth.test',
+          'Content-Type': contentType,
+        },
+        body: new Blob([new Uint8Array(bytes)], { type: contentType }),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  }
+
+  expect((await uploadCover('bob', png)).status).toBe(404);
+  expect((await uploadCover('alice', png, 'image/jpeg')).status).toBe(415);
+  expect((await uploadCover('alice', png)).status).toBe(200);
+  const listAfterCoverUpload = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
+    list: { hasCoverPhoto: boolean };
+  };
+  expect(listAfterCoverUpload.list.hasCoverPhoto).toBe(true);
+  expect((await call(coverPath, 'bob')).status).toBe(404);
+  expect(Buffer.from(await (await call(coverPath, 'alice')).arrayBuffer())).toEqual(png);
+  expect((await call(coverPath, 'alice', 'DELETE')).status).toBe(204);
+  const listAfterCoverRemoval = (await (await call(`/lists/${list.id}`, 'alice')).json()) as {
+    list: { hasCoverPhoto: boolean };
+  };
+  expect(listAfterCoverRemoval.list.hasCoverPhoto).toBe(false);
 
   expect((await call(`/items/${item.id}`, 'alice', 'DELETE')).status).toBe(204);
   expect((await call(path, 'alice')).status).toBe(404);

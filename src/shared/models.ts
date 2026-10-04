@@ -8,6 +8,7 @@ export interface ListSummary {
   description: string;
   itemCount: number;
   logCount: number;
+  hasCoverPhoto: boolean;
   updatedAt: number;
 }
 

@@ -10,6 +10,7 @@ const lists: ListSummary[] = [
     description: '',
     itemCount: 0,
     logCount: 0,
+    hasCoverPhoto: false,
     updatedAt: 0,
   },
   {
@@ -19,6 +20,7 @@ const lists: ListSummary[] = [
     description: '',
     itemCount: 0,
     logCount: 0,
+    hasCoverPhoto: false,
     updatedAt: 0,
   },
 ];

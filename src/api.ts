@@ -79,6 +79,13 @@ export const api = {
     }),
   deletePhoto: (kind: 'items' | 'logs', id: string) =>
     request<void>(`/${kind}/${id}/photo`, { method: 'DELETE' }),
+  uploadListCover: (id: string, blob: Blob) =>
+    request<{ hasCoverPhoto: boolean }>(`/lists/${id}/cover`, {
+      method: 'PUT',
+      headers: { 'Content-Type': blob.type },
+      body: blob,
+    }),
+  deleteListCover: (id: string) => request<void>(`/lists/${id}/cover`, { method: 'DELETE' }),
 };
 
 export interface ItemInput {
