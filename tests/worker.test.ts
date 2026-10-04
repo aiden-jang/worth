@@ -225,19 +225,33 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
       ).status,
     ).toBe(201);
   }
+  const newerList = await call('/lists', 'patterns', 'POST', {
+    name: 'Wines',
+    kind: 'collection',
+    description: '',
+  });
+  const newer = ((await newerList.json()) as { list: { id: string } }).list;
+  expect(
+    (
+      await call(`/lists/${list.id}`, 'patterns', 'PATCH', {
+        description: 'Updated after Wines was created.',
+      })
+    ).status,
+  ).toBe(200);
 
   const response = await call('/patterns', 'patterns');
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual(
     expect.objectContaining({
       totalRecords: 3,
-      totalCollections: 1,
+      totalCollections: 2,
       totalActivities: 0,
       revisitCount: 2,
       favoriteCount: 1,
       notAgainCount: 0,
       mostReturned: expect.objectContaining({ title: 'Cafe Maki', count: 2 }),
-      newestCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
+      newestCollection: expect.objectContaining({ id: newer.id, name: 'Wines', itemCount: 0 }),
+      lastTouchedCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
       mostKeptCollection: expect.objectContaining({ id: list.id, name: 'Places', itemCount: 1 }),
     }),
   );
@@ -247,7 +261,14 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
       totalRecords: number;
       mostReturned: unknown;
     },
-  ).toEqual(expect.objectContaining({ totalRecords: 0, mostReturned: null, mostKeptCollection: null }));
+  ).toEqual(
+    expect.objectContaining({
+      totalRecords: 0,
+      mostReturned: null,
+      lastTouchedCollection: null,
+      mostKeptCollection: null,
+    }),
+  );
 });
 
 test('record exports are owner-scoped and do not include photo binaries', async () => {

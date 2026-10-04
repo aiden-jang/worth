@@ -85,6 +85,21 @@ export function PatternsPage() {
               )}
             </article>
             <article>
+              <p className="overline">LAST TOUCHED</p>
+              {data.lastTouchedCollection ? (
+                <Link to={`/lists/${data.lastTouchedCollection.id}`}>
+                  <strong>{data.lastTouchedCollection.name}</strong>
+                  <span>
+                    {data.lastTouchedCollection.itemCount}{' '}
+                    {data.lastTouchedCollection.itemCount === 1 ? 'item' : 'items'} kept so far
+                  </span>
+                  <ArrowRight size={18} />
+                </Link>
+              ) : (
+                <p>Make a collection when you have something worth keeping close.</p>
+              )}
+            </article>
+            <article>
               <p className="overline">MOST KEPT IN</p>
               {data.mostKeptCollection ? (
                 <Link to={`/lists/${data.mostKeptCollection.id}`}>
