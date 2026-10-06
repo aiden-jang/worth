@@ -211,6 +211,24 @@ img {
 .account-link:hover {
   color: var(--paper);
 }
+.rail-shortcuts {
+  order: 3;
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--faint);
+  font: 500 0.61rem var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.rail-shortcuts:hover {
+  color: var(--paper);
+}
+.rail-shortcuts span {
+  margin-left: 0.25rem;
+  color: var(--acid);
+}
 
 .button {
   display: inline-flex;
@@ -2368,6 +2386,36 @@ dialog::backdrop {
   background: var(--raised);
   color: var(--paper);
 }
+.shortcut-list {
+  margin-top: 2.25rem;
+  border-top: 1px solid var(--line-strong);
+}
+.shortcut-list p {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  min-height: 60px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.shortcut-list kbd {
+  display: grid;
+  width: 32px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  color: var(--paper);
+  font: 500 0.7rem var(--mono);
+}
+.shortcut-note {
+  margin: 1rem 0 0;
+  color: var(--faint);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
 .add-list-choices button span {
   font-size: 1.25rem;
   font-weight: 600;
@@ -3427,6 +3475,9 @@ dialog::backdrop {
     margin-top: 0;
   }
   .account-link {
+    display: none;
+  }
+  .rail-shortcuts {
     display: none;
   }
   .header-add {

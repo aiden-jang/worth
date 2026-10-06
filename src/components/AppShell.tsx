@@ -23,6 +23,7 @@ export function AppShell({
   const location = useLocation();
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
+  const shortcutsDialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : window.sessionStorage.getItem(quickCaptureStorageKey),
@@ -81,10 +82,15 @@ export function AppShell({
         target?.closest('button, a, [role="button"]')
       )
         return;
+      if (dialog.current?.open || shortcutsDialog.current?.open) return;
 
       if (event.key === '/') {
         event.preventDefault();
         navigate('/search');
+      }
+      if (event.key === '?') {
+        event.preventDefault();
+        shortcutsDialog.current?.showModal();
       }
       if (event.key.toLocaleLowerCase() === 'n') {
         event.preventDefault();
@@ -146,6 +152,14 @@ export function AppShell({
           >
             Account
           </a>
+          <button
+            className="rail-shortcuts"
+            type="button"
+            title="Press ? for keyboard shortcuts"
+            onClick={() => shortcutsDialog.current?.showModal()}
+          >
+            Shortcuts <span>?</span>
+          </button>
           <div className={quickCaptureList ? 'quick-capture quick-capture-ready' : 'quick-capture'}>
             <button
               className="button button-accent header-add"
@@ -214,6 +228,46 @@ export function AppShell({
         <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
           Create a new list <ArrowRight size={16} />
         </Link>
+      </dialog>
+      <dialog
+        className="add-dialog shortcut-dialog"
+        ref={shortcutsDialog}
+        onClick={(event) => {
+          if (event.target === shortcutsDialog.current) shortcutsDialog.current.close();
+        }}
+      >
+        <div className="dialog-head">
+          <div>
+            <p className="overline">KEYBOARD</p>
+            <h2>Keep the pace.</h2>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close shortcuts"
+            onClick={() => shortcutsDialog.current?.close()}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="shortcut-list">
+          <p>
+            <kbd>N</kbd>
+            <span>Add to your current or last-used list</span>
+          </p>
+          <p>
+            <kbd>/</kbd>
+            <span>Search your archive</span>
+          </p>
+          <p>
+            <kbd>C</kbd>
+            <span>Focus the capture field in a collection</span>
+          </p>
+          <p>
+            <kbd>A</kbd>
+            <span>Start a new activity log on an activity page</span>
+          </p>
+        </div>
+        <p className="shortcut-note">Shortcuts pause while you type or use a control.</p>
       </dialog>
     </div>
   );
