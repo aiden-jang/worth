@@ -338,15 +338,18 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
           (SELECT COUNT(*) FROM items WHERE owner_id = ?) + (SELECT COUNT(*) FROM logs WHERE owner_id = ?) AS total_records,
           (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'collection') AS total_collections,
           (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'activity') AS total_activities,
+          (SELECT COALESCE(SUM(json_array_length(ranked_ids)), 0) FROM lists
+            WHERE owner_id = ? AND kind = 'collection') AS ranked_item_count,
           (SELECT COUNT(*) FROM logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
           (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
           (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count`,
         )
-          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
+          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
           .first<{
             total_records: number;
             total_collections: number;
             total_activities: number;
+            ranked_item_count: number;
             revisit_count: number;
             favorite_count: number;
             not_again_count: number;
@@ -407,6 +410,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       totalRecords: summary?.total_records ?? 0,
       totalCollections: summary?.total_collections ?? 0,
       totalActivities: summary?.total_activities ?? 0,
+      rankedItemCount: summary?.ranked_item_count ?? 0,
       revisitCount: summary?.revisit_count ?? 0,
       favoriteCount: summary?.favorite_count ?? 0,
       notAgainCount: summary?.not_again_count ?? 0,

@@ -203,7 +203,7 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
     kind: 'collection',
     description: '',
   });
-  const list = ((await createdList.json()) as { list: { id: string } }).list;
+  const list = ((await createdList.json()) as { list: { id: string; rankRevision: number } }).list;
   const createdItem = await call(`/lists/${list.id}/items`, 'patterns', 'POST', {
     title: 'Cafe Maki',
     type: 'Cafe',
@@ -213,6 +213,14 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
     endedOn: null,
   });
   const item = ((await createdItem.json()) as { item: { id: string } }).item;
+  expect(
+    (
+      await call(`/lists/${list.id}/rank`, 'patterns', 'PUT', {
+        itemIds: [item.id],
+        expectedRevision: list.rankRevision,
+      })
+    ).status,
+  ).toBe(200);
   for (const happenedOn of ['2026-09-01', '2026-09-15']) {
     expect(
       (
@@ -250,6 +258,7 @@ test('patterns summarize only the signed-in owner’s archive', async () => {
       totalRecords: 3,
       totalCollections: 2,
       totalActivities: 0,
+      rankedItemCount: 1,
       revisitCount: 2,
       favoriteCount: 1,
       notAgainCount: 0,

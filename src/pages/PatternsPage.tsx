@@ -45,6 +45,7 @@ export function PatternsPage() {
         <>
           <section className="pattern-stat-grid" aria-label="Archive patterns">
             <PatternStat label="Records" value={data.totalRecords} detail="Things kept in your archive" />
+            <PatternStat label="Ranked" value={data.rankedItemCount} detail="Items placed in order" />
             <PatternStat label="Revisits" value={data.revisitCount} detail="Returns to a collection item" />
             <PatternStat
               label="Favorites"

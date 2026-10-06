@@ -99,6 +99,7 @@ export interface ArchivePatterns {
   totalRecords: number;
   totalCollections: number;
   totalActivities: number;
+  rankedItemCount: number;
   revisitCount: number;
   favoriteCount: number;
   notAgainCount: number;
