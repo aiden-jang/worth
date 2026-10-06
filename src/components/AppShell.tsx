@@ -26,7 +26,7 @@ export function AppShell({
   const shortcutsDialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : window.sessionStorage.getItem(quickCaptureStorageKey),
+    typeof window === 'undefined' ? null : window.localStorage.getItem(quickCaptureStorageKey),
   );
   if (location.pathname.endsWith('/show')) return <>{children}</>;
 
@@ -40,7 +40,7 @@ export function AppShell({
   const listScope = new URLSearchParams(location.search).get('kind');
 
   const rememberList = useCallback((listId: string) => {
-    window.sessionStorage.setItem(quickCaptureStorageKey, listId);
+    window.localStorage.setItem(quickCaptureStorageKey, listId);
     setRememberedListId(listId);
   }, []);
 
