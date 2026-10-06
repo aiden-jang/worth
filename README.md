@@ -10,9 +10,9 @@ Collections hold repeatable things such as drinks, films, restaurants, and cars.
 - Search collection names, records, and logs across your private archive.
 - Keep a title-only collection index, then optionally rank, revisit, or add context later.
 - Rank a collection manually. Sorting the screen does not rewrite your ranking.
-- Add a private cover to a collection. Built-in starter covers are only used for the optional Drinks, Movies,
-  Places, and Cars starting points; an uploaded cover always takes precedence.
-- Read Patterns, a quiet summary of real records, revisits, calls, and archive shape.
+- Add a private cover when creating a collection or later from its header. Built-in starter covers are only used
+  for the optional Drinks, Movies, Places, and Cars starting points; an uploaded cover always takes precedence.
+- Read Patterns, a quiet summary of real records, revisits, calls, collection recency, and archive shape.
 - Open a large, private Show List view when you want to hand someone your phone.
 - Preview a ranked-list snapshot before making a share link. Links expire after seven days and can be revoked. Notes, dates, history, and photos are never in the public snapshot.
 - Upload one private photo per item or log, plus one private cover per collection. Photos stay behind the same
@@ -44,7 +44,7 @@ That runs formatting, tests against a migrated local D1, typechecking, and a pro
 
 One Cloudflare Worker serves the React app and `/api/*` on the same origin. D1 stores lists, entries, ranking, share snapshots, and small photos. The Worker verifies the shared `accounts.aidenjang.com` session on private routes. Public share tokens expose only a fixed snapshot; editing your private list does not silently change what a shared link shows.
 
-Photos and collection covers are capped at 900 KB after client-side compression. This keeps storage simple on the
-free plan, but D1 is not a photo-library backend. If photo volume grows, move the same private photo route to a
-dedicated storage service after reviewing its billing model. Worth does not require R2 or a paid Cloudflare
-subscription today.
+Photos and collection covers are capped at 900 KB after client-side compression. They are served privately with
+no-store caching and are never included in exports or public shares. This keeps storage simple on the free plan,
+but D1 is not a photo-library backend. If photo volume grows, move the same private photo route to a dedicated
+storage service after reviewing its billing model. Worth does not require R2 or a paid Cloudflare subscription today.

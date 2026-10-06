@@ -73,7 +73,8 @@ takes precedence and is visible only behind the signed-in archive routes. Covers
 public ranking snapshots.
 
 Patterns is a quiet reading of real data: record count, revisits, personal calls, most returned item, newest
-collection, and most-kept collection. It must not add scores, streaks, goal-setting, or recommendations.
+collection, last-touched collection, and most-kept collection. It must not add scores, streaks, goal-setting, or
+recommendations.
 
 Empty states should explain the first useful action. They should not manufacture a busy dashboard.
 
