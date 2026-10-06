@@ -64,6 +64,8 @@ export function ListsPage() {
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState('');
+  const coverInput = useRef<HTMLInputElement>(null);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useState('');
@@ -127,10 +129,21 @@ export function ListsPage() {
     window.localStorage.setItem(collectionOrderStorageKey, collectionOrder);
   }, [collectionOrder]);
 
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview('');
+      return;
+    }
+    const preview = URL.createObjectURL(coverFile);
+    setCoverPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [coverFile]);
+
   function chooseSuggestion(suggestion: (typeof suggestions)[number]) {
     setName(suggestion.name);
     setKind(suggestion.kind);
     setDescription(suggestion.description);
+    setCoverFile(null);
     setParams({ create: '1', kind: suggestion.kind });
   }
 
@@ -236,17 +249,38 @@ export function ListsPage() {
               />
             </label>
             {kind === 'collection' && (
-              <label className="form-wide collection-cover-picker">
-                Cover photo <span className="optional">optional · private</span>
+              <div className="form-wide collection-cover-picker">
+                <label htmlFor="collection-cover-file">
+                  Cover photo <span className="optional">optional · private</span>
+                </label>
                 <input
+                  id="collection-cover-file"
+                  ref={coverInput}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
                 />
+                {coverPreview && (
+                  <div className="collection-cover-preview">
+                    <img src={coverPreview} alt="Selected collection cover preview" />
+                    <div>
+                      <strong>{coverFile?.name}</strong>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCoverFile(null);
+                          if (coverInput.current) coverInput.current.value = '';
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <small>
                   {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
                 </small>
-              </label>
+              </div>
             )}
             {create.isError && <p className="form-error">{create.error.message}</p>}
             <button className="button button-dark" disabled={create.isPending}>

@@ -933,6 +933,46 @@ textarea::placeholder {
   color: var(--muted);
   font-size: 0.7rem;
 }
+.collection-cover-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+.collection-cover-preview img {
+  width: 104px;
+  height: 66px;
+  border: 1px solid var(--line-strong);
+  object-fit: cover;
+}
+.collection-cover-preview > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.4rem;
+}
+.collection-cover-preview strong {
+  overflow: hidden;
+  color: var(--paper);
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-cover-preview button {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 500 0.6rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.collection-cover-preview button:hover {
+  color: var(--acid);
+}
 .create-panel .panel-title .overline,
 .settings-panel .panel-title .overline {
   color: var(--acid);
