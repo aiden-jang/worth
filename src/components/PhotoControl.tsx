@@ -4,6 +4,7 @@ import { Camera, Trash } from '@phosphor-icons/react';
 import { api } from '../api';
 import { ConfirmDialog } from './ConfirmDialog';
 import { preparePhoto } from '../shared/photos';
+import { starterCollectionCover } from '../shared/starter-covers';
 
 export function PhotoControl({
   kind,
@@ -100,10 +101,12 @@ export function PhotoControl({
 
 export function CollectionCoverControl({
   listId,
+  listName,
   hasCoverPhoto,
   version,
 }: {
   listId: string;
+  listName: string;
   hasCoverPhoto: boolean;
   version: number;
 }) {
@@ -130,21 +133,29 @@ export function CollectionCoverControl({
     },
     onError: (failure) => setError(failure.message),
   });
+  const starterCover = hasCoverPhoto ? null : starterCollectionCover(listName);
+  const coverSource = hasCoverPhoto ? `/api/lists/${listId}/cover?v=${version}` : starterCover;
+  const coverState = hasCoverPhoto ? 'Private cover' : starterCover ? 'Starter cover' : 'No cover attached';
 
   return (
     <section className="collection-cover-control" aria-label="Collection cover">
       <div>
         <p className="overline">COLLECTION COVER</p>
         <p>
-          {hasCoverPhoto ? 'A private cover for this collection.' : 'Add an optional private cover photo.'}
+          {hasCoverPhoto
+            ? 'A private cover for this collection.'
+            : starterCover
+              ? 'A starter cover is showing until you add a private one.'
+              : 'Add an optional private cover photo.'}
         </p>
       </div>
-      {hasCoverPhoto && <img src={`/api/lists/${listId}/cover?v=${version}`} alt="Collection cover" />}
+      {coverSource && <img src={coverSource} alt="Collection cover" />}
       <div className="photo-actions">
-        <p className="photo-state">{hasCoverPhoto ? 'Private cover' : 'No cover attached'}</p>
+        <p className="photo-state">{coverState}</p>
         <div className="photo-buttons">
           <label className="button button-outline">
-            <Camera size={17} /> {hasCoverPhoto ? 'Replace cover' : 'Add a cover'}
+            <Camera size={17} />{' '}
+            {hasCoverPhoto ? 'Replace cover' : starterCover ? 'Use my photo' : 'Add a cover'}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"

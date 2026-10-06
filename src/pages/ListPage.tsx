@@ -321,7 +321,12 @@ function ListSettings({
         )}
       </form>
       {isCollection && (
-        <CollectionCoverControl listId={listId} hasCoverPhoto={hasCoverPhoto} version={updatedAt} />
+        <CollectionCoverControl
+          listId={listId}
+          listName={name}
+          hasCoverPhoto={hasCoverPhoto}
+          version={updatedAt}
+        />
       )}
       <div className="settings-danger">
         <span>This removes every item and log in this list.</span>
