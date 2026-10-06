@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { logoutUrl, siteFooterLinks } from '@aidenjang/auth-client';
 import { ArrowRight, CaretDown, Plus, X } from '@phosphor-icons/react';
@@ -38,18 +38,21 @@ export function AppShell({
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const listScope = new URLSearchParams(location.search).get('kind');
 
-  function rememberList(listId: string) {
+  const rememberList = useCallback((listId: string) => {
     window.sessionStorage.setItem(quickCaptureStorageKey, listId);
     setRememberedListId(listId);
-  }
+  }, []);
 
-  function openList(list: { id: string; kind: 'collection' | 'activity' }) {
-    rememberList(list.id);
-    dialog.current?.close();
-    navigate(`/lists/${list.id}${list.kind === 'collection' ? '?capture=1' : '?new=1'}`);
-  }
+  const openList = useCallback(
+    (list: { id: string; kind: 'collection' | 'activity' }) => {
+      rememberList(list.id);
+      dialog.current?.close();
+      navigate(`/lists/${list.id}${list.kind === 'collection' ? '?capture=1' : '?new=1'}`);
+    },
+    [navigate, rememberList],
+  );
 
-  function openAdd() {
+  const openAdd = useCallback(() => {
     if (lists.isPending) return;
     if (lists.isError) {
       navigate('/lists');
@@ -64,7 +67,33 @@ export function AppShell({
       return;
     }
     dialog.current?.showModal();
-  }
+  }, [lists.data?.lists.length, lists.isError, lists.isPending, navigate, openList, quickCaptureList]);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.isContentEditable ||
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.closest('button, a, [role="button"]')
+      )
+        return;
+
+      if (event.key === '/') {
+        event.preventDefault();
+        navigate('/search');
+      }
+      if (event.key.toLocaleLowerCase() === 'n') {
+        event.preventDefault();
+        openAdd();
+      }
+    };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [navigate, openAdd]);
 
   return (
     <div className="app-shell app-shell-dark">
@@ -93,7 +122,7 @@ export function AppShell({
             Activity
           </NavLink>
           <NavLink to="/patterns">Patterns</NavLink>
-          <NavLink className="rail-utility-link" to="/search">
+          <NavLink className="rail-utility-link" to="/search" title="Press / to search">
             Search
           </NavLink>
         </nav>
@@ -123,6 +152,7 @@ export function AppShell({
               onClick={openAdd}
               disabled={lists.isPending}
               aria-label={quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add to a list'}
+              title="Press N to add"
             >
               <Plus size={17} weight="bold" />
               {quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add'}
