@@ -2768,8 +2768,51 @@ dialog::backdrop {
   margin-top: 3.5rem;
   border-top: 1px solid var(--line-strong);
 }
-.search-results > .overline {
-  padding: 1rem 0;
+.search-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+.search-results-head > .overline {
+  margin: 0;
+}
+.search-scope {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+.search-scope button {
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  padding: 0.25rem 0.42rem;
+  background: transparent;
+  color: var(--muted);
+  font: 500 0.57rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.search-scope button:hover,
+.search-scope button:focus-visible {
+  color: var(--paper);
+}
+.search-scope button.active {
+  border-color: var(--line-strong);
+  color: var(--paper);
+}
+.search-scope button span {
+  margin-left: 0.2rem;
+  color: var(--acid);
+}
+.search-filter-empty {
+  min-height: 100px;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 .search-group > p {
   margin: 0;
