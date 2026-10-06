@@ -104,7 +104,11 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
   expect(ranked.status).toBe(200);
   const rankedOverview = (await (await call('/overview', 'alice')).json()) as {
     favorites: { itemId: string; listName: string }[];
+    ranked: { itemId: string; listName: string; rank: number }[];
   };
+  expect(rankedOverview.ranked).toContainEqual(
+    expect.objectContaining({ itemId: item.id, listName: 'Drinks', rank: 1 }),
+  );
   expect(rankedOverview.favorites).toContainEqual(
     expect.objectContaining({ itemId: item.id, listName: 'Drinks' }),
   );

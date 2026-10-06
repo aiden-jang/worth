@@ -227,7 +227,23 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       JOIN lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
       WHERE i.owner_id = ? AND i.decision = ?
       ORDER BY l.updated_at DESC, i.updated_at DESC LIMIT 5`;
-    const [favoritesQuery, notAgainQuery] = await Promise.all([
+    const rankedPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type,
+        CAST(r.key AS INTEGER) + 1 AS rank
+      FROM lists l
+      JOIN json_each(l.ranked_ids) r
+      JOIN items i ON i.id = r.value AND i.owner_id = l.owner_id
+      WHERE l.owner_id = ? AND l.kind = 'collection'
+      ORDER BY CAST(r.key AS INTEGER) ASC, l.updated_at DESC, i.updated_at DESC
+      LIMIT 5`;
+    const [rankedQuery, favoritesQuery, notAgainQuery] = await Promise.all([
+      c.env.DB.prepare(rankedPickQuery).bind(ownerId).all<{
+        list_id: string;
+        list_name: string;
+        item_id: string;
+        title: string;
+        type: string;
+        rank: number;
+      }>(),
       c.env.DB.prepare(decisionPickQuery).bind(ownerId, 'favorite').all<{
         list_id: string;
         list_name: string;
@@ -278,6 +294,14 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         unit: row.unit,
         sets: row.sets,
         reps: row.reps,
+      })),
+      ranked: rankedQuery.results.map((row) => ({
+        listId: row.list_id,
+        listName: row.list_name,
+        itemId: row.item_id,
+        title: row.title,
+        type: row.type,
+        rank: row.rank,
       })),
       favorites: favoritesQuery.results.map((row) => ({
         listId: row.list_id,

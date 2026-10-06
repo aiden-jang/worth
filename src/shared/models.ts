@@ -80,9 +80,19 @@ export interface RecentEntry {
 export interface Overview {
   lists: ListSummary[];
   recent: RecentEntry[];
+  ranked: RankedPick[];
   favorites: DecisionPick[];
   notAgain: DecisionPick[];
   lastTimes: LastTime[];
+}
+
+export interface RankedPick {
+  listId: string;
+  listName: string;
+  itemId: string;
+  title: string;
+  type: string;
+  rank: number;
 }
 
 export interface ArchivePatterns {

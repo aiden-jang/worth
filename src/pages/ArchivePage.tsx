@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { formatElapsedDays } from '../format';
-import type { DecisionPick } from '../shared/models';
+import type { DecisionPick, RankedPick } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
 
 const dateLabel = (value: string) =>
@@ -112,18 +112,19 @@ export function ArchivePage() {
             </section>
             <aside className="archive-shortlist" aria-labelledby="shortlist-heading">
               <header className="workspace-head">
-                <p id="shortlist-heading">Your calls</p>
-                <Link to="/lists">
-                  Lists <ArrowRight size={15} />
+                <p id="shortlist-heading">Shortlist</p>
+                <Link to="/lists?kind=collection">
+                  Collections <ArrowRight size={15} />
                 </Link>
               </header>
-              {data.favorites.length || data.notAgain.length ? (
+              {data.ranked.length || data.favorites.length || data.notAgain.length ? (
                 <div className="shortlist-groups">
+                  <RankedList picks={data.ranked} />
                   <DecisionList label="Favorites" code="FAV" picks={data.favorites} />
                   <DecisionList label="Would not again" code="NO" picks={data.notAgain} />
                 </div>
               ) : (
-                <div className="workspace-empty">Mark a favorite in any collection to keep it close.</div>
+                <div className="workspace-empty">Rank an item or make a personal call to keep it close.</div>
               )}
             </aside>
           </div>
@@ -199,6 +200,29 @@ export function ArchivePage() {
         </section>
       )}
     </main>
+  );
+}
+
+function RankedList({ picks }: { picks: RankedPick[] }) {
+  if (!picks.length) return null;
+  return (
+    <section className="shortlist-group" aria-label="Top ranked">
+      <p>Top ranked</p>
+      <ol className="shortlist-items">
+        {picks.map((pick) => (
+          <li key={pick.itemId}>
+            <span>#{String(pick.rank).padStart(2, '0')}</span>
+            <Link to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
+              <strong>{pick.title}</strong>
+              <small>
+                {pick.listName}
+                {pick.type ? ` · ${pick.type}` : ''}
+              </small>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
