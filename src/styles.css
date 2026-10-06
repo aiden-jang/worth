@@ -1188,6 +1188,10 @@ select:focus {
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
 }
+.collection-directory-entry {
+  position: relative;
+  min-width: 0;
+}
 .collection-directory-empty {
   display: grid;
   justify-items: start;
@@ -1304,6 +1308,44 @@ select:focus {
 }
 .collection-directory-card svg {
   color: var(--acid);
+}
+.collection-directory-cover-action {
+  position: absolute;
+  z-index: 2;
+  top: 1.15rem;
+  right: 1.15rem;
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+.collection-directory-cover-action button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 0.38rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  padding: 0.35rem 0.5rem;
+  background: rgb(8 10 11 / 80%);
+  color: var(--muted);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.collection-directory-cover-action button:hover:not(:disabled),
+.collection-directory-cover-action button:focus-visible {
+  border-color: var(--acid);
+  color: var(--paper);
+}
+.collection-directory-cover-action button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+.collection-directory-cover-action > span {
+  max-width: 18rem;
+  color: var(--acid);
+  font: 500 0.58rem/1.35 var(--mono);
+  text-align: right;
 }
 .directory-index {
   color: var(--acid);

@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, DownloadSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, DownloadSimple, ImageSquare, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
@@ -413,27 +413,29 @@ function ListDirectory({
                 ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
                 : starterCollectionCover(list.name);
               return (
-                <Link
-                  to={`/lists/${list.id}`}
-                  className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
-                  key={list.id}
-                >
-                  {cover && <img src={cover} alt="" />}
-                  <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="collection-directory-copy">
-                    <strong>{list.name}</strong>
-                    <small>
-                      <span>
-                        {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                        {list.description ? ` · ${list.description}` : ''}
-                      </span>
-                      <span className="collection-directory-updated">
-                        Updated {formatRelativeTimestamp(list.updatedAt)}
-                      </span>
-                    </small>
-                  </span>
-                  <ArrowRight size={20} aria-hidden="true" />
-                </Link>
+                <div className="collection-directory-entry" key={list.id}>
+                  <Link
+                    to={`/lists/${list.id}`}
+                    className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
+                  >
+                    {cover && <img src={cover} alt="" />}
+                    <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="collection-directory-copy">
+                      <strong>{list.name}</strong>
+                      <small>
+                        <span>
+                          {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
+                          {list.description ? ` · ${list.description}` : ''}
+                        </span>
+                        <span className="collection-directory-updated">
+                          Updated {formatRelativeTimestamp(list.updatedAt)}
+                        </span>
+                      </small>
+                    </span>
+                    <ArrowRight size={20} aria-hidden="true" />
+                  </Link>
+                  {!cover && <CollectionCoverAction list={list} />}
+                </div>
               );
             })}
           </div>
@@ -469,5 +471,43 @@ function ListDirectory({
         </div>
       )}
     </section>
+  );
+}
+
+function CollectionCoverAction({ list }: { list: ListSummary }) {
+  const client = useQueryClient();
+  const input = useRef<HTMLInputElement>(null);
+  const upload = useMutation({
+    mutationFn: async (file: File) => api.uploadListCover(list.id, await preparePhoto(file)),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+    },
+  });
+
+  return (
+    <div className="collection-directory-cover-action">
+      <input
+        ref={input}
+        className="sr-only"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) upload.mutate(file);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        disabled={upload.isPending}
+        aria-label={`Add a private cover photo to ${list.name}`}
+      >
+        <ImageSquare size={15} />
+        {upload.isPending ? 'Adding…' : 'Add cover'}
+      </button>
+      {upload.isError && <span role="alert">{upload.error.message}</span>}
+    </div>
   );
 }
