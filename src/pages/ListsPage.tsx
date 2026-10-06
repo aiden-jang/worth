@@ -44,6 +44,9 @@ const suggestions: { name: string; kind: ListKind; description: string; cover?: 
     description: 'The ones you owned, drove, or loved.',
     cover: '/art/starter-covers/cars-v1.webp',
   },
+  { name: 'Books', kind: 'collection', description: 'The ones worth lending out.' },
+  { name: 'Music', kind: 'collection', description: 'Albums and songs you keep returning to.' },
+  { name: 'Games', kind: 'collection', description: 'The ones that stayed with you.' },
   { name: 'Runs', kind: 'activity', description: 'Distance, pace, and when you went.' },
   { name: 'Upkeep', kind: 'activity', description: 'Haircuts, nails, and other little resets.' },
 ];
