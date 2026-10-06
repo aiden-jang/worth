@@ -1281,8 +1281,8 @@ select:focus {
   white-space: nowrap;
 }
 .collection-directory-copy small {
-  display: block;
-  overflow: hidden;
+  display: grid;
+  gap: 0.28rem;
   margin-top: 0.5rem;
   color: var(--muted);
   font:
@@ -1290,8 +1290,17 @@ select:focus {
     Arial,
     sans-serif;
   letter-spacing: 0;
+}
+.collection-directory-copy small > span:first-child {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.collection-directory-updated {
+  color: var(--faint);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 .collection-directory-card svg {
   color: var(--acid);

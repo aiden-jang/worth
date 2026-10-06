@@ -7,6 +7,7 @@ import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { starterCollectionCover } from '../shared/starter-covers';
 import { preparePhoto } from '../shared/photos';
+import { formatRelativeTimestamp } from '../format';
 
 type CollectionOrder = 'recent' | 'name' | 'items';
 
@@ -422,8 +423,13 @@ function ListDirectory({
                   <span className="collection-directory-copy">
                     <strong>{list.name}</strong>
                     <small>
-                      {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                      {list.description ? ` · ${list.description}` : ''}
+                      <span>
+                        {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
+                        {list.description ? ` · ${list.description}` : ''}
+                      </span>
+                      <span className="collection-directory-updated">
+                        Updated {formatRelativeTimestamp(list.updatedAt)}
+                      </span>
                     </small>
                   </span>
                   <ArrowRight size={20} aria-hidden="true" />
