@@ -1,4 +1,5 @@
 export const batchCaptureLimit = 30;
+export const collectionItemTitleLimit = 120;
 
 export function batchCaptureTitles(value: string): string[] {
   const seen = new Set<string>();

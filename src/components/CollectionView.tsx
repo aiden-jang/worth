@@ -12,7 +12,11 @@ import {
 } from '../shared/ranking';
 import { api, RequestError } from '../api';
 import { formatDate } from '../format';
-import { batchCaptureLimit, batchCaptureTitles } from '../shared/collection-capture';
+import {
+  batchCaptureLimit,
+  batchCaptureTitles,
+  collectionItemTitleLimit,
+} from '../shared/collection-capture';
 
 type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately';
 
@@ -223,6 +227,9 @@ export function CollectionView({
 
   const batchEntries = batchCaptureTitles(batchTitles);
   const batchOverLimit = batchEntries.length > batchCaptureLimit;
+  const batchHasLongTitle = batchTitles
+    .split(/\r?\n/)
+    .some((entry) => entry.trim().length > collectionItemTitleLimit);
   const capturePending = create.isPending || batchCreate.isPending;
 
   function selectBrowse(next: BrowseMode) {
@@ -279,7 +286,7 @@ export function CollectionView({
             <input
               ref={captureRef}
               value={title}
-              maxLength={160}
+              maxLength={collectionItemTitleLimit}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="What did you try?"
               disabled={capturePending}
@@ -288,7 +295,10 @@ export function CollectionView({
         </label>
         <button
           className="collection-capture-submit"
-          disabled={capturePending || (batchMode ? !batchEntries.length || batchOverLimit : !title.trim())}
+          disabled={
+            capturePending ||
+            (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
+          }
         >
           {capturePending ? 'Keeping…' : batchMode ? `Keep ${batchEntries.length || ''}` : 'Keep it'}{' '}
           <ArrowRight size={17} />
@@ -299,7 +309,9 @@ export function CollectionView({
           </button>
           <p>
             {batchMode
-              ? `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
+              ? batchHasLongTitle
+                ? `Each name can be up to ${collectionItemTitleLimit} characters.`
+                : `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
               : 'Rank it later if you want. Press C to add from anywhere on this page.'}
           </p>
         </div>

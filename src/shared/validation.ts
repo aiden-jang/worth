@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectionItemTitleLimit } from './collection-capture';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
@@ -24,7 +25,7 @@ export const listPatch = listInput
 
 export const itemInput = z
   .object({
-    title: shortText(120),
+    title: shortText(collectionItemTitleLimit),
     type: z.string().trim().max(60).default(''),
     note: note.default(''),
     decision: itemDecision.default(null),
@@ -38,7 +39,7 @@ export const itemInput = z
 
 export const itemPatch = z
   .object({
-    title: shortText(120).optional(),
+    title: shortText(collectionItemTitleLimit).optional(),
     type: z.string().trim().max(60).optional(),
     note: note.optional(),
     decision: itemDecision.optional(),
@@ -49,7 +50,7 @@ export const itemPatch = z
 
 export const itemsBatchInput = z.object({
   titles: z
-    .array(shortText(120))
+    .array(shortText(collectionItemTitleLimit))
     .min(1)
     .max(30)
     .refine((titles) => new Set(titles.map((title) => title.toLocaleLowerCase())).size === titles.length, {

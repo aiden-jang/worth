@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { batchCaptureLimit, batchCaptureTitles } from '../src/shared/collection-capture';
+import {
+  batchCaptureLimit,
+  batchCaptureTitles,
+  collectionItemTitleLimit,
+} from '../src/shared/collection-capture';
 
 describe('batch collection capture', () => {
   it('keeps one trimmed title per line and quietly drops duplicate or blank lines', () => {
@@ -11,5 +15,6 @@ describe('batch collection capture', () => {
 
   it('caps a batch at a deliberately small, predictable size', () => {
     expect(batchCaptureLimit).toBe(30);
+    expect(collectionItemTitleLimit).toBe(120);
   });
 });
