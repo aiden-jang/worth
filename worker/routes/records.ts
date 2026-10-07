@@ -230,20 +230,38 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const ownerId = c.get('ownerId');
     const lists = await listLists(c.env.DB, ownerId);
     const { results: recent } = await c.env.DB.prepare(
-      `SELECT g.id, g.list_id, g.item_id, l.name AS list_name, l.kind,
-      COALESCE(i.title, g.title) AS title, g.happened_on, g.amount, g.unit, g.sets, g.reps
-      FROM logs g JOIN lists l ON l.id = g.list_id LEFT JOIN items i ON i.id = g.item_id
-      WHERE g.owner_id = ? ORDER BY g.happened_on DESC, g.created_at DESC LIMIT 12`,
+      `WITH recent_records AS (
+        SELECT g.id, g.list_id, g.item_id, l.name AS list_name, l.kind, 'log' AS record_kind,
+          COALESCE(i.title, g.title) AS title, g.happened_on,
+          CAST(strftime('%s', g.happened_on) AS INTEGER) * 1000 AS recorded_at,
+          g.amount, g.unit, g.sets, g.reps
+        FROM logs g
+        JOIN lists l ON l.id = g.list_id
+        LEFT JOIN items i ON i.id = g.item_id
+        WHERE g.owner_id = ?
+        UNION ALL
+        SELECT i.id, i.list_id, i.id AS item_id, l.name AS list_name, l.kind, 'item' AS record_kind,
+          i.title, NULL AS happened_on, i.updated_at AS recorded_at,
+          NULL AS amount, '' AS unit, NULL AS sets, NULL AS reps
+        FROM items i
+        JOIN lists l ON l.id = i.list_id
+        WHERE i.owner_id = ?
+      )
+      SELECT * FROM recent_records
+      ORDER BY recorded_at DESC, id DESC
+      LIMIT 12`,
     )
-      .bind(ownerId)
+      .bind(ownerId, ownerId)
       .all<{
         id: string;
         list_id: string;
         item_id: string | null;
         list_name: string;
         kind: 'collection' | 'activity';
+        record_kind: 'item' | 'log';
         title: string;
-        happened_on: string;
+        happened_on: string | null;
+        recorded_at: number;
         amount: number | null;
         unit: string;
         sets: number | null;
@@ -314,9 +332,11 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         listId: row.list_id,
         listName: row.list_name,
         kind: row.kind,
+        recordKind: row.record_kind,
         itemId: row.item_id,
         title: row.title,
         happenedOn: row.happened_on,
+        recordedAt: row.recorded_at,
         amount: row.amount,
         unit: row.unit,
         sets: row.sets,

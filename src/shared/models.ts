@@ -70,9 +70,11 @@ export interface RecentEntry {
   listId: string;
   listName: string;
   kind: ListKind;
+  recordKind: 'item' | 'log';
   itemId: string | null;
   title: string;
-  happenedOn: string;
+  happenedOn: string | null;
+  recordedAt: number;
   amount: number | null;
   unit: string;
   sets: number | null;

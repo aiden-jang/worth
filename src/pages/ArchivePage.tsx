@@ -3,7 +3,7 @@ import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router';
 import { useState, type FormEvent } from 'react';
 import { api } from '../api';
-import { formatElapsedDays } from '../format';
+import { formatElapsedDays, formatRelativeTimestamp } from '../format';
 import type { DecisionPick, RankedPick } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
 
@@ -16,11 +16,13 @@ const dateLabel = (value: string) =>
 
 function activityDetail(entry: {
   listName: string;
+  recordKind: 'item' | 'log';
   amount: number | null;
   unit: string;
   sets: number | null;
   reps: number | null;
 }) {
+  if (entry.recordKind === 'item') return `${entry.listName} · kept`;
   const metrics = [];
   if (entry.amount !== null) metrics.push(`${entry.amount}${entry.unit ? ` ${entry.unit}` : ''}`);
   if (entry.sets !== null && entry.reps !== null) metrics.push(`${entry.sets} × ${entry.reps}`);
@@ -96,7 +98,11 @@ export function ArchivePage() {
                   {data.recent.slice(0, 8).map((entry) => (
                     <li key={entry.id}>
                       <span className="activity-marker" aria-hidden="true" />
-                      <time dateTime={entry.happenedOn}>{dateLabel(entry.happenedOn).toUpperCase()}</time>
+                      <time dateTime={entry.happenedOn ?? new Date(entry.recordedAt).toISOString()}>
+                        {entry.happenedOn
+                          ? dateLabel(entry.happenedOn).toUpperCase()
+                          : formatRelativeTimestamp(entry.recordedAt).toUpperCase()}
+                      </time>
                       <Link
                         to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
                       >
@@ -194,7 +200,13 @@ export function ArchivePage() {
             </div>
             <div>
               <span>Last record</span>
-              <strong>{data.recent[0] ? dateLabel(data.recent[0].happenedOn).toUpperCase() : '—'}</strong>
+              <strong>
+                {data.recent[0]
+                  ? data.recent[0].happenedOn
+                    ? dateLabel(data.recent[0].happenedOn).toUpperCase()
+                    : formatRelativeTimestamp(data.recent[0].recordedAt).toUpperCase()
+                  : '—'}
+              </strong>
             </div>
           </footer>
         </section>

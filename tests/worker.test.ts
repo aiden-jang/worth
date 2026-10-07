@@ -221,6 +221,12 @@ test('batch capture keeps several title-only collection items together', async (
     expect.objectContaining({ title: 'The Third Man', type: '', note: '' }),
     expect.objectContaining({ title: 'Portrait of a Lady on Fire', type: '', note: '' }),
   ]);
+  const overview = (await (await call('/overview', 'batch-capture')).json()) as {
+    recent: { title: string; recordKind: string; itemId: string | null }[];
+  };
+  expect(overview.recent).toContainEqual(
+    expect.objectContaining({ title: 'Heat', recordKind: 'item', itemId: expect.any(String) }),
+  );
 
   expect(
     (
