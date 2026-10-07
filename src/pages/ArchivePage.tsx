@@ -145,6 +145,16 @@ export function ArchivePage() {
               {data.lists.map((list, index) => {
                 const count = list.kind === 'collection' ? list.itemCount : list.logCount;
                 const noun = list.kind === 'collection' ? 'item' : 'log';
+                const signals =
+                  list.kind === 'collection'
+                    ? [
+                        `${count} ${count === 1 ? noun : `${noun}s`}`,
+                        list.rankedCount ? `${list.rankedCount} ranked` : '',
+                        list.favoriteCount
+                          ? `${list.favoriteCount} ${list.favoriteCount === 1 ? 'favorite' : 'favorites'}`
+                          : '',
+                      ].filter(Boolean)
+                    : [`${count} ${count === 1 ? noun : `${noun}s`}`];
                 const cover = list.hasCoverPhoto
                   ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
                   : list.kind === 'collection'
@@ -158,7 +168,7 @@ export function ArchivePage() {
                       <span className="archive-list-identity">
                         <strong>{list.name}</strong>
                         <small>
-                          {list.kind} · {count} {count === 1 ? noun : `${noun}s`}
+                          {list.kind} · {signals.join(' · ')}
                         </small>
                       </span>
                       <ArrowRight size={17} />
