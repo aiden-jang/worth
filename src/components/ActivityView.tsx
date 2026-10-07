@@ -125,6 +125,16 @@ export function ActivityView({
             <span>{formatElapsedDays(lastLog.happenedOn)}</span>
             <small>{formatDate(lastLog.happenedOn)}</small>
           </div>
+          <button
+            className="activity-summary-again"
+            type="button"
+            onClick={() => {
+              setRepeatTitle(lastLog.title);
+              onNew();
+            }}
+          >
+            Log again <ArrowRight size={15} />
+          </button>
         </section>
       )}
       <div className="activity-tools">

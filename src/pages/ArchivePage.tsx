@@ -208,6 +208,7 @@ function RankedList({ picks }: { picks: RankedPick[] }) {
   return (
     <section className="shortlist-group" aria-label="Top ranked">
       <p>Top ranked</p>
+      <small className="shortlist-context">Placed within each collection.</small>
       <ol className="shortlist-items">
         {picks.map((pick) => (
           <li key={pick.itemId}>

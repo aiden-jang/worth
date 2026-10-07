@@ -548,6 +548,7 @@ function CollectionCoverAction({ list }: { list: ListSummary }) {
     mutationFn: async (file: File) => api.uploadListCover(list.id, await preparePhoto(file)),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
   });

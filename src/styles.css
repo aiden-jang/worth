@@ -673,6 +673,12 @@ textarea::placeholder {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.shortlist-context {
+  display: block;
+  padding: 0.35rem 1.5rem 0;
+  color: var(--faint);
+  font: 400 0.66rem/1.35 var(--mono);
+}
 .shortlist-items li {
   display: grid;
   grid-template-columns: 2.1rem minmax(0, 1fr);
@@ -2081,6 +2087,22 @@ select:focus {
 .activity-summary > div:last-child small {
   margin-top: 0.45rem;
   letter-spacing: 0.04em;
+}
+.activity-summary-again {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  padding: 0.35rem 0;
+  background: transparent;
+  color: var(--paper);
+  font: 600 0.65rem var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.activity-summary-again:hover {
+  color: var(--acid);
 }
 .activity-tools input {
   min-height: 38px;
@@ -3887,6 +3909,10 @@ dialog::backdrop {
   }
   .collection-capture input {
     min-height: 64px;
+    padding-inline: 1rem;
+  }
+  .collection-capture textarea {
+    min-height: 132px;
     padding-inline: 1rem;
   }
   .collection-capture-submit {
