@@ -203,6 +203,48 @@ test('cross-origin writes fail before reaching private data', async () => {
   expect(response.headers.get('Cache-Control')).toContain('no-store');
 });
 
+test('batch capture keeps several title-only collection items together', async () => {
+  const createdList = await call('/lists', 'batch-capture', 'POST', {
+    name: 'Films',
+    kind: 'collection',
+    description: '',
+  });
+  const list = ((await createdList.json()) as { list: { id: string } }).list;
+  const response = await call(`/lists/${list.id}/items/batch`, 'batch-capture', 'POST', {
+    titles: ['Heat', 'The Third Man', 'Portrait of a Lady on Fire'],
+  });
+  expect(response.status).toBe(201);
+  expect(
+    ((await response.json()) as { items: { title: string; type: string; note: string }[] }).items,
+  ).toEqual([
+    expect.objectContaining({ title: 'Heat', type: '', note: '' }),
+    expect.objectContaining({ title: 'The Third Man', type: '', note: '' }),
+    expect.objectContaining({ title: 'Portrait of a Lady on Fire', type: '', note: '' }),
+  ]);
+
+  expect(
+    (
+      await call(`/lists/${list.id}/items/batch`, 'batch-capture', 'POST', {
+        titles: ['Heat', 'heat'],
+      })
+    ).status,
+  ).toBe(400);
+
+  const activity = await call('/lists', 'batch-capture', 'POST', {
+    name: 'Runs',
+    kind: 'activity',
+    description: '',
+  });
+  const activityList = ((await activity.json()) as { list: { id: string } }).list;
+  expect(
+    (
+      await call(`/lists/${activityList.id}/items/batch`, 'batch-capture', 'POST', {
+        titles: ['Morning run'],
+      })
+    ).status,
+  ).toBe(400);
+});
+
 test('patterns summarize only the signed-in owner’s archive', async () => {
   const createdList = await call('/lists', 'patterns', 'POST', {
     name: 'Places',

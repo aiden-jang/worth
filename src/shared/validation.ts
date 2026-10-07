@@ -47,6 +47,16 @@ export const itemPatch = z
   })
   .refine((value) => Object.keys(value).length > 0);
 
+export const itemsBatchInput = z.object({
+  titles: z
+    .array(shortText(120))
+    .min(1)
+    .max(30)
+    .refine((titles) => new Set(titles.map((title) => title.toLocaleLowerCase())).size === titles.length, {
+      message: 'Each title can only appear once in this batch',
+    }),
+});
+
 export const logInput = z.object({
   itemId: z.string().uuid().nullable().default(null),
   title: z.string().trim().max(120).default(''),

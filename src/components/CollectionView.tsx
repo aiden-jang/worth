@@ -12,6 +12,7 @@ import {
 } from '../shared/ranking';
 import { api, RequestError } from '../api';
 import { formatDate } from '../format';
+import { batchCaptureLimit, batchCaptureTitles } from '../shared/collection-capture';
 
 type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately';
 
@@ -45,7 +46,10 @@ export function CollectionView({
 }) {
   const client = useQueryClient();
   const captureRef = useRef<HTMLInputElement>(null);
+  const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const [title, setTitle] = useState('');
+  const [batchTitles, setBatchTitles] = useState('');
+  const [batchMode, setBatchMode] = useState(false);
   const [browse, setBrowse] = useState<BrowseMode>('all');
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -59,6 +63,8 @@ export function CollectionView({
 
   useEffect(() => {
     setTitle('');
+    setBatchTitles('');
+    setBatchMode(false);
     setBrowse('all');
     setShowSearch(false);
     setShowFilters(false);
@@ -72,8 +78,8 @@ export function CollectionView({
   }, [list.id]);
   useEffect(() => {
     if (!focusCapture) return;
-    requestAnimationFrame(() => captureRef.current?.focus());
-  }, [focusCapture, list.id]);
+    requestAnimationFrame(() => (batchMode ? batchCaptureRef.current : captureRef.current)?.focus());
+  }, [batchMode, focusCapture, list.id]);
   useEffect(() => {
     const focusCapture = (event: KeyboardEvent) => {
       if (
@@ -94,11 +100,11 @@ export function CollectionView({
       )
         return;
       event.preventDefault();
-      captureRef.current?.focus();
+      (batchMode ? batchCaptureRef.current : captureRef.current)?.focus();
     };
     window.addEventListener('keydown', focusCapture);
     return () => window.removeEventListener('keydown', focusCapture);
-  }, [list.id]);
+  }, [batchMode, list.id]);
   useEffect(() => {
     if (!selectedId) return;
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -129,6 +135,24 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
       captureRef.current?.focus();
+    },
+  });
+
+  const batchCreate = useMutation({
+    mutationFn: (nextTitles: string[]) => api.createItems(list.id, nextTitles),
+    onSuccess: ({ items: created }) => {
+      setBatchTitles('');
+      setBrowse('all');
+      setSelectedId(created.length === 1 ? (created[0]?.id ?? null) : null);
+      setStatus(
+        `${created.length} ${created.length === 1 ? 'thing was' : 'things were'} kept in ${list.name}.`,
+      );
+      void client.invalidateQueries({ queryKey: ['items', list.id] });
+      void client.invalidateQueries({ queryKey: ['list', list.id] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
+      batchCaptureRef.current?.focus();
     },
   });
 
@@ -182,12 +206,24 @@ export function CollectionView({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (batchMode) {
+      const titles = batchCaptureTitles(batchTitles);
+      if (titles.length) {
+        setStatus('');
+        batchCreate.mutate(titles);
+      }
+      return;
+    }
     const cleanTitle = title.trim();
     if (cleanTitle) {
       setStatus('');
       create.mutate(cleanTitle);
     }
   }
+
+  const batchEntries = batchCaptureTitles(batchTitles);
+  const batchOverLimit = batchEntries.length > batchCaptureLimit;
+  const capturePending = create.isPending || batchCreate.isPending;
 
   function selectBrowse(next: BrowseMode) {
     setBrowse(next);
@@ -229,22 +265,50 @@ export function CollectionView({
 
       <form className="collection-capture" onSubmit={submit}>
         <label>
-          <span className="sr-only">What did you try?</span>
-          <input
-            ref={captureRef}
-            value={title}
-            maxLength={160}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="What did you try?"
-            disabled={create.isPending}
-          />
+          <span className="sr-only">{batchMode ? 'One name per line' : 'What did you try?'}</span>
+          {batchMode ? (
+            <textarea
+              ref={batchCaptureRef}
+              value={batchTitles}
+              maxLength={3660}
+              onChange={(event) => setBatchTitles(event.target.value)}
+              placeholder={'One name per line\nYou can rank them later'}
+              disabled={capturePending}
+            />
+          ) : (
+            <input
+              ref={captureRef}
+              value={title}
+              maxLength={160}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="What did you try?"
+              disabled={capturePending}
+            />
+          )}
         </label>
-        <button className="collection-capture-submit" disabled={!title.trim() || create.isPending}>
-          {create.isPending ? 'Keeping…' : 'Keep it'} <ArrowRight size={17} />
+        <button
+          className="collection-capture-submit"
+          disabled={capturePending || (batchMode ? !batchEntries.length || batchOverLimit : !title.trim())}
+        >
+          {capturePending ? 'Keeping…' : batchMode ? `Keep ${batchEntries.length || ''}` : 'Keep it'}{' '}
+          <ArrowRight size={17} />
         </button>
-        <p>Rank it later if you want. Press C to add from anywhere on this page.</p>
+        <div className="collection-capture-note">
+          <button type="button" onClick={() => setBatchMode((current) => !current)} disabled={capturePending}>
+            {batchMode ? 'Add one' : 'Add several'}
+          </button>
+          <p>
+            {batchMode
+              ? `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
+              : 'Rank it later if you want. Press C to add from anywhere on this page.'}
+          </p>
+        </div>
       </form>
-      {create.isError && <p className="form-error collection-capture-error">{create.error.message}</p>}
+      {(create.isError || batchCreate.isError) && (
+        <p className="form-error collection-capture-error">
+          {create.error?.message ?? batchCreate.error?.message}
+        </p>
+      )}
       {(decide.isError ||
         (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
         <p className="form-error collection-capture-error" role="alert">

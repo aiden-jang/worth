@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import { itemInput, itemPatch, logInput, logPatch } from '../../src/shared/validation';
+import { itemInput, itemPatch, itemsBatchInput, logInput, logPatch } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
 import { ApiError, listLists, listLogs, requireItem, requireList, requireLog } from '../data';
 import { readJson } from '../http';
@@ -35,6 +35,33 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       .bind(now, list.id, c.get('ownerId'))
       .run();
     return c.json({ item: await requireItem(c.env.DB, c.get('ownerId'), id) }, 201);
+  });
+
+  api.post('/lists/:listId/items/batch', async (c) => {
+    const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
+    if (list.kind !== 'collection')
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'This list holds activity logs');
+    const input = await readJson(c.req.raw, itemsBatchInput);
+    const now = Date.now();
+    const items = input.titles.map((title) => ({ id: crypto.randomUUID(), title }));
+    await c.env.DB.batch([
+      ...items.map((item) =>
+        c.env.DB.prepare(
+          `INSERT INTO items
+            (id, list_id, owner_id, title, type, note, decision, started_on, ended_on, created_at, updated_at)
+            VALUES (?, ?, ?, ?, '', '', NULL, NULL, NULL, ?, ?)`,
+        ).bind(item.id, list.id, c.get('ownerId'), item.title, now, now),
+      ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        list.id,
+        c.get('ownerId'),
+      ),
+    ]);
+    return c.json(
+      { items: await Promise.all(items.map((item) => requireItem(c.env.DB, c.get('ownerId'), item.id))) },
+      201,
+    );
   });
 
   api.get('/items/:itemId', async (c) =>

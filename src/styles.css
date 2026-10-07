@@ -1692,7 +1692,8 @@ select:focus {
 .collection-capture label {
   min-width: 0;
 }
-.collection-capture input {
+.collection-capture input,
+.collection-capture textarea {
   width: 100%;
   min-height: 74px;
   border: 1px solid var(--line-strong);
@@ -1705,11 +1706,18 @@ select:focus {
   font-weight: 500;
   letter-spacing: -0.045em;
 }
-.collection-capture input::placeholder {
+.collection-capture textarea {
+  min-height: 152px;
+  resize: vertical;
+  line-height: 1.35;
+}
+.collection-capture input::placeholder,
+.collection-capture textarea::placeholder {
   color: var(--faint);
   opacity: 1;
 }
-.collection-capture input:focus {
+.collection-capture input:focus,
+.collection-capture textarea:focus {
   position: relative;
   border-color: var(--acid);
   outline: 0;
@@ -1738,11 +1746,33 @@ select:focus {
   background: var(--panel);
   color: var(--faint);
 }
-.collection-capture > p {
+.collection-capture-note {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
   margin: 0.6rem 0 0;
+}
+.collection-capture-note p {
+  margin: 0;
   color: var(--muted);
   font-size: 0.73rem;
+}
+.collection-capture-note button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--paper);
+  font: 500 0.63rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.collection-capture-note button:hover:not(:disabled) {
+  color: var(--acid);
+}
+.collection-capture-note button:disabled {
+  color: var(--faint);
 }
 .collection-capture-error,
 .collection-capture-status {

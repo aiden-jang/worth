@@ -52,6 +52,8 @@ export const api = {
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
   createItem: (listId: string, body: ItemInput) =>
     request<{ item: Item }>(`/lists/${listId}/items`, json('POST', body)),
+  createItems: (listId: string, titles: string[]) =>
+    request<{ items: Item[] }>(`/lists/${listId}/items/batch`, json('POST', { titles })),
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => request<void>(`/items/${id}`, { method: 'DELETE' }),
