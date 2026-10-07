@@ -28,6 +28,7 @@ export function AppShell({
   const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : window.localStorage.getItem(quickCaptureStorageKey),
   );
+  const [pickerQuery, setPickerQuery] = useState('');
   if (location.pathname.endsWith('/show')) return <>{children}</>;
 
   const quickCaptureList = preferredQuickCaptureList(
@@ -37,6 +38,17 @@ export function AppShell({
   );
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const pickerTerm = pickerQuery.trim().toLocaleLowerCase();
+  const visibleCollectionLists = pickerTerm
+    ? collectionLists.filter((list) =>
+        `${list.name} ${list.description}`.toLocaleLowerCase().includes(pickerTerm),
+      )
+    : collectionLists;
+  const visibleActivityLists = pickerTerm
+    ? activityLists.filter((list) =>
+        `${list.name} ${list.description}`.toLocaleLowerCase().includes(pickerTerm),
+      )
+    : activityLists;
   const listScope = new URLSearchParams(location.search).get('kind');
 
   const rememberList = useCallback((listId: string) => {
@@ -53,6 +65,11 @@ export function AppShell({
     [navigate, rememberList],
   );
 
+  const openPicker = useCallback(() => {
+    setPickerQuery('');
+    dialog.current?.showModal();
+  }, []);
+
   const openAdd = useCallback(() => {
     if (lists.isPending) return;
     if (lists.isError) {
@@ -67,8 +84,16 @@ export function AppShell({
       openList(quickCaptureList);
       return;
     }
-    dialog.current?.showModal();
-  }, [lists.data?.lists.length, lists.isError, lists.isPending, navigate, openList, quickCaptureList]);
+    openPicker();
+  }, [
+    lists.data?.lists.length,
+    lists.isError,
+    lists.isPending,
+    navigate,
+    openList,
+    openPicker,
+    quickCaptureList,
+  ]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -172,11 +197,7 @@ export function AppShell({
               {quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add'}
             </button>
             {quickCaptureList && (
-              <button
-                className="quick-capture-picker"
-                aria-label="Choose another list"
-                onClick={() => dialog.current?.showModal()}
-              >
+              <button className="quick-capture-picker" aria-label="Choose another list" onClick={openPicker}>
                 <CaretDown size={14} weight="bold" />
               </button>
             )}
@@ -217,12 +238,26 @@ export function AppShell({
             <X size={20} />
           </button>
         </div>
+        {(collectionLists.length + activityLists.length > 6 || pickerQuery) && (
+          <label className="add-list-search">
+            <span className="sr-only">Find a list</span>
+            <input
+              autoFocus
+              value={pickerQuery}
+              onChange={(event) => setPickerQuery(event.target.value)}
+              placeholder="Find a list"
+            />
+          </label>
+        )}
         <div className="add-list-choices">
-          {collectionLists.length > 0 && (
-            <ListPickerGroup label="Collections" lists={collectionLists} onOpen={openList} />
+          {visibleCollectionLists.length > 0 && (
+            <ListPickerGroup label="Collections" lists={visibleCollectionLists} onOpen={openList} />
           )}
-          {activityLists.length > 0 && (
-            <ListPickerGroup label="Activity" lists={activityLists} onOpen={openList} />
+          {visibleActivityLists.length > 0 && (
+            <ListPickerGroup label="Activity" lists={visibleActivityLists} onOpen={openList} />
+          )}
+          {pickerTerm && !visibleCollectionLists.length && !visibleActivityLists.length && (
+            <p className="add-list-empty">No lists match “{pickerQuery.trim()}”.</p>
           )}
         </div>
         <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
