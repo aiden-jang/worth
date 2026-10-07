@@ -112,6 +112,12 @@ test('private records stay owner-scoped and public snapshots exclude notes', asy
   expect(rankedOverview.favorites).toContainEqual(
     expect.objectContaining({ itemId: item.id, listName: 'Drinks' }),
   );
+  const listSummaries = (await (await call('/lists', 'alice')).json()) as {
+    lists: { id: string; rankedCount: number; favoriteCount: number }[];
+  };
+  expect(listSummaries.lists).toContainEqual(
+    expect.objectContaining({ id: list.id, rankedCount: 1, favoriteCount: 1 }),
+  );
 
   const changedDecision = await call(`/items/${item.id}`, 'alice', 'PATCH', {
     decision: 'would_not_again',

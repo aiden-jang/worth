@@ -9,6 +9,8 @@ const list: ListDetail = {
   description: '',
   itemCount: 3,
   logCount: 0,
+  rankedCount: 2,
+  favoriteCount: 0,
   hasCoverPhoto: false,
   rankedIds: ['b', 'a', 'missing'],
   rankRevision: 1,

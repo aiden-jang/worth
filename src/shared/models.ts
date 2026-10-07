@@ -8,6 +8,8 @@ export interface ListSummary {
   description: string;
   itemCount: number;
   logCount: number;
+  rankedCount: number;
+  favoriteCount: number;
   hasCoverPhoto: boolean;
   updatedAt: number;
 }

@@ -29,6 +29,8 @@ type ListRow = {
   updated_at: number;
   item_count: number;
   log_count: number;
+  ranked_count: number;
+  favorite_count: number;
   has_cover_photo: number;
 };
 
@@ -76,6 +78,8 @@ const listQuery = `
   SELECT l.id, l.name, l.kind, l.description, l.ranked_ids, l.rank_revision, l.updated_at,
     (SELECT COUNT(*) FROM items i WHERE i.list_id = l.id) AS item_count,
     (SELECT COUNT(*) FROM logs g WHERE g.list_id = l.id) AS log_count,
+    json_array_length(l.ranked_ids) AS ranked_count,
+    (SELECT COUNT(*) FROM items i WHERE i.list_id = l.id AND i.decision = 'favorite') AS favorite_count,
     EXISTS(SELECT 1 FROM list_photos p WHERE p.list_id = l.id) AS has_cover_photo
   FROM lists l
 `;
@@ -90,6 +94,8 @@ function mapList(row: ListRow): ListDetail {
     rankRevision: row.rank_revision,
     itemCount: row.item_count,
     logCount: row.log_count,
+    rankedCount: row.ranked_count,
+    favoriteCount: row.favorite_count,
     hasCoverPhoto: Boolean(row.has_cover_photo),
     updatedAt: row.updated_at,
   };
@@ -107,6 +113,8 @@ export async function listLists(db: D1Database, ownerId: string): Promise<ListSu
     description: row.description,
     itemCount: row.item_count,
     logCount: row.log_count,
+    rankedCount: row.ranked_count,
+    favoriteCount: row.favorite_count,
     hasCoverPhoto: Boolean(row.has_cover_photo),
     updatedAt: row.updated_at,
   }));

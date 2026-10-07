@@ -9,14 +9,20 @@ import { starterCollectionCover } from '../shared/starter-covers';
 import { preparePhoto } from '../shared/photos';
 import { formatRelativeTimestamp } from '../format';
 
-type CollectionOrder = 'recent' | 'name' | 'items';
+type CollectionOrder = 'recent' | 'name' | 'items' | 'ranked' | 'favorites';
 
 const collectionOrderStorageKey = 'worth:collection-order';
 
 function savedCollectionOrder(): CollectionOrder {
   if (typeof window === 'undefined') return 'recent';
   const value = window.localStorage.getItem(collectionOrderStorageKey);
-  return value === 'name' || value === 'items' || value === 'recent' ? value : 'recent';
+  return value === 'name' ||
+    value === 'items' ||
+    value === 'ranked' ||
+    value === 'favorites' ||
+    value === 'recent'
+    ? value
+    : 'recent';
 }
 
 const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
@@ -81,6 +87,18 @@ export function ListsPage() {
     if (collectionOrder === 'name') return left.name.localeCompare(right.name);
     if (collectionOrder === 'items')
       return right.itemCount - left.itemCount || right.updatedAt - left.updatedAt;
+    if (collectionOrder === 'ranked')
+      return (
+        right.rankedCount - left.rankedCount ||
+        right.favoriteCount - left.favoriteCount ||
+        right.updatedAt - left.updatedAt
+      );
+    if (collectionOrder === 'favorites')
+      return (
+        right.favoriteCount - left.favoriteCount ||
+        right.rankedCount - left.rankedCount ||
+        right.updatedAt - left.updatedAt
+      );
     return right.updatedAt - left.updatedAt;
   });
   const pageTitle =
@@ -435,6 +453,8 @@ function ListDirectory({
                   <option value="recent">Recently updated</option>
                   <option value="name">Name</option>
                   <option value="items">Most kept</option>
+                  <option value="ranked">Most ranked</option>
+                  <option value="favorites">Most favorites</option>
                 </select>
               </label>
             </div>
@@ -464,6 +484,14 @@ function ListDirectory({
                           {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
                           {list.description ? ` · ${list.description}` : ''}
                         </span>
+                        {(list.rankedCount > 0 || list.favoriteCount > 0) && (
+                          <span className="collection-directory-signals">
+                            {list.rankedCount > 0 && `${list.rankedCount} ranked`}
+                            {list.rankedCount > 0 && list.favoriteCount > 0 && ' · '}
+                            {list.favoriteCount > 0 &&
+                              `${list.favoriteCount} ${list.favoriteCount === 1 ? 'favorite' : 'favorites'}`}
+                          </span>
+                        )}
                         <span className="collection-directory-updated">
                           Updated {formatRelativeTimestamp(list.updatedAt)}
                         </span>
@@ -496,7 +524,9 @@ function ListDirectory({
                   <small>{list.description || 'Activity'}</small>
                 </span>
                 <span className="directory-meta">
-                  <small>{list.kind}</small>
+                  <small>
+                    {list.kind} · updated {formatRelativeTimestamp(list.updatedAt)}
+                  </small>
                   <strong>
                     {count} {count === 1 ? 'log' : 'logs'}
                   </strong>

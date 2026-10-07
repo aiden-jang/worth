@@ -1346,6 +1346,12 @@ select:focus {
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
+.collection-directory-signals {
+  color: var(--acid);
+  font: 500 0.58rem var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
 .collection-directory-card svg {
   color: var(--acid);
 }
