@@ -387,7 +387,7 @@
   min-width: 0;
 }
 .call-distribution .call-face {
-  --face-fill: var(--slip);
+  --face-fill: var(--paper);
   --face-ink: var(--ink);
   --face-outline: var(--ink);
   width: 60px;

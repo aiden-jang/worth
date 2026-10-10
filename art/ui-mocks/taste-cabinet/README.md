@@ -34,3 +34,9 @@ an optional private cover rather than invented category art. Empty and no-call s
 
 See [build contract](../BUILD-CONTRACT.md), [voice](../../../VOICE.md) and
 [working captures](../../ui-qa/taste-cabinet/README.md) for implementation verification.
+
+The subsequent cute pass preserves these compositions and updates the shared face family:
+soft oval heads, fuller cheeks and small hands on the large opinion face. Favorite gets
+smile eyes and a tiny blush heart; Meh shrugs; Not again keeps a gentle unimpressed frown.
+The app adds a single settling reaction with reduced-motion support. See
+[cute pass verification](../../ui-qa/cute-pass/README.md).

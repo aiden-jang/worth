@@ -12,7 +12,7 @@ export function CallFace({
 }) {
   return (
     <svg
-      className={`call-face ${selected ? 'call-face-selected' : ''}`}
+      className={`call-face call-face-${value} ${selected ? 'call-face-selected' : ''}`}
       viewBox="0 0 120 110"
       fill="none"
       aria-hidden="true"
@@ -21,8 +21,10 @@ export function CallFace({
         <path
           d={
             value === 'meh'
-              ? 'M22 70 12 80 7 65 M98 70 108 80 113 65'
-              : 'M22 70 Q9 80 5 65 M98 70 Q111 80 115 65'
+              ? 'M21 67q-8 9-12 5l-3-8 M99 67q8 9 12 5l3-8'
+              : value === 'favorite'
+                ? 'M21 67Q9 80 6 69 M99 64q12-12 14-4'
+                : 'M21 70q-10 8-15 0 M99 70q10 8 15 0'
           }
           stroke="var(--face-outline, var(--paper))"
           strokeWidth="3"
@@ -30,14 +32,22 @@ export function CallFace({
           strokeLinejoin="round"
         />
       )}
-      <circle
+      <ellipse
         cx="60"
-        cy="53"
-        r="43"
+        cy="54"
+        rx="43"
+        ry="41"
+        fill="var(--face-fill, var(--paper))"
         stroke={selected ? 'var(--acid)' : 'var(--face-outline, var(--paper))'}
         strokeWidth="2.5"
       />
-      <circle cx="60" cy="53" r="38" fill="var(--face-fill, var(--paper))" />
+      {arms && value === 'favorite' && (
+        <path
+          className="call-face-heart"
+          d="M98 23c-10-6-12-13-7-16 3-2 6-1 7 2 2-3 5-4 8-2 5 3 2 10-8 16Z"
+          fill="#d7a092"
+        />
+      )}
       <g stroke="var(--face-ink, var(--ink))" strokeWidth="3.5" strokeLinecap="round">
         {value === 'meh' ? (
           <>
@@ -45,16 +55,27 @@ export function CallFace({
             <path d="M50 63h20" />
           </>
         ) : (
-          <path d={value === 'favorite' ? 'M48 62 Q60 75 72 62' : 'M48 68 Q60 48 72 68'} />
+          <path d={value === 'favorite' ? 'M48 62 Q60 75 72 62' : 'M49 67 Q60 57 71 67'} />
         )}
       </g>
-      <g fill="var(--face-ink, var(--ink))">
-        <circle cx="44" cy={value === 'meh' ? 46 : 45} r="3.8" />
-        <circle cx="76" cy={value === 'meh' ? 46 : 45} r="3.8" />
-      </g>
+      {value === 'favorite' ? (
+        <g
+          className="call-face-eyes"
+          stroke="var(--face-ink, var(--ink))"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        >
+          <path d="M40 47q4-6 8 0 M72 47q4-6 8 0" />
+        </g>
+      ) : (
+        <g className="call-face-eyes" fill="var(--face-ink, var(--ink))">
+          <circle cx="44" cy={value === 'meh' ? 46 : 47} r="3.8" />
+          <circle cx="76" cy={value === 'meh' ? 46 : 47} r="3.8" />
+        </g>
+      )}
       <g fill="#d7a092">
-        <ellipse cx="35" cy="59" rx="4.5" ry="3.7" />
-        <ellipse cx="85" cy="59" rx="4.5" ry="3.7" />
+        <ellipse cx="34" cy="60" rx="5.5" ry="4" />
+        <ellipse cx="86" cy="60" rx="5.5" ry="4" />
       </g>
     </svg>
   );

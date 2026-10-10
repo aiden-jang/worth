@@ -33,7 +33,7 @@ export function OpinionSlip({
       <h3>{title}</h3>
       {type && <p className="opinion-slip-type">{type}</p>}
       <div className="opinion-slip-verdict" aria-live="polite">
-        {decision && <CallFace value={decision} />}
+        {decision && <CallFace key={decision} value={decision} arms />}
         <strong>{decision ? `${decisionLabel(decision)}.` : 'Undecided.'}</strong>
         <span>{decision ? callAsides[decision] : 'No opinion required.'}</span>
       </div>

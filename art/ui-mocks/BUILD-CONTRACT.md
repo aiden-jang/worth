@@ -39,6 +39,17 @@ Differences in real records, relative timestamps, display name and navigation ic
 The pre-build static reference omits live export/account affordances; the app preserves them.
 No data or function may be removed to imitate a mock. Document layout deviations explicitly.
 
+## Cute refinement — October 10
+
+The user requested a cuter pass after committing the build. Preserve the current layout,
+palette, typography, controls and copy. Updated references in `taste-cabinet` use the same
+soft oval face family as the app: fuller blush, smile eyes for Favorite, shrug arms for large
+Meh, a shallow Not again frown, and a tiny heart only on large Favorite faces.
+Opinion faces are ivory against the cream slip. Compact badges remain simple.
+The large opinion face settles once after a call change; pointer hover adds a slight tilt.
+Reduced motion disables both. No-call remains faceless; no call or ranking semantics change.
+See [cute pass captures](../ui-qa/cute-pass/README.md) for desktop/mobile verification.
+
 ## History
 
 ## October 9 personality refinement — historical override

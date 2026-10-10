@@ -37,6 +37,9 @@ The opinion slip expresses one actual call with a face and a short caption: `Yes
 `It was a thing.`, or `Once was plenty.`. An item without a call says `Undecided.` / `No opinion required.`
 and has no opinion face. Three plain, labeled buttons make the choice reversible.
 The large face replaces repeated face graphics on those buttons; compact row faces remain.
+The cute refinement adds soft oval heads, fuller blush, small shrug/wave arms and a tiny
+Favorite heart on large faces. One brief settling reaction respects reduced motion. The layout,
+palette and concise copy stay the same; no-call remains faceless.
 
 [VOICE.md](VOICE.md) defines the copy and boundaries. Preserve user-written text. Functional
 labels, account access, errors, deletion, privacy and sharing stay factual. Cute expressions

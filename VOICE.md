@@ -80,3 +80,14 @@ Current desktop/mobile references are in
 The selected opinion slip shows one large face and one caption. The three call buttons use
 plain labels, avoiding repeated illustrations. No-call says `Undecided.` / `No opinion required.`
 and does not display a reaction face. Archive aside: `Opinions may vary. Yours, mostly.`.
+
+## Cute refinement
+
+Keep the accepted taste cabinet composition. The shared faces now have softly oval ivory heads,
+slightly fuller blush and rounded features. Favorite has contented smile eyes and a tiny blush
+heart on its large opinion face. Meh gives a small, half-hearted shrug; Not again has a shallow
+unimpressed frown and resting arms. Compact row faces omit hands and the heart.
+
+A changed opinion gives the large face one small settling motion. A pointer hover adds a slight
+tilt; reduced motion disables both. There is no repeating animation or added mascot copy.
+No-call still has no face, and all choices keep their plain labels and existing meanings.
