@@ -227,9 +227,7 @@
   object-fit: cover;
   transition: transform 180ms ease;
 }
-.cabinet-folder:hover img {
-  transform: scale(1.025);
-}
+
 .cabinet-folder-number {
   position: absolute;
   bottom: 12px;
@@ -830,13 +828,13 @@
   min-height: 52px;
   border: 1px solid var(--line-strong);
   border-right: 0;
-  border-radius: 7px 0 0 7px;
+  border-radius: 12px 0 0 12px;
   padding: 14px 16px;
   font-size: 15px;
   background: transparent;
 }
 .collection-capture-submit {
-  border-radius: 0 7px 7px 0;
+  border-radius: 0 12px 12px 0;
   padding: 0 16px;
   min-height: 52px;
   font-size: 13px;
@@ -1677,5 +1675,99 @@
   }
   .cabinet-demo-index {
     padding-top: 4px;
+  }
+}
+
+/* Quiet feedback makes the cabinet feel responsive without constant motion. */
+.collection-capture:focus-within input,
+.collection-capture:focus-within textarea,
+.collection-capture:focus-within .collection-capture-submit,
+.cabinet-demo .demo-capture:focus-within input,
+.cabinet-demo .demo-capture:focus-within .button {
+  border-color: var(--acid);
+}
+.collection-capture-status {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0 0 18px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--paper);
+  background: var(--panel);
+  font:
+    400 12px/1.5 'DM Sans',
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.collection-capture-status::before {
+  content: '';
+  flex: 0 0 5px;
+  width: 5px;
+  height: 5px;
+  align-self: flex-start;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--acid);
+}
+.collection-index-rows li.selected:hover .collection-index-row,
+.collection-index-rows li.selected:focus-within .collection-index-row {
+  background: var(--raised);
+}
+.cabinet-folder:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 6px;
+  border-radius: 16px;
+}
+.cabinet-folder:is(:hover, :focus-visible) .cabinet-folder-copy > svg {
+  color: var(--acid);
+}
+@keyframes cabinet-feedback-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .collection-capture input,
+  .collection-capture textarea,
+  .collection-capture-submit,
+  .cabinet-demo .demo-capture input,
+  .cabinet-demo .demo-capture .button {
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
+  .cabinet-folder-copy > svg {
+    transition:
+      transform 180ms ease,
+      color 180ms ease;
+  }
+  .cabinet-folder:focus-visible img {
+    transform: scale(1.025);
+  }
+  .cabinet-folder:focus-visible .cabinet-folder-copy > svg {
+    transform: translate(2px, -2px);
+  }
+  .collection-capture-status {
+    animation: cabinet-feedback-arrive 180ms ease both;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cabinet-folder:hover img {
+    transform: scale(1.025);
+  }
+  .cabinet-folder:hover .cabinet-folder-copy > svg {
+    transform: translate(2px, -2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cabinet-folder-picture img {
+    transition: none;
   }
 }

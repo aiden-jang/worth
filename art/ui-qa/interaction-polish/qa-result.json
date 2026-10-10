@@ -1,0 +1,14 @@
+{
+  "errors": [],
+  "checks": [
+    "selected row keeps raised hover surface",
+    "capture focus border and shared corners",
+    "name-only capture remains unranked and no-call",
+    "single and batch capture focus restored after saving",
+    "factual live confirmation",
+    "keyboard shelf focus",
+    "reduced motion disables feedback and shelf transforms",
+    "desktop/mobile captures and narrow overflow checks",
+    "all mutations intercepted in browser fixtures; no database writes"
+  ]
+}

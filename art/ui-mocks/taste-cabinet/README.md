@@ -61,3 +61,7 @@ The latest signature composition puts a straight, larger opinion card beside the
 headline and moves the example index underneath the introduction. Mobile shows signup,
 opinion card, then index. The selected call slides inside its capsule, with immediate
 changes under reduced motion. See [signature verification](../../ui-qa/signature/README.md).
+
+The everyday interaction pass aligns capture corners to 12px and keeps selected rows raised
+on hover. Focus, confirmation and link reactions preserve the resting compositions. See
+[interaction verification](../../ui-qa/interaction-polish/README.md).

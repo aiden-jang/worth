@@ -116,6 +116,17 @@ pressed states, reversible choices and rank independence remain unchanged.
 See [signature captures and recording](../ui-qa/signature/README.md). Updated static
 references reflect this arrangement; private pages retain their established compositions.
 
+## Everyday interaction refinement — October 10
+
+Capture controls now use 12px outer corners, matching other controls. Focus within the
+capture group highlights its borders in butter without removing keyboard outlines.
+Selected rows retain the raised surface on hover. Existing factual status messages use a
+12px dark panel with a quiet butter dot and a 180ms entrance. Collection links lift their
+arrow by 2px and scale the cover to 1.025 on fine-pointer hover or keyboard focus. Reduced
+motion keeps them still; touch devices do not get a sticky animated hover. Resting layouts
+and all call, rank, capture and privacy semantics remain unchanged. See
+[interaction verification](../ui-qa/interaction-polish/README.md).
+
 ## History
 
 ## October 9 personality refinement — historical override

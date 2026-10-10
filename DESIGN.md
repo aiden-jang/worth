@@ -84,8 +84,8 @@ Drinks, Movies and Places while preserving transient edits. The selected item co
 Name-only capture adds an unranked item with no call. Demo state never writes to the API.
 `EXAMPLE` and the explanatory footnote remain visible; no testimonials or invented statistics.
 
-Mobile puts the headline and signup first, followed by the index and slip. The slip has no
-rotation on phones. Footer: `Meh is a complete sentence.` and one concise product scope line.
+Mobile puts the headline and signup first, followed by the slip and example index. The slip
+has no rotation. Footer: `Meh is a complete sentence.` and one concise product scope line.
 
 ## Signed-in home
 
@@ -162,3 +162,14 @@ Pointer selection in the mobile example reveals the changed opinion; keyboard se
 preserves focus. The selected call slides inside its capsule; clearing a call removes the
 selection and face. Reduced motion keeps selection changes immediate. See
 [signature verification](art/ui-qa/signature/README.md).
+
+## Everyday interaction refinement
+
+Capture fields use the shared 12px control corners and a butter border while focused.
+Save/call/rank feedback remains factual in a small dark confirmation panel. A selected row
+retains its selected surface on hover. Collection links acknowledge hover and keyboard focus
+with a small arrow movement and cover scale; reduced motion keeps both still. There is no
+change to the resting composition, stored data or required capture fields.
+
+After successful single or batch capture, restore input focus after the pending state clears
+so another name can be added immediately.

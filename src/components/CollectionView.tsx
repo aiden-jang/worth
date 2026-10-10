@@ -47,6 +47,7 @@ export function CollectionView({
   const client = useQueryClient();
   const captureRef = useRef<HTMLInputElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
+  const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
   const [title, setTitle] = useState('');
   const [batchTitles, setBatchTitles] = useState('');
   const [batchMode, setBatchMode] = useState(false);
@@ -62,6 +63,7 @@ export function CollectionView({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    restoreCaptureFocus.current = null;
     setTitle('');
     setBatchTitles('');
     setBatchMode(false);
@@ -139,7 +141,7 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
-      captureRef.current?.focus();
+      restoreCaptureFocus.current = 'single';
     },
   });
 
@@ -160,7 +162,7 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
-      batchCaptureRef.current?.focus();
+      restoreCaptureFocus.current = 'batch';
     },
   });
 
@@ -239,6 +241,12 @@ export function CollectionView({
     .split(/\r?\n/)
     .some((entry) => entry.trim().length > collectionItemTitleLimit);
   const capturePending = create.isPending || batchCreate.isPending;
+  useEffect(() => {
+    if (capturePending || !restoreCaptureFocus.current) return;
+    const field = restoreCaptureFocus.current === 'batch' ? batchCaptureRef.current : captureRef.current;
+    restoreCaptureFocus.current = null;
+    field?.focus();
+  }, [capturePending]);
   const selectedItem = visible.find((item) => item.id === selectedId);
   const rowActions = {
     rankSlots: items.length,
