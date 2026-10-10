@@ -152,3 +152,8 @@ Current landing headline: `Your taste. A place to keep it.`
 Product copy: `Collect what you try. Rank what holds up. Keep the meh, too.`
 Example invitation: `Go on. Have an opinion.` / `Try the example. Nothing here is saved.`
 The hero's Cold brew opinion is explicitly labeled EXAMPLE; it is not a user's recorded call.
+
+Landing topics: `Drinks` / `Midnight snacks` / `Questionable purchases`.
+Their captions: `For research.` / `Several were necessary.` / `Seemed reasonable.`
+These are labeled examples of personal collection names, not descriptions silently saved
+onto accounts. Illustrative snack and purchase records stay in the local landing demo.

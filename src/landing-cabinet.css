@@ -89,7 +89,7 @@
 .landing-cabinet-folder img {
   display: block;
   width: 100%;
-  aspect-ratio: 1.45;
+  aspect-ratio: 1.6;
   object-fit: cover;
   border-radius: 0 0 16px 16px;
 }
@@ -301,5 +301,29 @@
   .landing-cabinet-visual figcaption {
     max-width: 128px;
     line-height: 1.6;
+  }
+}
+
+.landing-cabinet-folder > span strong {
+  display: block;
+  font:
+    500 13px 'DM Sans',
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.landing-cabinet-folder > span small {
+  display: block;
+  margin-top: 6px;
+  font: 9px/1.5 var(--mono);
+  color: #59604b;
+}
+@media (max-width: 680px) {
+  .landing-cabinet-folder > span strong {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .landing-cabinet-folder > span small {
+    font-size: 8px;
+    margin-top: 5px;
   }
 }

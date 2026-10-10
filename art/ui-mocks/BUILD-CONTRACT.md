@@ -349,3 +349,12 @@ a cream Cold brew / EXAMPLE slip carries the dry Meh reaction. The example label
 Below the hero, a distinct example section contains the existing interactive collection.
 Desktop pairs its index with a 340px opinion slip (300px <=900px); <=680px stacks index
 then slip. Auth, reversible calls, independent ranks and name-only demo capture remain.
+
+The approved landing topics are Drinks / Midnight snacks / Questionable purchases, with
+`For research.` / `Several were necessary.` / `Seemed reasonable.` captions. Keep the cup;
+use native snack-bag and shopping-bag illustrations in the existing clay/butter folders.
+Long names wrap on phones, as do the labeled demo tabs. These are signed-out examples,
+not starter templates or content to insert in private accounts. Demo categories have their
+own illustrative items; explicit calls and unranked/no-call creation retain their semantics.
+Desktop folder art uses the shared 1.6 ratio to accommodate the added captions within the
+first view. Mobile retains the established portrait crop and stagger.

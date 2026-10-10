@@ -17,3 +17,8 @@ is a separate section below the hero. Private archive layouts remain current.
 - No API writes, testimonials, invented user counts or opinions outside labeled examples.
 
 References rendered at 1440 × 900 and 390 × 780 with full-page scrolling.
+
+Current topic revision: Drinks, Midnight snacks and Questionable purchases. Captions are
+For research. / Several were necessary. / Seemed reasonable. Native SVG illustrations
+pair the cup with a snack bag and shopping bag. Demo tabs match those topics and wrap
+on mobile. These examples do not change personal collections or starter templates.

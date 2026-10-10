@@ -52,6 +52,16 @@ function PrivateApp() {
   );
 }
 
+const landingTopics = [
+  { name: 'Drinks', caption: 'For research.', art: 'starter-covers/drinks-v2.svg' },
+  { name: 'Midnight snacks', caption: 'Several were necessary.', art: 'landing/midnight-snacks.svg' },
+  {
+    name: 'Questionable purchases',
+    caption: 'Seemed reasonable.',
+    art: 'landing/questionable-purchases.svg',
+  },
+];
+
 function Welcome({ authOrigin }: { authOrigin: string }) {
   const returnTo = window.location.href;
   return (
@@ -85,10 +95,13 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
       </section>
       <figure className="landing-cabinet-visual">
         <div className="landing-cabinet-folders" aria-hidden="true">
-          {['Drinks', 'Movies', 'Places'].map((name) => (
+          {landingTopics.map(({ name, caption, art }) => (
             <div className="landing-cabinet-folder" key={name}>
-              <span>{name}</span>
-              <img src={`/art/starter-covers/${name.toLowerCase()}-v2.svg`} alt="" />
+              <span>
+                <strong>{name}</strong>
+                <small>{caption}</small>
+              </span>
+              <img src={`/art/${art}`} alt="" />
             </div>
           ))}
         </div>
@@ -123,15 +136,15 @@ const exampleCollections: Record<string, ExampleItem[]> = {
     { title: 'Cold brew', type: 'Coffee', decision: 'meh', ranked: true },
     { title: 'Highball', type: 'Cocktail', decision: 'would_not_again', ranked: false },
   ],
-  Movies: [
-    { title: 'Perfect Days', type: 'Film', decision: 'favorite', ranked: true },
-    { title: 'The Grand Budapest Hotel', type: 'Film', decision: 'favorite', ranked: true },
-    { title: 'The sequel', type: 'Film', decision: 'meh', ranked: false },
+  'Midnight snacks': [
+    { title: 'Chili crisps', type: 'Snack', decision: 'favorite', ranked: true },
+    { title: 'Emergency crackers', type: 'Snack', decision: 'meh', ranked: true },
+    { title: 'Mystery freezer dumpling', type: 'Snack', decision: 'would_not_again', ranked: false },
   ],
-  Places: [
-    { title: 'The corner bakery', type: 'Bakery', decision: 'favorite', ranked: true },
-    { title: 'That new lunch spot', type: 'Restaurant', decision: 'meh', ranked: true },
-    { title: 'The rooftop bar', type: 'Bar', decision: 'would_not_again', ranked: false },
+  'Questionable purchases': [
+    { title: 'Tiny desk lamp', type: 'Home', decision: 'favorite', ranked: true },
+    { title: 'Another tote bag', type: 'Bag', decision: 'meh', ranked: true },
+    { title: 'The miniature waffle maker', type: 'Kitchen', decision: 'would_not_again', ranked: false },
   ],
 };
 

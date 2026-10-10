@@ -206,3 +206,7 @@ centers `Your taste. A place to keep it.` over three staggered illustrated folde
 small explicitly labeled example Meh slip. Signup remains prominent. A separate working
 example sits below the hero; mobile shows its index before the opinion slip. This supersedes
 earlier landing layouts only. The accepted private cabinet screens remain current.
+
+The landing now illustrates Drinks, Midnight snacks and Questionable purchases, using a
+cup, snack bag and shopping bag. The working example uses the same topics. Long names
+wrap instead of shrinking; the accepted three-folder layout and cream Meh slip remain.

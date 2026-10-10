@@ -1,0 +1,17 @@
+{
+  "errors": [],
+  "requests": ["GET /api/me"],
+  "checks": [
+    "desktop/mobile match cabinet mock with three approved topics",
+    "no signed-out archive sidebar",
+    "existing sign-in/signup destinations",
+    "example anchor works",
+    "category switching and transient edits retained",
+    "all three labeled calls remain reversible",
+    "new name is unranked/no-call with faceless art",
+    "keyboard selection retains focus",
+    "reduced motion respected",
+    "no overflow at 320/390/430/768/900/1180/1440",
+    "no demo API writes"
+  ]
+}
