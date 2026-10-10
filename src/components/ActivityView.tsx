@@ -322,9 +322,15 @@ function ActivityEditor({
   return (
     <dialog
       className="editor-dialog activity-editor-dialog"
+      aria-labelledby="activity-editor-title"
       ref={dialog}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
+        if (!dialog.current?.open) onClose();
+      }}
       onCancel={(event) => {
+        event.stopPropagation();
         event.preventDefault();
         requestClose();
       }}
@@ -336,21 +342,12 @@ function ActivityEditor({
         <div className="editor-head">
           <div>
             <p className="overline">{log ? 'ACTIVITY DETAIL' : 'QUICK LOG'}</p>
-            <h2>{log ? log.title : 'What happened?'}</h2>
+            <h2 id="activity-editor-title">{log ? log.title : 'What happened?'}</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
           </button>
         </div>
-        {log && (
-          <PhotoControl
-            kind="logs"
-            id={log.id}
-            hasPhoto={log.hasPhoto}
-            version={log.updatedAt}
-            listId={listId}
-          />
-        )}
         <form className="editor-form record-form" onSubmit={submit}>
           <label>
             What
@@ -382,56 +379,69 @@ function ActivityEditor({
               onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
             />
           </label>
-          <div className="metric-row">
-            <label>
-              Amount <span className="optional">optional</span>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={form.amount ?? ''}
-                onChange={(event) =>
-                  setForm({ ...form, amount: event.target.value === '' ? null : Number(event.target.value) })
-                }
-                placeholder="5.2"
-              />
-            </label>
-            <label>
-              Unit
-              <input
-                maxLength={24}
-                value={form.unit}
-                onChange={(event) => setForm({ ...form, unit: event.target.value })}
-                placeholder="mi, lb, km…"
-              />
-            </label>
-          </div>
-          <div className="metric-row">
-            <label>
-              Sets <span className="optional">optional</span>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={form.sets ?? ''}
-                onChange={(event) =>
-                  setForm({ ...form, sets: event.target.value === '' ? null : Number(event.target.value) })
-                }
-              />
-            </label>
-            <label>
-              Reps <span className="optional">optional</span>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={form.reps ?? ''}
-                onChange={(event) =>
-                  setForm({ ...form, reps: event.target.value === '' ? null : Number(event.target.value) })
-                }
-              />
-            </label>
-          </div>
+          <details
+            className="record-extras"
+            open={Boolean(
+              (log?.amount !== null && log?.amount !== undefined) || log?.unit || log?.sets || log?.reps,
+            )}
+          >
+            <summary>
+              Measurements <span>optional</span>
+            </summary>
+            <div className="metric-row">
+              <label>
+                Amount <span className="optional">optional</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={form.amount ?? ''}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      amount: event.target.value === '' ? null : Number(event.target.value),
+                    })
+                  }
+                  placeholder="5.2"
+                />
+              </label>
+              <label>
+                Unit
+                <input
+                  maxLength={24}
+                  value={form.unit}
+                  onChange={(event) => setForm({ ...form, unit: event.target.value })}
+                  placeholder="mi, lb, km…"
+                />
+              </label>
+            </div>
+            <div className="metric-row">
+              <label>
+                Sets <span className="optional">optional</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.sets ?? ''}
+                  onChange={(event) =>
+                    setForm({ ...form, sets: event.target.value === '' ? null : Number(event.target.value) })
+                  }
+                />
+              </label>
+              <label>
+                Reps <span className="optional">optional</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.reps ?? ''}
+                  onChange={(event) =>
+                    setForm({ ...form, reps: event.target.value === '' ? null : Number(event.target.value) })
+                  }
+                />
+              </label>
+            </div>
+          </details>
           <label>
             Private note <span className="optional">optional</span>
             <textarea
@@ -444,12 +454,26 @@ function ActivityEditor({
           </label>
           {save.isError && <p className="form-error">{save.error.message}</p>}
           <button
-            className="button button-dark"
+            className="button button-accent"
             disabled={!form.title.trim() || save.isPending || Boolean(log && !hasLogChanges)}
           >
             {log ? 'Save changes' : 'Save log'}
           </button>
         </form>
+        {log && (
+          <details className="record-extras record-photo" open={log.hasPhoto}>
+            <summary>
+              Photo <span>optional · private</span>
+            </summary>
+            <PhotoControl
+              kind="logs"
+              id={log.id}
+              hasPhoto={log.hasPhoto}
+              version={log.updatedAt}
+              listId={listId}
+            />
+          </details>
+        )}
         {log && (
           <button
             className="text-danger"

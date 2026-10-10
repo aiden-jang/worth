@@ -1,8 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { Route, Routes } from 'react-router';
 import { api } from './api';
+import { CallBadge } from './components/PersonalCall';
+import { OpinionSlip } from './components/OpinionSlip';
+import { useState } from 'react';
+import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
 import { ArchivePage } from './pages/ArchivePage';
 import { ListsPage } from './pages/ListsPage';
@@ -15,45 +18,6 @@ import { PatternsPage } from './pages/PatternsPage';
 const authOrigin =
   import.meta.env.VITE_AUTH_URL ??
   (import.meta.env.DEV ? 'http://localhost:34100' : 'https://accounts.aidenjang.com');
-
-const landingExamples = [
-  {
-    id: 'drinks',
-    name: 'Drinks',
-    itemLabel: 'COLLECTION',
-    favorite: 'Dry Riesling',
-    detail: 'A short private note, only for you.',
-    items: [
-      ['Dry Riesling', 'Wine'],
-      ['Highball', 'Whiskey'],
-      ['Cold brew', 'Coffee'],
-    ],
-  },
-  {
-    id: 'runs',
-    name: 'Runs',
-    itemLabel: 'ACTIVITY',
-    favorite: 'Lake loop',
-    detail: '5.2 mi, logged when it happened.',
-    items: [
-      ['Lake loop', '5.2 mi'],
-      ['Easy four', '4.0 mi'],
-      ['After work', '3.1 mi'],
-    ],
-  },
-  {
-    id: 'places',
-    name: 'Places',
-    itemLabel: 'COLLECTION',
-    favorite: 'Corner table',
-    detail: 'Keep the context that makes a place worth returning to.',
-    items: [
-      ['Corner table', 'Restaurant'],
-      ['Late lunch', 'Restaurant'],
-      ['Window seat', 'Coffee'],
-    ],
-  },
-] as const;
 
 export function App() {
   return (
@@ -90,110 +54,147 @@ function PrivateApp() {
 
 function Welcome({ authOrigin }: { authOrigin: string }) {
   const returnTo = window.location.href;
-  const [exampleId, setExampleId] = useState<(typeof landingExamples)[number]['id']>('drinks');
-  const example = landingExamples.find((entry) => entry.id === exampleId) ?? landingExamples[0];
   return (
-    <main className="welcome">
-      <header className="welcome-top">
-        <span className="landing-brand">worth</span>
-        <a className="landing-sign-in" href={loginUrl(authOrigin, returnTo)}>
-          Sign in
+    <main className="cabinet-landing">
+      <header className="cabinet-landing-top">
+        <span className="product-wordmark">worth</span>
+        <a href={loginUrl(authOrigin, returnTo)}>
+          Sign in <span aria-hidden="true">→</span>
         </a>
       </header>
-      <section className="landing-meter" aria-labelledby="landing-title">
-        <div className="meter-caption meter-caption-low">
-          <span>Personal call</span>
-          <strong>Would not again</strong>
+      <section className="cabinet-landing-hero" aria-labelledby="landing-title">
+        <div>
+          <p className="overline">YOUR TASTE, ON RECORD</p>
+          <h1 id="landing-title">
+            For the good.
+            <br />
+            And the <em>meh.</em>
+          </h1>
         </div>
-        <div className="meter-track" aria-hidden="true">
-          <span className="meter-point meter-point-low" />
-          <span className="meter-point meter-point-high" />
-        </div>
-        <div className="meter-caption meter-caption-high">
-          <span>Personal call</span>
-          <strong>Favorite</strong>
-        </div>
-        <h1 id="landing-title">worth</h1>
-        <div className="landing-message">
-          <p>Keep the things worth keeping.</p>
-          <small>A private archive for what you tried, did, kept, and would not do again.</small>
-          <a className="landing-cta" href={signupUrl(authOrigin, returnTo)}>
-            Start your archive <span>→</span>
+        <div className="cabinet-landing-intro">
+          <p>
+            Keep what you try.
+            <br />
+            Find what’s worth repeating.
+          </p>
+          <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
+            Start your archive <span aria-hidden="true">→</span>
           </a>
         </div>
       </section>
-      <section className="landing-proof" aria-labelledby="landing-proof-title">
-        <header className="landing-proof-head">
-          <div>
-            <p className="overline">INSIDE WORTH</p>
-            <h2 id="landing-proof-title">The list is only the beginning.</h2>
-          </div>
-          <p>Rank what held up. Keep the reason. Find it when it matters again.</p>
-        </header>
-        <figure className="landing-editorial">
-          <img src="/images/worth-roadside-diner-v1.png" alt="A quiet roadside diner at blue hour" />
-          <figcaption>Editorial illustration — not from a user archive.</figcaption>
-        </figure>
-        <div className="landing-example-switch" role="group" aria-label="Preview example lists">
-          {landingExamples.map((entry) => (
+      <LandingExample />
+      <footer className="cabinet-landing-bottom">
+        <strong>Meh is a complete sentence.</strong>
+        <span>Collections, rankings & a place to remember.</span>
+      </footer>
+    </main>
+  );
+}
+
+type ExampleItem = { title: string; type: string; decision: ItemDecision | null; ranked: boolean };
+const exampleCollections: Record<string, ExampleItem[]> = {
+  Drinks: [
+    { title: 'Dry Riesling', type: 'Wine', decision: 'favorite', ranked: true },
+    { title: 'Cold brew', type: 'Coffee', decision: 'meh', ranked: true },
+    { title: 'Highball', type: 'Cocktail', decision: 'would_not_again', ranked: false },
+  ],
+  Movies: [
+    { title: 'Perfect Days', type: 'Film', decision: 'favorite', ranked: true },
+    { title: 'The Grand Budapest Hotel', type: 'Film', decision: 'favorite', ranked: true },
+    { title: 'The sequel', type: 'Film', decision: 'meh', ranked: false },
+  ],
+  Places: [
+    { title: 'The corner bakery', type: 'Bakery', decision: 'favorite', ranked: true },
+    { title: 'That new lunch spot', type: 'Restaurant', decision: 'meh', ranked: true },
+    { title: 'The rooftop bar', type: 'Bar', decision: 'would_not_again', ranked: false },
+  ],
+};
+
+function LandingExample() {
+  const [collections, setCollections] = useState(exampleCollections);
+  const [category, setCategory] = useState('Drinks');
+  const [selected, setSelected] = useState(1);
+  const [title, setTitle] = useState('');
+  const items = collections[category];
+  const item = items[selected];
+  return (
+    <section className="cabinet-demo" aria-label="Interactive collection example">
+      <div className="cabinet-demo-index">
+        <div className="demo-tabs" role="group" aria-label="Example collection">
+          {Object.keys(collections).map((name) => (
             <button
-              className={entry.id === example.id ? 'active' : ''}
-              key={entry.id}
-              aria-pressed={entry.id === example.id}
-              onClick={() => setExampleId(entry.id)}
+              key={name}
+              aria-pressed={name === category}
+              onClick={() => {
+                setCategory(name);
+                setSelected(1);
+                setTitle('');
+              }}
             >
-              {entry.name}
+              {name}
             </button>
           ))}
         </div>
-        <div className="landing-sample" aria-label={`Example ${example.name} list`}>
-          <header className="landing-sample-head">
-            <div>
-              <span>{example.itemLabel} / EXAMPLE</span>
-              <strong>{example.name}</strong>
-            </div>
-            <div>
-              <span>Favorite right now</span>
-              <strong>{example.favorite}</strong>
-            </div>
-          </header>
-          <ol>
-            {example.items.map(([title, detail], index) => (
-              <li key={title}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{title}</strong>
-                <small>{detail}</small>
-              </li>
-            ))}
-          </ol>
-          <aside>
-            <span>PRIVATE CONTEXT</span>
-            <p>{example.detail}</p>
-            <small>Notes, dates, and photos stay yours.</small>
-          </aside>
-        </div>
-      </section>
-      <footer className="landing-close">
-        <p>Private by default. Share only a ranked snapshot when you choose.</p>
-        <div className="landing-pillars" aria-label="What Worth is for">
+        <div className="demo-heading">
           <div>
-            <span>01</span>
-            <strong>Collect</strong>
-            <p>What you find.</p>
-          </div>
-          <div>
-            <span>02</span>
-            <strong>Log</strong>
-            <p>What happened.</p>
-          </div>
-          <div>
-            <span>03</span>
-            <strong>Rank</strong>
-            <p>What held up.</p>
+            <h2>{category}</h2>
+            <span>{items.length} items · EXAMPLE</span>
           </div>
         </div>
-      </footer>
-    </main>
+        <ol className="demo-index">
+          {items.map((entry, index) => (
+            <li key={index} className={selected === index ? 'selected' : ''}>
+              <button aria-pressed={selected === index} onClick={() => setSelected(index)}>
+                <span className="demo-rank">{entry.ranked ? String(index + 1).padStart(2, '0') : '—'}</span>
+                <span className="demo-item-name">
+                  <strong>{entry.title}</strong>
+                  <small>{entry.type || 'Unranked'}</small>
+                </span>
+                {entry.decision && <CallBadge value={entry.decision} />}
+              </button>
+            </li>
+          ))}
+        </ol>
+        <form
+          className="demo-capture"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!title.trim()) return;
+            setCollections({
+              ...collections,
+              [category]: [...items, { title: title.trim(), type: '', decision: null, ranked: false }],
+            });
+            setSelected(items.length);
+            setTitle('');
+          }}
+        >
+          <input
+            aria-label="Add an example item"
+            placeholder="What did you try?"
+            maxLength={120}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <button className="button button-accent" disabled={!title.trim()}>
+            Keep it <span aria-hidden="true">→</span>
+          </button>
+        </form>
+        <p className="demo-footnote">Just an example. Your actual opinions go in your archive.</p>
+      </div>
+      <OpinionSlip
+        example
+        title={item.title}
+        type={item.type}
+        rank={item.ranked ? selected + 1 : undefined}
+        decision={item.decision}
+        onChange={(decision) =>
+          setCollections({
+            ...collections,
+            [category]: items.map((entry, index) => (index === selected ? { ...entry, decision } : entry)),
+          })
+        }
+      />
+    </section>
   );
 }
 
@@ -203,10 +204,8 @@ function AuthProblem({ onRetry }: { onRetry: () => void }) {
       <span className="brand">worth</span>
       <div className="welcome-body">
         <p className="overline">TEMPORARILY UNAVAILABLE</p>
-        <h1>Give it a minute.</h1>
-        <p className="welcome-copy">
-          We couldn't check your account. Your archive is still private and unchanged.
-        </p>
+        <h1>Account unavailable.</h1>
+        <p className="welcome-copy">We couldn’t connect to your account. Try again in a moment.</p>
         <button className="button button-accent" onClick={onRetry}>
           Try again
         </button>

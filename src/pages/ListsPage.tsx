@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, DownloadSimple, ImageSquare, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, ImageSquare, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
@@ -105,10 +105,10 @@ export function ListsPage() {
     listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
   const pageDescription =
     listScope === 'collection'
-      ? 'Things you want to remember, compare, and keep close.'
+      ? 'The good, the meh, and the “not again.”'
       : listScope === 'activity'
-        ? 'A quiet record of what happened and when.'
-        : 'Keep similar things together. Rank a collection, or just log what happened.';
+        ? 'Record what happened and when.'
+        : 'Your collections and activity logs.';
   const create = useMutation({
     mutationFn: async (input: {
       name: string;
@@ -176,7 +176,7 @@ export function ListsPage() {
   }
 
   function requestCloseCreate() {
-    if (name.trim() || description.trim()) {
+    if (name.trim() || description.trim() || coverFile) {
       setConfirmingDiscard(true);
       return;
     }
@@ -201,13 +201,6 @@ export function ListsPage() {
           <p>{pageDescription}</p>
         </div>
         <div className="list-page-actions">
-          <a
-            className="button button-outline"
-            href="/api/export/records"
-            title="Downloads lists, items, and logs as JSON. Photos are not included."
-          >
-            <DownloadSimple size={18} /> Download records
-          </a>
           <button className="button button-accent" onClick={openCreate}>
             <Plus size={18} />{' '}
             {listScope === 'activity'
@@ -216,7 +209,6 @@ export function ListsPage() {
                 ? 'New collection'
                 : 'New list'}
           </button>
-          <small>JSON only. Photos stay in Worth.</small>
         </div>
       </div>
 
@@ -224,8 +216,8 @@ export function ListsPage() {
         <section className="create-panel" aria-label="Create a list">
           <div className="panel-title">
             <div>
-              <p className="overline">NEW LIST</p>
-              <h2>Name the list.</h2>
+              <p className="overline">NEW {kind.toUpperCase()}</p>
+              <h2>{kind === 'collection' ? 'What are you collecting?' : 'What are you keeping track of?'}</h2>
             </div>
             <button className="icon-button" aria-label="Close" onClick={requestCloseCreate}>
               <X size={20} />
@@ -243,73 +235,81 @@ export function ListsPage() {
                 required
               />
             </label>
-            <label>
-              Type
-              <select
-                value={kind}
-                onChange={(event) => {
-                  const nextKind = event.target.value as ListKind;
-                  setKind(nextKind);
-                  if (nextKind === 'activity') setCoverFile(null);
-                }}
-              >
-                <option value="collection">Collection: things you can revisit and rank</option>
-                <option value="activity">Activity: things you log over time</option>
-              </select>
-            </label>
-            <label className="form-wide">
-              A short description <span className="optional">optional</span>
-              <input
-                value={description}
-                maxLength={280}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="A line to remind yourself what belongs here"
-              />
-            </label>
-            {kind === 'collection' && (
-              <div className="form-wide collection-cover-picker">
-                <label htmlFor="collection-cover-file">
-                  Cover photo <span className="optional">optional · private</span>
-                </label>
-                <input
-                  id="collection-cover-file"
-                  ref={coverInput}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
-                />
-                {coverPreview && (
-                  <div className="collection-cover-preview">
-                    <img src={coverPreview} alt="Selected collection cover preview" />
-                    <div>
-                      <strong>{coverFile?.name}</strong>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCoverFile(null);
-                          if (coverInput.current) coverInput.current.value = '';
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <small>
-                  {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
-                </small>
-              </div>
+            {!listScope && (
+              <label>
+                Type
+                <select
+                  value={kind}
+                  onChange={(event) => {
+                    const nextKind = event.target.value as ListKind;
+                    setKind(nextKind);
+                    if (nextKind === 'activity') setCoverFile(null);
+                  }}
+                >
+                  <option value="collection">Collection: things you can revisit and rank</option>
+                  <option value="activity">Activity: things you log over time</option>
+                </select>
+              </label>
             )}
+            <details className="create-extras form-wide">
+              <summary>
+                {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
+                <span className="optional">optional</span>
+              </summary>
+              <label className="form-wide">
+                A short description <span className="optional">optional</span>
+                <input
+                  value={description}
+                  maxLength={280}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="A line to remind yourself what belongs here"
+                />
+              </label>
+              {kind === 'collection' && (
+                <div className="form-wide collection-cover-picker">
+                  <label htmlFor="collection-cover-file">
+                    Cover photo <span className="optional">optional · private</span>
+                  </label>
+                  <input
+                    id="collection-cover-file"
+                    ref={coverInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                  />
+                  {coverPreview && (
+                    <div className="collection-cover-preview">
+                      <img src={coverPreview} alt="Selected collection cover preview" />
+                      <div>
+                        <strong>{coverFile?.name}</strong>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCoverFile(null);
+                            if (coverInput.current) coverInput.current.value = '';
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <small>
+                    {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
+                  </small>
+                </div>
+              )}
+            </details>
             {create.isError && <p className="form-error">{create.error.message}</p>}
-            <button className="button button-dark" disabled={create.isPending}>
-              Create list <ArrowRight size={18} />
+            <button className="button button-accent" disabled={create.isPending}>
+              {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
             </button>
           </form>
           {confirmingDiscard && (
             <ConfirmDialog
               eyebrow="DISCARD DRAFT"
               title="Leave this list draft?"
-              description="The name and description you entered will be lost."
+              description="The name, description, and cover you entered will be lost."
               cancelLabel="Keep editing"
               confirmLabel="Discard draft"
               onConfirm={discardDraft}
@@ -332,7 +332,7 @@ export function ListsPage() {
           {visibleCollectionLists.length > 0 && (
             <ListDirectory
               heading="Collections"
-              detail="Things you can compare, rank, and revisit."
+              detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
               lists={orderedCollectionLists}
               isCollectionDirectory
               collectionOrder={collectionOrder}
@@ -344,7 +344,7 @@ export function ListsPage() {
           {visibleActivityLists.length > 0 && (
             <ListDirectory
               heading="Activity"
-              detail="Things you want to log over time."
+              detail={listScope === 'activity' ? '' : 'Things you want to log over time.'}
               lists={visibleActivityLists}
             />
           )}
@@ -370,6 +370,9 @@ function EmptyListScope({
     <section className="list-suggestions">
       <p className="overline">
         {scope ? `NO ${scope === 'collection' ? 'COLLECTIONS' : 'ACTIVITIES'} YET` : 'A FEW PLACES TO START'}
+      </p>
+      <p className="starter-intro">
+        {scope === 'activity' ? 'Pick a place to keep track.' : 'An empty archive. Enjoy it while it lasts.'}
       </p>
       <div>
         {scopedSuggestions.map((suggestion) => (
@@ -558,6 +561,8 @@ function CollectionCoverAction({ list }: { list: ListSummary }) {
       <input
         ref={input}
         className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
         type="file"
         accept="image/jpeg,image/png,image/webp"
         onChange={(event) => {

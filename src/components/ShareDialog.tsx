@@ -68,8 +68,14 @@ export function ShareDialog({
   return (
     <dialog
       className="share-dialog"
+      aria-labelledby="share-dialog-title"
       ref={dialog}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
+        if (!dialog.current?.open) onClose();
+      }}
+      onCancel={(event) => event.stopPropagation()}
       onClick={(event) => {
         if (event.target === dialog.current) dialog.current.close();
       }}
@@ -77,15 +83,15 @@ export function ShareDialog({
       <div className="share-inner">
         <div className="editor-head">
           <div>
-            <p className="overline">RANKING ONLY</p>
-            <h2>{list.name}</h2>
+            <p className="overline">SHARE A RANKING</p>
+            <h2 id="share-dialog-title">{list.name}</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
             <X size={22} />
           </button>
         </div>
         <p className="share-explainer">
-          The link shows the ranking. Notes, photos, dates, and history stay private.
+          Only ranked titles and types are shared. Calls, notes, photos, dates, and history stay private.
         </p>
         <label className="share-limit">
           Include
@@ -103,13 +109,15 @@ export function ShareDialog({
           </select>
         </label>
         <div className="share-preview">
-          <span className="overline">PREVIEW</span>
+          <span className="overline">LINK PREVIEW</span>
           <h3>{list.name}</h3>
           {preview.map((item, index) => (
             <div key={item.id}>
               <strong>{String(index + 1).padStart(2, '0')}</strong>
-              <span>{item.title}</span>
-              <small>{item.type}</small>
+              <span>
+                {item.title}
+                {item.type && <small>{item.type}</small>}
+              </span>
             </div>
           ))}
           {!preview.length && <p>Rank an item first, then it can appear here.</p>}

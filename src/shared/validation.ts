@@ -3,7 +3,7 @@ import { collectionItemTitleLimit } from './collection-capture';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
-const itemDecision = z.enum(['favorite', 'would_not_again']).nullable();
+const itemDecision = z.enum(['favorite', 'meh', 'would_not_again']).nullable();
 const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from '@phosphor-icons/react';
 
@@ -24,6 +24,8 @@ export function ConfirmDialog({
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     const node = dialog.current;
@@ -35,8 +37,15 @@ export function ConfirmDialog({
   return createPortal(
     <dialog
       className="confirm-dialog"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       ref={dialog}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
+        if (!dialog.current?.open) onClose();
+      }}
+      onCancel={(event) => event.stopPropagation()}
       onClick={(event) => {
         if (event.target === dialog.current) dialog.current.close();
       }}
@@ -45,13 +54,13 @@ export function ConfirmDialog({
         <header className="confirm-head">
           <div>
             <p className="overline">{eyebrow}</p>
-            <h2>{title}</h2>
+            <h2 id={titleId}>{title}</h2>
           </div>
           <button className="icon-button" aria-label="Cancel" onClick={() => dialog.current?.close()}>
             <X size={20} />
           </button>
         </header>
-        <p>{description}</p>
+        <p id={descriptionId}>{description}</p>
         {error && <p className="form-error">{error}</p>}
         <div className="confirm-actions">
           <button
@@ -62,7 +71,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </button>
           <button className="button button-danger" onClick={onConfirm} disabled={pending} autoFocus>
-            {pending ? 'Deleting…' : confirmLabel}
+            {pending ? 'Working…' : confirmLabel}
           </button>
         </div>
       </div>

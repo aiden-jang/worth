@@ -43,7 +43,7 @@ export function SearchPage() {
   return (
     <main className="light-page search-page page-width">
       <p className="overline">YOUR ARCHIVE, ALL AT ONCE</p>
-      <h1>Find something</h1>
+      <h1>Find that thing.</h1>
       <label className="global-search">
         <MagnifyingGlass size={26} />
         <span className="sr-only">Search all lists</span>

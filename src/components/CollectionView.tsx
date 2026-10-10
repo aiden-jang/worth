@@ -11,7 +11,9 @@ import {
   type RankFilter,
 } from '../shared/ranking';
 import { api, RequestError } from '../api';
-import { formatDate } from '../format';
+import { CallBadge, CallFace } from './PersonalCall';
+import { OpinionSlip } from './OpinionSlip';
+import { decisionLabel } from '../shared/decisions';
 import {
   batchCaptureLimit,
   batchCaptureTitles,
@@ -22,16 +24,10 @@ type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately';
 
 const browseModes: { id: BrowseMode; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'kept', label: 'Kept' },
+  { id: 'kept', label: 'Favorites' },
   { id: 'revisited', label: 'Revisited' },
   { id: 'not-opened-lately', label: 'Not opened lately' },
 ];
-
-function decisionLabel(item: Item): string | null {
-  if (item.decision === 'favorite') return 'Favorite';
-  if (item.decision === 'would_not_again') return 'Would not again';
-  return null;
-}
 
 export function CollectionView({
   list,
@@ -131,8 +127,13 @@ export function CollectionView({
     onSuccess: ({ item }) => {
       setTitle('');
       setBrowse('all');
+      setSearch('');
+      setType('all');
+      setRankFilter('all');
+      setDecisionFilter('all');
+      setSort('rank');
       setSelectedId(item.id);
-      setStatus(`${item.title} was kept in ${list.name}.`);
+      setStatus(`${item.title} added to ${list.name}.`);
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -147,10 +148,13 @@ export function CollectionView({
     onSuccess: ({ items: created }) => {
       setBatchTitles('');
       setBrowse('all');
+      setSearch('');
+      setType('all');
+      setRankFilter('all');
+      setDecisionFilter('all');
+      setSort('rank');
       setSelectedId(created.length === 1 ? (created[0]?.id ?? null) : null);
-      setStatus(
-        `${created.length} ${created.length === 1 ? 'thing was' : 'things were'} kept in ${list.name}.`,
-      );
+      setStatus(`${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`);
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -164,8 +168,12 @@ export function CollectionView({
     mutationFn: ({ item, decision }: { item: Item; decision: Item['decision'] }) =>
       api.updateItem(item.id, { decision }),
     onSuccess: ({ item }) => {
-      setStatus(item.decision ? `${item.title}: ${decisionLabel(item)}.` : `${item.title}: no call yet.`);
+      setStatus(
+        item.decision ? `${item.title}: ${decisionLabel(item.decision)}.` : `${item.title}: no call yet.`,
+      );
       void client.invalidateQueries({ queryKey: ['items', list.id] });
+      void client.invalidateQueries({ queryKey: ['list', list.id] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
     },
@@ -231,6 +239,23 @@ export function CollectionView({
     .split(/\r?\n/)
     .some((entry) => entry.trim().length > collectionItemTitleLimit);
   const capturePending = create.isPending || batchCreate.isPending;
+  const selectedItem = visible.find((item) => item.id === selectedId);
+  const rowActions = {
+    rankSlots: items.length,
+    onOpenDetails,
+    onAddNote,
+    onLogRevisit,
+    onDecide: (item: Item, decision: Item['decision']) => {
+      setStatus('');
+      decide.mutate({ item, decision });
+    },
+    decisionPending: decide.isPending,
+    onRank: (item: Item, position: number | null) => {
+      setStatus('');
+      rank.mutate({ item, position });
+    },
+    rankPending: rank.isPending,
+  };
 
   function selectBrowse(next: BrowseMode) {
     setBrowse(next);
@@ -239,287 +264,262 @@ export function CollectionView({
 
   return (
     <section className="collection-workspace" aria-label={`${list.name} collection`}>
-      <header className="collection-index-head">
-        <div>
-          <p className="overline">YOUR INDEX</p>
-          <p className="collection-index-summary">
-            {items.length
-              ? `${items.length} ${items.length === 1 ? 'thing' : 'things'} kept here.`
-              : 'Start with one thing worth remembering.'}
-          </p>
-        </div>
-        <div className="collection-utilities">
-          <button
-            className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
-            type="button"
-            aria-expanded={showSearch}
-            aria-controls="collection-search"
-            onClick={() => setShowSearch((current) => !current)}
-          >
-            <MagnifyingGlass size={16} /> Search
-          </button>
-          <button
-            className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
-            type="button"
-            aria-expanded={showFilters}
-            aria-controls="collection-filters"
-            onClick={() => setShowFilters((current) => !current)}
-          >
-            Filter{hasAdvancedFilters ? ' ·' : ''}
-          </button>
-        </div>
-      </header>
-
-      <form className="collection-capture" onSubmit={submit}>
-        <label>
-          <span className="sr-only">{batchMode ? 'One name per line' : 'What did you try?'}</span>
-          {batchMode ? (
-            <textarea
-              ref={batchCaptureRef}
-              value={batchTitles}
-              maxLength={3660}
-              onChange={(event) => setBatchTitles(event.target.value)}
-              placeholder={'One name per line\nYou can rank them later'}
-              disabled={capturePending}
-            />
-          ) : (
-            <input
-              ref={captureRef}
-              value={title}
-              maxLength={collectionItemTitleLimit}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="What did you try?"
-              disabled={capturePending}
-            />
-          )}
-        </label>
-        <button
-          className="collection-capture-submit"
-          disabled={
-            capturePending ||
-            (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
-          }
-        >
-          {capturePending ? 'Keeping…' : batchMode ? `Keep ${batchEntries.length || ''}` : 'Keep it'}{' '}
-          <ArrowRight size={17} />
-        </button>
-        <div className="collection-capture-note">
-          <button type="button" onClick={() => setBatchMode((current) => !current)} disabled={capturePending}>
-            {batchMode ? 'Add one' : 'Add several'}
-          </button>
-          <p>
-            {batchMode
-              ? batchHasLongTitle
-                ? `Each name can be up to ${collectionItemTitleLimit} characters.`
-                : `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
-              : 'Rank it later if you want. Press C to add from anywhere on this page.'}
-          </p>
-        </div>
-      </form>
-      {(create.isError || batchCreate.isError) && (
-        <p className="form-error collection-capture-error">
-          {create.error?.message ?? batchCreate.error?.message}
-        </p>
-      )}
-      {(decide.isError ||
-        (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
-        <p className="form-error collection-capture-error" role="alert">
-          {decide.isError ? decide.error.message : rank.error?.message}
-        </p>
-      )}
-      {status && (
-        <p className="collection-capture-status" role="status">
-          {status}
-        </p>
-      )}
-
-      {showSearch && (
-        <div className="collection-search" id="collection-search">
-          <label>
-            <span className="sr-only">Search {list.name}</span>
-            <input
-              autoFocus
-              value={search}
-              placeholder={`Search ${list.name.toLowerCase()}`}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-          {search && (
-            <button type="button" onClick={() => setSearch('')}>
-              <X size={15} /> Clear
-            </button>
-          )}
-        </div>
-      )}
-      {showFilters && (
-        <div className="collection-advanced-filters" id="collection-filters">
-          {types.length > 0 && (
+      <div className={`cabinet-collection-body ${!items.length ? 'cabinet-collection-empty' : ''}`}>
+        <div className="cabinet-collection-main">
+          <form className="collection-capture" onSubmit={submit}>
             <label>
-              <span>Type</span>
-              <select value={type} onChange={(event) => setType(event.target.value)}>
-                <option value="all">Everything</option>
-                {types.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
+              <span className="sr-only">{batchMode ? 'One name per line' : 'What did you try?'}</span>
+              {batchMode ? (
+                <textarea
+                  ref={batchCaptureRef}
+                  value={batchTitles}
+                  maxLength={3660}
+                  onChange={(event) => setBatchTitles(event.target.value)}
+                  placeholder={'One name per line\nYou can rank them later'}
+                  disabled={capturePending}
+                />
+              ) : (
+                <input
+                  ref={captureRef}
+                  value={title}
+                  maxLength={collectionItemTitleLimit}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="What did you try?"
+                  disabled={capturePending}
+                />
+              )}
             </label>
-          )}
-          <label>
-            <span>Rank</span>
-            <select value={rankFilter} onChange={(event) => setRankFilter(event.target.value as RankFilter)}>
-              <option value="all">Any position</option>
-              <option value="top5">Top 5</option>
-              <option value="top10">Top 10</option>
-              <option value="unranked">Not ranked</option>
-            </select>
-          </label>
-          <label>
-            <span>Your call</span>
-            <select
-              value={decisionFilter}
-              onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
-            >
-              <option value="all">Any call</option>
-              <option value="favorite">Favorite</option>
-              <option value="would_not_again">Would not again</option>
-            </select>
-          </label>
-          <label>
-            <span>Order</span>
-            <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
-              <option value="rank">My rank</option>
-              <option value="recent">Last opened</option>
-              <option value="name">Name</option>
-              <option value="times">Most visits</option>
-            </select>
-          </label>
-          {hasAdvancedFilters && (
             <button
-              type="button"
-              onClick={() => {
-                setType('all');
-                setRankFilter('all');
-                setDecisionFilter('all');
-                setSort('rank');
-              }}
+              className="collection-capture-submit"
+              disabled={
+                capturePending ||
+                (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
+              }
             >
-              Clear filters
+              {capturePending ? 'Keeping…' : batchMode ? `Keep ${batchEntries.length || ''}` : 'Keep it'}{' '}
+              <ArrowRight size={17} />
             </button>
-          )}
-        </div>
-      )}
-
-      <div className="collection-index-layout">
-        <nav className="collection-browse" aria-label="Browse collection">
-          <span>Show</span>
-          {browseModes.map((mode) => (
-            <button
-              type="button"
-              key={mode.id}
-              className={browse === mode.id ? 'active' : ''}
-              aria-pressed={browse === mode.id}
-              onClick={() => selectBrowse(mode.id)}
-            >
-              {mode.label}
-              <small>{collectionBrowseCount(mode.id, items)}</small>
-            </button>
-          ))}
-        </nav>
-
-        <div className="collection-index">
-          {!visible.length ? (
-            <div className="collection-index-empty">
-              <h2>{items.length ? 'Nothing here yet.' : 'Keep the first one.'}</h2>
+            <div className="collection-capture-note">
+              <button
+                type="button"
+                onClick={() => setBatchMode((current) => !current)}
+                disabled={capturePending}
+              >
+                {batchMode ? 'Add one' : 'Add several'}
+              </button>
               <p>
-                {items.length
-                  ? 'Try another view or search for a different name.'
-                  : 'A name is enough. Add context whenever it becomes useful.'}
+                {batchMode
+                  ? batchHasLongTitle
+                    ? `Each name can be up to ${collectionItemTitleLimit} characters.`
+                    : `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
+                  : 'Rank later. No rush.'}
               </p>
-              {items.length > 0 && (browse !== 'all' || search) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBrowse('all');
-                    setSearch('');
-                  }}
-                >
-                  Show everything
+            </div>
+          </form>
+          {(create.isError || batchCreate.isError) && (
+            <p className="form-error collection-capture-error">
+              {create.error?.message ?? batchCreate.error?.message}
+            </p>
+          )}
+          {(decide.isError ||
+            (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
+            <p className="form-error collection-capture-error" role="alert">
+              {decide.isError ? decide.error.message : rank.error?.message}
+            </p>
+          )}
+          {status && (
+            <p className="collection-capture-status" role="status">
+              {status}
+            </p>
+          )}
+
+          {showSearch && (
+            <div className="collection-search" id="collection-search">
+              <label>
+                <span className="sr-only">Search {list.name}</span>
+                <input
+                  autoFocus
+                  value={search}
+                  placeholder={`Search ${list.name.toLowerCase()}`}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+              {search && (
+                <button type="button" onClick={() => setSearch('')}>
+                  <X size={15} /> Clear
                 </button>
               )}
             </div>
-          ) : (
-            <>
-              {ranked.length > 0 && (
-                <IndexRows
-                  items={ranked}
-                  ranks={ranks}
-                  rankSlots={items.length}
-                  selectedId={selectedId}
-                  onSelect={setSelectedId}
-                  onOpenDetails={onOpenDetails}
-                  onAddNote={onAddNote}
-                  onLogRevisit={onLogRevisit}
-                  onDecide={(item, decision) => {
-                    setStatus('');
-                    decide.mutate({ item, decision: item.decision === decision ? null : decision });
-                  }}
-                  decisionPending={decide.isPending}
-                  onRank={(item, position) => {
-                    setStatus('');
-                    rank.mutate({ item, position });
-                  }}
-                  rankPending={rank.isPending}
-                />
-              )}
-              {unranked.length > 0 && (
-                <section className="collection-unranked" aria-labelledby="unranked-heading">
-                  {ranked.length > 0 && <p id="unranked-heading">Not ranked yet</p>}
-                  <IndexRows
-                    items={unranked}
-                    ranks={ranks}
-                    rankSlots={items.length}
-                    selectedId={selectedId}
-                    onSelect={setSelectedId}
-                    onOpenDetails={onOpenDetails}
-                    onAddNote={onAddNote}
-                    onLogRevisit={onLogRevisit}
-                    onDecide={(item, decision) => {
-                      setStatus('');
-                      decide.mutate({ item, decision: item.decision === decision ? null : decision });
-                    }}
-                    decisionPending={decide.isPending}
-                    onRank={(item, position) => {
-                      setStatus('');
-                      rank.mutate({ item, position });
-                    }}
-                    rankPending={rank.isPending}
-                  />
-                </section>
-              )}
-            </>
           )}
+          {showFilters && (
+            <div className="collection-advanced-filters" id="collection-filters">
+              {types.length > 0 && (
+                <label>
+                  <span>Type</span>
+                  <select value={type} onChange={(event) => setType(event.target.value)}>
+                    <option value="all">Everything</option>
+                    {types.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label>
+                <span>Rank</span>
+                <select
+                  value={rankFilter}
+                  onChange={(event) => setRankFilter(event.target.value as RankFilter)}
+                >
+                  <option value="all">Any position</option>
+                  <option value="top5">Top 5</option>
+                  <option value="top10">Top 10</option>
+                  <option value="unranked">Not ranked</option>
+                </select>
+              </label>
+              <label>
+                <span>Your call</span>
+                <select
+                  aria-label="Filter by personal call"
+                  value={decisionFilter}
+                  onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
+                >
+                  <option value="all">Any call</option>
+                  <option value="favorite">Favorite</option>
+                  <option value="meh">Meh</option>
+                  <option value="would_not_again">Not again</option>
+                </select>
+              </label>
+              <label>
+                <span>Order</span>
+                <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
+                  <option value="rank">My rank</option>
+                  <option value="recent">Last opened</option>
+                  <option value="name">Name</option>
+                  <option value="times">Most visits</option>
+                </select>
+              </label>
+              {hasAdvancedFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setType('all');
+                    setRankFilter('all');
+                    setDecisionFilter('all');
+                    setSort('rank');
+                  }}
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="collection-index-layout">
+            <div className="cabinet-index-toolbar">
+              <nav className="collection-browse" aria-label="Browse collection">
+                <span>Show</span>
+                {browseModes.map((mode) => (
+                  <button
+                    type="button"
+                    key={mode.id}
+                    className={browse === mode.id ? 'active' : ''}
+                    aria-pressed={browse === mode.id}
+                    onClick={() => selectBrowse(mode.id)}
+                  >
+                    {mode.label}
+                    <small>{collectionBrowseCount(mode.id, items)}</small>
+                  </button>
+                ))}
+              </nav>
+
+              <div className="collection-utilities">
+                <button
+                  className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
+                  type="button"
+                  aria-expanded={showSearch}
+                  aria-controls="collection-search"
+                  onClick={() => setShowSearch((current) => !current)}
+                >
+                  <MagnifyingGlass size={16} /> Search
+                </button>
+                <button
+                  className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
+                  type="button"
+                  aria-expanded={showFilters}
+                  aria-controls="collection-filters"
+                  onClick={() => setShowFilters((current) => !current)}
+                >
+                  Filter{hasAdvancedFilters ? ' ·' : ''}
+                </button>
+              </div>
+            </div>
+            <div className="collection-index">
+              {!visible.length ? (
+                <div className="collection-index-empty">
+                  {!items.length && <CallFace value="meh" arms />}
+                  <h2>{items.length ? 'No matching items.' : 'Nothing to judge. Yet.'}</h2>
+                  <p>
+                    {items.length
+                      ? 'Try another view or search for a different name.'
+                      : 'Add the first thing you tried. A name will do.'}
+                  </p>
+                  {items.length > 0 && (browse !== 'all' || search) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBrowse('all');
+                        setSearch('');
+                      }}
+                    >
+                      Show everything
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {ranked.length > 0 && (
+                    <IndexRows
+                      items={ranked}
+                      ranks={ranks}
+                      selectedId={selectedId}
+                      onSelect={setSelectedId}
+                      {...rowActions}
+                    />
+                  )}
+                  {unranked.length > 0 && (
+                    <section className="collection-unranked" aria-labelledby="unranked-heading">
+                      {ranked.length > 0 && <p id="unranked-heading">Unranked · {unranked.length}</p>}
+                      <IndexRows
+                        items={unranked}
+                        ranks={ranks}
+                        selectedId={selectedId}
+                        onSelect={setSelectedId}
+                        {...rowActions}
+                      />
+                    </section>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
+        {selectedItem ? (
+          <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+        ) : items.length > 0 ? (
+          <aside className="opinion-slip opinion-slip-empty">
+            <CallFace value="meh" arms />
+            <h3>Pick an item.</h3>
+            <p>You have the floor.</p>
+          </aside>
+        ) : null}
       </div>
     </section>
   );
 }
 
-function IndexRows({
-  items,
-  ranks,
-  rankSlots,
-  selectedId,
-  onSelect,
-  onOpenDetails,
-  onAddNote,
-  onLogRevisit,
-  onDecide,
-  decisionPending,
-  onRank,
-  rankPending,
-}: {
+type IndexProps = {
   items: Item[];
   ranks: Map<string, number>;
   rankSlots: number;
@@ -532,12 +532,13 @@ function IndexRows({
   decisionPending: boolean;
   onRank: (item: Item, position: number | null) => void;
   rankPending: boolean;
-}) {
+};
+
+function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: IndexProps) {
   return (
     <ol className="collection-index-rows">
       {items.map((item) => {
         const rank = ranks.get(item.id);
-        const call = decisionLabel(item);
         const selected = selectedId === item.id;
         return (
           <li className={selected ? 'selected' : ''} key={item.id}>
@@ -549,81 +550,83 @@ function IndexRows({
                 onClick={() => onSelect(selected ? null : item.id)}
               >
                 <strong>{item.title}</strong>
-                <span>
-                  {call ||
-                    (item.lastLoggedOn ? `Last opened ${formatDate(item.lastLoggedOn)}` : 'No details yet')}
-                </span>
+                {item.type && <span>{item.type}</span>}
               </button>
-              <span className="collection-row-context">
-                {item.note || (item.logCount > 1 ? `${item.logCount} visits` : '')}
-              </span>
+              {item.decision && <CallBadge value={item.decision} />}
             </div>
             {selected && (
-              <div className="collection-action-tray" aria-label={`Actions for ${item.title}`}>
-                <button
-                  type="button"
-                  className={item.decision === 'favorite' ? 'active' : ''}
-                  aria-pressed={item.decision === 'favorite'}
-                  aria-label={
-                    item.decision === 'favorite'
-                      ? `Remove favorite from ${item.title}`
-                      : `Favorite ${item.title}`
-                  }
-                  disabled={decisionPending}
-                  onClick={() => onDecide(item, 'favorite')}
-                >
-                  Favorite
-                </button>
-                <button
-                  type="button"
-                  className={item.decision === 'would_not_again' ? 'active' : ''}
-                  aria-pressed={item.decision === 'would_not_again'}
-                  aria-label={
-                    item.decision === 'would_not_again'
-                      ? `Remove would not again from ${item.title}`
-                      : `Mark ${item.title} as would not again`
-                  }
-                  disabled={decisionPending}
-                  onClick={() => onDecide(item, 'would_not_again')}
-                >
-                  Would not again
-                </button>
-                <label className="collection-rank-placement">
-                  <span>Place</span>
-                  <select
-                    aria-label={`Place ${item.title} in your ranking`}
-                    value={rank ?? 'none'}
-                    disabled={rankPending}
-                    onChange={(event) =>
-                      onRank(item, event.target.value === 'none' ? null : Number(event.target.value))
-                    }
-                  >
-                    <option value="none">Unranked</option>
-                    {Array.from({ length: rankSlots }, (_, index) => (
-                      <option key={index + 1} value={index + 1}>
-                        #{String(index + 1).padStart(2, '0')}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="button" onClick={() => onAddNote(item.id)}>
-                  Add a note
-                </button>
-                <button type="button" onClick={() => onLogRevisit(item.id)}>
-                  Log revisit
-                </button>
-                <button
-                  type="button"
-                  className="collection-open-details"
-                  onClick={() => onOpenDetails(item.id)}
-                >
-                  Details <ArrowRight size={15} />
-                </button>
-              </div>
+              <ItemActions className="collection-action-tray" item={item} rank={rank} {...actions} />
             )}
           </li>
         );
       })}
     </ol>
+  );
+}
+
+function ItemActions({
+  item,
+  rank,
+  rankSlots,
+  onOpenDetails,
+  onAddNote,
+  onLogRevisit,
+  onDecide,
+  decisionPending,
+  onRank,
+  rankPending,
+  className = '',
+}: Omit<IndexProps, 'items' | 'ranks' | 'selectedId' | 'onSelect'> & {
+  item: Item;
+  rank?: number;
+  className?: string;
+}) {
+  return (
+    <OpinionSlip
+      className={className}
+      title={item.title}
+      type={item.type}
+      rank={rank}
+      decision={item.decision}
+      disabled={decisionPending}
+      onChange={(value) => onDecide(item, value)}
+    >
+      <div className="collection-tray-actions">
+        <details className="collection-rank-disclosure">
+          <summary aria-label={`Rank ${item.title}`}>Rank</summary>
+          <label className="collection-rank-placement">
+            <span>Place</span>
+            <select
+              aria-label={`Place ${item.title} in your ranking`}
+              value={rank ?? 'none'}
+              disabled={rankPending}
+              onChange={(event) =>
+                onRank(item, event.target.value === 'none' ? null : Number(event.target.value))
+              }
+            >
+              <option value="none">Unranked</option>
+              {Array.from({ length: rankSlots }, (_, index) => (
+                <option key={index + 1} value={index + 1}>
+                  #{String(index + 1).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </label>
+        </details>
+        <button type="button" aria-label={`Add a note to ${item.title}`} onClick={() => onAddNote(item.id)}>
+          Note
+        </button>
+        <button
+          type="button"
+          aria-label={`Log a revisit to ${item.title}`}
+          onClick={() => onLogRevisit(item.id)}
+        >
+          Revisit
+        </button>
+        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
+          Details <ArrowRight size={15} />
+        </button>
+      </div>
+    </OpinionSlip>
   );
 }

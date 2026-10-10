@@ -1,0 +1,16 @@
+{
+  "errors": [],
+  "viewports": [1440, 390, 320, 430, 768],
+  "checks": [
+    "interactive examples switch collection",
+    "example add and optional call",
+    "Meh clearing",
+    "signed-in call persistence and rank independence",
+    "Favorites filtering",
+    "empty states",
+    "menu Escape",
+    "name-only collection creation",
+    "title-only capture",
+    "responsive overflow"
+  ]
+}

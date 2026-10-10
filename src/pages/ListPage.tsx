@@ -8,8 +8,7 @@ import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { CollectionCoverButton, CollectionCoverControl } from '../components/PhotoControl';
-import { starterCollectionCover } from '../shared/starter-covers';
+import { CollectionCoverControl } from '../components/PhotoControl';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -81,12 +80,6 @@ export function ListPage() {
   const selected =
     items.find((item) => item.id === selectedId) ??
     (focusedLog?.itemId ? (items.find((item) => item.id === focusedLog.itemId) ?? null) : null);
-  const collectionCover =
-    list.kind === 'collection'
-      ? list.hasCoverPhoto
-        ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-        : starterCollectionCover(list.name)
-      : null;
   const coverError =
     location.state && typeof location.state === 'object' && 'coverError' in location.state
       ? String(location.state.coverError)
@@ -94,19 +87,27 @@ export function ListPage() {
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
-      <Link className="back-link" to="/lists">
-        <ArrowLeft size={16} /> All lists
+      <Link className="back-link" to={`/lists?kind=${list.kind}`}>
+        <ArrowLeft size={16} /> {list.kind === 'collection' ? 'Collections' : 'Activity'}
       </Link>
       <section className="list-page-head">
         <div>
+          {list.kind === 'collection' && list.hasCoverPhoto && (
+            <img
+              className="cabinet-personal-cover"
+              src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`}
+              alt=""
+            />
+          )}
           <p className="overline">{list.kind === 'collection' ? 'YOUR COLLECTION' : 'YOUR ACTIVITY'}</p>
           <h1>{list.name}</h1>
-          <p>
-            {list.description ||
-              (list.kind === 'collection' ? 'Things you want to remember.' : 'A record of when it happened.')}
+          <p className="list-record-count">
+            {list.kind === 'collection'
+              ? `${list.itemCount} ${list.itemCount === 1 ? 'item' : 'items'} · ${list.rankedCount} ranked`
+              : `${list.logCount} ${list.logCount === 1 ? 'log' : 'logs'}`}
           </p>
+          {list.description && <p className="list-user-description">{list.description}</p>}
         </div>
-        {collectionCover && <img className="collection-title-cover" src={collectionCover} alt="" />}
         <div className="list-head-actions">
           {list.kind === 'collection' && (
             <Link className="button button-outline" to={`/lists/${list.id}/show`}>
@@ -117,9 +118,6 @@ export function ListPage() {
             <button className="button button-outline" onClick={() => setShowShare(true)}>
               <ShareNetwork size={18} /> Share
             </button>
-          )}
-          {list.kind === 'collection' && (
-            <CollectionCoverButton listId={list.id} hasCoverPhoto={list.hasCoverPhoto} />
           )}
           <button
             className="icon-button settings-button"
@@ -190,6 +188,7 @@ export function ListPage() {
             <ItemEditor
               listId={listId}
               item={creating ? null : selected}
+              rank={selected ? list.rankedIds.indexOf(selected.id) + 1 || undefined : undefined}
               items={items}
               logs={logs}
               focusLogId={focusLogId}
@@ -311,7 +310,7 @@ function ListSettings({
             onChange={(event) => setNextDescription(event.target.value)}
           />
         </label>
-        <button className="button button-dark" disabled={!cleanName || !hasChanges || update.isPending}>
+        <button className="button button-accent" disabled={!cleanName || !hasChanges || update.isPending}>
           Save changes
         </button>
         {update.isError && (

@@ -1,10 +1,9 @@
+import { CallBadge, CallFace } from '../components/PersonalCall';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react';
-import { Link, useNavigate } from 'react-router';
-import { useState, type FormEvent } from 'react';
+import { ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
+import { Link } from 'react-router';
 import { api } from '../api';
 import { formatElapsedDays, formatRelativeTimestamp } from '../format';
-import type { DecisionPick, RankedPick } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
 
 const dateLabel = (value: string) =>
@@ -22,7 +21,7 @@ function activityDetail(entry: {
   sets: number | null;
   reps: number | null;
 }) {
-  if (entry.recordKind === 'item') return `${entry.listName} · kept`;
+  if (entry.recordKind === 'item') return entry.listName;
   const metrics = [];
   if (entry.amount !== null) metrics.push(`${entry.amount}${entry.unit ? ` ${entry.unit}` : ''}`);
   if (entry.sets !== null && entry.reps !== null) metrics.push(`${entry.sets} × ${entry.reps}`);
@@ -31,257 +30,177 @@ function activityDetail(entry: {
 
 export function ArchivePage() {
   const overview = useQuery({ queryKey: ['overview'], queryFn: api.overview });
-  const navigate = useNavigate();
-  const [query, setQuery] = useState('');
   const data = overview.data;
-
-  function search(event: FormEvent) {
-    event.preventDefault();
-    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-  }
-
-  const today = new Date();
-  const dayNumber = new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(today);
-  const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(today).toUpperCase();
-  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(today).toUpperCase();
-  const totalRecords = data?.lists.reduce((total, list) => total + list.itemCount + list.logCount, 0) ?? 0;
-
-  return (
-    <main className="archive-page">
-      <h1 className="sr-only">Archive</h1>
-      {overview.isPending ? (
-        <div className="page-width loading-line" role="status">
-          Opening your archive…
-        </div>
-      ) : overview.isError ? (
-        <div className="page-width error-banner" role="alert">
-          Couldn't load your archive. <button onClick={() => void overview.refetch()}>Try again</button>
-        </div>
-      ) : !data?.lists.length ? (
+  const date = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    .format(new Date())
+    .toUpperCase();
+  if (overview.isPending)
+    return (
+      <main className="page-width loading-line" role="status">
+        Opening your archive…
+      </main>
+    );
+  if (overview.isError)
+    return (
+      <main className="page-width error-banner" role="alert">
+        Couldn't load your archive. <button onClick={() => void overview.refetch()}>Try again</button>
+      </main>
+    );
+  if (!data?.lists.length)
+    return (
+      <main className="archive-page">
         <EmptyArchive />
-      ) : (
-        <section className="archive-dashboard page-width">
-          <header className="archive-dashboard-head">
-            <div className="archive-day-block">
-              <div className="archive-day" aria-label={`${weekday}, ${month} ${dayNumber}`}>
-                <strong>{dayNumber}</strong>
-                <span>
-                  {month}
-                  <br />
-                  {weekday}
-                </span>
-              </div>
-              <Link className="archive-pattern-link" to="/patterns">
-                Read patterns <ArrowRight size={15} />
-              </Link>
-            </div>
-            <form className="archive-search" onSubmit={search} role="search">
-              <MagnifyingGlass size={18} />
-              <input
-                aria-label="Find something you logged"
-                placeholder="Search your records"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </form>
-          </header>
-          <div className="archive-workspace">
-            <section className="archive-activity" aria-labelledby="recent-heading">
-              <header className="workspace-head">
-                <p id="recent-heading">Recent</p>
-                <Link to="/search">
-                  View all <ArrowRight size={15} />
-                </Link>
-              </header>
-              {data.recent.length ? (
-                <ol className="activity-rail">
-                  {data.recent.slice(0, 8).map((entry) => (
-                    <li key={entry.id}>
-                      <span className="activity-marker" aria-hidden="true" />
-                      <time dateTime={entry.happenedOn ?? new Date(entry.recordedAt).toISOString()}>
-                        {entry.happenedOn
-                          ? dateLabel(entry.happenedOn).toUpperCase()
-                          : formatRelativeTimestamp(entry.recordedAt).toUpperCase()}
-                      </time>
-                      <Link
-                        to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
-                      >
-                        <strong>{entry.title}</strong>
-                        <span>{activityDetail(entry)}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <div className="workspace-empty">Log something and it will appear here.</div>
-              )}
-            </section>
-            <aside className="archive-shortlist" aria-labelledby="shortlist-heading">
-              <header className="workspace-head">
-                <p id="shortlist-heading">Shortlist</p>
-                <Link to="/lists?kind=collection">
-                  Collections <ArrowRight size={15} />
-                </Link>
-              </header>
-              {data.ranked.length || data.favorites.length || data.notAgain.length ? (
-                <div className="shortlist-groups">
-                  <RankedList picks={data.ranked} />
-                  <DecisionList label="Favorites" code="FAV" picks={data.favorites} />
-                  <DecisionList label="Would not again" code="NO" picks={data.notAgain} />
-                </div>
-              ) : (
-                <div className="workspace-empty">Rank an item or make a personal call to keep it close.</div>
-              )}
-            </aside>
-          </div>
-          <section className="archive-lists" aria-labelledby="archive-lists-heading">
-            <header className="workspace-head">
-              <p id="archive-lists-heading">Your lists</p>
-              <Link to="/lists">
-                Manage lists <ArrowRight size={15} />
-              </Link>
-            </header>
-            <ol>
-              {data.lists.map((list, index) => {
-                const count = list.kind === 'collection' ? list.itemCount : list.logCount;
-                const noun = list.kind === 'collection' ? 'item' : 'log';
-                const signals =
-                  list.kind === 'collection'
-                    ? [
-                        `${count} ${count === 1 ? noun : `${noun}s`}`,
-                        list.rankedCount ? `${list.rankedCount} ranked` : '',
-                        list.favoriteCount
-                          ? `${list.favoriteCount} ${list.favoriteCount === 1 ? 'favorite' : 'favorites'}`
-                          : '',
-                      ].filter(Boolean)
-                    : [`${count} ${count === 1 ? noun : `${noun}s`}`];
-                const cover = list.hasCoverPhoto
-                  ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-                  : list.kind === 'collection'
-                    ? starterCollectionCover(list.name)
-                    : null;
-                return (
-                  <li key={list.id}>
-                    <Link to={`/lists/${list.id}`} className={cover ? 'has-cover' : undefined}>
-                      {cover && <img className="archive-list-cover" src={cover} alt="" />}
-                      <span className="archive-list-index">{String(index + 1).padStart(2, '0')}</span>
-                      <span className="archive-list-identity">
-                        <strong>{list.name}</strong>
-                        <small>
-                          {list.kind} · {signals.join(' · ')}
-                        </small>
+      </main>
+    );
+  const collections = data.lists.filter((list) => list.kind === 'collection');
+  const shelves = collections.length ? collections : data.lists;
+  const pick = data.ranked[0];
+  const last = data.lastTimes[0];
+  return (
+    <main className="cabinet-home page-width">
+      <header className="cabinet-heading">
+        <div>
+          <p className="overline">{date}</p>
+          <h1>The archive.</h1>
+          <p>Good finds. Mixed feelings.</p>
+        </div>
+        <div className="cabinet-wink">
+          <CallFace value="meh" />
+          <span>
+            Opinions may vary.
+            <br />
+            Yours, mostly.
+          </span>
+        </div>
+      </header>
+      <section aria-labelledby="cabinet-shelves-heading">
+        <header className="cabinet-section-head">
+          <h2 id="cabinet-shelves-heading">{collections.length ? 'Your collections' : 'Your activity'}</h2>
+          <Link to={collections.length ? '/lists?kind=collection' : '/lists?kind=activity'}>
+            View all <ArrowRight size={15} />
+          </Link>
+        </header>
+        <ol className="cabinet-shelves">
+          {shelves.slice(0, 6).map((list, index) => {
+            const count = list.kind === 'collection' ? list.itemCount : list.logCount;
+            const noun = list.kind === 'collection' ? 'item' : 'log';
+            const cover = list.hasCoverPhoto
+              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              : list.kind === 'collection'
+                ? starterCollectionCover(list.name)
+                : null;
+            return (
+              <li key={list.id}>
+                <Link to={`/lists/${list.id}`} className="cabinet-folder">
+                  <div className="cabinet-folder-picture">
+                    {cover ? (
+                      <img src={cover} alt="" />
+                    ) : (
+                      <span className="cabinet-folder-blank" aria-hidden="true">
+                        {list.name.slice(0, 1)}
                       </span>
-                      <ArrowRight size={17} />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-          {data.lastTimes.length > 0 && (
-            <section className="archive-last-times" aria-labelledby="last-times-heading">
-              <header>
-                <p id="last-times-heading">Last done</p>
-                <span>From activity logs</span>
-              </header>
-              <ol>
-                {data.lastTimes.map((entry) => (
-                  <li key={entry.id}>
-                    <Link to={`/lists/${entry.listId}?focus=log:${entry.id}`}>
-                      <strong>{entry.title}</strong>
-                      <time dateTime={entry.happenedOn}>{formatElapsedDays(entry.happenedOn)}</time>
+                    )}
+                    <span className="cabinet-folder-number" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="cabinet-folder-copy">
+                    <span>
+                      <strong>{list.name}</strong>
                       <small>
-                        {entry.listName} · {dateLabel(entry.happenedOn).toUpperCase()}
+                        {count} {count === 1 ? noun : `${noun}s`}
+                        {list.kind === 'collection' && list.rankedCount
+                          ? ` · ${list.rankedCount} ranked`
+                          : ''}
                       </small>
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            </section>
+                    </span>
+                    <ArrowUpRight size={18} />
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+      <div className="cabinet-home-lower">
+        <section className="cabinet-recent" aria-labelledby="recent-heading">
+          <header className="cabinet-section-head">
+            <h2 id="recent-heading">Recently filed</h2>
+            <Link to="/search">
+              View all <ArrowRight size={15} />
+            </Link>
+          </header>
+          {data.recent.length ? (
+            <ol className="activity-rail">
+              {data.recent.slice(0, 4).map((entry) => (
+                <li key={entry.id}>
+                  <time dateTime={entry.happenedOn ?? new Date(entry.recordedAt).toISOString()}>
+                    {entry.happenedOn
+                      ? dateLabel(entry.happenedOn).toUpperCase()
+                      : formatRelativeTimestamp(entry.recordedAt)}
+                  </time>
+                  <Link
+                    to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
+                  >
+                    <strong>{entry.title}</strong>
+                    <span>{activityDetail(entry)}</span>
+                  </Link>
+                  {entry.recordKind === 'item' && entry.decision && <CallBadge value={entry.decision} />}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="workspace-empty">Nothing filed yet. Add a name to get started.</p>
           )}
-          <footer className="archive-totals" aria-label="Archive totals">
-            <div>
-              <span>Records</span>
-              <strong>{totalRecords}</strong>
-            </div>
-            <div>
-              <span>Lists</span>
-              <strong>{data.lists.length}</strong>
-            </div>
-            <div>
-              <span>Last record</span>
-              <strong>
-                {data.recent[0]
-                  ? data.recent[0].happenedOn
-                    ? dateLabel(data.recent[0].happenedOn).toUpperCase()
-                    : formatRelativeTimestamp(data.recent[0].recordedAt).toUpperCase()
-                  : '—'}
-              </strong>
-            </div>
-          </footer>
         </section>
-      )}
+        <aside>
+          {pick ? (
+            <Link className="cabinet-pick" to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
+              <p className="overline">TOP OF THE LIST</p>
+              <div className="cabinet-pick-rank">
+                <span>{String(pick.rank).padStart(2, '0')}</span>
+                <small>Within {pick.listName} ↗</small>
+              </div>
+              <h3>{pick.title}</h3>
+              <p>{pick.type ? `${pick.type} · ` : ''}Ranked by you</p>
+            </Link>
+          ) : (
+            collections.length > 0 && (
+              <Link className="cabinet-pick" to={`/lists/${collections[0].id}`}>
+                <p className="overline">YOUR RANKING</p>
+                <div className="cabinet-pick-rank">
+                  <span>—</span>
+                </div>
+                <h3>Unranked. Unbothered.</h3>
+                <p>Pick an item when something stands out.</p>
+              </Link>
+            )
+          )}
+          {last && (
+            <Link className="cabinet-last-done" to={`/lists/${last.listId}?focus=log:${last.id}`}>
+              <span>
+                Last done · <strong>{last.title}</strong>
+              </span>
+              <span>
+                {formatElapsedDays(last.happenedOn)} <ArrowRight size={12} />
+              </span>
+            </Link>
+          )}
+        </aside>
+      </div>
     </main>
-  );
-}
-
-function RankedList({ picks }: { picks: RankedPick[] }) {
-  if (!picks.length) return null;
-  return (
-    <section className="shortlist-group" aria-label="Top ranked">
-      <p>Top ranked</p>
-      <small className="shortlist-context">Placed within each collection.</small>
-      <ol className="shortlist-items">
-        {picks.map((pick) => (
-          <li key={pick.itemId}>
-            <span>#{String(pick.rank).padStart(2, '0')}</span>
-            <Link to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
-              <strong>{pick.title}</strong>
-              <small>
-                {pick.listName}
-                {pick.type ? ` · ${pick.type}` : ''}
-              </small>
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-function DecisionList({ label, code, picks }: { label: string; code: string; picks: DecisionPick[] }) {
-  if (!picks.length) return null;
-  return (
-    <section className="shortlist-group" aria-label={label}>
-      <p>{label}</p>
-      <ol className="shortlist-items">
-        {picks.map((pick) => (
-          <li key={pick.itemId}>
-            <span>{code}</span>
-            <Link to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
-              <strong>{pick.title}</strong>
-              <small>
-                {pick.listName}
-                {pick.type ? ` · ${pick.type}` : ''}
-              </small>
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 
 function EmptyArchive() {
   return (
     <section className="empty-archive page-width">
-      <div className="empty-index">NO. 001</div>
+      <div className="empty-index">
+        <CallFace value="meh" arms />
+      </div>
       <div>
-        <h2>Start with one thing.</h2>
-        <p>
-          Start with a collection for things you want to compare, or an activity for things you want to log
-          over time.
-        </p>
+        <h1>A clean slate. Suspicious.</h1>
+        <p>Start a collection for what you try, or an activity for what you do. A name is enough.</p>
         <div className="empty-archive-actions">
           <Link className="button button-accent" to="/lists?create=1&kind=collection">
             Start a collection <ArrowRight size={18} />

@@ -1,4 +1,4 @@
-import type { Item, ListDetail } from './models';
+import type { Item, ItemDecision, ListDetail } from './models';
 
 export function rankedItems(list: ListDetail, items: Item[]): Item[] {
   const byId = new Map(items.map((item) => [item.id, item]));
@@ -18,7 +18,7 @@ export function moveRank(rankedIds: string[], itemId: string, position: number |
 
 export type ItemSort = 'rank' | 'recent' | 'name' | 'times';
 export type RankFilter = 'all' | 'top5' | 'top10' | 'unranked';
-export type DecisionFilter = 'all' | 'favorite' | 'would_not_again';
+export type DecisionFilter = 'all' | ItemDecision;
 
 export function visibleItems(
   items: Item[],

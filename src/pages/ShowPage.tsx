@@ -15,8 +15,7 @@ export function ShowPage() {
   const list = listQuery.data?.list;
   const ranked = list ? rankedItems(list, itemsQuery.data?.items ?? []) : [];
   const visible = limit === 'all' ? ranked : ranked.slice(0, limit);
-  const favorite = ranked.find((item) => item.decision === 'favorite');
-  const primaryItem = favorite ?? ranked[0];
+  const primaryItem = ranked[0];
 
   useEffect(() => {
     const syncFullscreen = () => setFull(Boolean(document.fullscreenElement));
@@ -54,7 +53,7 @@ export function ShowPage() {
     );
 
   return (
-    <main className="show-page">
+    <main className="show-page ranking-display">
       <header className="show-header">
         <Link to={`/lists/${list.id}`}>
           <ArrowLeft size={19} /> Back to list
@@ -77,10 +76,11 @@ export function ShowPage() {
         <div className="show-intro-copy">
           <p className="overline">YOUR RANKED LIST</p>
           <h1>{list.name}</h1>
+          <p className="ranking-caption">{ranked.length} ranked · In your very particular order.</p>
         </div>
         {primaryItem && (
           <aside className="show-favorite">
-            <span>{favorite ? 'Favorite' : 'Top ranked'}</span>
+            <span>Top of this list</span>
             <strong>{primaryItem.title}</strong>
             {primaryItem.type && <small>{primaryItem.type}</small>}
           </aside>

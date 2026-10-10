@@ -22,6 +22,7 @@ beforeAll(async () => {
     '0002_photo_storage.sql',
     '0003_item_decisions.sql',
     '0004_list_photos.sql',
+    '0005_meh_decision.sql',
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
@@ -592,4 +593,59 @@ test('activity logs can be found, edited, and removed without crossing accounts'
   expect(await call(`/lists/${list.id}/logs`, 'alice').then((response) => response.json())).toEqual({
     logs: [],
   });
+});
+
+test('Meh is explicit, reversible, owner-scoped, and independent of rank', async () => {
+  const list = (
+    (await (await call('/lists', 'neutral', 'POST', { name: 'Coffee', kind: 'collection' })).json()) as {
+      list: { id: string };
+    }
+  ).list;
+  const item = (
+    (await (await call(`/lists/${list.id}/items`, 'neutral', 'POST', { title: 'Cold brew' })).json()) as {
+      item: { id: string; decision: string | null };
+    }
+  ).item;
+  expect(item.decision).toBeNull();
+  expect((await call(`/items/${item.id}`, 'other', 'PATCH', { decision: 'meh' })).status).toBe(404);
+  const updated = (
+    (await (await call(`/items/${item.id}`, 'neutral', 'PATCH', { decision: 'meh' })).json()) as {
+      item: { decision: string };
+    }
+  ).item;
+  expect(updated.decision).toBe('meh');
+  expect((await (await call(`/lists/${list.id}`, 'neutral')).json()) as unknown).toMatchObject({
+    list: { rankedIds: [], rankRevision: 0 },
+  });
+  expect(
+    (await call(`/lists/${list.id}/rank`, 'neutral', 'PUT', { itemIds: [item.id], expectedRevision: 0 }))
+      .status,
+  ).toBe(200);
+  expect((await (await call('/overview', 'neutral')).json()) as unknown).toMatchObject({
+    favorites: [],
+    notAgain: [],
+    recent: [expect.objectContaining({ itemId: item.id, decision: 'meh' })],
+  });
+  expect((await (await call('/patterns', 'neutral')).json()) as unknown).toMatchObject({
+    mehCount: 1,
+    favoriteCount: 0,
+    notAgainCount: 0,
+  });
+  expect((await (await call('/export/records', 'neutral')).json()) as unknown).toMatchObject({
+    items: [expect.objectContaining({ decision: 'meh' })],
+  });
+  const shared = (await (await call(`/lists/${list.id}/shares`, 'neutral', 'POST', { limit: 5 })).json()) as {
+    share: { token: string };
+    token: string;
+  };
+  // The existing share contract contains ranked names/types only, never calls.
+  const token = shared.token ?? shared.share?.token;
+  const snapshot = await call(`/public/${token}`, null);
+  expect(snapshot.status).toBe(200);
+  expect(JSON.stringify(await snapshot.json())).not.toContain('meh');
+  expect((await call(`/items/${item.id}`, 'neutral', 'PATCH', { decision: null })).status).toBe(200);
+  expect((await (await call(`/lists/${list.id}`, 'neutral')).json()) as unknown).toMatchObject({
+    list: { rankedIds: [item.id], rankRevision: 1 },
+  });
+  expect((await (await call('/patterns', 'neutral')).json()) as unknown).toMatchObject({ mehCount: 0 });
 });

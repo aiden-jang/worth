@@ -6,18 +6,29 @@ Turn a collection from a form-heavy management screen into a quiet personal cata
 
 **add a name → optionally rank it → leave.**
 
-The reference is the approved `Places` mock in `art/ui-mocks/` workflow: a dark editorial workspace with a single quick-capture field, a ranked index, and controls that appear only for the selected item.
+The current references are `art/ui-mocks/taste-cabinet/collection-desktop.png` and
+`art/ui-mocks/taste-cabinet/collection-mobile.png`: an open dark index and a focused cream
+opinion slip. Desktop puts the selected item beside the list; mobile puts it beneath its row.
+Follow `art/ui-mocks/BUILD-CONTRACT.md` and compare the implemented screens at matching widths.
+Older generated references and phases below are historical, not the current layout target.
 
 This is a visual and interaction redesign of collection pages. It does **not** change the ranking model, introduce star ratings, or require people to fill in notes, types, dates, photos, or revisit details.
+
+The assessment and phases below describe the earlier collection redesign. The current
+component already supports title-only capture and a selected-row action tray. The current revision adds the shared cute face controls and explicit neutral Meh state
+with migration 0005;
+do not rebuild completed phases merely because this historical plan lists them.
 
 ## Product rules
 
 - Rank order remains the comparison tool.
-- The existing choices remain: **Favorite**, **Would not again**, or no decision.
+- Choices: **Favorite**, **Meh**, **Not again**, or no decision. Meh is a new explicit
+  neutral value supported by storage and validation; Not again retains `would_not_again`.
 - An item can be saved with a title alone.
 - Extra context is progressive disclosure, never a prerequisite.
 - One item is active at a time. The selected row exposes actions; the rest stay visually quiet.
-- There are no dashboard cards, decorative imagery, fake activity, or new lifestyle art in signed-in collection screens.
+- No dashboard cards, fake activity, or new lifestyle art. Small category illustrations and
+  labeled call face glyphs are part of the current visual direction.
 - Desktop and mobile must support the same low-effort capture path.
 
 ## Current-state assessment
@@ -37,9 +48,10 @@ The redesign should reuse existing APIs and mutations where possible. New server
 ### Collection page default
 
 1. **Collection identity** — name, optional one-line description, item count.
-2. **Quick capture** — one prominent title field and one `Keep it` action. Helper copy: `Rank it later if you want.`
+2. **Quick capture** — one prominent title field and one `Keep it` action. Helper copy: `Rank later.`
 3. **Index** — one ordered, rank-first list; unranked items live in a clear lower section rather than pretending to have a rank.
-4. **Selection tray** — expands directly below the selected row with Favorite, Would not again, Add a note, Log revisit, and Open details.
+4. **Selection tray** — expands below the selected row with labeled Favorite / Meh / Not again
+   face choices, followed by Rank / Note / Revisit / Details actions.
 5. **Quiet browse rail** — All, Kept, Revisited, Not opened lately. Search and advanced filtering live behind a single `Filter` affordance.
 
 The old gallery, list, and compact chooser is removed from the default workflow. Photo-forward browsing can return later as an explicit secondary view only if actual private photos make it valuable.
@@ -129,7 +141,7 @@ The mock’s editorial feeling should come from hierarchy, whitespace, and row b
 
 - Add one controlled selected-item state to `CollectionView`.
 - Render the inline action tray only for that row.
-- Wire Favorite and Would not again to the existing update path; make decisions reversible.
+- Wire Favorite, Meh, and Not again to the existing update path; make decisions reversible.
 - Provide Add a note, Log revisit, and Open details routes/actions without duplicating the rich editor.
 - Add focus management and clear status feedback after mutations.
 
@@ -165,7 +177,8 @@ The mock’s editorial feeling should come from hierarchy, whitespace, and row b
 
 - Five-star ratings.
 - Social mechanics, public feeds, prompts, streaks, recommendations, or engagement metrics.
-- Any generated artwork or imagery in the signed-in workspace.
+- New lifestyle imagery beyond existing eligible starter/private covers. The current cute
+  face and category SVG glyphs are intentional parts of the interface.
 - Drag-and-drop ranking before accessibility and conflict handling are designed.
 - A separate gallery mode unless real private-photo use demonstrates a need.
 - Changing the collection data model merely to resemble the mock.
@@ -174,7 +187,7 @@ The mock’s editorial feeling should come from hierarchy, whitespace, and row b
 
 - A new item can be captured with only a name.
 - Ranking is optional and still legible in the main index.
-- Favorite / Would not again are optional, reversible, and visually distinct from rank.
+- Favorite / Meh / Not again are optional, reversible, and visually distinct from rank.
 - Selected-row actions do not force a full-screen editor.
 - Advanced controls do not overwhelm first-time or casual use.
 - All data shown is real user data; blank states stay useful.

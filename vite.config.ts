@@ -9,6 +9,8 @@ export default defineConfig(({ mode, command }) => ({
       : [
           react(),
           cloudflare({
+            // Visual QA uses an isolated local database, never a person's archive.
+            persistState: process.env.WORTH_PREVIEW_STATE ? { path: process.env.WORTH_PREVIEW_STATE } : true,
             config:
               command === 'serve'
                 ? (config) => ({ vars: { ...config.vars, AUTH_URL: 'http://localhost:34100' } })

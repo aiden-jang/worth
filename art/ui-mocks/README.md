@@ -1,23 +1,71 @@
 # Worth UI mocks
 
-These are product-direction references, not screenshots to reproduce literally. The generated photos and entries are sample content. The app should display users' own uploads and records, not ship these images as catalog data.
+## Current build target — October 10 taste cabinet
 
-- `worth-archive-home-v2.png`: preferred signed-in archive direction, with one photo, text-led recent entries, and last-time reminders.
+The user authorized a stronger redesign after rejecting another incremental polish pass.
+The new [taste cabinet references](taste-cabinet/README.md) cover landing, archive and collection
+at desktop and mobile widths. These were built as standalone compositions before integration;
+the reference and app share the same stylesheet. [Implementation captures](../ui-qa/taste-cabinet/README.md)
+record the working product and verification. This revision supersedes the older compositions.
+
+## Generated foundation — cute visual calls
+
+Use this matching set alongside the [implemented screens](../ui-qa/README.md). These are new proposed mocks,
+not screenshots of the current app. Match their layout, typography hierarchy, spacing,
+palette, and selected states; follow the documented product refinement where its composition differs.
+
+- [Signed-out landing, desktop](worth-landing-desktop-v3.png): soft ivory faces, tiny blush marks, a deadpan Meh shrug, and illustrated ranked specimens.
+- [Signed-out landing, mobile](worth-landing-mobile-v3.png): the same cute faces and signup action above the fold, with one concise example specimen.
+- [Archive home](worth-archive-home-v6.png): cute call glyphs, recent index, shortlist, and the existing collection-cover strip.
+- [Desktop collection](worth-collection-desktop-v5.png): soft labeled call choices, Meh selected, title-only capture, and ranked index.
+- [Mobile collection](worth-collection-mobile-v5.png): three cute labeled call choices and compact actions in the scrolling index.
+
+[BUILD-CONTRACT.md](BUILD-CONTRACT.md) defines exact tokens, viewports, responsive behavior,
+and required screenshot comparison. [VOICE.md](../../VOICE.md) defines the nonchalant voice.
+[PROMPTS-CUTE-VISUAL-CALLS.md](PROMPTS-CUTE-VISUAL-CALLS.md) preserves the complete built-in imagegen prompts
+and reference roles. All five outputs were visually inspected. The app now implements this direction; the latest
+user-requested copy refinements and functional controls are documented in the implementation screenshots.
+
+Generated records are demonstration content, not production data. Use real user records in
+the app. Earlier mocks below are historical and do not override this set.
+
+The mock calls are Favorite / Meh / Not again, with no-call separate. Meh is an explicit
+neutral value implemented in the API and database by migration 0005. Not again is a shorter
+display label for the existing Would not again state. The home mock's rows are fixtures
+even though it omits the printed EXAMPLE label; its cover images reuse bundled starter art.
+
+## Earlier explorations
+
+- `worth-landing-desktop-v2.png`, `worth-landing-mobile-v2.png`, `worth-archive-home-v5.png`,
+  `worth-collection-desktop-v4.png`, and `worth-collection-mobile-v4.png`: the previous
+  visual-calls set before the cute treatment. Prompts remain in [PROMPTS-VISUAL-CALLS.md](PROMPTS-VISUAL-CALLS.md).
+
+- `worth-landing-desktop-v1.png`, `worth-landing-mobile-v1.png`, `worth-archive-home-v4.png`,
+  `worth-collection-desktop-v3.png`, and `worth-collection-mobile-v3.png`: the previous
+  wordier dry-voice revision. Prompts remain in [PROMPTS-DRY-VOICE.md](PROMPTS-DRY-VOICE.md).
+
+- `worth-archive-home-v3.png`, `worth-collection-desktop-v2.png`, and `worth-collection-mobile-v2.png`:
+  the matching dark sans-serif set before the dry-voice revision. Their original generation
+  prompts remain in [PROMPTS-2026-10-08.md](PROMPTS-2026-10-08.md).
+
+- `worth-archive-home-v2.png`: earlier signed-in archive direction, with one photo, text-led recent entries, and last-time reminders.
 - `worth-archive-home-v1.png`: earlier, more image-heavy home exploration. Keep it for comparison, not as the primary build reference.
 - `worth-drinks-list-v1.png`: a list with filters and an item's repeat history.
 - `worth-drinks-ranked-compact-v1.png`: a denser, ranked collection view. The mock shows 12 visible rows from a longer scrollable list, not a 12-item limit.
 - `worth-drinks-show-list-mobile-v1.png`: a clean top-five view to show someone in person. Sharing from it still needs an explicit preview and confirmation.
 - `worth-quick-add-mobile-v1.png`: a quick-add form for a run.
 
-Keep the editorial typography, warm ivory/ink palette, muted rust accent, clear hierarchy, and thin rules. The dark archive surface can lead into lighter list and capture surfaces. Don't copy generated text, dates, or control placement without testing them. In particular, the home screen must work when an account has no photos.
+The six original explorations use serif headings, mixed light/dark surfaces, and top navigation.
+Keep them for history; the current set uses dark surfaces and sans-serif type throughout.
+The app must work without photos.
 
-## Ranking direction to confirm
+## Historical ranking exploration
 
-Rank is an optional, manually set order within one list. It is not a global score across unrelated records. Sorting by a field must never rewrite that saved order. All items, including unranked ones, stay accessible in Gallery, List, and Compact views. Compact mode should show the full filtered collection in one scrollable table without forced pagination. A public share should contain only the selected list and range, with private notes, dates, and locations excluded unless explicitly chosen in a preview. The in-person Show list view should work without publishing a link.
+Rank is an optional, manually set order within one list. It is not a global score across unrelated records. Sorting by a field must never rewrite that saved order. The older Gallery/List/Compact exploration is superseded by the current ranked index with all items accessible, including unranked ones, without forced pagination. Public snapshots retain the existing privacy rules: notes, dates, history, and photos stay private. The in-person Show list view works without publishing a link.
 
-## Generation prompts
+## Historical generation prompts
 
-Built-in image generation was used for all six saved mocks. An earlier mobile render was discarded because the text contrast was broken.
+Built-in image generation was used for the six original mocks below. An earlier mobile render was discarded because the text contrast was broken. Current prompts are in [PROMPTS-CUTE-VISUAL-CALLS.md](PROMPTS-CUTE-VISUAL-CALLS.md); earlier prompt sets remain linked in the history above.
 
 ### Archive home
 

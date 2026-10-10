@@ -9,8 +9,9 @@ Collections hold repeatable things such as drinks, films, restaurants, and cars.
 - Create, edit, and delete collections, activities, items, and logs.
 - Search collection names, records, and logs across your private archive.
 - Keep a title-only collection index, then optionally rank, revisit, or add context later.
+- Make an optional personal call: Favorite, Meh, or Not again. Selecting it again clears the call.
 - Rank a collection manually. Sorting the screen does not rewrite your ranking.
-- Add a private cover when creating a collection or later from its header. Built-in starter covers are only used
+- Add a private cover when creating a collection or later from list settings. Built-in starter covers are only used
   for the optional Drinks, Movies, Places, and Cars starting points; an uploaded cover always takes precedence.
 - Read Patterns, a quiet summary of real records, revisits, calls, collection recency, and archive shape.
 - Open a large, private Show List view when you want to hand someone your phone.
@@ -18,7 +19,9 @@ Collections hold repeatable things such as drinks, films, restaurants, and cars.
 - Upload one private photo per item or log, plus one private cover per collection. Photos stay behind the same
   account check as the record and are excluded from exports and public shares.
 
-The mocks in [`art/ui-mocks`](art/ui-mocks/README.md) are design references, not bundled example content. Worth starts empty for a new account.
+The current mocks in [`art/ui-mocks`](art/ui-mocks/README.md) guide the implemented landing, archive,
+and collection layouts. [Actual screenshots and verification](art/ui-qa/taste-cabinet/README.md) document the build
+and the October 10 taste cabinet redesign. Mock fixtures are not bundled into the app. Worth starts empty for a new account.
 
 [`DESIGN.md`](DESIGN.md) is the current visual and product-direction source of truth. Use it before changing primary screens or generating new mocks.
 

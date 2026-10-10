@@ -1,3 +1,4 @@
+import { OpinionSlip } from './OpinionSlip';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
@@ -19,6 +20,7 @@ const emptyItem: ItemInput = {
 export function ItemEditor({
   listId,
   item,
+  rank,
   items,
   logs,
   focusLogId,
@@ -29,6 +31,7 @@ export function ItemEditor({
 }: {
   listId: string;
   item: Item | null;
+  rank?: number;
   items: Item[];
   logs: Log[];
   focusLogId: string | null;
@@ -66,7 +69,8 @@ export function ItemEditor({
     const nextForm = item ? fromItem(item) : emptyItem;
     setForm(nextForm);
     setSavedForm(nextForm);
-  }, [item?.id, item?.updatedAt]);
+    // Save handles the new baseline. Photo/query refreshes must not replace an active draft.
+  }, [item?.id]);
   useEffect(() => {
     if (!focusLogId || focusLogId === handledFocusLogId || !item) return;
     const focusedLog = logs.find((log) => log.id === focusLogId && log.itemId === item.id);
@@ -180,9 +184,15 @@ export function ItemEditor({
   return (
     <dialog
       className="editor-dialog item-editor-dialog"
+      aria-labelledby="item-editor-title"
       ref={dialog}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
+        if (!dialog.current?.open) onClose();
+      }}
       onCancel={(event) => {
+        event.stopPropagation();
         event.preventDefault();
         requestClose();
       }}
@@ -194,122 +204,118 @@ export function ItemEditor({
         <div className="editor-head">
           <div>
             <p className="overline">{item ? 'ITEM DETAIL' : 'NEW ITEM'}</p>
-            <h2>{item ? item.title : 'Keep this one.'}</h2>
+            <h2 id="item-editor-title">{item ? item.title : 'Keep this one.'}</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
           </button>
         </div>
-        {item && (
-          <PhotoControl
-            kind="items"
-            id={item.id}
-            hasPhoto={item.hasPhoto}
-            version={item.updatedAt}
-            listId={listId}
-          />
-        )}
-        <form className="editor-form record-form" onSubmit={saveItem}>
-          <label>
-            Name
-            <input
-              required
-              autoFocus={!item}
-              maxLength={120}
-              value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
-              placeholder="The thing you want to remember"
-            />
-          </label>
-          <label>
-            Type <span className="optional">optional</span>
-            <input
-              maxLength={60}
-              value={form.type}
-              list={`item-types-${listId}`}
-              onChange={(event) => setForm({ ...form, type: event.target.value })}
-              placeholder="Whiskey, wine, film…"
-            />
-            {typeSuggestions.length > 0 && (
-              <datalist id={`item-types-${listId}`}>
-                {typeSuggestions.map((suggestion) => (
-                  <option key={suggestion} value={suggestion} />
-                ))}
-              </datalist>
-            )}
-          </label>
-          <label>
-            Private note <span className="optional">never included in shares</span>
-            <textarea
-              ref={itemNoteInput}
-              rows={3}
-              maxLength={4000}
-              value={form.note}
-              onChange={(event) => setForm({ ...form, note: event.target.value })}
-              placeholder="What made it worth keeping?"
-            />
-          </label>
-          <fieldset className="item-decision">
-            <legend>
-              Your call <span className="optional">optional</span>
-            </legend>
-            <div role="group" aria-label="Item decision">
-              <button
-                type="button"
-                className={form.decision === 'favorite' ? 'active' : ''}
-                aria-pressed={form.decision === 'favorite'}
-                onClick={() => setForm({ ...form, decision: 'favorite' })}
-              >
-                Favorite
-              </button>
-              <button
-                type="button"
-                className={form.decision === 'would_not_again' ? 'active' : ''}
-                aria-pressed={form.decision === 'would_not_again'}
-                onClick={() => setForm({ ...form, decision: 'would_not_again' })}
-              >
-                Would not again
-              </button>
-              <button
-                type="button"
-                className={form.decision === null ? 'active' : ''}
-                aria-pressed={form.decision === null}
-                onClick={() => setForm({ ...form, decision: null })}
-              >
-                No call yet
-              </button>
-            </div>
-          </fieldset>
-          <div className="date-pair">
+        <form className="editor-form record-form record-layout" onSubmit={saveItem}>
+          <div className="record-identity">
             <label>
-              From <span className="optional">optional</span>
+              Name
               <input
-                type="date"
-                value={form.startedOn ?? ''}
-                onChange={(event) => setForm({ ...form, startedOn: event.target.value || null })}
+                required
+                autoFocus={!item}
+                maxLength={120}
+                value={form.title}
+                onChange={(event) => setForm({ ...form, title: event.target.value })}
+                placeholder="The thing you want to remember"
               />
             </label>
             <label>
-              To <span className="optional">optional</span>
+              Type <span className="optional">optional</span>
               <input
-                type="date"
-                value={form.endedOn ?? ''}
-                onChange={(event) => setForm({ ...form, endedOn: event.target.value || null })}
+                maxLength={60}
+                value={form.type}
+                list={`item-types-${listId}`}
+                onChange={(event) => setForm({ ...form, type: event.target.value })}
+                placeholder="Whiskey, wine, film…"
               />
+              {typeSuggestions.length > 0 && (
+                <datalist id={`item-types-${listId}`}>
+                  {typeSuggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion} />
+                  ))}
+                </datalist>
+              )}
             </label>
           </div>
-          {save.isError && <p className="form-error">{save.error.message}</p>}
-          <button
-            className="button button-dark"
-            disabled={!form.title.trim() || save.isPending || Boolean(item && !hasItemChanges)}
+          <OpinionSlip
+            className="record-call"
+            title={form.title.trim() || 'This one'}
+            type={form.type}
+            rank={rank}
+            decision={form.decision}
+            onChange={(decision) => setForm({ ...form, decision })}
           >
-            {item ? 'Save changes' : 'Add item'}
-          </button>
+            <p className="record-call-hint">Optional. Tap the selected call to clear it.</p>
+          </OpinionSlip>
+          <div className="record-notes">
+            <label>
+              Private note <span className="optional">never included in shares</span>
+              <textarea
+                ref={itemNoteInput}
+                rows={3}
+                maxLength={4000}
+                value={form.note}
+                onChange={(event) => setForm({ ...form, note: event.target.value })}
+                placeholder="Anything to remember?"
+              />
+            </label>
+            <details className="record-extras" open={Boolean(item?.startedOn || item?.endedOn)}>
+              <summary>
+                Dates <span>optional</span>
+              </summary>
+              <div className="date-pair">
+                <label>
+                  From <span className="optional">optional</span>
+                  <input
+                    type="date"
+                    value={form.startedOn ?? ''}
+                    onChange={(event) => setForm({ ...form, startedOn: event.target.value || null })}
+                  />
+                </label>
+                <label>
+                  To <span className="optional">optional</span>
+                  <input
+                    type="date"
+                    value={form.endedOn ?? ''}
+                    onChange={(event) => setForm({ ...form, endedOn: event.target.value || null })}
+                  />
+                </label>
+              </div>
+            </details>
+          </div>
+          <div className="record-save">
+            {save.isError && <p className="form-error">{save.error.message}</p>}
+            <button
+              className="button button-accent"
+              disabled={!form.title.trim() || save.isPending || Boolean(item && !hasItemChanges)}
+            >
+              {item ? 'Save changes' : 'Add item'}
+            </button>
+            {save.isSuccess && !hasItemChanges && <span role="status">Saved.</span>}
+          </div>
         </form>
+        {item && (
+          <details className="record-extras record-photo" open={item.hasPhoto}>
+            <summary>
+              Photo <span>optional · private</span>
+            </summary>
+            <PhotoControl
+              kind="items"
+              id={item.id}
+              hasPhoto={item.hasPhoto}
+              version={item.updatedAt}
+              listId={listId}
+            />
+          </details>
+        )}
         {item && (
           <section className="item-history">
             <div className="panel-title">
-              <h3>Every time</h3>
+              <h3>Revisits</h3>
               <span>
                 {history.length} {history.length === 1 ? 'log' : 'logs'}
               </span>
@@ -360,9 +366,7 @@ export function ItemEditor({
                   </div>
                 </div>
               ))}
-              {!history.length && (
-                <p className="muted">No dates yet. Log it when you try, watch, or revisit it.</p>
-              )}
+              {!history.length && <p className="muted">Been here before? Log a revisit.</p>}
             </div>
           </section>
         )}
@@ -470,9 +474,15 @@ function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: strin
   return (
     <dialog
       className="editor-dialog collection-log-dialog"
+      aria-labelledby="revisit-editor-title"
       ref={dialog}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
+        if (!dialog.current?.open) onClose();
+      }}
       onCancel={(event) => {
+        event.stopPropagation();
         event.preventDefault();
         requestClose();
       }}
@@ -484,7 +494,7 @@ function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: strin
         <div className="editor-head">
           <div>
             <p className="overline">REVISIT DETAIL</p>
-            <h2>{formatDate(log.happenedOn)}</h2>
+            <h2 id="revisit-editor-title">{formatDate(log.happenedOn)}</h2>
           </div>
           <button type="button" className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
@@ -519,7 +529,7 @@ function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: strin
             />
           </label>
           {save.isError && <p className="form-error">{save.error.message}</p>}
-          <button className="button button-dark" disabled={!happenedOn || !hasChanges || save.isPending}>
+          <button className="button button-accent" disabled={!happenedOn || !hasChanges || save.isPending}>
             Save changes
           </button>
         </form>

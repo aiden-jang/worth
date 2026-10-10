@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { logoutUrl, siteFooterLinks } from '@aidenjang/auth-client';
-import { ArrowRight, CaretDown, Plus, X } from '@phosphor-icons/react';
+import {
+  ArrowRight,
+  CaretDown,
+  ChartBar,
+  Clock,
+  DownloadSimple,
+  House,
+  List,
+  MagnifyingGlass,
+  Plus,
+  Stack,
+  X,
+} from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
 import { api } from '../api';
@@ -29,7 +41,18 @@ export function AppShell({
     typeof window === 'undefined' ? null : window.localStorage.getItem(quickCaptureStorageKey),
   );
   const [pickerQuery, setPickerQuery] = useState('');
-  if (location.pathname.endsWith('/show')) return <>{children}</>;
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname, location.search]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [menuOpen]);
 
   const quickCaptureList = preferredQuickCaptureList(
     location.pathname,
@@ -96,6 +119,7 @@ export function AppShell({
   ]);
 
   useEffect(() => {
+    if (location.pathname.endsWith('/show')) return;
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
@@ -124,37 +148,57 @@ export function AppShell({
     };
     window.addEventListener('keydown', handleShortcut);
     return () => window.removeEventListener('keydown', handleShortcut);
-  }, [navigate, openAdd]);
+  }, [location.pathname, navigate, openAdd]);
+
+  if (location.pathname.endsWith('/show')) return <>{children}</>;
 
   return (
     <div className="app-shell app-shell-dark">
-      <aside className="app-rail">
+      <aside className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}>
         <Link to="/" className="brand" aria-label="Worth, archive home">
           worth
         </Link>
-        <nav aria-label="Main navigation" className="main-nav">
+        <button
+          type="button"
+          className="mobile-menu-toggle icon-button"
+          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+          aria-expanded={menuOpen}
+          aria-controls="worth-navigation"
+          onClick={() => setMenuOpen((current) => !current)}
+        >
+          {menuOpen ? <X size={24} /> : <List size={24} />}
+        </button>
+        <nav id="worth-navigation" aria-label="Main navigation" className="main-nav">
           <NavLink end to="/">
-            Archive
+            <House size={18} aria-hidden="true" /> Archive
           </NavLink>
           <NavLink
             to="/lists?kind=collection"
             className={() =>
-              location.pathname === '/lists' && listScope === 'collection' ? 'active' : undefined
+              (location.pathname === '/lists' && listScope === 'collection') ||
+              collectionLists.some((list) => location.pathname === `/lists/${list.id}`)
+                ? 'active'
+                : undefined
             }
           >
-            Collections
+            <Stack size={18} aria-hidden="true" /> Collections
           </NavLink>
           <NavLink
             to="/lists?kind=activity"
             className={() =>
-              location.pathname === '/lists' && listScope === 'activity' ? 'active' : undefined
+              (location.pathname === '/lists' && listScope === 'activity') ||
+              activityLists.some((list) => location.pathname === `/lists/${list.id}`)
+                ? 'active'
+                : undefined
             }
           >
-            Activity
+            <Clock size={18} aria-hidden="true" /> Activity
           </NavLink>
-          <NavLink to="/patterns">Patterns</NavLink>
+          <NavLink to="/patterns">
+            <ChartBar size={18} aria-hidden="true" /> Patterns
+          </NavLink>
           <NavLink className="rail-utility-link" to="/search" title="Press / to search">
-            Search
+            <MagnifyingGlass size={18} aria-hidden="true" /> Search <kbd>/</kbd>
           </NavLink>
         </nav>
         {collectionLists.length > 0 && (
@@ -175,7 +219,20 @@ export function AppShell({
             href={new URL('/account', authOrigin).toString()}
             title={user.displayName}
           >
-            Account
+            <span className="account-avatar" aria-hidden="true">
+              {(user.displayName || 'W').slice(0, 1).toUpperCase()}
+            </span>
+            <span>
+              {user.displayName || 'Account'}
+              <small>Account settings ↗</small>
+            </span>
+          </a>
+          <a
+            className="rail-export"
+            href="/api/export/records"
+            title="Downloads records as JSON. Photos are not included."
+          >
+            <DownloadSimple size={15} aria-hidden="true" /> Export records
           </a>
           <button
             className="rail-shortcuts"
@@ -208,7 +265,6 @@ export function AppShell({
         {children}
         <footer className="site-footer">
           <span>worth</span>
-          <span>Private by default.</span>
           {siteFooterLinks(authOrigin).map((link) => (
             <a
               key={link.href}

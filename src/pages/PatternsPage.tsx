@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
+import { CallFace } from '../components/PersonalCall';
+import { decisionLabel, callAsides } from '../shared/decisions';
+import type { ItemDecision } from '../shared/models';
 
 export function PatternsPage() {
   const patterns = useQuery({ queryKey: ['patterns'], queryFn: api.patterns });
@@ -25,18 +28,15 @@ export function PatternsPage() {
   return (
     <main className="light-page patterns-page page-width">
       <header className="patterns-head">
-        <p className="overline">A QUIET LOOK AT YOUR ARCHIVE</p>
+        <p className="overline">YOUR ARCHIVE</p>
         <h1>Patterns</h1>
-        <p>Only the things your own records can show—no goals, scores, or comparisons.</p>
+        <p>A few patterns. No personality diagnosis.</p>
       </header>
       {data.totalRecords === 0 ? (
         <section className="patterns-empty">
           <p className="overline">NOTHING TO READ YET</p>
-          <h2>Patterns appear after a few entries.</h2>
-          <p>
-            Start a collection or add a log. This page will stay quiet until your archive has something useful
-            to say.
-          </p>
+          <h2>Nothing to summarize yet.</h2>
+          <p>Add items or activity logs to see patterns here.</p>
           <Link className="button button-accent" to="/lists?kind=collection">
             Open collections <ArrowRight size={18} />
           </Link>
@@ -44,16 +44,13 @@ export function PatternsPage() {
       ) : (
         <>
           <section className="pattern-stat-grid" aria-label="Archive patterns">
-            <PatternStat label="Records" value={data.totalRecords} detail="Things kept in your archive" />
+            <PatternStat label="Records" value={data.totalRecords} detail="Items and activity logs" />
             <PatternStat label="Ranked" value={data.rankedItemCount} detail="Items placed in order" />
             <PatternStat label="Revisits" value={data.revisitCount} detail="Returns to a collection item" />
-            <PatternStat
-              label="Favorites"
-              value={data.favoriteCount}
-              detail="Things you would choose again"
-            />
-            <PatternStat label="Would not again" value={data.notAgainCount} detail="Useful calls you made" />
           </section>
+          <CallDistribution
+            counts={{ favorite: data.favoriteCount, meh: data.mehCount, would_not_again: data.notAgainCount }}
+          />
           <section className="pattern-notes">
             <article>
               <p className="overline">MOST RETURNED TO</p>
@@ -136,5 +133,42 @@ function PatternStat({ label, value, detail }: { label: string; value: number; d
       <strong>{value}</strong>
       <span>{detail}</span>
     </article>
+  );
+}
+
+function CallDistribution({ counts }: { counts: Record<ItemDecision, number> }) {
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  return (
+    <section className="call-distribution" aria-label="Recorded personal calls">
+      <header>
+        <div>
+          <p className="overline">YOUR CALLS</p>
+          <h2>Mixed feelings, on record.</h2>
+        </div>
+        <span>
+          {total} {total === 1 ? 'call' : 'calls'}
+        </span>
+      </header>
+      <div className="call-distribution-grid">
+        {(['favorite', 'meh', 'would_not_again'] as const).map((value) => (
+          <article key={value}>
+            <CallFace value={value} />
+            <div>
+              <h3>{decisionLabel(value)}</h3>
+              <span>{callAsides[value]}</span>
+            </div>
+            <strong>{counts[value]}</strong>
+            <div className="call-count-track" aria-hidden="true">
+              <span style={{ width: total ? `${(counts[value] / total) * 100}%` : '0%' }} />
+            </div>
+          </article>
+        ))}
+      </div>
+      <p className="call-distribution-footnote">
+        {total
+          ? 'Only items with a call. Rankings are a separate matter.'
+          : 'No calls yet. Having an opinion is optional.'}
+      </p>
+    </section>
   );
 }

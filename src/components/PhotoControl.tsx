@@ -52,7 +52,7 @@ export function PhotoControl({
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              hidden
+              className="photo-file-input"
               disabled={upload.isPending}
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -159,7 +159,7 @@ export function CollectionCoverControl({
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              hidden
+              className="photo-file-input"
               disabled={upload.isPending}
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -241,7 +241,7 @@ export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: strin
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            hidden
+            className="photo-file-input"
             disabled={upload.isPending}
             onChange={(event) => {
               const file = event.target.files?.[0];

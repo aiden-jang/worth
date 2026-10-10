@@ -1,0 +1,16 @@
+{
+  "errors": [],
+  "checks": [
+    "one visible opinion slip at every breakpoint",
+    "no-call remains faceless",
+    "actual ranking saves and restores on desktop/tablet/mobile",
+    "long names wrap",
+    "supporting-page overflow",
+    "cream panel contrast and type scale",
+    "reduced motion"
+  ],
+  "panelText": {
+    "color": "rgb(24, 25, 21)",
+    "size": "42px"
+  }
+}

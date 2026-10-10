@@ -1,5 +1,5 @@
 export type ListKind = 'collection' | 'activity';
-export type ItemDecision = 'favorite' | 'would_not_again';
+export type ItemDecision = 'favorite' | 'meh' | 'would_not_again';
 
 export interface ListSummary {
   id: string;
@@ -71,6 +71,7 @@ export interface RecentEntry {
   listName: string;
   kind: ListKind;
   recordKind: 'item' | 'log';
+  decision: ItemDecision | null;
   itemId: string | null;
   title: string;
   happenedOn: string | null;
@@ -107,6 +108,7 @@ export interface ArchivePatterns {
   revisitCount: number;
   favoriteCount: number;
   notAgainCount: number;
+  mehCount: number;
   mostReturned: {
     listId: string;
     itemId: string;

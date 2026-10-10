@@ -48,6 +48,24 @@ describe('ranking', () => {
     expect(visible.map((entry) => entry.id)).toEqual(['b', 'a']);
   });
 
+  it('Meh filtering excludes no-call items at every rank position', () => {
+    const items = [
+      item('empty', 'No call'),
+      item('neutral', 'Meh', '', 'meh'),
+      item('neutral-unranked', 'Also meh', '', 'meh'),
+    ];
+    const ranks = ['empty', 'neutral'];
+    const result = visibleItems(items, ranks, {
+      search: '',
+      type: 'all',
+      rankFilter: 'all',
+      decisionFilter: 'meh',
+      sort: 'rank',
+    });
+    expect(result.map((entry) => entry.id)).toEqual(['neutral', 'neutral-unranked']);
+    expect(ranks).toEqual(['empty', 'neutral']);
+  });
+
   it('filters personal calls without changing rank order', () => {
     const items = [
       item('a', 'A', 'Whiskey', 'would_not_again'),

@@ -234,7 +234,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         SELECT g.id, g.list_id, g.item_id, l.name AS list_name, l.kind, 'log' AS record_kind,
           COALESCE(i.title, g.title) AS title, g.happened_on,
           CAST(strftime('%s', g.happened_on) AS INTEGER) * 1000 AS recorded_at,
-          g.amount, g.unit, g.sets, g.reps
+          g.amount, g.unit, g.sets, g.reps, NULL AS decision
         FROM logs g
         JOIN lists l ON l.id = g.list_id
         LEFT JOIN items i ON i.id = g.item_id
@@ -242,7 +242,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         UNION ALL
         SELECT i.id, i.list_id, i.id AS item_id, l.name AS list_name, l.kind, 'item' AS record_kind,
           i.title, NULL AS happened_on, i.updated_at AS recorded_at,
-          NULL AS amount, '' AS unit, NULL AS sets, NULL AS reps
+          NULL AS amount, '' AS unit, NULL AS sets, NULL AS reps, i.decision
         FROM items i
         JOIN lists l ON l.id = i.list_id
         WHERE i.owner_id = ?
@@ -259,6 +259,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         list_name: string;
         kind: 'collection' | 'activity';
         record_kind: 'item' | 'log';
+        decision: 'favorite' | 'meh' | 'would_not_again' | null;
         title: string;
         happened_on: string | null;
         recorded_at: number;
@@ -333,6 +334,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         listName: row.list_name,
         kind: row.kind,
         recordKind: row.record_kind,
+        decision: row.decision,
         itemId: row.item_id,
         title: row.title,
         happenedOn: row.happened_on,
@@ -389,9 +391,10 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
             WHERE owner_id = ? AND kind = 'collection') AS ranked_item_count,
           (SELECT COUNT(*) FROM logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
           (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
-          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count`,
+          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count,
+          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'meh') AS meh_count`,
         )
-          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
+          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
           .first<{
             total_records: number;
             total_collections: number;
@@ -400,6 +403,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
             revisit_count: number;
             favorite_count: number;
             not_again_count: number;
+            meh_count: number;
           }>(),
         c.env.DB.prepare(
           `SELECT l.id AS list_id, i.id AS item_id, l.name AS list_name, i.title, COUNT(*) AS revisit_count
@@ -461,6 +465,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       revisitCount: summary?.revisit_count ?? 0,
       favoriteCount: summary?.favorite_count ?? 0,
       notAgainCount: summary?.not_again_count ?? 0,
+      mehCount: summary?.meh_count ?? 0,
       mostReturned: mostReturned
         ? {
             listId: mostReturned.list_id,

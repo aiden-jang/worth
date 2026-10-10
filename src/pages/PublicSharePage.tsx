@@ -28,7 +28,7 @@ export function PublicSharePage() {
   }
   const { share } = query.data;
   return (
-    <main className="public-page">
+    <main className="public-page ranking-display">
       <header className="public-header">
         <Link to="/" className="brand">
           worth
@@ -40,6 +40,7 @@ export function PublicSharePage() {
           <div>
             <p className="overline">RANKED LIST</p>
             <h1>{share.title}</h1>
+            <p className="ranking-caption">{share.entries.length} ranked · A shared snapshot.</p>
           </div>
           {share.entries[0] && (
             <aside className="public-favorite">
