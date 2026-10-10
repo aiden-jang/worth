@@ -6,6 +6,12 @@ import type { Item, Log } from '../shared/models';
 import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
 import { ConfirmDialog } from './ConfirmDialog';
+import { useDraftPhoto } from '../hooks/useDraftPhoto';
+import { useConnection } from '../hooks/useConnection';
+import { useDraft } from '../hooks/useDraft';
+import { isItemDraft } from '../shared/drafts';
+import { DraftPhoto } from './DraftPhoto';
+import { preparePhoto } from '../shared/photos';
 import { PhotoControl } from './PhotoControl';
 
 const emptyItem: ItemInput = {
@@ -44,7 +50,17 @@ export function ItemEditor({
   const logNoteInput = useRef<HTMLInputElement>(null);
   const itemNoteInput = useRef<HTMLTextAreaElement>(null);
   const client = useQueryClient();
-  const [form, setForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
+  const draft = useDraft<ItemInput>(
+    `item:${listId}:${item?.id ?? 'new'}`,
+    item ? fromItem(item) : emptyItem,
+    isItemDraft,
+  );
+  const { form, setForm } = draft;
+  const photoDraft = useDraftPhoto(`item:${listId}:${item?.id ?? 'new'}`);
+  const photo = photoDraft.file;
+  const setPhoto = photoDraft.change;
+  const online = useConnection();
+  const previousItemId = useRef(item?.id);
   const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
@@ -57,7 +73,7 @@ export function ItemEditor({
   const history = logs.filter((log) => log.itemId === item?.id);
   const typeSuggestions = Array.from(new Set(items.map((entry) => entry.type).filter(Boolean))).sort();
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
-  const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim());
+  const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim()) || Boolean(photo);
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -67,7 +83,11 @@ export function ItemEditor({
   }, []);
   useEffect(() => {
     const nextForm = item ? fromItem(item) : emptyItem;
-    setForm(nextForm);
+    if (previousItemId.current !== item?.id) {
+      setForm(nextForm);
+      draft.clear();
+      previousItemId.current = item?.id;
+    }
     setSavedForm(nextForm);
     // Save handles the new baseline. Photo/query refreshes must not replace an active draft.
   }, [item?.id]);
@@ -95,11 +115,24 @@ export function ItemEditor({
   }, [focusNoteComposer, item]);
 
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const input = cleanItemInput(form);
-      return item ? api.updateItem(item.id, input) : api.createItem(listId, input);
+      const blob = photo ? await preparePhoto(photo) : null;
+      const id = item?.id ?? draft.savedId.current;
+      let result = id
+        ? await api.updateItem(id, input)
+        : await api.createItem(listId, input, draft.operationId.current);
+      draft.rememberSaved(result.item.id);
+      if (!id) result = await api.updateItem(result.item.id, input);
+      if (blob) {
+        await api.uploadPhoto('items', result.item.id, blob);
+        result.item.hasPhoto = true;
+      }
+      return result;
     },
     onSuccess: ({ item: saved }) => {
+      draft.clear(fromItem(saved));
+      setPhoto(null);
       if (!item) {
         client.setQueryData<{ items: Item[] }>(['items', listId], (current) => ({
           items: [saved, ...(current?.items ?? [])],
@@ -166,6 +199,7 @@ export function ItemEditor({
 
   function saveItem(event: FormEvent) {
     event.preventDefault();
+    if (save.isPending) return;
     save.mutate();
   }
   function logAgain(event: FormEvent) {
@@ -174,6 +208,7 @@ export function ItemEditor({
   }
 
   function requestClose() {
+    if (save.isPending || addLog.isPending || remove.isPending) return;
     if (hasUnsavedChanges) {
       setConfirmingDiscard(true);
       return;
@@ -210,7 +245,16 @@ export function ItemEditor({
             <X size={22} />
           </button>
         </div>
-        <form className="editor-form record-form record-layout" onSubmit={saveItem}>
+        <form
+          className="editor-form record-form record-layout"
+          onSubmit={saveItem}
+          onKeyDown={(event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !save.isPending) {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+        >
           <div className="record-identity">
             <label>
               Name
@@ -287,14 +331,42 @@ export function ItemEditor({
               </div>
             </details>
           </div>
+          {!item && (
+            <div className="record-notes">
+              <DraftPhoto file={photo} onChange={setPhoto} disabled={save.isPending} />
+              {photoDraft.status && (
+                <p className="draft-state" role="status">
+                  {photoDraft.status}
+                </p>
+              )}
+            </div>
+          )}
           <div className="record-save">
-            {save.isError && <p className="form-error">{save.error.message}</p>}
+            {save.isError && (
+              <p className="form-error" role="alert">
+                {draft.savedId.current
+                  ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
+                  : ''}
+                {save.error.message}
+              </p>
+            )}
             <button
               className="button button-accent"
-              disabled={!form.title.trim() || save.isPending || Boolean(item && !hasItemChanges)}
+              disabled={
+                !online ||
+                !photoDraft.ready ||
+                !form.title.trim() ||
+                save.isPending ||
+                Boolean(item && !hasItemChanges)
+              }
             >
-              {item ? 'Save changes' : 'Add item'}
+              {save.isPending ? 'Saving…' : item ? 'Save changes' : 'Add item'}
             </button>
+            {draft.status && (
+              <span className="draft-state" role="status">
+                {draft.status}
+              </span>
+            )}
             {save.isSuccess && !hasItemChanges && <span role="status">Saved.</span>}
           </div>
         </form>
@@ -415,6 +487,8 @@ export function ItemEditor({
             cancelLabel="Keep editing"
             confirmLabel="Discard changes"
             onConfirm={() => {
+              draft.clear();
+              photoDraft.clear();
               setConfirmingDiscard(false);
               dialog.current?.close();
             }}

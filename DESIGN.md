@@ -230,3 +230,15 @@ Activity lists can save a named, ordered exercise lineup and start a fresh dated
 ## Exercise history and progress
 
 A collapsed exercise directory and a set-editor action open read-only history for a normalized exercise name in the current activity list. Charts show total individually recorded reps or the heaviest logged weight per entry, keeping kg/lb separate and bodyweight/legacy gaps visible. Each point reveals its exact sets; history includes preserved notes and older measurements. Same-day visits remain separate. Empty and single-entry states avoid invented trends. Opening and closing history preserves an unfinished exercise draft. See [exercise progress references](art/ui-mocks/taste-cabinet/workouts/README.md#exercise-history-and-progress) for the cabinet composition and accessibility adaptations.
+
+## Product flow completion
+
+Workout visits now have explicit Active / Finished states, resumable exercise drafts,
+an optional rest timer, save-and-next logging, and a factual saved-set recap. A visit's
+planned names can be reordered or swapped without editing its source routine; skipped
+names remain reversible. Queue membership is independent of opinion and rank. Added
+dates and visit counts extend the existing collection filter disclosure. Search includes
+exercise scope and matching note context. Optional new-record photos, account-scoped
+local draft recovery, clear saving/offline status and on-demand pages extend the accepted
+cabinet. See [product-pass QA](art/ui-qa/product-pass/README.md) for reference comparisons,
+responsive adaptations and release limits.

@@ -173,6 +173,7 @@ export function ListPage() {
             </p>
           ) : (
             <CollectionView
+              key={listId}
               list={list}
               items={items}
               focusCapture={focusCapture}
@@ -189,6 +190,7 @@ export function ListPage() {
           )}
           {(creating || selected) && (
             <ItemEditor
+              key={`${listId}:${creating ? 'new' : selected?.id}`}
               listId={listId}
               item={creating ? null : selected}
               rank={selected ? list.rankedIds.indexOf(selected.id) + 1 || undefined : undefined}
@@ -216,7 +218,9 @@ export function ListPage() {
           newOpen={creating}
           focusLogId={focus?.startsWith('log:') ? focus.slice('log:'.length) : null}
           onCloseNew={closeEditor}
-          onNew={() => setParams({ new: '1' })}
+          onNew={(workoutId, exercise = '') =>
+            setParams({ new: '1', ...(workoutId ? { workout: workoutId, exercise } : {}) })
+          }
         />
       )}
     </main>

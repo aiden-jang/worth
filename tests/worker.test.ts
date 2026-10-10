@@ -26,7 +26,16 @@ beforeAll(async () => {
     '0006_personal_tools.sql',
     '0007_workout_sessions.sql',
     '0008_workout_routines.sql',
+    '0009_product_flow.sql',
   ]) {
+    if (file === '0009_product_flow.sql') {
+      await platform.env.DB.prepare(
+        "INSERT INTO lists (id, owner_id, name, kind, created_at, updated_at) VALUES ('pre-flow', 'migration', 'Old gym', 'activity', 1, 1)",
+      ).run();
+      await platform.env.DB.prepare(
+        "INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, planned_exercises, created_at, updated_at) VALUES ('old-visit', 'pre-flow', 'migration', 'Earlier visit', '2026-10-01', '[\"Row\"]', 1, 1)",
+      ).run();
+    }
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
       .split(';')
@@ -883,4 +892,124 @@ test('routines start blank visits, snapshot ordered names, and remain owner-scop
   };
   await call(`/lists/${gym}`, 'routines', 'DELETE');
   expect((await call(`/routines/${saved.routine.id}`, 'routines', 'PUT', input)).status).toBe(404);
+});
+
+const productRequest = call;
+type ProductTestBody = {
+  list: import('../src/shared/models').ListDetail;
+  item: import('../src/shared/models').Item;
+  workout: import('../src/shared/models').WorkoutSession;
+  log: import('../src/shared/models').Log;
+  logs: import('../src/shared/models').Log[];
+  items: import('../src/shared/models').Item[];
+  workoutSessions: import('../src/shared/models').WorkoutSession[];
+  results: import('../src/shared/models').SearchResult[];
+};
+test('product flow preserves queue independence, workout plans, recovery keys and private search context', async () => {
+  const call = (...args: Parameters<typeof productRequest>) =>
+    productRequest(...args) as Promise<Omit<Response, 'json'> & { json: () => Promise<ProductTestBody> }>;
+  const collection = (
+    await (await call('/lists', 'alice', 'POST', { name: 'Coffee notes', kind: 'collection' })).json()
+  ).list;
+  const created = (
+    await (
+      await call(`/lists/${collection.id}/items`, 'alice', 'POST', {
+        title: 'Cold brew',
+        decision: 'meh',
+        note: 'Citrus finish',
+      })
+    ).json()
+  ).item;
+  const queued = (
+    await (await call(`/items/${created.id}`, 'alice', 'PATCH', { revisitQueued: true })).json()
+  ).item;
+  expect(queued).toMatchObject({ decision: 'meh', revisitQueued: true });
+  expect((await (await call(`/lists/${collection.id}`, 'alice')).json()).list.rankedIds).toEqual([]);
+  expect((await call(`/items/${created.id}`, 'bob', 'PATCH', { revisitQueued: false })).status).toBe(404);
+  const search = (await (await call('/search?q=Citrus', 'alice')).json()).results;
+  expect(search.find((result: { id: string }) => result.id === created.id)?.detail).toContain(
+    'Citrus finish',
+  );
+  expect((await (await call('/search?q=Citrus', 'bob')).json()).results).toEqual([]);
+  const gym = (await (await call('/lists', 'alice', 'POST', { name: 'Gym flow', kind: 'activity' })).json())
+    .list;
+  const visit = (
+    await (
+      await call(`/lists/${gym.id}/workouts`, 'alice', 'POST', { title: 'Today', happenedOn: '2026-10-10' })
+    ).json()
+  ).workout;
+  expect(visit.status).toBe('active');
+  const planned = (
+    await (
+      await call(`/workouts/${visit.id}`, 'alice', 'PATCH', {
+        plannedExercises: ['Row', 'Press'],
+        skippedExercises: ['Press'],
+      })
+    ).json()
+  ).workout;
+  expect(planned.skippedExercises).toEqual(['Press']);
+  expect(
+    (await call(`/workouts/${visit.id}`, 'alice', 'PATCH', { skippedExercises: ['Not in plan'] })).status,
+  ).toBe(400);
+  const swapped = (
+    await (
+      await call(`/workouts/${visit.id}`, 'alice', 'PATCH', { plannedExercises: ['Pull-up', 'Row'] })
+    ).json()
+  ).workout;
+  expect(swapped.skippedExercises).toEqual([]);
+  const key = crypto.randomUUID();
+  const capture = () =>
+    app.request(
+      `https://worth.test/api/lists/${gym.id}/logs`,
+      {
+        method: 'POST',
+        headers: {
+          Cookie: 'preview_user=alice',
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'Idempotency-Key': key,
+        },
+        body: JSON.stringify({
+          title: 'Row',
+          workoutId: visit.id,
+          happenedOn: '2026-10-10',
+          note: 'Cable machine',
+          exerciseSets: [{ reps: 8, weight: 0 }],
+          weightUnit: 'kg',
+        }),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  const first = ((await (await capture()).json()) as { log: import('../src/shared/models').Log }).log;
+  const retry = ((await (await capture()).json()) as { log: import('../src/shared/models').Log }).log;
+  expect(retry.id).toBe(first.id);
+  expect((await (await call(`/lists/${gym.id}/logs`, 'alice')).json()).logs).toHaveLength(1);
+  expect(
+    (await (await call('/search?q=Cable', 'alice')).json()).results.find(
+      (result: { id: string }) => result.id === first.id,
+    ),
+  ).toMatchObject({ exercise: true });
+  expect((await call(`/workouts/${visit.id}`, 'bob', 'PATCH', { status: 'finished' })).status).toBe(404);
+  const recap = (await (await call(`/workouts/${visit.id}`, 'alice', 'PATCH', { status: 'finished' })).json())
+    .workout;
+  expect(recap.status).toBe('finished');
+  const exported = await (await call('/export/records', 'alice')).json();
+  expect(exported.items.find((item: { id: string }) => item.id === created.id)?.revisitQueued).toBe(true);
+  expect(exported.workoutSessions.find((workout: { id: string }) => workout.id === visit.id)).toMatchObject({
+    status: 'finished',
+    plannedExercises: ['Pull-up', 'Row'],
+  });
+});
+
+test('product migration preserves earlier visits without marking all history active', async () => {
+  const response = await call('/lists/pre-flow/workouts', 'migration');
+  const value = (await response.json()) as { workouts: import('../src/shared/models').WorkoutSession[] };
+  expect(value.workouts).toHaveLength(1);
+  expect(value.workouts[0]).toMatchObject({
+    title: 'Earlier visit',
+    status: 'finished',
+    plannedExercises: ['Row'],
+    skippedExercises: [],
+  });
 });

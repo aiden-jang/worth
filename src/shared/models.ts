@@ -27,6 +27,7 @@ export interface ListDetail extends ListSummary {
 }
 
 export interface Item {
+  revisitQueued?: boolean;
   id: string;
   listId: string;
   title: string;
@@ -52,6 +53,8 @@ export interface WorkoutRoutine {
 }
 
 export interface WorkoutSession {
+  status?: 'active' | 'finished';
+  skippedExercises?: string[];
   plannedExercises?: string[];
   id: string;
   listId: string;
@@ -184,6 +187,7 @@ export interface SearchResult {
   listId: string;
   listName: string;
   kind: 'list' | 'item' | 'log';
+  exercise?: boolean;
   itemId: string | null;
   title: string;
   detail: string;

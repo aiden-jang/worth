@@ -1,4 +1,5 @@
 import { formatActivityMetric, previousExercise } from '../shared/workouts';
+import { useSearchParams } from 'react-router';
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
@@ -9,6 +10,13 @@ import type { Log, WorkoutSession } from '../shared/models';
 import { api, type LogInput } from '../api';
 import { formatDate, formatElapsedDays, today } from '../format';
 import { ConfirmDialog } from './ConfirmDialog';
+import { useDraftPhoto } from '../hooks/useDraftPhoto';
+import { useConnection } from '../hooks/useConnection';
+import { useDraft } from '../hooks/useDraft';
+import { isLogDraft } from '../shared/drafts';
+import { RestTimer } from './RestTimer';
+import { DraftPhoto } from './DraftPhoto';
+import { preparePhoto } from '../shared/photos';
 import { PhotoControl } from './PhotoControl';
 
 export function ActivityView({
@@ -30,8 +38,9 @@ export function ActivityView({
   newOpen: boolean;
   focusLogId: string | null;
   onCloseNew: () => void;
-  onNew: () => void;
+  onNew: (workoutId?: string, exercise?: string) => void;
 }) {
+  const [routeParams] = useSearchParams();
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
@@ -39,6 +48,9 @@ export function ActivityView({
   const [initialExercise, setInitialExercise] = useState('');
   const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [initialWorkout, setInitialWorkout] = useState<WorkoutSession | null>(null);
+  const restoredWorkout =
+    initialWorkout ?? workouts.find((workout) => workout.id === routeParams.get('workout')) ?? null;
+  const restoredExercise = initialExercise || routeParams.get('exercise') || '';
   const [selected, setSelected] = useState<Log | null>(null);
   const [repeatLog, setRepeatLog] = useState<Log | null>(null);
   const [query, setQuery] = useState('');
@@ -251,7 +263,7 @@ export function ActivityView({
             setRepeatLog(null);
             setInitialWorkout(workout);
             setInitialExercise(title);
-            onNew();
+            onNew(workout.id, title);
           }}
         />
       )}
@@ -259,9 +271,13 @@ export function ActivityView({
       {!visible.length && !workouts.length ? (
         <div className="empty-list">
           <h2>{logs.length ? 'Nothing matches.' : 'Nothing here yet.'}</h2>
-          <p>{logs.length ? 'Try another search.' : 'Log a run, a night out, or whatever belongs here.'}</p>
+          <p>
+            {logs.length
+              ? 'Try another search.'
+              : 'Create a routine above to plan your exercises, or start with one log.'}
+          </p>
           {!logs.length && (
-            <button className="button button-dark" onClick={onNew}>
+            <button className="button button-dark" onClick={() => onNew()}>
               <Plus size={17} /> Add first log
             </button>
           )}
@@ -320,9 +336,9 @@ export function ActivityView({
           onClose={() => setHistoryTitle(null)}
         />
       )}
-      {(newOpen || selected) && (
+      {(newOpen || selected) && (!routeParams.get('workout') || !workoutsQuery.isPending) && (
         <ActivityEditor
-          key={selected?.id ?? `new-${repeatLog?.id ?? initialWorkout?.id ?? 'blank'}-${initialExercise}`}
+          key={selected?.id ?? `new-${repeatLog?.id ?? restoredWorkout?.id ?? 'blank'}-${restoredExercise}`}
           listId={listId}
           log={newOpen ? null : selected}
           repeatLog={repeatLog}
@@ -333,10 +349,15 @@ export function ActivityView({
               ? [initialWorkout, ...workouts]
               : workouts
           }
-          initialWorkout={initialWorkout}
-          initialExercise={initialExercise}
+          initialWorkout={restoredWorkout}
+          initialExercise={restoredExercise}
           workoutsLoading={workoutsQuery.isPending || workoutsQuery.isError}
           onClose={close}
+          onNext={(workout, title) => {
+            setInitialWorkout(workout);
+            setInitialExercise(title);
+            onNew(workout.id, title);
+          }}
         />
       )}
     </section>
@@ -368,6 +389,7 @@ function ActivityEditor({
   initialExercise,
   workoutsLoading,
   onClose,
+  onNext,
 }: {
   listId: string;
   log: Log | null;
@@ -379,27 +401,37 @@ function ActivityEditor({
   initialExercise: string;
   workoutsLoading: boolean;
   onClose: () => void;
+  onNext: (workout: WorkoutSession, title: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
-  const [form, setForm] = useState<LogInput>(
-    log
-      ? fromLog(log)
-      : repeatLog
-        ? { ...fromLog(repeatLog), workoutId: null, happenedOn: today(), note: '' }
-        : initialWorkout
-          ? {
-              ...emptyLog(),
-              title: initialExercise,
-              workoutId: initialWorkout.id,
-              happenedOn: initialWorkout.happenedOn,
-              exerciseSets: [{ reps: null, weight: null }],
-            }
-          : emptyLog(),
+  const originalForm = log
+    ? fromLog(log)
+    : repeatLog
+      ? { ...fromLog(repeatLog), workoutId: null, happenedOn: today(), note: '' }
+      : initialWorkout
+        ? {
+            ...emptyLog(),
+            title: initialExercise,
+            workoutId: initialWorkout.id,
+            happenedOn: initialWorkout.happenedOn,
+            exerciseSets: [{ reps: null, weight: null }],
+          }
+        : emptyLog();
+  const draft = useDraft<LogInput>(
+    `log:${listId}:${log?.id ?? `new:${initialWorkout?.id ?? repeatLog?.id ?? 'blank'}:${initialExercise}`}`,
+    originalForm,
+    isLogDraft,
   );
-  const [exerciseMode, setExerciseMode] = useState(
-    Boolean(initialWorkout || (log ?? repeatLog)?.exerciseSets?.length),
+  const { form, setForm } = draft;
+  const photoDraft = useDraftPhoto(
+    `log:${listId}:${log?.id ?? `new:${initialWorkout?.id ?? repeatLog?.id ?? 'blank'}:${initialExercise}`}`,
   );
+  const photo = photoDraft.file;
+  const setPhoto = photoDraft.change;
+  const online = useConnection();
+  const [saveNext, setSaveNext] = useState(false);
+  const [exerciseMode, setExerciseMode] = useState(Boolean(form.exerciseSets?.length));
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [confirmingPrevious, setConfirmingPrevious] = useState(false);
   const activeWorkout =
@@ -425,21 +457,8 @@ function ActivityEditor({
   const [confirmingActivity, setConfirmingActivity] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
-  const originalForm = log
-    ? fromLog(log)
-    : repeatLog
-      ? { ...fromLog(repeatLog), workoutId: null, happenedOn: today(), note: '' }
-      : initialWorkout
-        ? {
-            ...emptyLog(),
-            title: initialExercise,
-            workoutId: initialWorkout.id,
-            happenedOn: initialWorkout.happenedOn,
-            exerciseSets: [{ reps: null, weight: null }],
-          }
-        : emptyLog();
   const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
-  const hasUnsavedChanges = hasLogChanges;
+  const hasUnsavedChanges = hasLogChanges || Boolean(photo);
   useEffect(() => {
     dialog.current?.showModal();
     return () => {
@@ -447,17 +466,49 @@ function ActivityEditor({
     };
   }, []);
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const input = cleanLogInput(form);
-      return log ? api.updateLog(log.id, input) : api.createLog(listId, input);
+      const blob = photo ? await preparePhoto(photo) : null;
+      const id = log?.id ?? draft.savedId.current;
+      let result = id
+        ? await api.updateLog(id, input)
+        : await api.createLog(listId, input, draft.operationId.current);
+      draft.rememberSaved(result.log.id);
+      // A lost create response may have saved an older version of this draft.
+      if (!id) result = await api.updateLog(result.log.id, input);
+      if (blob) {
+        await api.uploadPhoto('logs', result.log.id, blob);
+        result.log.hasPhoto = true;
+      }
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: ({ log: saved }) => {
+      draft.clear();
+      photoDraft.clear();
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
-      dialog.current?.close();
+      const next =
+        saveNext && activeWorkout
+          ? (activeWorkout.plannedExercises ?? []).find(
+              (name) =>
+                !(activeWorkout.skippedExercises ?? []).includes(name) &&
+                name.trim().toLowerCase() !== saved.title.trim().toLowerCase() &&
+                !logs.some(
+                  (entry) =>
+                    entry.workoutId === activeWorkout.id &&
+                    entry.title.trim().toLowerCase() === name.trim().toLowerCase(),
+                ),
+            )
+          : undefined;
+      client.setQueryData<{ logs: Log[] }>(['logs', listId], (current) => ({
+        logs: [saved, ...(current?.logs ?? []).filter((entry) => entry.id !== saved.id)],
+      }));
+      if (next) {
+        onNext(activeWorkout!, next);
+      } else dialog.current?.close();
     },
   });
   const remove = useMutation({
@@ -474,10 +525,12 @@ function ActivityEditor({
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (save.isPending) return;
     save.mutate();
   }
 
   function requestClose() {
+    if (save.isPending || remove.isPending) return;
     if (hasUnsavedChanges) {
       setConfirmingDiscard(true);
       return;
@@ -508,13 +561,29 @@ function ActivityEditor({
         <div className="editor-head">
           <div>
             <p className="overline">{log ? 'ACTIVITY DETAIL' : 'QUICK LOG'}</p>
-            <h2 id="activity-editor-title">{log ? log.title : 'What happened?'}</h2>
+            <h2 id="activity-editor-title">
+              {log ? log.title : initialWorkout ? 'Log an exercise' : 'What happened?'}
+            </h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={requestClose}>
             <X size={22} />
           </button>
         </div>
-        <form className="editor-form record-form" onSubmit={submit}>
+        <form
+          className="editor-form record-form"
+          onSubmit={submit}
+          onKeyDown={(event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !save.isPending) {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+        >
+          {draft.status && (
+            <p className="draft-state" role="status">
+              {draft.status}
+            </p>
+          )}
           <div className="activity-mode" aria-label="Log type">
             <button
               type="button"
@@ -659,6 +728,9 @@ function ActivityEditor({
               )}
             </section>
           )}
+          {exerciseMode && activeWorkout?.status === 'active' && (
+            <RestTimer key={activeWorkout.id} workoutId={activeWorkout.id} />
+          )}
           {exerciseMode && (
             <fieldset className="exercise-sets">
               <legend>Exercise sets</legend>
@@ -763,7 +835,7 @@ function ActivityEditor({
                   });
                 }}
               >
-                <Plus size={16} /> Add set
+                <Plus size={16} /> {form.exerciseSets?.at(-1)?.reps ? 'Duplicate last set' : 'Add set'}
               </button>
               <p className="exercise-total">
                 {form.exerciseSets?.length ?? 0} {form.exerciseSets?.length === 1 ? 'set' : 'sets'} ·{' '}
@@ -844,17 +916,46 @@ function ActivityEditor({
               placeholder="Anything you want to remember"
             />
           </label>
-          {save.isError && <p className="form-error">{save.error.message}</p>}
+          {!log && (
+            <>
+              <DraftPhoto file={photo} onChange={setPhoto} disabled={save.isPending} />
+              {photoDraft.status && (
+                <p className="draft-state" role="status">
+                  {photoDraft.status}
+                </p>
+              )}
+            </>
+          )}
+          {save.isError && (
+            <p className="form-error" role="alert">
+              {draft.savedId.current
+                ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
+                : ''}
+              {save.error.message}
+            </p>
+          )}
+          {!log && activeWorkout && (
+            <label className="next-exercise-choice">
+              <input
+                type="checkbox"
+                checked={saveNext}
+                onChange={(event) => setSaveNext(event.target.checked)}
+              />{' '}
+              Continue to next exercise after saving
+            </label>
+          )}
           <button
             className="button button-accent"
             disabled={
+              !online ||
+              !photoDraft.ready ||
               !form.title.trim() ||
               save.isPending ||
               Boolean(log && !hasLogChanges) ||
               Boolean(exerciseMode && !form.exerciseSets?.length)
             }
           >
-            {log ? 'Save changes' : 'Save log'}
+            {save.isPending ? 'Saving…' : log ? 'Save changes' : 'Save log'}
           </button>
         </form>
         {log && (
@@ -937,6 +1038,8 @@ function ActivityEditor({
             cancelLabel="Keep editing"
             confirmLabel="Discard changes"
             onConfirm={() => {
+              draft.clear();
+              photoDraft.clear();
               setConfirmingDiscard(false);
               dialog.current?.close();
             }}

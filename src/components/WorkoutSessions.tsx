@@ -5,6 +5,9 @@ import type { Log, WorkoutSession } from '../shared/models';
 import { api } from '../api';
 import { formatDate, today } from '../format';
 import { formatActivityMetric } from '../shared/workouts';
+import { RestTimer } from './RestTimer';
+import { ExerciseLineup } from './ExerciseLineup';
+import { useDraft } from '../hooks/useDraft';
 import { ConfirmDialog } from './ConfirmDialog';
 
 export function WorkoutSessions({
@@ -34,6 +37,17 @@ export function WorkoutSessions({
   onSaveRoutine: (workout: WorkoutSession, entries: Log[]) => void;
   onOpen: (log: Log) => void;
 }) {
+  const client = useQueryClient();
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.updateWorkout>[1] }) =>
+      api.updateWorkout(id, patch),
+    onSuccess: ({ workout }) => {
+      client.setQueryData<{ workouts: WorkoutSession[] }>(['workouts', listId], (current) => ({
+        workouts: (current?.workouts ?? []).map((value) => (value.id === workout.id ? workout : value)),
+      }));
+      void client.invalidateQueries({ queryKey: ['workouts', listId] });
+    },
+  });
   const [editing, setEditing] = useState<WorkoutSession | null>(null);
   const filtered = workouts
     .filter(
@@ -53,6 +67,11 @@ export function WorkoutSessions({
   if (!workouts.length && !creating && !editing) return null;
   return (
     <section className="workout-sessions" aria-label="Workouts">
+      {update.isError && (
+        <p className="form-error" role="alert">
+          {update.error.message}
+        </p>
+      )}
       <div className="workout-section-head">
         <p className="overline">WORKOUTS</p>
         <span className="workout-count">{filtered.length} shown</span>
@@ -66,7 +85,9 @@ export function WorkoutSessions({
           .sort((a, b) => a.createdAt - b.createdAt);
         const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
         const pending = (workout.plannedExercises ?? []).filter(
-          (name) => !entries.some((entry) => normalize(entry.title) === normalize(name)),
+          (name) =>
+            !entries.some((entry) => normalize(entry.title) === normalize(name)) &&
+            !(workout.skippedExercises ?? []).includes(name),
         );
         const visiblePending = pending.filter(
           (name) =>
@@ -84,7 +105,10 @@ export function WorkoutSessions({
           <article className="workout-card" key={workout.id}>
             <div className="workout-card-heading">
               <div>
-                <p className="overline">WORKOUT · {formatDate(workout.happenedOn)}</p>
+                <p className="overline">
+                  {workout.status === 'active' ? 'ACTIVE WORKOUT' : 'WORKOUT RECAP'} ·{' '}
+                  {formatDate(workout.happenedOn)}
+                </p>
                 <h2 id={`workout-heading-${workout.id}`} tabIndex={-1}>
                   {workout.title}
                 </h2>
@@ -103,6 +127,41 @@ export function WorkoutSessions({
               {sets === 1 ? 'set' : 'sets'} · {reps} {reps === 1 ? 'rep' : 'reps'}
               {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
             </p>
+            <div className="routine-actions">
+              {workout.status === 'active' && (
+                <button
+                  type="button"
+                  className="button button-accent"
+                  onClick={() => onAdd(workout, pending[0])}
+                >
+                  Resume workout <ArrowRight size={17} />
+                </button>
+              )}
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={update.isPending}
+                onClick={() =>
+                  update.mutate({
+                    id: workout.id,
+                    patch: { status: workout.status === 'active' ? 'finished' : 'active' },
+                  })
+                }
+              >
+                {update.isPending && update.variables?.id === workout.id
+                  ? 'Saving…'
+                  : workout.status === 'active'
+                    ? 'Finish workout'
+                    : 'Reopen workout'}
+              </button>
+            </div>
+            {workout.status === 'active' && <RestTimer key={workout.id} workoutId={workout.id} />}
+            {workout.status !== 'active' && pending.length > 0 && (
+              <p className="exercise-helper">
+                {pending.length} planned {pending.length === 1 ? 'exercise was' : 'exercises were'} left
+                unlogged.
+              </p>
+            )}
             <div className="workout-exercises">
               {shown.map((log) => (
                 <button type="button" key={log.id} onClick={() => onOpen(log)}>
@@ -119,22 +178,63 @@ export function WorkoutSessions({
                 <p className="overline">EXERCISES TO LOG</p>
                 <div className="workout-exercises">
                   {visiblePending.map((name) => (
-                    <button
-                      type="button"
-                      key={name}
-                      onClick={() => onAdd(workout, name)}
-                      aria-label={`Log ${name} in ${workout.title}`}
-                    >
-                      <span>
-                        <strong>{name}</strong>
-                        <small>Not logged</small>
-                      </span>
-                      <span className="planned-action">
-                        Log exercise <ArrowRight size={18} />
-                      </span>
-                    </button>
+                    <div className="planned-row" key={name}>
+                      <button
+                        type="button"
+                        key={name}
+                        onClick={() => onAdd(workout, name)}
+                        aria-label={`Log ${name} in ${workout.title}`}
+                      >
+                        <span>
+                          <strong>{name}</strong>
+                          <small>Not logged</small>
+                        </span>
+                        <span className="planned-action">
+                          Log exercise <ArrowRight size={18} />
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        aria-label={`Skip ${name} for this visit`}
+                        disabled={update.isPending}
+                        onClick={() =>
+                          update.mutate({
+                            id: workout.id,
+                            patch: { skippedExercises: [...(workout.skippedExercises ?? []), name] },
+                          })
+                        }
+                      >
+                        Skip
+                      </button>
+                    </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {Boolean(workout.skippedExercises?.length) && (
+              <div className="skipped-exercises">
+                <p className="overline">SKIPPED THIS VISIT</p>
+                {workout.skippedExercises?.map((name) => (
+                  <p key={name}>
+                    <span>{name}</span>
+                    <button
+                      type="button"
+                      className="button button-outline"
+                      disabled={update.isPending}
+                      onClick={() =>
+                        update.mutate({
+                          id: workout.id,
+                          patch: {
+                            skippedExercises: workout.skippedExercises?.filter((value) => value !== name),
+                          },
+                        })
+                      }
+                    >
+                      Restore
+                    </button>
+                  </p>
+                ))}
               </div>
             )}
             {!entries.length && !pending.length && (
@@ -192,9 +292,28 @@ function WorkoutEditor({
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     client = useQueryClient();
-  const initial = { title: workout?.title ?? '', happenedOn: workout?.happenedOn ?? today() };
-  const [form, setForm] = useState(initial),
-    [discard, setDiscard] = useState(false),
+  const initial = {
+    title: workout?.title ?? '',
+    happenedOn: workout?.happenedOn ?? today(),
+    exercises: (workout?.plannedExercises ?? []).join('\n'),
+  };
+  const draft = useDraft(
+    `workout:${listId}:${workout?.id ?? 'new'}`,
+    initial,
+    (value): value is typeof initial =>
+      Boolean(
+        value &&
+        typeof value === 'object' &&
+        'title' in value &&
+        typeof value.title === 'string' &&
+        'exercises' in value &&
+        typeof value.exercises === 'string' &&
+        'happenedOn' in value &&
+        typeof value.happenedOn === 'string',
+      ),
+  );
+  const { form, setForm } = draft;
+  const [discard, setDiscard] = useState(false),
     [confirmRemove, setConfirmRemove] = useState(false);
   const changed = JSON.stringify(form) !== JSON.stringify(initial);
   useEffect(() => {
@@ -213,8 +332,19 @@ function WorkoutEditor({
       void client.invalidateQueries({ queryKey: key });
   }
   const save = useMutation({
-    mutationFn: () => (workout ? api.updateWorkout(workout.id, form) : api.createWorkout(listId, form)),
+    mutationFn: () =>
+      workout
+        ? api.updateWorkout(workout.id, {
+            title: form.title,
+            happenedOn: form.happenedOn,
+            plannedExercises: form.exercises
+              .split('\n')
+              .map((name) => name.trim())
+              .filter(Boolean),
+          })
+        : api.createWorkout(listId, form),
     onSuccess: ({ workout: saved }) => {
+      draft.clear();
       refresh();
       dialog.current?.close();
       if (!workout) onCreated(saved);
@@ -264,6 +394,11 @@ function WorkoutEditor({
           </button>
         </div>
         <form className="editor-form record-form" onSubmit={submit}>
+          {draft.status && (
+            <p className="draft-state" role="status">
+              {draft.status}
+            </p>
+          )}
           <label>
             Name <span className="optional">optional</span>
             <input
@@ -284,6 +419,27 @@ function WorkoutEditor({
             />
           </label>
           {workout && (
+            <>
+              <label>
+                This visit’s lineup
+                <textarea
+                  rows={4}
+                  maxLength={5000}
+                  value={form.exercises}
+                  onChange={(event) => setForm({ ...form, exercises: event.target.value })}
+                />
+              </label>
+              <ExerciseLineup
+                value={form.exercises}
+                onChange={(exercises) => setForm({ ...form, exercises })}
+              />
+              <p className="exercise-helper">
+                One name per line. Swap a name or reorder it here. Your saved routine and logged exercises
+                stay intact.
+              </p>
+            </>
+          )}
+          {workout && (
             <p className="exercise-helper">Changing the date also moves every exercise in this workout.</p>
           )}
           {save.isError && (
@@ -295,7 +451,7 @@ function WorkoutEditor({
             className="button button-accent"
             disabled={save.isPending || (Boolean(workout) && !changed)}
           >
-            {workout ? 'Save workout' : 'Create workout'}
+            {save.isPending ? 'Saving…' : workout ? 'Save workout' : 'Create workout'}
           </button>
         </form>
         {workout && (
@@ -322,7 +478,10 @@ function WorkoutEditor({
             description="Changes to this workout draft will be lost."
             cancelLabel="Keep editing"
             confirmLabel="Discard changes"
-            onConfirm={() => dialog.current?.close()}
+            onConfirm={() => {
+              draft.clear();
+              dialog.current?.close();
+            }}
             onClose={() => setDiscard(false)}
           />
         )}

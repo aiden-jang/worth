@@ -4,6 +4,8 @@ import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { api } from '../api';
 import type { WorkoutRoutine, WorkoutSession } from '../shared/models';
 import { today } from '../format';
+import { ExerciseLineup } from './ExerciseLineup';
+import { useDraft } from '../hooks/useDraft';
 import { ConfirmDialog } from './ConfirmDialog';
 
 export type RoutineDraft = { title: string; exercises: string[] };
@@ -48,7 +50,9 @@ export function WorkoutRoutines({
         </p>
       )}
       {query.data?.routines.length === 0 && (
-        <p className="exercise-helper">Save an exercise list. Start a fresh visit whenever you need it.</p>
+        <p className="exercise-helper">
+          Name a routine. Add your exercise lineup. Start a visit when you’re ready.
+        </p>
       )}
       <div className="routine-grid">
         {query.data?.routines.map((routine) => (
@@ -112,8 +116,23 @@ function RoutineEditor({
     exercises: (routine?.exercises ?? seed?.exercises ?? []).join('\n'),
     happenedOn: today(),
   };
-  const [form, setForm] = useState(initial),
-    [discard, setDiscard] = useState(false),
+  const draft = useDraft(
+    `routine:${listId}:${routine?.id ?? 'new'}:${starting ? 'start' : 'edit'}`,
+    initial,
+    (value): value is typeof initial =>
+      Boolean(
+        value &&
+        typeof value === 'object' &&
+        'title' in value &&
+        typeof value.title === 'string' &&
+        'exercises' in value &&
+        typeof value.exercises === 'string' &&
+        'happenedOn' in value &&
+        typeof value.happenedOn === 'string',
+      ),
+  );
+  const { form, setForm } = draft;
+  const [discard, setDiscard] = useState(false),
     [confirmRemove, setConfirmRemove] = useState(false);
   const changed = JSON.stringify(form) !== JSON.stringify(initial);
   useEffect(() => {
@@ -145,6 +164,7 @@ function RoutineEditor({
       else await api.createRoutine(listId, body);
     },
     onSuccess: (workout) => {
+      draft.clear();
       if (workout) {
         client.setQueryData<{ workouts: WorkoutSession[] }>(['workouts', listId], (data) => ({
           workouts: [workout, ...(data?.workouts ?? [])],
@@ -215,6 +235,11 @@ function RoutineEditor({
           </button>
         </div>
         <form className="editor-form record-form" onSubmit={submit}>
+          {draft.status && (
+            <p className="draft-state" role="status">
+              {draft.status}
+            </p>
+          )}
           <label>
             Name
             <input
@@ -251,9 +276,14 @@ function RoutineEditor({
                   value={form.exercises}
                   onChange={(event) => setForm({ ...form, exercises: event.target.value })}
                   placeholder={'Bench press\nShoulder press\nTriceps extension'}
+                  aria-label="Exercises"
                   aria-describedby="routine-exercise-help"
                 />
               </label>
+              <ExerciseLineup
+                value={form.exercises}
+                onChange={(exercises) => setForm({ ...form, exercises })}
+              />
               <p id="routine-exercise-help" className="exercise-helper">
                 One exercise per line, in the order you want to log them. Up to 40 unique names.
               </p>
@@ -273,7 +303,7 @@ function RoutineEditor({
             className="button button-accent"
             disabled={save.isPending || (Boolean(routine) && !starting && !changed)}
           >
-            {starting ? 'Start workout' : 'Save routine'}
+            {save.isPending ? 'Saving…' : starting ? 'Start workout' : 'Save routine'}
           </button>
         </form>
         {routine && !starting && (
@@ -300,7 +330,10 @@ function RoutineEditor({
             description="Changes to this draft will be lost."
             cancelLabel="Keep editing"
             confirmLabel="Discard changes"
-            onConfirm={() => dialog.current?.close()}
+            onConfirm={() => {
+              draft.clear();
+              dialog.current?.close();
+            }}
             onClose={() => setDiscard(false)}
           />
         )}

@@ -382,3 +382,14 @@ Routines store a name and 1–40 unique exercise names in order, with one line p
 Use the [exercise progress references](taste-cabinet/workouts/README.md#exercise-history-and-progress). History is a centered native scrolling modal, 840px maximum desktop width and viewport minus 24px on phones, with 22px corners, standard editor insets, 32px/28px headings, labeled 44px measurement choices, cabinet rules and a butter line. Keep a fixed 200px plot and 12px HTML axes/dates for phone readability. Each chart point is an accessible button, with a 44px phone target and a label containing date/value/unit/entry order; selecting it focuses and reveals the corresponding exact set history. Preserve reduced-motion behavior.
 
 The collapsed history directory groups only saved exercise entries within the current activity list, normalizing names as last-time recall does. A set editor can open the same read-only history without losing its draft; nested Close/Escape must not close the editor. Same-day visits remain separate points, ordered by visit creation, then record creation. Each point is one equally spaced logged entry, not a daily average or elapsed-time scale. Total reps is the sum of individual sets; Top weight is their maximum numeric weight. Keep kg/lb separate, without conversion. Null weight is bodyweight, not zero; numeric zero is plotted. Missing units, bodyweight and older aggregate records break weight lines. Legacy measurements remain readable and never generate inferred set rows/rep totals. Show factual empty/one-point states, actual entry/date range, exact sets and preserved notes; no performance scores, activity jokes or synthetic records.
+
+## October 10 product flow extension
+
+Keep the current cabinet edition and workout compositions. Active/finished workout
+controls follow [flow references](taste-cabinet/workouts/README.md#active-workout-flow).
+Queue status is independent of rank and all four call states (including null). Keep
+queue and optional capture-photo controls inside the existing detail areas, and date /
+visit filters inside the existing disclosure. Mobile filters stack at <=360px; wider
+phones use two columns. Continue 44px targets, native scrolling dialogs, account-only
+records and factual workout/draft/offline copy. Intentional integrations are recorded
+in [product pass QA](../ui-qa/product-pass/README.md).

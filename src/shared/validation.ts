@@ -37,6 +37,7 @@ export const itemInput = z
     type: z.string().trim().max(60).default(''),
     note: note.default(''),
     decision: itemDecision.default(null),
+    revisitQueued: z.boolean().default(false),
     startedOn: date.nullable().default(null),
     endedOn: date.nullable().default(null),
   })
@@ -51,6 +52,7 @@ export const itemPatch = z
     type: z.string().trim().max(60).optional(),
     note: note.optional(),
     decision: itemDecision.optional(),
+    revisitQueued: z.boolean().optional(),
     startedOn: date.nullable().optional(),
     endedOn: date.nullable().optional(),
   })
@@ -84,6 +86,7 @@ export const workoutInput = z.object({
 });
 export const workoutPatch = workoutInput
   .omit({ routineId: true })
+  .extend({ status: z.enum(['active', 'finished']), plannedExercises, skippedExercises: plannedExercises })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 

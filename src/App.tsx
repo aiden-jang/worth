@@ -4,16 +4,24 @@ import { Route, Routes } from 'react-router';
 import { api } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
-import { useRef, useState } from 'react';
+import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
-import { ArchivePage } from './pages/ArchivePage';
-import { ListsPage } from './pages/ListsPage';
-import { ListPage } from './pages/ListPage';
-import { SearchPage } from './pages/SearchPage';
-import { ShowPage } from './pages/ShowPage';
-import { PublicSharePage } from './pages/PublicSharePage';
-import { PatternsPage } from './pages/PatternsPage';
+const ArchivePage = lazy(() =>
+  import('./pages/ArchivePage').then((module) => ({ default: module.ArchivePage })),
+);
+const ListsPage = lazy(() => import('./pages/ListsPage').then((module) => ({ default: module.ListsPage })));
+const ListPage = lazy(() => import('./pages/ListPage').then((module) => ({ default: module.ListPage })));
+const SearchPage = lazy(() =>
+  import('./pages/SearchPage').then((module) => ({ default: module.SearchPage })),
+);
+const ShowPage = lazy(() => import('./pages/ShowPage').then((module) => ({ default: module.ShowPage })));
+const PublicSharePage = lazy(() =>
+  import('./pages/PublicSharePage').then((module) => ({ default: module.PublicSharePage })),
+);
+const PatternsPage = lazy(() =>
+  import('./pages/PatternsPage').then((module) => ({ default: module.PatternsPage })),
+);
 
 const authOrigin =
   import.meta.env.VITE_AUTH_URL ??
@@ -21,11 +29,41 @@ const authOrigin =
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/s/:token" element={<PublicSharePage />} />
-      <Route path="*" element={<PrivateApp />} />
-    </Routes>
+    <PageBoundary>
+      <Suspense
+        fallback={
+          <div className="boot-screen" role="status">
+            Opening Worth…
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/s/:token" element={<PublicSharePage />} />
+          <Route path="*" element={<PrivateApp />} />
+        </Routes>
+      </Suspense>
+    </PageBoundary>
   );
+}
+
+class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <main className="light-page page-width">
+        <h1>Couldn’t open this page.</h1>
+        <p>Your saved records are still in your archive.</p>
+        <button className="button button-accent" onClick={() => window.location.reload()}>
+          Reload page
+        </button>
+      </main>
+    ) : (
+      this.props.children
+    );
+  }
 }
 
 function PrivateApp() {

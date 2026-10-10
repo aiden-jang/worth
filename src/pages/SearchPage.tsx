@@ -6,10 +6,10 @@ import { api } from '../api';
 import { CabinetEmptyState } from '../components/CabinetEmptyState';
 import type { SearchResult } from '../shared/models';
 
-type SearchScope = 'all' | 'lists' | 'items' | 'logs';
+type SearchScope = 'all' | 'lists' | 'items' | 'logs' | 'exercises';
 
 function searchScope(value: string | null): SearchScope {
-  return value === 'lists' || value === 'items' || value === 'logs' ? value : 'all';
+  return value === 'lists' || value === 'items' || value === 'logs' || value === 'exercises' ? value : 'all';
 }
 
 export function SearchPage() {
@@ -19,10 +19,14 @@ export function SearchPage() {
   const [query, setQuery] = useState(routeQuery);
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => setQuery(routeQuery), [routeQuery]);
-  const term = query.trim();
+  const [term, setTerm] = useState(query.trim());
+  useEffect(() => {
+    const timer = setTimeout(() => setTerm(query.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
   const results = useQuery({
     queryKey: ['search', term],
-    queryFn: () => api.search(term),
+    queryFn: ({ signal }) => api.search(term, signal),
     enabled: term.length >= 2,
   });
   const listResults = results.data?.results.filter((result) => result.kind === 'list') ?? [];
@@ -33,7 +37,13 @@ export function SearchPage() {
     { scope: 'items', label: 'Items', results: itemResults },
     { scope: 'logs', label: 'Logs', results: logResults },
   ];
-  const visibleGroups = scope === 'all' ? groups : groups.filter((group) => group.scope === scope);
+  const exercises = logResults.filter((result) => result.exercise);
+  const visibleGroups =
+    scope === 'exercises'
+      ? [{ scope: 'exercises', label: 'Exercises', results: exercises }]
+      : scope === 'all'
+        ? groups
+        : groups.filter((group) => group.scope === scope);
   const visibleCount = visibleGroups.reduce((total, group) => total + group.results.length, 0);
 
   function updateSearch(nextQuery: string, nextScope = scope) {
@@ -52,7 +62,8 @@ export function SearchPage() {
         <input
           ref={input}
           autoFocus
-          placeholder="A film, a place, a good drink…"
+          placeholder="An exercise, a note, a good drink…"
+          maxLength={40}
           value={query}
           onChange={(event) => {
             const next = event.target.value;
@@ -78,7 +89,7 @@ export function SearchPage() {
       {term.length < 2 ? (
         <CabinetEmptyState
           title="Somewhere in here."
-          description="Type at least two characters to search your lists and logs."
+          description="Search names and notes across collections, drinks, exercises and logs. Use at least two characters."
         />
       ) : results.isPending ? (
         <p className="search-hint" role="status">
@@ -101,6 +112,7 @@ export function SearchPage() {
                   ['lists', 'Lists', listResults.length],
                   ['items', 'Items', itemResults.length],
                   ['logs', 'Logs', logResults.length],
+                  ['exercises', 'Exercises', exercises.length],
                 ] as const
               ).map(([nextScope, label, count]) => (
                 <button

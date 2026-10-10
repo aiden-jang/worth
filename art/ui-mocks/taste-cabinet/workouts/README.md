@@ -24,3 +24,15 @@ Routine editing/deletion applies to the saved lineup only. Each visit snapshots 
 Production adds a collapsed Exercise history directory to activity lists and View exercise history inside the set editor. History uses all matching saved exercise entries in the current list, independent of browse filters. Names use the same whitespace/case normalization as last-time recall; same-day visits stay distinct. Each point represents a single entry, equally spaced in chronological order, not elapsed-time intervals. Total reps sums individually recorded sets; top weight is their maximum numeric weight. Kg and lb are separate choices without conversion. Bodyweight and legacy aggregate entries remain readable but leave gaps in weight/individual-set charts. Zero weight stays numeric. No scores, inferred individual sets, estimated lifts or sample records are introduced.
 
 The implementation deliberately keeps axis/date labels in HTML at 12px and the plot at 200px high so labels remain readable on narrow screens; the standalone SVG scales with its panel. Points are accessible labeled buttons (44px phone hit targets), which focus and reveal their entry. Notes disclose without modifying user text. Nested history closes back to the unchanged exercise draft. Existing native header/rules, full dates, unit-specific choices, gap explanations, one-point/empty messages and a newest-first set index provide working-product detail beyond the three-entry reference.
+
+## Active workout flow
+
+[Flow desktop](flow-desktop.png) / [mobile](flow-mobile.png) were authored, rendered
+and inspected before implementing active/finished visits. Resume opens the next
+unlogged, unskipped exercise; the exercise editor can save and continue. Rest duration
+and the remaining countdown stay factual. A saved visit can be finished/reopened,
+its lineup swapped/reordered independently of its source routine, and individual
+planned names skipped/restored without deleting logs. The implementation keeps the
+existing activity header/recall/filter composition described above. See the
+[product-pass verification](../../../ui-qa/product-pass/README.md) for deliberate
+integration details and desktop/mobile captures.

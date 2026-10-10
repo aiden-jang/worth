@@ -1,0 +1,194 @@
+<link rel="stylesheet" href="../../../../src/styles.css" /><style>
+  body {
+    margin: 0;
+    background: #181915;
+    color: #f0ecdf;
+    font:
+      15px 'DM Sans',
+      sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  aside {
+    position: fixed;
+    width: 192px;
+    padding: 32px;
+    border-right: 1px solid #38392f;
+    height: 100vh;
+  }
+  main {
+    margin-left: 192px;
+    padding: 40px;
+    max-width: 1232px;
+  }
+  h1 {
+    font-size: 68px;
+    font-weight: 500;
+    letter-spacing: -3px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 12px 0 32px;
+  }
+  p,
+  small {
+    color: #aaa99b;
+  }
+  section {
+    border: 1px solid #38392f;
+    border-radius: 22px;
+    padding: 32px;
+    max-width: 960px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 56px;
+  }
+  label {
+    display: block;
+    margin: 16px 0;
+  }
+  input,
+  select {
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 13px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button {
+    color: inherit;
+    background: none;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+  }
+  .primary {
+    background: #e8dc9d;
+    color: #181915;
+    border: 0;
+  }
+  .objects {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .objects img {
+    width: 100%;
+    border-radius: 8px;
+  }
+  .chosen {
+    border-color: #e8dc9d;
+  }
+  .tones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .preview img {
+    width: 100%;
+    border-radius: 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 44px;
+    gap: 12px;
+    align-items: end;
+    margin: 12px 0;
+  }
+  .workout {
+    max-width: 620px;
+    margin: auto;
+  }
+  header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .overline {
+    font:
+      10px 'DM Mono',
+      monospace;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 680px) {
+    aside {
+      display: none;
+    }
+    main {
+      margin: 0;
+      padding: 24px 20px;
+    }
+    h1 {
+      font-size: 50px;
+    }
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    section {
+      padding: 22px 18px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    .row {
+      gap: 8px;
+      grid-template-columns: 28px 1fr 1fr 44px;
+    }
+  }
+</style>
+<aside>
+  <h2>worth</h2>
+  <p>Archive</p>
+  <p>Collections</p>
+  <p>Activity</p>
+</aside>
+<main>
+  <p class="overline">YOUR ACTIVITY</p>
+  <h1>Gym</h1>
+  <p>3 logs</p>
+  <button class="primary">New workout +</button><button>Add log +</button>
+  <p class="overline" style="margin-top: 32px">ROUTINES</p>
+  <section style="padding: 24px; margin: 16px 0 32px">
+    <h2 style="margin: 0 0 12px; font-size: 28px">Push day</h2>
+    <p>Bench press · Shoulder press · Triceps extension</p>
+    <button class="primary">Start workout →</button><button>Edit routine</button>
+  </section>
+  <button>New routine +</button>
+  <p style="margin-top: 32px">Find a log</p>
+  <section style="margin-top: 24px">
+    <p class="overline">ACTIVE WORKOUT · OCT 10</p>
+    <h2>Push day</h2>
+    <p>0 exercises logged · 0 sets · 0 reps</p>
+    <button class="primary">Resume workout →</button> <button>Finish workout</button>
+    <p>Rest timer · 1:00 <button>Start</button></p>
+    <p class="overline">EXERCISES TO LOG</p>
+    <div style="border-top: 1px solid #38392f; padding: 22px 0">
+      Bench press <small>Not logged</small> <button style="float: right">Log exercise →</button>
+      <button>Skip</button>
+    </div>
+    <div style="border-top: 1px solid #38392f; padding: 22px 0">
+      Shoulder press <small>Not logged</small> <button style="float: right">Log exercise →</button>
+      <button>Skip</button>
+    </div>
+    <div style="border-top: 1px solid #38392f; padding: 22px 0">
+      Triceps extension <small>Not logged</small> <button style="float: right">Log exercise →</button>
+      <button>Skip</button>
+    </div>
+    <button>Add exercise +</button><button>Edit workout</button>
+    <p><small>Edit this visit’s lineup to swap or reorder exercises. Your routine stays the same.</small></p>
+  </section>
+  <p class="overline" style="margin-top: 32px">OTHER LOGS</p>
+  <p>Evening walk · Oct 8</p>
+</main>

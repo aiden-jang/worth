@@ -25,7 +25,7 @@ export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
       throw new ApiError(400, 'INVALID_ROUTINE', 'Choose a routine in this activity list');
     await c.env.DB.batch([
       c.env.DB.prepare(
-        'INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, created_at, updated_at, planned_exercises) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        `INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, created_at, updated_at, planned_exercises, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
       ).bind(
         id,
         list.id,
@@ -49,10 +49,24 @@ export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
     const patch = await readJson(c.req.raw, workoutPatch),
       now = Date.now();
     const happenedOn = patch.happenedOn ?? workout.happenedOn;
+    const planned = patch.plannedExercises ?? workout.plannedExercises ?? [];
+    const skipped =
+      patch.skippedExercises ?? (workout.skippedExercises ?? []).filter((name) => planned.includes(name));
+    if (skipped.some((name) => !planned.includes(name)))
+      throw new ApiError(400, 'INVALID_SKIP', 'Only exercises in this visit can be skipped');
     await c.env.DB.batch([
       c.env.DB.prepare(
-        'UPDATE workout_sessions SET title = ?, happened_on = ?, updated_at = ? WHERE id = ? AND owner_id = ?',
-      ).bind((patch.title ?? workout.title) || 'Workout', happenedOn, now, workout.id, c.get('ownerId')),
+        'UPDATE workout_sessions SET title = ?, happened_on = ?, updated_at = ?, status = ?, planned_exercises = ?, skipped_exercises = ? WHERE id = ? AND owner_id = ?',
+      ).bind(
+        (patch.title ?? workout.title) || 'Workout',
+        happenedOn,
+        now,
+        patch.status ?? workout.status ?? 'finished',
+        JSON.stringify(planned),
+        JSON.stringify(skipped),
+        workout.id,
+        c.get('ownerId'),
+      ),
       c.env.DB.prepare(
         'UPDATE logs SET happened_on = ?, updated_at = ? WHERE workout_id = ? AND owner_id = ?',
       ).bind(happenedOn, now, workout.id, c.get('ownerId')),

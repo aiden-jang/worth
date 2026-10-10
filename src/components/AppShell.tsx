@@ -16,6 +16,7 @@ import {
 } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
+import { useConnection } from '../hooks/useConnection';
 import { api } from '../api';
 import { preferredQuickCaptureList } from '../shared/quick-capture';
 import { starterCollectionCover } from '../shared/starter-covers';
@@ -32,6 +33,7 @@ export function AppShell({
   user: AuthUser;
   authOrigin: string;
 }) {
+  const online = useConnection();
   const location = useLocation();
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -262,6 +264,11 @@ export function AppShell({
         </div>
       </aside>
       <div className="app-content">
+        {!online && (
+          <p className="connection-state" role="status">
+            You’re offline. Record drafts stay on this device. Reconnect to save to your archive.
+          </p>
+        )}
         {children}
         <footer className="site-footer">
           <span>worth</span>

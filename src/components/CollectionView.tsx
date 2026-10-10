@@ -10,6 +10,8 @@ import {
   type ItemSort,
   type RankFilter,
 } from '../shared/ranking';
+import { useDraft } from '../hooks/useDraft';
+import { useConnection } from '../hooks/useConnection';
 import { api, RequestError } from '../api';
 import { CallBadge, CallFace } from './PersonalCall';
 import { OpinionSlip } from './OpinionSlip';
@@ -21,11 +23,12 @@ import {
   collectionItemTitleLimit,
 } from '../shared/collection-capture';
 
-type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately';
+type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue';
 
 const browseModes: { id: BrowseMode; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'kept', label: 'Favorites' },
+  { id: 'queue', label: 'Revisit queue' },
   { id: 'revisited', label: 'Revisited' },
   { id: 'not-opened-lately', label: 'Not opened lately' },
 ];
@@ -49,13 +52,38 @@ export function CollectionView({
   const captureRef = useRef<HTMLInputElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
-  const [title, setTitle] = useState('');
-  const [batchTitles, setBatchTitles] = useState('');
-  const [batchMode, setBatchMode] = useState(false);
+  const captureDraft = useDraft(
+    `capture:${list.id}`,
+    { title: '', batchTitles: '', batchMode: false },
+    (value): value is { title: string; batchTitles: string; batchMode: boolean } =>
+      Boolean(
+        value &&
+        typeof value === 'object' &&
+        'title' in value &&
+        typeof value.title === 'string' &&
+        'batchTitles' in value &&
+        typeof value.batchTitles === 'string' &&
+        'batchMode' in value &&
+        typeof value.batchMode === 'boolean',
+      ),
+  );
+  const { title, batchTitles, batchMode } = captureDraft.form;
+  const setTitle = (title: string) => captureDraft.setForm((current) => ({ ...current, title }));
+  const setBatchTitles = (batchTitles: string) =>
+    captureDraft.setForm((current) => ({ ...current, batchTitles }));
+  const setBatchMode = (next: boolean | ((current: boolean) => boolean)) =>
+    captureDraft.setForm((current) => ({
+      ...current,
+      batchMode: typeof next === 'function' ? next(current.batchMode) : next,
+    }));
+  const online = useConnection();
   const [browse, setBrowse] = useState<BrowseMode>('all');
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState('');
+  const [addedSince, setAddedSince] = useState('');
+  const [addedBefore, setAddedBefore] = useState('');
+  const [visits, setVisits] = useState('all');
   const [type, setType] = useState('all');
   const [rankFilter, setRankFilter] = useState<RankFilter>('all');
   const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
@@ -65,13 +93,13 @@ export function CollectionView({
 
   useEffect(() => {
     restoreCaptureFocus.current = null;
-    setTitle('');
-    setBatchTitles('');
-    setBatchMode(false);
     setBrowse('all');
     setShowSearch(false);
     setShowFilters(false);
     setSearch('');
+    setAddedSince('');
+    setAddedBefore('');
+    setVisits('all');
     setType('all');
     setRankFilter('all');
     setDecisionFilter('all');
@@ -119,18 +147,27 @@ export function CollectionView({
 
   const create = useMutation({
     mutationFn: (nextTitle: string) =>
-      api.createItem(list.id, {
-        title: nextTitle,
-        type: '',
-        note: '',
-        decision: null,
-        startedOn: null,
-        endedOn: null,
-      }),
+      api.createItem(
+        list.id,
+        {
+          title: nextTitle,
+          type: '',
+          note: '',
+          decision: null,
+          startedOn: null,
+          endedOn: null,
+        },
+        captureDraft.operationId.current,
+      ),
     onSuccess: ({ item }) => {
+      captureDraft.clear({ ...captureDraft.form, title: '' });
+      captureDraft.operationId.current = crypto.randomUUID();
       setTitle('');
       setBrowse('all');
       setSearch('');
+      setAddedSince('');
+      setAddedBefore('');
+      setVisits('all');
       setType('all');
       setRankFilter('all');
       setDecisionFilter('all');
@@ -149,9 +186,13 @@ export function CollectionView({
   const batchCreate = useMutation({
     mutationFn: (nextTitles: string[]) => api.createItems(list.id, nextTitles),
     onSuccess: ({ items: created }) => {
+      captureDraft.clear({ ...captureDraft.form, batchTitles: '' });
       setBatchTitles('');
       setBrowse('all');
       setSearch('');
+      setAddedSince('');
+      setAddedBefore('');
+      setVisits('all');
       setType('all');
       setRankFilter('all');
       setDecisionFilter('all');
@@ -198,10 +239,24 @@ export function CollectionView({
     },
   });
 
+  const queue = useMutation({
+    mutationFn: (item: Item) => api.updateItem(item.id, { revisitQueued: !item.revisitQueued }),
+    onSuccess: ({ item }) => {
+      client.setQueryData<{ items: Item[] }>(['items', list.id], (current) => ({
+        items: (current?.items ?? []).map((value) => (value.id === item.id ? item : value)),
+      }));
+      setStatus(item.revisitQueued ? 'Added to revisit queue.' : 'Removed from revisit queue.');
+      void client.invalidateQueries({ queryKey: ['items', list.id] });
+    },
+  });
   const rankedIds = new Set(list.rankedIds);
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
   const hasAdvancedFilters =
-    type !== 'all' || rankFilter !== 'all' || decisionFilter !== 'all' || sort !== 'rank';
+    Boolean(addedSince || addedBefore || visits !== 'all') ||
+    type !== 'all' ||
+    rankFilter !== 'all' ||
+    decisionFilter !== 'all' ||
+    sort !== 'rank';
   const ranks = useMemo(() => new Map(list.rankedIds.map((id, index) => [id, index + 1])), [list.rankedIds]);
   const ordered = visibleItems(items, list.rankedIds, {
     search,
@@ -211,6 +266,15 @@ export function CollectionView({
     sort,
   });
   const visible = ordered.filter((item) => {
+    const added = new Date(item.createdAt).toLocaleDateString('en-CA');
+    if ((addedSince && added < addedSince) || (addedBefore && added > addedBefore)) return false;
+    if (
+      (visits === 'never' && item.logCount !== 0) ||
+      (visits === 'once' && item.logCount !== 1) ||
+      (visits === 'again' && item.logCount <= 1)
+    )
+      return false;
+    if (browse === 'queue') return Boolean(item.revisitQueued);
     if (browse === 'kept') return item.decision === 'favorite';
     if (browse === 'revisited') return item.logCount > 1;
     if (browse === 'not-opened-lately') return wasOpenedLongAgo(item);
@@ -221,6 +285,7 @@ export function CollectionView({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!online || capturePending) return;
     if (batchMode) {
       const titles = batchCaptureTitles(batchTitles);
       if (titles.length) {
@@ -250,6 +315,8 @@ export function CollectionView({
   }, [capturePending]);
   const selectedItem = visible.find((item) => item.id === selectedId);
   const rowActions = {
+    onQueue: (item: Item) => queue.mutate(item),
+    queuePending: queue.isPending,
     rankSlots: items.length,
     onOpenDetails,
     onAddNote,
@@ -301,6 +368,7 @@ export function CollectionView({
             <button
               className="collection-capture-submit"
               disabled={
+                !online ||
                 capturePending ||
                 (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
               }
@@ -325,15 +393,21 @@ export function CollectionView({
               </p>
             </div>
           </form>
+          {captureDraft.status && (title || batchTitles) && (
+            <p className="draft-state" role="status">
+              {captureDraft.status}
+            </p>
+          )}
           {(create.isError || batchCreate.isError) && (
             <p className="form-error collection-capture-error">
               {create.error?.message ?? batchCreate.error?.message}
             </p>
           )}
-          {(decide.isError ||
+          {(queue.isError ||
+            decide.isError ||
             (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
             <p className="form-error collection-capture-error" role="alert">
-              {decide.isError ? decide.error.message : rank.error?.message}
+              {queue.error?.message ?? decide.error?.message ?? rank.error?.message}
             </p>
           )}
           {status && (
@@ -395,6 +469,7 @@ export function CollectionView({
                   onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
                 >
                   <option value="all">Any call</option>
+                  <option value="none">No call</option>
                   <option value="favorite">Favorite</option>
                   <option value="meh">Meh</option>
                   <option value="would_not_again">Not again</option>
@@ -409,10 +484,44 @@ export function CollectionView({
                   <option value="times">Most visits</option>
                 </select>
               </label>
+              <label>
+                <span>Added since</span>
+                <input
+                  type="date"
+                  value={addedSince}
+                  max={addedBefore || undefined}
+                  onChange={(event) => setAddedSince(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>Added before</span>
+                <input
+                  type="date"
+                  value={addedBefore}
+                  min={addedSince || undefined}
+                  onChange={(event) => setAddedBefore(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>Visits</span>
+                <select
+                  aria-label="Filter by visit count"
+                  value={visits}
+                  onChange={(event) => setVisits(event.target.value)}
+                >
+                  <option value="all">Any number</option>
+                  <option value="never">Never logged</option>
+                  <option value="once">Once</option>
+                  <option value="again">More than once</option>
+                </select>
+              </label>
               {hasAdvancedFilters && (
                 <button
                   type="button"
                   onClick={() => {
+                    setAddedSince('');
+                    setAddedBefore('');
+                    setVisits('all');
                     setType('all');
                     setRankFilter('all');
                     setDecisionFilter('all');
@@ -542,6 +651,8 @@ export function CollectionView({
 }
 
 type IndexProps = {
+  onQueue: (item: Item) => void;
+  queuePending: boolean;
   items: Item[];
   ranks: Map<string, number>;
   rankSlots: number;
@@ -587,6 +698,8 @@ function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: IndexProp
 }
 
 function ItemActions({
+  onQueue,
+  queuePending,
   item,
   rank,
   rankSlots,
@@ -613,6 +726,15 @@ function ItemActions({
       disabled={decisionPending}
       onChange={(value) => onDecide(item, value)}
     >
+      <button
+        type="button"
+        aria-pressed={Boolean(item.revisitQueued)}
+        className="collection-queue-action"
+        disabled={queuePending}
+        onClick={() => onQueue(item)}
+      >
+        {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
+      </button>
       <div className="collection-tray-actions">
         <details className="collection-rank-disclosure">
           <summary aria-label={`Rank ${item.title}`}>Rank</summary>

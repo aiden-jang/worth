@@ -18,7 +18,7 @@ export function moveRank(rankedIds: string[], itemId: string, position: number |
 
 export type ItemSort = 'rank' | 'recent' | 'name' | 'times';
 export type RankFilter = 'all' | 'top5' | 'top10' | 'unranked';
-export type DecisionFilter = 'all' | ItemDecision;
+export type DecisionFilter = 'all' | 'none' | ItemDecision;
 
 export function visibleItems(
   items: Item[],
@@ -41,7 +41,13 @@ export function visibleItems(
     if (options.rankFilter === 'unranked' && position !== undefined) return false;
     if (options.rankFilter === 'top5' && (position === undefined || position >= 5)) return false;
     if (options.rankFilter === 'top10' && (position === undefined || position >= 10)) return false;
-    if (options.decisionFilter !== 'all' && item.decision !== options.decisionFilter) return false;
+    if (options.decisionFilter === 'none' && item.decision !== null) return false;
+    if (
+      options.decisionFilter !== 'all' &&
+      options.decisionFilter !== 'none' &&
+      item.decision !== options.decisionFilter
+    )
+      return false;
     return true;
   });
   return filtered.sort((a, b) => {

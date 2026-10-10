@@ -58,8 +58,14 @@ export const api = {
     request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
   deleteList: (id: string) => request<void>(`/lists/${id}`, { method: 'DELETE' }),
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
-  createItem: (listId: string, body: ItemInput) =>
-    request<{ item: Item }>(`/lists/${listId}/items`, json('POST', body)),
+  createItem: (listId: string, body: ItemInput, operationId?: string) =>
+    request<{ item: Item }>(`/lists/${listId}/items`, {
+      ...json('POST', body),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(operationId ? { 'Idempotency-Key': operationId } : {}),
+      },
+    }),
   createItems: (listId: string, titles: string[]) =>
     request<{ items: Item[] }>(`/lists/${listId}/items/batch`, json('POST', { titles })),
   updateItem: (id: string, body: Partial<ItemInput>) =>
@@ -74,12 +80,26 @@ export const api = {
   workouts: (listId: string) => request<{ workouts: WorkoutSession[] }>(`/lists/${listId}/workouts`),
   createWorkout: (listId: string, body: { title: string; happenedOn: string; routineId?: string }) =>
     request<{ workout: WorkoutSession }>(`/lists/${listId}/workouts`, json('POST', body)),
-  updateWorkout: (id: string, body: { title?: string; happenedOn?: string }) =>
-    request<{ workout: WorkoutSession }>(`/workouts/${id}`, json('PATCH', body)),
+  updateWorkout: (
+    id: string,
+    body: {
+      title?: string;
+      happenedOn?: string;
+      status?: 'active' | 'finished';
+      plannedExercises?: string[];
+      skippedExercises?: string[];
+    },
+  ) => request<{ workout: WorkoutSession }>(`/workouts/${id}`, json('PATCH', body)),
   deleteWorkout: (id: string) => request<void>(`/workouts/${id}`, { method: 'DELETE' }),
   logs: (listId: string) => request<{ logs: Log[] }>(`/lists/${listId}/logs`),
-  createLog: (listId: string, body: LogInput) =>
-    request<{ log: Log }>(`/lists/${listId}/logs`, json('POST', body)),
+  createLog: (listId: string, body: LogInput, operationId?: string) =>
+    request<{ log: Log }>(`/lists/${listId}/logs`, {
+      ...json('POST', body),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(operationId ? { 'Idempotency-Key': operationId } : {}),
+      },
+    }),
   updateLog: (id: string, body: Partial<LogInput>) =>
     request<{ log: Log }>(`/logs/${id}`, json('PATCH', body)),
   deleteLog: (id: string) => request<void>(`/logs/${id}`, { method: 'DELETE' }),
@@ -93,7 +113,8 @@ export const api = {
     ),
   revokeShare: (id: string) => request<void>(`/shares/${id}`, { method: 'DELETE' }),
   publicShare: (token: string) => request<{ share: PublicShare }>(`/public/${token}`),
-  search: (query: string) => request<{ results: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}`),
+  search: (query: string, signal?: AbortSignal) =>
+    request<{ results: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}`, { signal }),
   uploadPhoto: (kind: 'items' | 'logs', id: string, blob: Blob) =>
     request<{ hasPhoto: boolean }>(`/${kind}/${id}/photo`, {
       method: 'PUT',
@@ -112,6 +133,7 @@ export const api = {
 };
 
 export interface ItemInput {
+  revisitQueued?: boolean;
   title: string;
   type: string;
   note: string;

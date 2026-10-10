@@ -11,12 +11,20 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     if (list.kind !== 'collection')
       throw new ApiError(400, 'WRONG_LIST_KIND', 'This list holds activity logs');
     const input = await readJson(c.req.raw, itemInput);
-    const id = crypto.randomUUID();
+    const id = creationId(c.req.header('Idempotency-Key'));
+    const existing = await c.env.DB.prepare('SELECT owner_id, list_id FROM items WHERE id = ?')
+      .bind(id)
+      .first<{ owner_id: string; list_id: string }>();
+    if (existing) {
+      if (existing.owner_id !== c.get('ownerId') || existing.list_id !== list.id)
+        throw new ApiError(409, 'ID_CONFLICT', 'Please start a fresh capture');
+      return c.json({ item: await requireItem(c.env.DB, c.get('ownerId'), id) }, 201);
+    }
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO items
-      (id, list_id, owner_id, title, type, note, decision, started_on, ended_on, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, owner_id, title, type, note, decision, revisit_queued, started_on, ended_on, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -26,6 +34,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         input.type,
         input.note,
         input.decision,
+        input.revisitQueued ? 1 : 0,
         input.startedOn,
         input.endedOn,
         now,
@@ -77,6 +86,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       type: patch.type ?? item.type,
       note: patch.note ?? item.note,
       decision: patch.decision === undefined ? item.decision : patch.decision,
+      revisitQueued: patch.revisitQueued ?? item.revisitQueued ?? false,
       startedOn: patch.startedOn === undefined ? item.startedOn : patch.startedOn,
       endedOn: patch.endedOn === undefined ? item.endedOn : patch.endedOn,
     });
@@ -86,13 +96,14 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.batch([
       c.env.DB.prepare(
-        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, started_on = ?, ended_on = ?,
+        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, started_on = ?, ended_on = ?,
           updated_at = ? WHERE id = ? AND owner_id = ?`,
       ).bind(
         value.title,
         value.type,
         value.note,
         value.decision,
+        value.revisitQueued ? 1 : 0,
         value.startedOn,
         value.endedOn,
         now,
@@ -148,7 +159,15 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       input.exerciseSets,
       input.itemId,
     );
-    const id = crypto.randomUUID();
+    const id = creationId(c.req.header('Idempotency-Key'));
+    const existing = await c.env.DB.prepare('SELECT owner_id, list_id FROM logs WHERE id = ?')
+      .bind(id)
+      .first<{ owner_id: string; list_id: string }>();
+    if (existing) {
+      if (existing.owner_id !== c.get('ownerId') || existing.list_id !== list.id)
+        throw new ApiError(409, 'ID_CONFLICT', 'Please start a fresh capture');
+      return c.json({ log: await requireLog(c.env.DB, c.get('ownerId'), id) }, 201);
+    }
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO logs
@@ -540,17 +559,17 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       .all<{ id: string; name: string; kind: 'collection' | 'activity'; description: string }>();
     const { results: items } = await c.env.DB.prepare(
       `SELECT i.id, i.list_id, l.name AS list_name,
-      i.title, i.type AS detail FROM items i JOIN lists l ON l.id = i.list_id
+      i.title, CASE WHEN i.note LIKE ? ESCAPE '\\' THEN substr(i.note, 1, 180) ELSE i.type END AS detail FROM items i JOIN lists l ON l.id = i.list_id
       WHERE i.owner_id = ? AND (
         i.title LIKE ? ESCAPE '\\' OR i.type LIKE ? ESCAPE '\\' OR i.note LIKE ? ESCAPE '\\'
       )
       ORDER BY i.updated_at DESC LIMIT 40`,
     )
-      .bind(ownerId, pattern, pattern, pattern)
+      .bind(pattern, ownerId, pattern, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     const { results: logs } = await c.env.DB.prepare(
       `SELECT g.id, g.list_id, g.item_id, l.name AS list_name,
-      COALESCE(i.title, g.title) AS title, g.happened_on AS detail
+      COALESCE(i.title, g.title) AS title, CASE WHEN g.note LIKE ? ESCAPE '\\' THEN g.happened_on || ' · ' || substr(g.note, 1, 180) ELSE g.happened_on END AS detail, json_array_length(g.exercise_sets) > 0 AS exercise
       FROM logs g
       JOIN lists l ON l.id = g.list_id
       LEFT JOIN items i ON i.id = g.item_id AND i.owner_id = g.owner_id
@@ -559,8 +578,9 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
       )
       ORDER BY g.happened_on DESC LIMIT 40`,
     )
-      .bind(ownerId, pattern, pattern)
+      .bind(pattern, ownerId, pattern, pattern)
       .all<{
+        exercise: number;
         id: string;
         list_id: string;
         item_id: string | null;
@@ -595,6 +615,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
           title: row.title,
           detail: row.detail,
           kind: 'log' as const,
+          exercise: Boolean(row.exercise),
           itemId: row.item_id,
         })),
       ],
@@ -618,4 +639,11 @@ async function validateLogTarget(
   if (!itemId) throw new ApiError(400, 'INVALID_LOG', 'Choose an item for this log');
   const item = await requireItem(db, ownerId, itemId);
   if (item.listId !== listId) throw new ApiError(400, 'INVALID_LOG', 'The item belongs to another list');
+}
+
+function creationId(key?: string): string {
+  if (!key) return crypto.randomUUID();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(key))
+    throw new ApiError(400, 'INVALID_CAPTURE_KEY', 'Invalid capture key');
+  return key;
 }

@@ -47,6 +47,7 @@ type ListRow = {
 };
 
 type ItemRow = {
+  revisit_queued: number;
   id: string;
   list_id: string;
   title: string;
@@ -154,6 +155,7 @@ function mapItem(row: ItemRow): Item {
     type: row.type,
     note: row.note,
     decision: row.decision,
+    revisitQueued: Boolean(row.revisit_queued),
     startedOn: row.started_on,
     endedOn: row.ended_on,
     hasPhoto: Boolean(row.has_photo),
@@ -165,7 +167,7 @@ function mapItem(row: ItemRow): Item {
 }
 
 const itemQuery = `
-  SELECT i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
+  SELECT i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
     i.created_at, i.updated_at,
     EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id = i.id) AS has_photo,
     (SELECT COUNT(*) FROM logs g WHERE g.item_id = i.id) AS log_count,
@@ -283,6 +285,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
 }
 
 type WorkoutRow = {
+  status: 'active' | 'finished';
+  skipped_exercises: string;
   planned_exercises: string;
   id: string;
   list_id: string;
@@ -295,6 +299,8 @@ type WorkoutRow = {
 function mapWorkout(row: WorkoutRow): WorkoutSession {
   return {
     plannedExercises: JSON.parse(row.planned_exercises ?? '[]'),
+    skippedExercises: JSON.parse(row.skipped_exercises ?? '[]'),
+    status: row.status,
     id: row.id,
     listId: row.list_id,
     title: row.title,
