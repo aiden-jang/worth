@@ -12,10 +12,19 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
     const id = crypto.randomUUID();
     const now = Date.now();
     await c.env.DB.prepare(
-      `INSERT INTO lists (id, owner_id, name, kind, description, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO lists (id, owner_id, name, kind, description, artwork, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-      .bind(id, c.get('ownerId'), input.name, input.kind, input.description, now, now)
+      .bind(
+        id,
+        c.get('ownerId'),
+        input.name,
+        input.kind,
+        input.description,
+        input.artwork ? JSON.stringify(input.artwork) : null,
+        now,
+        now,
+      )
       .run();
     return c.json({ list: await requireList(c.env.DB, c.get('ownerId'), id) }, 201);
   });
@@ -28,11 +37,18 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
     const patch = await readJson(c.req.raw, listPatch);
     await c.env.DB.prepare(
-      'UPDATE lists SET name = ?, description = ?, updated_at = ? WHERE id = ? AND owner_id = ?',
+      'UPDATE lists SET name = ?, description = ?, artwork = ?, updated_at = ? WHERE id = ? AND owner_id = ?',
     )
       .bind(
         patch.name ?? list.name,
         patch.description ?? list.description,
+        patch.artwork === undefined
+          ? list.artwork
+            ? JSON.stringify(list.artwork)
+            : null
+          : patch.artwork
+            ? JSON.stringify(patch.artwork)
+            : null,
         Date.now(),
         list.id,
         c.get('ownerId'),

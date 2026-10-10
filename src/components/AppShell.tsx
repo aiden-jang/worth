@@ -381,7 +381,7 @@ function ListPickerGroup({
           list.kind === 'collection'
             ? list.hasCoverPhoto
               ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-              : starterCollectionCover(list.name)
+              : starterCollectionCover(list.name, list.artwork)
             : null;
         return (
           <button key={list.id} onClick={() => onOpen(list)}>

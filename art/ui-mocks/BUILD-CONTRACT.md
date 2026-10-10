@@ -358,3 +358,9 @@ not starter templates or content to insert in private accounts. Demo categories 
 own illustrative items; explicit calls and unranked/no-call creation retain their semantics.
 Desktop folder art uses the shared 1.6 ratio to accommodate the added captions within the
 first view. Mobile retains the established portrait crop and stagger.
+
+## Personal tools — October 10
+
+Use [personal tools](taste-cabinet/personal-tools/README.md) for the authorized artwork and exercise extension. Keep the cabinet creation columns, scrolling native editors and settings save/draft protection. Artwork is optional: Automatic retains exact-name starter/monogram fallback; explicit Cup/Ticket/Place/Car/Snack/Bag and Sage/Clay/Butter persist per collection. Uploaded private photos show first. Pickers use three equal columns, 8px gaps and 44px labeled controls, with butter selected borders. No sample records are created.
+
+Exercise mode adds ordered sets with required positive integer reps, optional nonnegative weight and explicit kg/lb. Blank weight represents bodyweight. Use a 28px set label, two fluid labeled fields and 44px remove action; 12px gaps desktop, 8px mobile. Add set copies the last draft set; Repeat copies the exercise measurements, resets date to today and clears the note. Existing aggregate fields remain editable and preserved. Sets are persisted, owner-scoped and exported. No call icons, motivational copy or performance scores accompany activity.

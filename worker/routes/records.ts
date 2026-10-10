@@ -142,8 +142,8 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO logs
-      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, exercise_sets, weight_unit, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -157,6 +157,8 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         input.unit,
         input.sets,
         input.reps,
+        JSON.stringify(input.exerciseSets),
+        input.weightUnit,
         now,
         now,
       )
@@ -172,6 +174,8 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const list = await requireList(c.env.DB, c.get('ownerId'), log.listId);
     const patch = await readJson(c.req.raw, logPatch);
     const merged = logInput.safeParse({
+      exerciseSets: patch.exerciseSets ?? log.exerciseSets ?? [],
+      weightUnit: patch.weightUnit ?? log.weightUnit ?? 'kg',
       itemId: patch.itemId === undefined ? log.itemId : patch.itemId,
       title: patch.title ?? log.title,
       happenedOn: patch.happenedOn ?? log.happenedOn,
@@ -189,7 +193,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     await c.env.DB.batch([
       c.env.DB.prepare(
         `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
-          unit = ?, sets = ?, reps = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
+          unit = ?, sets = ?, reps = ?, exercise_sets = ?, weight_unit = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
       ).bind(
         value.itemId,
         value.title,
@@ -199,6 +203,8 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         value.unit,
         value.sets,
         value.reps,
+        JSON.stringify(value.exerciseSets),
+        value.weightUnit,
         now,
         log.id,
         c.get('ownerId'),

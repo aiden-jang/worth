@@ -1,0 +1,192 @@
+<link rel="stylesheet" href="../../../../src/styles.css" /><style>
+  body {
+    margin: 0;
+    background: #181915;
+    color: #f0ecdf;
+    font:
+      15px 'DM Sans',
+      sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  aside {
+    position: fixed;
+    width: 192px;
+    padding: 32px;
+    border-right: 1px solid #38392f;
+    height: 100vh;
+  }
+  main {
+    margin-left: 192px;
+    padding: 40px;
+    max-width: 1232px;
+  }
+  h1 {
+    font-size: 68px;
+    font-weight: 500;
+    letter-spacing: -3px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 12px 0 32px;
+  }
+  p,
+  small {
+    color: #aaa99b;
+  }
+  section {
+    border: 1px solid #38392f;
+    border-radius: 22px;
+    padding: 32px;
+    max-width: 960px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 56px;
+  }
+  label {
+    display: block;
+    margin: 16px 0;
+  }
+  input,
+  select {
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 13px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button {
+    color: inherit;
+    background: none;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+  }
+  .primary {
+    background: #e8dc9d;
+    color: #181915;
+    border: 0;
+  }
+  .objects {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .objects img {
+    width: 100%;
+    border-radius: 8px;
+  }
+  .chosen {
+    border-color: #e8dc9d;
+  }
+  .tones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .preview img {
+    width: 100%;
+    border-radius: 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 44px;
+    gap: 12px;
+    align-items: end;
+    margin: 12px 0;
+  }
+  .workout {
+    max-width: 620px;
+    margin: auto;
+  }
+  header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .overline {
+    font:
+      10px 'DM Mono',
+      monospace;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 680px) {
+    aside {
+      display: none;
+    }
+    main {
+      margin: 0;
+      padding: 24px 20px;
+    }
+    h1 {
+      font-size: 50px;
+    }
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    section {
+      padding: 22px 18px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    .row {
+      gap: 8px;
+      grid-template-columns: 28px 1fr 1fr 44px;
+    }
+  }
+</style>
+<aside>
+  <h2>worth</h2>
+  <p>Archive</p>
+  <p>Collections</p>
+  <p>Activity</p>
+</aside>
+<main>
+  <p class="overline">YOUR ARCHIVE</p>
+  <h1>Collections</h1>
+  <section>
+    <p class="overline">NEW COLLECTION</p>
+    <h2>What are you collecting?</h2>
+    <div class="columns">
+      <div>
+        <label>Name<input value="Coffee experiments" /></label>
+        <p>Artwork · optional</p>
+        <button>Automatic</button>
+        <div class="objects">
+          <button class="chosen"><img src="../../../../public/art/starter-covers/drinks-v2.svg" />Cup</button
+          ><button class=""><img src="../../../../public/art/starter-covers/movies-v2.svg" />Ticket</button
+          ><button class=""><img src="../../../../public/art/starter-covers/places-v2.svg" />Leaf</button
+          ><button class=""><img src="../../../../public/art/starter-covers/cars-v2.svg" />Car</button
+          ><button class=""><img src="../../../../public/art/landing/midnight-snacks.svg" />Snack</button
+          ><button class="">
+            <img src="../../../../public/art/landing/questionable-purchases.svg" />Bag
+          </button>
+        </div>
+        <div class="tones">
+          <button class="chosen">Sage</button><button>Clay</button><button>Butter</button>
+        </div>
+        <p>▸ Description & cover · optional</p>
+        <button class="primary">Create collection →</button>
+      </div>
+      <div class="preview">
+        <p class="overline">YOUR COLLECTION</p>
+        <img src="../../../../public/art/starter-covers/drinks-v2.svg" />
+        <h2>Coffee experiments</h2>
+        <small>A name is enough. The rest can wait.</small>
+      </div>
+    </div>
+  </section>
+</main>

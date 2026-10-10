@@ -29,7 +29,7 @@ export function ActivityView({
   onNew: () => void;
 }) {
   const [selected, setSelected] = useState<Log | null>(null);
-  const [repeatTitle, setRepeatTitle] = useState('');
+  const [repeatLog, setRepeatLog] = useState<Log | null>(null);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'name'>('newest');
   const [period, setPeriod] = useState<'all' | '7d' | '30d' | 'year'>('all');
@@ -55,7 +55,7 @@ export function ActivityView({
 
   useEffect(() => {
     setSelected(null);
-    setRepeatTitle('');
+    setRepeatLog(null);
     setQuery('');
     setSort('newest');
     setPeriod('all');
@@ -69,7 +69,7 @@ export function ActivityView({
 
   function close() {
     setSelected(null);
-    setRepeatTitle('');
+    setRepeatLog(null);
     if (newOpen) onCloseNew();
   }
 
@@ -129,7 +129,7 @@ export function ActivityView({
             className="activity-summary-again"
             type="button"
             onClick={() => {
-              setRepeatTitle(lastLog.title);
+              setRepeatLog(lastLog);
               onNew();
             }}
           >
@@ -213,7 +213,7 @@ export function ActivityView({
                   <button
                     className="activity-again"
                     onClick={() => {
-                      setRepeatTitle(log.title);
+                      setRepeatLog(log);
                       onNew();
                     }}
                   >
@@ -227,10 +227,10 @@ export function ActivityView({
       )}
       {(newOpen || selected) && (
         <ActivityEditor
-          key={selected?.id ?? `new-${repeatTitle}`}
+          key={selected?.id ?? `new-${repeatLog?.id ?? 'blank'}`}
           listId={listId}
           log={newOpen ? null : selected}
-          initialTitle={repeatTitle}
+          repeatLog={repeatLog}
           existingTitles={logs.map((entry) => entry.title)}
           onClose={close}
         />
@@ -256,22 +256,30 @@ function activityMonthLabel(value: string): string {
 function ActivityEditor({
   listId,
   log,
-  initialTitle,
+  repeatLog,
   existingTitles,
   onClose,
 }: {
   listId: string;
   log: Log | null;
-  initialTitle: string;
+  repeatLog: Log | null;
   existingTitles: string[];
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
-  const [form, setForm] = useState<LogInput>(log ? fromLog(log) : emptyLog(initialTitle));
+  const [form, setForm] = useState<LogInput>(
+    log ? fromLog(log) : repeatLog ? { ...fromLog(repeatLog), happenedOn: today(), note: '' } : emptyLog(),
+  );
+  const [exerciseMode, setExerciseMode] = useState(Boolean((log ?? repeatLog)?.exerciseSets?.length));
+  const [confirmingActivity, setConfirmingActivity] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
-  const originalForm = log ? fromLog(log) : emptyLog(initialTitle);
+  const originalForm = log
+    ? fromLog(log)
+    : repeatLog
+      ? { ...fromLog(repeatLog), happenedOn: today(), note: '' }
+      : emptyLog();
   const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
   const hasUnsavedChanges = hasLogChanges;
   useEffect(() => {
@@ -349,8 +357,35 @@ function ActivityEditor({
           </button>
         </div>
         <form className="editor-form record-form" onSubmit={submit}>
+          <div className="activity-mode" aria-label="Log type">
+            <button
+              type="button"
+              aria-pressed={!exerciseMode}
+              onClick={() => {
+                if (form.exerciseSets?.some((set) => set.reps !== null || set.weight !== null)) {
+                  setConfirmingActivity(true);
+                  return;
+                }
+                setForm({ ...form, exerciseSets: [] });
+                setExerciseMode(false);
+              }}
+            >
+              Activity
+            </button>
+            <button
+              type="button"
+              aria-pressed={exerciseMode}
+              onClick={() => {
+                setExerciseMode(true);
+                if (!form.exerciseSets?.length)
+                  setForm({ ...form, exerciseSets: [{ reps: null, weight: null }] });
+              }}
+            >
+              Exercise
+            </button>
+          </div>
           <label>
-            What
+            {exerciseMode ? 'Exercise' : 'What'}
             <input
               required
               autoFocus={!log}
@@ -379,6 +414,110 @@ function ActivityEditor({
               onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
             />
           </label>
+          {exerciseMode && (
+            <fieldset className="exercise-sets">
+              <legend>Exercise sets</legend>
+              <p className="exercise-helper">Leave weight blank for bodyweight sets.</p>
+              <label>
+                Weight unit
+                <select
+                  value={form.weightUnit ?? 'kg'}
+                  onChange={(event) => setForm({ ...form, weightUnit: event.target.value as 'kg' | 'lb' })}
+                >
+                  <option value="kg">kg</option>
+                  <option value="lb">lb</option>
+                </select>
+              </label>
+              {(form.exerciseSets ?? []).map((set, index) => (
+                <div className="exercise-set-row" key={index}>
+                  <span className="set-number" aria-label={`Set ${index + 1}`}>
+                    {index + 1}
+                  </span>
+                  <label>
+                    Reps
+                    <input
+                      aria-label={`Set ${index + 1} reps`}
+                      type="number"
+                      required
+                      min="1"
+                      max="10000"
+                      step="1"
+                      value={set.reps ?? ''}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          exerciseSets: form.exerciseSets?.map((entry, i) =>
+                            i === index
+                              ? {
+                                  ...entry,
+                                  reps: event.target.value === '' ? null : Number(event.target.value),
+                                }
+                              : entry,
+                          ),
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Weight
+                    <input
+                      aria-label={`Set ${index + 1} weight in ${form.weightUnit ?? 'kg'}`}
+                      type="number"
+                      min="0"
+                      max="100000"
+                      step="any"
+                      placeholder="—"
+                      value={set.weight ?? ''}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          exerciseSets: form.exerciseSets?.map((entry, i) =>
+                            i === index
+                              ? {
+                                  ...entry,
+                                  weight: event.target.value === '' ? null : Number(event.target.value),
+                                }
+                              : entry,
+                          ),
+                        })
+                      }
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label={`Remove set ${index + 1}`}
+                    onClick={() =>
+                      setForm({ ...form, exerciseSets: form.exerciseSets?.filter((_, i) => i !== index) })
+                    }
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={(form.exerciseSets?.length ?? 0) >= 100}
+                onClick={() => {
+                  const previous = form.exerciseSets?.at(-1);
+                  setForm({
+                    ...form,
+                    exerciseSets: [
+                      ...(form.exerciseSets ?? []),
+                      previous ? { ...previous } : { reps: null, weight: null },
+                    ],
+                  });
+                }}
+              >
+                <Plus size={16} /> Add set
+              </button>
+              <p className="exercise-total">
+                {form.exerciseSets?.length ?? 0} sets ·{' '}
+                {(form.exerciseSets ?? []).reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps
+              </p>
+            </fieldset>
+          )}
           <details
             className="record-extras"
             open={Boolean(
@@ -386,7 +525,7 @@ function ActivityEditor({
             )}
           >
             <summary>
-              Measurements <span>optional</span>
+              {exerciseMode ? 'Other measurements' : 'Measurements'} <span>optional</span>
             </summary>
             <div className="metric-row">
               <label>
@@ -455,7 +594,12 @@ function ActivityEditor({
           {save.isError && <p className="form-error">{save.error.message}</p>}
           <button
             className="button button-accent"
-            disabled={!form.title.trim() || save.isPending || Boolean(log && !hasLogChanges)}
+            disabled={
+              !form.title.trim() ||
+              save.isPending ||
+              Boolean(log && !hasLogChanges) ||
+              Boolean(exerciseMode && !form.exerciseSets?.length)
+            }
           >
             {log ? 'Save changes' : 'Save log'}
           </button>
@@ -496,6 +640,21 @@ function ActivityEditor({
             onClose={() => setConfirmingDelete(false)}
           />
         )}
+        {confirmingActivity && (
+          <ConfirmDialog
+            eyebrow="CHANGE LOG TYPE"
+            title="Remove exercise sets?"
+            description="Switching to Activity removes the exercise sets from this draft. Other measurements and notes stay intact."
+            cancelLabel="Keep editing"
+            confirmLabel="Use Activity"
+            onConfirm={() => {
+              setForm({ ...form, exerciseSets: [] });
+              setExerciseMode(false);
+              setConfirmingActivity(false);
+            }}
+            onClose={() => setConfirmingActivity(false)}
+          />
+        )}
         {confirmingDiscard && (
           <ConfirmDialog
             eyebrow="DISCARD CHANGES"
@@ -517,6 +676,8 @@ function ActivityEditor({
 
 function emptyLog(title = ''): LogInput {
   return {
+    exerciseSets: [],
+    weightUnit: 'kg',
     itemId: null,
     title,
     happenedOn: today(),
@@ -530,6 +691,8 @@ function emptyLog(title = ''): LogInput {
 
 function fromLog(log: Log): LogInput {
   return {
+    exerciseSets: (log.exerciseSets ?? []).map((set) => ({ ...set })),
+    weightUnit: log.weightUnit ?? 'kg',
     itemId: null,
     title: log.title,
     happenedOn: log.happenedOn,
@@ -546,8 +709,18 @@ function cleanLogInput(input: LogInput): LogInput {
 }
 
 function formatMetric(log: Log): string {
+  if (log.exerciseSets?.length) {
+    const weights = log.exerciseSets.flatMap((set) => (set.weight === null ? [] : [set.weight]));
+    const totalReps = log.exerciseSets.reduce((sum, set) => sum + (set.reps ?? 0), 0);
+    const low = Math.min(...weights),
+      high = Math.max(...weights);
+    const weight = weights.length
+      ? `${low === high ? low : `${low}–${high}`} ${log.weightUnit ?? 'kg'}${weights.length < log.exerciseSets.length ? ' + bodyweight' : ''}`
+      : 'bodyweight';
+    return `${log.exerciseSets.length} sets · ${totalReps} reps · ${weight}`;
+  }
   const parts = [];
   if (log.amount !== null) parts.push(`${log.amount}${log.unit ? ` ${log.unit}` : ''}`);
-  if (log.sets !== null && log.reps !== null) parts.push(`${log.sets} × ${log.reps}`);
+  if (log.sets !== null && log.reps !== null) parts.push(`${log.sets} sets × ${log.reps} reps`);
   return parts.join(' · ');
 }

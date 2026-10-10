@@ -4,6 +4,7 @@ import { Camera, Trash } from '@phosphor-icons/react';
 import { api } from '../api';
 import { ConfirmDialog } from './ConfirmDialog';
 import { preparePhoto } from '../shared/photos';
+import type { CollectionArt } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
 
 export function PhotoControl({
@@ -102,11 +103,13 @@ export function PhotoControl({
 export function CollectionCoverControl({
   listId,
   listName,
+  artwork,
   hasCoverPhoto,
   version,
 }: {
   listId: string;
   listName: string;
+  artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
   version: number;
 }) {
@@ -133,9 +136,13 @@ export function CollectionCoverControl({
     },
     onError: (failure) => setError(failure.message),
   });
-  const starterCover = hasCoverPhoto ? null : starterCollectionCover(listName);
+  const starterCover = hasCoverPhoto ? null : starterCollectionCover(listName, artwork);
   const coverSource = hasCoverPhoto ? `/api/lists/${listId}/cover?v=${version}` : starterCover;
-  const coverState = hasCoverPhoto ? 'Private cover' : starterCover ? 'Starter cover' : 'No cover attached';
+  const coverState = hasCoverPhoto
+    ? 'Private cover'
+    : starterCover
+      ? 'Collection artwork'
+      : 'No cover attached';
 
   return (
     <section className="collection-cover-control" aria-label="Collection cover">
@@ -145,11 +152,11 @@ export function CollectionCoverControl({
           {hasCoverPhoto
             ? 'A private cover for this collection.'
             : starterCover
-              ? 'A starter cover is showing until you add a private one.'
+              ? 'Your artwork is showing. You can use a private photo instead.'
               : 'Add an optional private cover photo.'}
         </p>
       </div>
-      {coverSource && <img src={coverSource} alt="Collection cover" />}
+      {coverSource && (hasCoverPhoto || !artwork) && <img src={coverSource} alt="Collection cover" />}
       <div className="photo-actions">
         <p className="photo-state">{coverState}</p>
         <div className="photo-buttons">

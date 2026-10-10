@@ -24,6 +24,7 @@ type ListRow = {
   name: string;
   kind: 'collection' | 'activity';
   description: string;
+  artwork: string | null;
   ranked_ids: string;
   rank_revision: number;
   updated_at: number;
@@ -51,6 +52,8 @@ type ItemRow = {
 };
 
 type LogRow = {
+  exercise_sets: string;
+  weight_unit: 'kg' | 'lb';
   id: string;
   list_id: string;
   item_id: string | null;
@@ -75,7 +78,7 @@ type ShareRow = {
 };
 
 const listQuery = `
-  SELECT l.id, l.name, l.kind, l.description, l.ranked_ids, l.rank_revision, l.updated_at,
+  SELECT l.id, l.name, l.kind, l.description, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at,
     (SELECT COUNT(*) FROM items i WHERE i.list_id = l.id) AS item_count,
     (SELECT COUNT(*) FROM logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
@@ -90,6 +93,7 @@ function mapList(row: ListRow): ListDetail {
     name: row.name,
     kind: row.kind,
     description: row.description,
+    artwork: row.artwork ? JSON.parse(row.artwork) : null,
     rankedIds: JSON.parse(row.ranked_ids) as string[],
     rankRevision: row.rank_revision,
     itemCount: row.item_count,
@@ -111,6 +115,7 @@ export async function listLists(db: D1Database, ownerId: string): Promise<ListSu
     name: row.name,
     kind: row.kind,
     description: row.description,
+    artwork: row.artwork ? JSON.parse(row.artwork) : null,
     itemCount: row.item_count,
     logCount: row.log_count,
     rankedCount: row.ranked_count,
@@ -180,6 +185,8 @@ function mapLog(row: LogRow): Log {
     itemId: row.item_id,
     title: row.title,
     happenedOn: row.happened_on,
+    exerciseSets: JSON.parse(row.exercise_sets),
+    weightUnit: row.weight_unit,
     note: row.note,
     amount: row.amount,
     unit: row.unit,

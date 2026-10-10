@@ -23,6 +23,7 @@ beforeAll(async () => {
     '0003_item_decisions.sql',
     '0004_list_photos.sql',
     '0005_meh_decision.sql',
+    '0006_personal_tools.sql',
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
@@ -648,4 +649,75 @@ test('Meh is explicit, reversible, owner-scoped, and independent of rank', async
     list: { rankedIds: [item.id], rankRevision: 1 },
   });
   expect((await (await call('/patterns', 'neutral')).json()) as unknown).toMatchObject({ mehCount: 0 });
+});
+
+test('collection artwork and exercise sets persist, patch independently, and export privately', async () => {
+  const art = { object: 'snack', tone: 'clay' };
+  const created = await call('/lists', 'tools', 'POST', {
+    name: 'Small things',
+    kind: 'collection',
+    artwork: art,
+  });
+  expect(created.status).toBe(201);
+  const { list } = (await created.json()) as { list: { id: string; artwork: unknown } };
+  expect(list.artwork).toEqual(art);
+  const renamed = await call(`/lists/${list.id}`, 'tools', 'PATCH', { name: 'Still small' });
+  expect(((await renamed.json()) as { list: { artwork: unknown } }).list.artwork).toEqual(art);
+  expect((await call(`/lists/${list.id}`, 'other', 'PATCH', { artwork: null })).status).toBe(404);
+  expect(
+    (await call(`/lists/${list.id}`, 'tools', 'PATCH', { artwork: { object: 'invalid', tone: 'sage' } }))
+      .status,
+  ).toBe(400);
+  const cleared = await call(`/lists/${list.id}`, 'tools', 'PATCH', { artwork: null });
+  expect(((await cleared.json()) as { list: { artwork: unknown } }).list.artwork).toBeNull();
+
+  const gym = await call('/lists', 'tools', 'POST', { name: 'Gym', kind: 'activity' });
+  const gymId = ((await gym.json()) as { list: { id: string } }).list.id;
+  const exerciseSets = [
+    { reps: 10, weight: 40 },
+    { reps: 8, weight: 45 },
+    { reps: 6, weight: null },
+  ];
+  const saved = await call(`/lists/${gymId}/logs`, 'tools', 'POST', {
+    title: 'Bench press',
+    happenedOn: '2026-10-10',
+    exerciseSets,
+    weightUnit: 'kg',
+  });
+  expect(saved.status).toBe(201);
+  const { log } = (await saved.json()) as { log: { id: string; exerciseSets: unknown; weightUnit: string } };
+  expect(log.exerciseSets).toEqual(exerciseSets);
+  expect(log.weightUnit).toBe('kg');
+  const noted = await call(`/logs/${log.id}`, 'tools', 'PATCH', { note: 'New note' });
+  expect(((await noted.json()) as { log: { exerciseSets: unknown } }).log.exerciseSets).toEqual(exerciseSets);
+  expect((await call(`/logs/${log.id}`, 'other', 'PATCH', { exerciseSets: [] })).status).toBe(404);
+  for (const invalid of [[{ reps: -1, weight: 1 }], [{ reps: 2.5, weight: 1 }], [{ reps: 2, weight: -1 }]]) {
+    expect((await call(`/logs/${log.id}`, 'tools', 'PATCH', { exerciseSets: invalid })).status).toBe(400);
+  }
+  const edited = await call(`/logs/${log.id}`, 'tools', 'PATCH', {
+    exerciseSets: [{ reps: 12, weight: 0 }],
+    weightUnit: 'lb',
+  });
+  expect(((await edited.json()) as { log: { exerciseSets: unknown; weightUnit: string } }).log).toMatchObject(
+    { exerciseSets: [{ reps: 12, weight: 0 }], weightUnit: 'lb' },
+  );
+  const exported = await call('/export/records', 'tools');
+  expect(exported.status).toBe(200);
+  expect(((await exported.json()) as { logs: unknown[] }).logs).toContainEqual(
+    expect.objectContaining({ id: log.id, exerciseSets: [{ reps: 12, weight: 0 }], weightUnit: 'lb' }),
+  );
+  const legacy = await call(`/lists/${gymId}/logs`, 'tools', 'POST', {
+    title: 'Old style',
+    happenedOn: '2026-10-10',
+    sets: 3,
+    reps: 8,
+    amount: 50,
+    unit: 'kg',
+  });
+  expect(((await legacy.json()) as { log: unknown }).log).toMatchObject({
+    sets: 3,
+    reps: 8,
+    amount: 50,
+    exerciseSets: [],
+  });
 });

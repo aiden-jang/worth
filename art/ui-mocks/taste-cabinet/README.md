@@ -76,3 +76,7 @@ The cabinet finishing pass adds [Search and Patterns references](edition/README.
 and brief opened-panel motion. Signed-out landing, settings and sharing retain their
 accepted compositions; long personal titles wrap. See
 [finishing verification](../../ui-qa/cabinet-finishing/README.md).
+
+## Personal tools
+
+[Artwork and exercise references](personal-tools/README.md) extend the approved cabinet with saved custom artwork and individual exercise sets. Creation, settings and activity retain their existing screen compositions.

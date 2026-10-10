@@ -8,6 +8,8 @@ import { ActivityView } from '../components/ActivityView';
 import { ItemEditor } from '../components/ItemEditor';
 import { ShareDialog } from '../components/ShareDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import type { CollectionArt } from '../shared/models';
+import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
 import { CollectionCoverControl } from '../components/PhotoControl';
 
 export function ListPage() {
@@ -145,6 +147,7 @@ export function ListPage() {
           name={list.name}
           description={list.description}
           isCollection={list.kind === 'collection'}
+          artwork={list.artwork ?? null}
           hasCoverPhoto={list.hasCoverPhoto}
           updatedAt={list.updatedAt}
           onClose={() => setShowSettings(false)}
@@ -225,6 +228,7 @@ function ListSettings({
   name,
   description,
   isCollection,
+  artwork,
   hasCoverPhoto,
   updatedAt,
   onClose,
@@ -234,21 +238,27 @@ function ListSettings({
   name: string;
   description: string;
   isCollection: boolean;
+  artwork: CollectionArt | null;
   hasCoverPhoto: boolean;
   updatedAt: number;
   onClose: () => void;
   onDeleted: () => void;
 }) {
   const client = useQueryClient();
+  const [nextArtwork, setNextArtwork] = useState(artwork);
   const [nextName, setNextName] = useState(name);
   const [nextDescription, setNextDescription] = useState(description);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const cleanName = nextName.trim();
   const cleanDescription = nextDescription.trim();
-  const hasChanges = cleanName !== name || cleanDescription !== description;
+  const hasChanges =
+    cleanName !== name ||
+    cleanDescription !== description ||
+    JSON.stringify(nextArtwork) !== JSON.stringify(artwork);
   const update = useMutation({
-    mutationFn: () => api.updateList(listId, { name: cleanName, description: cleanDescription }),
+    mutationFn: () =>
+      api.updateList(listId, { name: cleanName, description: cleanDescription, artwork: nextArtwork }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['list', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -310,6 +320,12 @@ function ListSettings({
             onChange={(event) => setNextDescription(event.target.value)}
           />
         </label>
+        {isCollection && (
+          <CollectionArtworkPicker name={nextName} value={nextArtwork} onChange={setNextArtwork} />
+        )}
+        {isCollection && hasCoverPhoto && (
+          <p className="muted">Your uploaded cover shows first. Artwork appears when you remove it.</p>
+        )}
         <button className="button button-accent" disabled={!cleanName || !hasChanges || update.isPending}>
           Save changes
         </button>
@@ -323,6 +339,7 @@ function ListSettings({
         <CollectionCoverControl
           listId={listId}
           listName={name}
+          artwork={artwork}
           hasCoverPhoto={hasCoverPhoto}
           version={updatedAt}
         />

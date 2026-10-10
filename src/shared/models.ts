@@ -1,3 +1,9 @@
+export type CollectionArt = {
+  object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag';
+  tone: 'sage' | 'clay' | 'butter';
+};
+export type ExerciseSet = { reps: number | null; weight: number | null };
+
 export type ListKind = 'collection' | 'activity';
 export type ItemDecision = 'favorite' | 'meh' | 'would_not_again';
 
@@ -10,6 +16,7 @@ export interface ListSummary {
   logCount: number;
   rankedCount: number;
   favoriteCount: number;
+  artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
   updatedAt: number;
 }
@@ -36,6 +43,8 @@ export interface Item {
 }
 
 export interface Log {
+  exerciseSets?: ExerciseSet[];
+  weightUnit?: 'kg' | 'lb';
   id: string;
   listId: string;
   itemId: string | null;

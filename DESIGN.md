@@ -210,3 +210,9 @@ earlier landing layouts only. The accepted private cabinet screens remain curren
 The landing now illustrates Drinks, Midnight snacks and Questionable purchases, using a
 cup, snack bag and shopping bag. The working example uses the same topics. Long names
 wrap instead of shrinking; the accepted three-folder layout and cream Meh slip remain.
+
+## Personal tools
+
+Collections now support an optional saved object and palette choice. Automatic keeps the existing starter-name/monogram fallback; private uploaded covers remain first. Creation previews the selection, and settings save it alongside name and description. See [personal tools references](art/ui-mocks/taste-cabinet/personal-tools/README.md).
+
+Activity supports an explicit Exercise mode. One dated entry records one exercise and its ordered sets, with separate reps and optional weight in kg/lb. History summarizes actual set count, total reps and weight range; the editor shows every set. Repeating copies measurements into a new draft with today's date and no note. Legacy aggregate measurements remain editable and preserved. Switching to Activity confirms removal of entered draft sets. These records remain private and exportable; no scores or activity judgments are introduced.

@@ -1,5 +1,7 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
+  CollectionArt,
+  ExerciseSet,
   Item,
   ItemDecision,
   ListDetail,
@@ -44,9 +46,13 @@ export const api = {
   patterns: () => request<import('./shared/models').ArchivePatterns>('/patterns'),
   lists: () => request<{ lists: ListSummary[] }>('/lists'),
   list: (id: string) => request<{ list: ListDetail }>(`/lists/${id}`),
-  createList: (body: { name: string; kind: 'collection' | 'activity'; description: string }) =>
-    request<{ list: ListDetail }>('/lists', json('POST', body)),
-  updateList: (id: string, body: { name?: string; description?: string }) =>
+  createList: (body: {
+    name: string;
+    kind: 'collection' | 'activity';
+    description: string;
+    artwork?: CollectionArt | null;
+  }) => request<{ list: ListDetail }>('/lists', json('POST', body)),
+  updateList: (id: string, body: { name?: string; description?: string; artwork?: CollectionArt | null }) =>
     request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
   deleteList: (id: string) => request<void>(`/lists/${id}`, { method: 'DELETE' }),
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
@@ -101,6 +107,8 @@ export interface ItemInput {
 }
 
 export interface LogInput {
+  exerciseSets?: ExerciseSet[];
+  weightUnit?: 'kg' | 'lb';
   itemId: string | null;
   title: string;
   happenedOn: string;

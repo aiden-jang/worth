@@ -88,7 +88,7 @@ export function ArchivePage() {
             const cover = list.hasCoverPhoto
               ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
               : list.kind === 'collection'
-                ? starterCollectionCover(list.name)
+                ? starterCollectionCover(list.name, list.artwork)
                 : null;
             return (
               <li key={list.id}>

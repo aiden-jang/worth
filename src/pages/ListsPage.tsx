@@ -5,6 +5,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ListKind, ListSummary } from '../shared/models';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
+import type { CollectionArt } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
 import { preparePhoto } from '../shared/photos';
 import { formatRelativeTimestamp } from '../format';
@@ -54,6 +56,7 @@ const suggestions: { name: string; kind: ListKind; description: string; cover?: 
   { name: 'Books', kind: 'collection', description: 'The ones worth lending out.' },
   { name: 'Music', kind: 'collection', description: 'Albums and songs you keep returning to.' },
   { name: 'Games', kind: 'collection', description: 'The ones that stayed with you.' },
+  { name: 'Gym', kind: 'activity', description: 'Exercises, sets, reps, and weight.' },
   { name: 'Runs', kind: 'activity', description: 'Distance, pace, and when you went.' },
   { name: 'Upkeep', kind: 'activity', description: 'Haircuts, nails, and other little resets.' },
 ];
@@ -70,6 +73,7 @@ export function ListsPage() {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
+  const [artwork, setArtwork] = useState<CollectionArt | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const coverInput = useRef<HTMLInputElement>(null);
@@ -117,6 +121,7 @@ export function ListsPage() {
       kind: ListKind;
       description: string;
       coverFile: File | null;
+      artwork: CollectionArt | null;
     }) => {
       const created = await api.createList(input);
       if (!input.coverFile || input.kind !== 'collection') return { ...created, coverError: '' };
@@ -176,11 +181,17 @@ export function ListsPage() {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) return;
-    create.mutate({ name: name.trim(), kind, description: description.trim(), coverFile });
+    create.mutate({
+      name: name.trim(),
+      kind,
+      description: description.trim(),
+      coverFile,
+      artwork: kind === 'collection' ? artwork : null,
+    });
   }
 
   function requestCloseCreate() {
-    if (name.trim() || description.trim() || coverFile) {
+    if (name.trim() || description.trim() || coverFile || artwork) {
       setConfirmingDiscard(true);
       return;
     }
@@ -189,6 +200,7 @@ export function ListsPage() {
 
   function discardDraft() {
     setName('');
+    setArtwork(null);
     setDescription('');
     setCoverFile(null);
     setKind(requestedKind === 'activity' ? 'activity' : 'collection');
@@ -251,19 +263,21 @@ export function ListsPage() {
               </label>
               <div className="cabinet-name-ideas" role="group" aria-label="Name suggestions">
                 <span>A few ideas</span>
-                {(kind === 'collection' ? ['Drinks', 'Movies', 'Books'] : ['Runs', 'Upkeep']).map((idea) => (
-                  <button
-                    key={idea}
-                    type="button"
-                    disabled={create.isPending}
-                    onClick={() => {
-                      setName(idea);
-                      nameInput.current?.focus();
-                    }}
-                  >
-                    {idea}
-                  </button>
-                ))}
+                {(kind === 'collection' ? ['Drinks', 'Movies', 'Books'] : ['Gym', 'Runs', 'Upkeep']).map(
+                  (idea) => (
+                    <button
+                      key={idea}
+                      type="button"
+                      disabled={create.isPending}
+                      onClick={() => {
+                        setName(idea);
+                        nameInput.current?.focus();
+                      }}
+                    >
+                      {idea}
+                    </button>
+                  ),
+                )}
               </div>
               {!listScope && (
                 <label>
@@ -280,6 +294,14 @@ export function ListsPage() {
                     <option value="activity">Activity: things you log over time</option>
                   </select>
                 </label>
+              )}
+              {kind === 'collection' && (
+                <details className="create-artwork">
+                  <summary>
+                    Artwork <span className="optional">optional</span>
+                  </summary>
+                  <CollectionArtworkPicker name={name} value={artwork} onChange={setArtwork} />
+                </details>
               )}
               <details className="create-extras form-wide">
                 <summary>
@@ -338,7 +360,10 @@ export function ListsPage() {
             {kind === 'collection' && (
               <aside className="cabinet-create-preview" aria-label="Collection preview">
                 <p className="overline">YOUR COLLECTION</p>
-                <CollectionArtwork name={name} cover={coverPreview || starterCollectionCover(name)} />
+                <CollectionArtwork
+                  name={name}
+                  cover={coverPreview || starterCollectionCover(name, artwork)}
+                />
                 <h3>{name.trim() || 'Your collection'}</h3>
                 <p>A name is enough. The rest can wait.</p>
               </aside>
@@ -517,7 +542,7 @@ function ListDirectory({
             {lists.map((list, index) => {
               const cover = list.hasCoverPhoto
                 ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-                : starterCollectionCover(list.name);
+                : starterCollectionCover(list.name, list.artwork);
               return (
                 <div className="collection-directory-entry" key={list.id}>
                   <Link to={`/lists/${list.id}`} className="collection-directory-card cabinet-directory-card">

@@ -12,14 +12,22 @@ const date = z
     return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
   }, 'Invalid date');
 
+const artwork = z
+  .object({
+    object: z.enum(['cup', 'ticket', 'place', 'car', 'snack', 'bag']),
+    tone: z.enum(['sage', 'clay', 'butter']),
+  })
+  .nullable();
+
 export const listInput = z.object({
   name: shortText(80),
   kind: z.enum(['collection', 'activity']),
   description: z.string().trim().max(280).default(''),
+  artwork: artwork.default(null),
 });
 
 export const listPatch = listInput
-  .pick({ name: true, description: true })
+  .pick({ name: true, description: true, artwork: true })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 
@@ -59,6 +67,16 @@ export const itemsBatchInput = z.object({
 });
 
 export const logInput = z.object({
+  exerciseSets: z
+    .array(
+      z.object({
+        reps: z.number().int().positive().max(10000),
+        weight: z.number().finite().nonnegative().max(100000).nullable(),
+      }),
+    )
+    .max(100)
+    .default([]),
+  weightUnit: z.enum(['kg', 'lb']).default('kg'),
   itemId: z.string().uuid().nullable().default(null),
   title: z.string().trim().max(120).default(''),
   happenedOn: date,

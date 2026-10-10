@@ -958,3 +958,160 @@
     sans-serif;
   letter-spacing: -0.075em;
 }
+
+/* Personal tools retain the cabinet's palette and creation/editor compositions. */
+.artwork-picker,
+.exercise-sets {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.artwork-picker {
+  grid-column: 1 / -1;
+}
+.artwork-picker legend,
+.exercise-sets legend {
+  padding: 0;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 14px;
+}
+.artwork-auto {
+  margin-bottom: 12px;
+}
+.artwork-picker button,
+.activity-mode button {
+  background: transparent;
+  border: 1px solid #38392f;
+  border-radius: 12px;
+  color: #f0ecdf;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.artwork-picker button[aria-pressed='true'],
+.activity-mode button[aria-pressed='true'] {
+  border-color: #e8dc9d;
+  background: #292a23;
+}
+.artwork-objects {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.artwork-objects button {
+  min-width: 0;
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.artwork-objects .collection-artwork {
+  border-radius: 8px;
+  width: 100%;
+}
+.artwork-tones,
+.activity-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.artwork-tones button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.artwork-tones i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #bec7ad;
+}
+.artwork-tones i[data-tone='clay'] {
+  background: #cdb0a4;
+}
+.artwork-tones i[data-tone='butter'] {
+  background: #d8cf9d;
+}
+.exercise-sets {
+  display: grid;
+  gap: 14px;
+}
+.exercise-set-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 44px;
+  align-items: end;
+  gap: 12px;
+}
+.exercise-set-row label {
+  min-width: 0;
+}
+.exercise-set-row input {
+  width: 100%;
+  min-width: 0;
+}
+.set-number {
+  color: #aaa99b;
+  font:
+    12px 'DM Mono',
+    monospace;
+  padding-bottom: 15px;
+}
+.exercise-total {
+  color: #aaa99b;
+  font-size: 13px;
+  margin: 0;
+}
+.exercise-sets > .button {
+  justify-self: start;
+}
+.activity-mode {
+  margin: 0;
+}
+@media (max-width: 680px) {
+  .exercise-set-row {
+    gap: 8px;
+  }
+  .artwork-tones {
+    gap: 6px;
+  }
+}
+.settings-form .artwork-picker {
+  max-width: 528px;
+}
+.exercise-helper {
+  font-size: 13px;
+  color: #aaa99b;
+  margin: 0;
+}
+.activity-list-page .list-head-actions .button-accent {
+  background: #e8dc9d;
+  color: #181915;
+  padding: 12px 18px;
+  border-radius: 999px;
+  min-height: 44px;
+}
+.activity-main small {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.create-artwork {
+  margin: 0;
+}
+.create-artwork > summary {
+  cursor: pointer;
+  color: #aaa99b;
+  font-size: 13px;
+}
+.create-artwork[open] > summary {
+  margin-bottom: 18px;
+}
+.create-artwork .artwork-picker legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
