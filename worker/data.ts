@@ -1,4 +1,12 @@
-import type { Item, ItemDecision, ListDetail, ListSummary, Log, ShareSummary } from '../src/shared/models';
+import type {
+  WorkoutSession,
+  Item,
+  ItemDecision,
+  ListDetail,
+  ListSummary,
+  Log,
+  ShareSummary,
+} from '../src/shared/models';
 
 export type RecordExport = {
   schemaVersion: 1;
@@ -7,6 +15,7 @@ export type RecordExport = {
   lists: ListDetail[];
   items: Item[];
   logs: Log[];
+  workoutSessions: WorkoutSession[];
 };
 
 export class ApiError extends Error {
@@ -52,6 +61,7 @@ type ItemRow = {
 };
 
 type LogRow = {
+  workout_id: string | null;
   exercise_sets: string;
   weight_unit: 'kg' | 'lb';
   id: string;
@@ -184,6 +194,7 @@ function mapLog(row: LogRow): Log {
     listId: row.list_id,
     itemId: row.item_id,
     title: row.title,
+    workoutId: row.workout_id,
     happenedOn: row.happened_on,
     exerciseSets: JSON.parse(row.exercise_sets),
     weightUnit: row.weight_unit,
@@ -238,7 +249,7 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
 }
 
 export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
-  const [listResult, itemResult, logResult] = await Promise.all([
+  const [listResult, itemResult, logResult, workoutResult] = await Promise.all([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId).all<ListRow>(),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId).all<ItemRow>(),
     db
@@ -248,6 +259,10 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       )
       .bind(ownerId)
       .all<LogRow>(),
+    db
+      .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? ORDER BY happened_on ASC, created_at ASC')
+      .bind(ownerId)
+      .all<WorkoutRow>(),
   ]);
   return {
     schemaVersion: 1,
@@ -256,5 +271,65 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     lists: listResult.results.map(mapList),
     items: itemResult.results.map(mapItem),
     logs: logResult.results.map(mapLog),
+    workoutSessions: workoutResult.results.map(mapWorkout),
   };
+}
+
+type WorkoutRow = {
+  id: string;
+  list_id: string;
+  owner_id: string;
+  title: string;
+  happened_on: string;
+  created_at: number;
+  updated_at: number;
+};
+function mapWorkout(row: WorkoutRow): WorkoutSession {
+  return {
+    id: row.id,
+    listId: row.list_id,
+    title: row.title,
+    happenedOn: row.happened_on,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+export async function listWorkouts(
+  db: D1Database,
+  ownerId: string,
+  listId: string,
+): Promise<WorkoutSession[]> {
+  const { results } = await db
+    .prepare(
+      'SELECT * FROM workout_sessions WHERE owner_id = ? AND list_id = ? ORDER BY happened_on DESC, created_at DESC',
+    )
+    .bind(ownerId, listId)
+    .all<WorkoutRow>();
+  return results.map(mapWorkout);
+}
+export async function requireWorkout(db: D1Database, ownerId: string, id: string): Promise<WorkoutSession> {
+  const row = await db
+    .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? AND id = ?')
+    .bind(ownerId, id)
+    .first<WorkoutRow>();
+  if (!row) throw new ApiError(404, 'NOT_FOUND', 'Workout not found');
+  return mapWorkout(row);
+}
+export async function validateWorkoutTarget(
+  db: D1Database,
+  ownerId: string,
+  listId: string,
+  workoutId: string | null,
+  happenedOn: string,
+  exerciseSets: unknown[],
+  itemId: string | null,
+): Promise<void> {
+  if (!workoutId) return;
+  const workout = await requireWorkout(db, ownerId, workoutId);
+  if (workout.listId !== listId)
+    throw new ApiError(400, 'INVALID_WORKOUT', 'Choose a workout in this activity list');
+  if (workout.happenedOn !== happenedOn)
+    throw new ApiError(400, 'INVALID_WORKOUT_DATE', 'The exercise date must match its workout');
+  if (!exerciseSets.length || itemId)
+    throw new ApiError(400, 'INVALID_WORKOUT_EXERCISE', 'Workout entries must contain exercise sets');
 }

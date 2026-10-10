@@ -216,3 +216,9 @@ wrap instead of shrinking; the accepted three-folder layout and cream Meh slip r
 Collections now support an optional saved object and palette choice. Automatic keeps the existing starter-name/monogram fallback; private uploaded covers remain first. Creation previews the selection, and settings save it alongside name and description. See [personal tools references](art/ui-mocks/taste-cabinet/personal-tools/README.md).
 
 Activity supports an explicit Exercise mode. One dated entry records one exercise and its ordered sets, with separate reps and optional weight in kg/lb. History summarizes actual set count, total reps and weight range; the editor shows every set. Repeating copies measurements into a new draft with today's date and no note. Legacy aggregate measurements remain editable and preserved. Switching to Activity confirms removal of entered draft sets. These records remain private and exportable; no scores or activity judgments are introduced.
+
+## Workout visits and recall
+
+An activity list can hold explicit workout sessions: a named/date visit grouping multiple exercise entries. Start a visit, then add its exercises; existing entries can be assigned from their editor. Separate visits on the same date remain separate. Session rename/date edits are supported; removing a grouping keeps its exercises intact. Exports include workout sessions and each log's relationship.
+
+Exercise logging shows the latest earlier matching entry from this activity list. Current-visit entries and future records are excluded, including later same-day entries when editing history. Original units are kept beside corresponding sets. Use previous sets explicitly copies measurements and unit; replacing filled draft sets asks for confirmation. The [workout references](art/ui-mocks/taste-cabinet/workouts/README.md) retain the cabinet compositions.

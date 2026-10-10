@@ -1,0 +1,177 @@
+<link rel="stylesheet" href="../../../../src/styles.css" /><style>
+  body {
+    margin: 0;
+    background: #181915;
+    color: #f0ecdf;
+    font:
+      15px 'DM Sans',
+      sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  aside {
+    position: fixed;
+    width: 192px;
+    padding: 32px;
+    border-right: 1px solid #38392f;
+    height: 100vh;
+  }
+  main {
+    margin-left: 192px;
+    padding: 40px;
+    max-width: 1232px;
+  }
+  h1 {
+    font-size: 68px;
+    font-weight: 500;
+    letter-spacing: -3px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 12px 0 32px;
+  }
+  p,
+  small {
+    color: #aaa99b;
+  }
+  section {
+    border: 1px solid #38392f;
+    border-radius: 22px;
+    padding: 32px;
+    max-width: 960px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 56px;
+  }
+  label {
+    display: block;
+    margin: 16px 0;
+  }
+  input,
+  select {
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 13px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button {
+    color: inherit;
+    background: none;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+  }
+  .primary {
+    background: #e8dc9d;
+    color: #181915;
+    border: 0;
+  }
+  .objects {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .objects img {
+    width: 100%;
+    border-radius: 8px;
+  }
+  .chosen {
+    border-color: #e8dc9d;
+  }
+  .tones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .preview img {
+    width: 100%;
+    border-radius: 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 44px;
+    gap: 12px;
+    align-items: end;
+    margin: 12px 0;
+  }
+  .workout {
+    max-width: 620px;
+    margin: auto;
+  }
+  header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .overline {
+    font:
+      10px 'DM Mono',
+      monospace;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 680px) {
+    aside {
+      display: none;
+    }
+    main {
+      margin: 0;
+      padding: 24px 20px;
+    }
+    h1 {
+      font-size: 50px;
+    }
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    section {
+      padding: 22px 18px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    .row {
+      gap: 8px;
+      grid-template-columns: 28px 1fr 1fr 44px;
+    }
+  }
+</style>
+<aside>
+  <h2>worth</h2>
+  <p>Archive</p>
+  <p>Collections</p>
+  <p>Activity</p>
+</aside>
+<main>
+  <p class="overline">YOUR ACTIVITY</p>
+  <h1>Gym</h1>
+  <p>3 logs</p>
+  <button class="primary">New workout +</button><button>Add log +</button>
+  <p style="margin-top: 32px">Find a log</p>
+  <section style="margin-top: 24px">
+    <p class="overline">WORKOUT · OCT 10</p>
+    <h2>Push day</h2>
+    <p>2 exercises · 6 sets · 48 reps</p>
+    <div style="border-top: 1px solid #38392f; padding: 22px 0">
+      Bench press <small>3 sets · 24 reps · 40–45 kg</small>
+    </div>
+    <div style="border-top: 1px solid #38392f; padding: 22px 0">
+      Shoulder press <small>3 sets · 24 reps · 15 kg</small>
+    </div>
+    <button>Add exercise +</button><button>Edit workout</button>
+  </section>
+  <p class="overline" style="margin-top: 32px">OTHER LOGS</p>
+  <p>Evening walk · Oct 8</p>
+</main>

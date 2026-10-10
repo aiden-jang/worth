@@ -24,6 +24,7 @@ beforeAll(async () => {
     '0004_list_photos.sql',
     '0005_meh_decision.sql',
     '0006_personal_tools.sql',
+    '0007_workout_sessions.sql',
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
@@ -720,4 +721,91 @@ test('collection artwork and exercise sets persist, patch independently, and exp
     amount: 50,
     exerciseSets: [],
   });
+});
+
+test('workout visits are private, separate on the same date, and preserve exercises when ungrouped', async () => {
+  const create = async (name: string, kind = 'activity') =>
+    ((await (await call('/lists', 'workouts', 'POST', { name, kind })).json()) as { list: { id: string } })
+      .list.id;
+  const gymId = await create('Gym'),
+    otherId = await create('Other gym'),
+    collectionId = await create('Books', 'collection');
+  expect(
+    (await call(`/lists/${collectionId}/workouts`, 'workouts', 'POST', { happenedOn: '2026-10-10' })).status,
+  ).toBe(400);
+  expect(
+    (await call(`/lists/${gymId}/workouts`, 'workouts', 'POST', { happenedOn: '2026-02-30' })).status,
+  ).toBe(400);
+  const makeWorkout = async (title: string) =>
+    (
+      (await (
+        await call(`/lists/${gymId}/workouts`, 'workouts', 'POST', { title, happenedOn: '2026-10-10' })
+      ).json()) as { workout: { id: string; title: string } }
+    ).workout;
+  const morning = await makeWorkout('Morning'),
+    evening = await makeWorkout('Evening');
+  expect(morning.id).not.toBe(evening.id);
+  expect((await call(`/workouts/${morning.id}`, 'stranger', 'PATCH', { title: 'No' })).status).toBe(404);
+  expect((await call(`/workouts/${morning.id}`, 'stranger', 'DELETE')).status).toBe(404);
+  expect((await call(`/lists/${gymId}/workouts`, 'stranger')).status).toBe(404);
+  const input = {
+    title: 'Bench press',
+    happenedOn: '2026-10-10',
+    exerciseSets: [{ reps: 8, weight: 40 }],
+    workoutId: morning.id,
+  };
+  expect((await call(`/lists/${otherId}/logs`, 'workouts', 'POST', input)).status).toBe(400);
+  expect(
+    (await call(`/lists/${gymId}/logs`, 'workouts', 'POST', { ...input, happenedOn: '2026-10-09' })).status,
+  ).toBe(400);
+  expect(
+    (await call(`/lists/${gymId}/logs`, 'workouts', 'POST', { ...input, exerciseSets: [] })).status,
+  ).toBe(400);
+  const saved = await call(`/lists/${gymId}/logs`, 'workouts', 'POST', input);
+  expect(saved.status).toBe(201);
+  const { log } = (await saved.json()) as { log: { id: string; workoutId: string } };
+  expect(log.workoutId).toBe(morning.id);
+  const patched = await call(`/logs/${log.id}`, 'workouts', 'PATCH', { note: 'Preserve visit' });
+  expect(((await patched.json()) as { log: { workoutId: string } }).log.workoutId).toBe(morning.id);
+  const dated = await call(`/workouts/${morning.id}`, 'workouts', 'PATCH', {
+    happenedOn: '2026-10-09',
+    title: 'Push day',
+  });
+  expect(dated.status).toBe(200);
+  const datedLogs = (
+    (await (await call(`/lists/${gymId}/logs`, 'workouts')).json()) as {
+      logs: { id: string; happenedOn: string }[];
+    }
+  ).logs;
+  expect(datedLogs.find((entry) => entry.id === log.id)?.happenedOn).toBe('2026-10-09');
+  const exported = (await (await call('/export/records', 'workouts')).json()) as {
+    workoutSessions: unknown[];
+    logs: unknown[];
+  };
+  expect(exported.workoutSessions).toHaveLength(2);
+  expect(exported.logs).toContainEqual(expect.objectContaining({ id: log.id, workoutId: morning.id }));
+  const privateExport = (await (await call('/export/records', 'stranger')).json()) as {
+    workoutSessions: unknown[];
+  };
+  expect(privateExport.workoutSessions).toEqual([]);
+  // Removing the grouping must leave the original exercise and measurements intact.
+  expect((await call(`/workouts/${morning.id}`, 'workouts', 'DELETE')).status).toBe(204);
+  const kept = ((await (await call(`/lists/${gymId}/logs`, 'workouts')).json()) as { logs: unknown[] }).logs;
+  expect(kept).toContainEqual(
+    expect.objectContaining({
+      id: log.id,
+      workoutId: null,
+      exerciseSets: [{ reps: 8, weight: 40 }],
+      happenedOn: '2026-10-09',
+    }),
+  );
+  // Attach to another visit, then detach explicitly without changing measurements.
+  expect(
+    (await call(`/logs/${log.id}`, 'workouts', 'PATCH', { workoutId: evening.id, happenedOn: '2026-10-10' }))
+      .status,
+  ).toBe(200);
+  const detached = await call(`/logs/${log.id}`, 'workouts', 'PATCH', { workoutId: null });
+  expect(((await detached.json()) as { log: { workoutId: string | null } }).log.workoutId).toBeNull();
+  expect((await call(`/lists/${gymId}`, 'workouts', 'DELETE')).status).toBe(204);
+  expect((await call(`/workouts/${evening.id}`, 'workouts', 'PATCH', { title: 'Gone' })).status).toBe(404);
 });

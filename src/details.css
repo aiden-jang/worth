@@ -1115,3 +1115,169 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+/* Workouts extend the existing dark activity index and scrolling editor. */
+.workout-sessions {
+  margin: 28px 0;
+}
+.workout-section-head,
+.workout-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.workout-section-head {
+  margin-bottom: 18px;
+}
+.workout-section-head > .overline {
+  margin: 0;
+}
+.workout-card {
+  padding: 28px;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  margin-bottom: 18px;
+}
+.workout-card-heading {
+  align-items: start;
+}
+.workout-card-heading > div {
+  min-width: 0;
+}
+.workout-card h2 {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+.workout-card .overline {
+  margin: 0;
+}
+.workout-count,
+.workout-empty {
+  color: #aaa99b;
+  font-size: 13px;
+  margin: 16px 0 22px;
+}
+.workout-exercises {
+  margin-bottom: 18px;
+}
+.workout-exercises > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid #38392f;
+  color: #f0ecdf;
+  background: transparent;
+  text-align: left;
+}
+.workout-exercises > button > span {
+  min-width: 0;
+}
+.workout-exercises strong {
+  font-size: 18px;
+  font-weight: 500;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.workout-exercises small {
+  display: block;
+  margin-top: 6px;
+  color: #aaa99b;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.workout-exercises svg {
+  flex-shrink: 0;
+}
+.previous-exercise {
+  border: 1px solid #38392f;
+  border-radius: 12px;
+  padding: 18px;
+}
+.previous-exercise > .overline {
+  margin: 0 0 10px;
+}
+.previous-exercise > p:not(.overline) {
+  color: #aaa99b;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+.previous-exercise > p:last-child {
+  margin-bottom: 0;
+}
+.previous-exercise details {
+  font-size: 13px;
+  color: #aaa99b;
+  margin: 12px 0;
+}
+.previous-exercise summary {
+  cursor: pointer;
+}
+.previous-exercise ol {
+  max-height: 176px;
+  overflow: auto;
+  padding-left: 22px;
+  line-height: 1.9;
+}
+.set-previous {
+  grid-column: 2 / 4;
+  margin: 0;
+  font-size: 12px;
+  color: #aaa99b;
+}
+.workout-editor-dialog {
+  max-width: 600px;
+}
+@media (max-width: 680px) {
+  .workout-card {
+    padding: 22px 18px;
+  }
+  .workout-card-heading {
+    display: block;
+  }
+  .workout-card-heading > .button {
+    margin-top: 14px;
+  }
+  .workout-card h2 {
+    font-size: 26px;
+  }
+  .workout-section-head {
+    gap: 12px;
+  }
+}
+.workout-launch {
+  display: flex;
+  justify-content: flex-end;
+  margin: 18px 0;
+}
+.workout-section-head .workout-count {
+  margin: 0;
+}
+.activity-tools {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 180px 160px auto;
+  gap: 12px;
+}
+.activity-tools input,
+.activity-tools select {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 1180px) {
+  .activity-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .activity-tools input {
+    grid-column: 1 / -1;
+  }
+  .activity-tools > span {
+    grid-column: 2;
+  }
+}

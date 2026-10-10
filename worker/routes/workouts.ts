@@ -1,0 +1,69 @@
+import type { Hono } from 'hono';
+import { workoutInput, workoutPatch } from '../../src/shared/validation';
+import type { AppEnv } from '../context';
+import { ApiError, listWorkouts, requireList, requireWorkout } from '../data';
+import { readJson } from '../http';
+
+export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
+  api.get('/lists/:listId/workouts', async (c) => {
+    const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
+    if (list.kind !== 'activity')
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'Workouts belong in an activity list');
+    return c.json({ workouts: await listWorkouts(c.env.DB, c.get('ownerId'), list.id) });
+  });
+  api.post('/lists/:listId/workouts', async (c) => {
+    const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
+    if (list.kind !== 'activity')
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'Workouts belong in an activity list');
+    const input = await readJson(c.req.raw, workoutInput),
+      id = crypto.randomUUID(),
+      now = Date.now();
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        'INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ).bind(id, list.id, c.get('ownerId'), input.title || 'Workout', input.happenedOn, now, now),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        list.id,
+        c.get('ownerId'),
+      ),
+    ]);
+    return c.json({ workout: await requireWorkout(c.env.DB, c.get('ownerId'), id) }, 201);
+  });
+  api.patch('/workouts/:workoutId', async (c) => {
+    const workout = await requireWorkout(c.env.DB, c.get('ownerId'), c.req.param('workoutId'));
+    const patch = await readJson(c.req.raw, workoutPatch),
+      now = Date.now();
+    const happenedOn = patch.happenedOn ?? workout.happenedOn;
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        'UPDATE workout_sessions SET title = ?, happened_on = ?, updated_at = ? WHERE id = ? AND owner_id = ?',
+      ).bind((patch.title ?? workout.title) || 'Workout', happenedOn, now, workout.id, c.get('ownerId')),
+      c.env.DB.prepare(
+        'UPDATE logs SET happened_on = ?, updated_at = ? WHERE workout_id = ? AND owner_id = ?',
+      ).bind(happenedOn, now, workout.id, c.get('ownerId')),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        workout.listId,
+        c.get('ownerId'),
+      ),
+    ]);
+    return c.json({ workout: await requireWorkout(c.env.DB, c.get('ownerId'), workout.id) });
+  });
+  api.delete('/workouts/:workoutId', async (c) => {
+    const workout = await requireWorkout(c.env.DB, c.get('ownerId'), c.req.param('workoutId'));
+    // ON DELETE SET NULL preserves each exercise, its sets and private photo.
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM workout_sessions WHERE id = ? AND owner_id = ?').bind(
+        workout.id,
+        c.get('ownerId'),
+      ),
+      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+        Date.now(),
+        workout.listId,
+        c.get('ownerId'),
+      ),
+    ]);
+    return c.body(null, 204);
+  });
+}

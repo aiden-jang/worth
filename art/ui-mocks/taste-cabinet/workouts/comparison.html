@@ -1,0 +1,192 @@
+<link rel="stylesheet" href="../../../../src/styles.css" /><style>
+  body {
+    margin: 0;
+    background: #181915;
+    color: #f0ecdf;
+    font:
+      15px 'DM Sans',
+      sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  aside {
+    position: fixed;
+    width: 192px;
+    padding: 32px;
+    border-right: 1px solid #38392f;
+    height: 100vh;
+  }
+  main {
+    margin-left: 192px;
+    padding: 40px;
+    max-width: 1232px;
+  }
+  h1 {
+    font-size: 68px;
+    font-weight: 500;
+    letter-spacing: -3px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 12px 0 32px;
+  }
+  p,
+  small {
+    color: #aaa99b;
+  }
+  section {
+    border: 1px solid #38392f;
+    border-radius: 22px;
+    padding: 32px;
+    max-width: 960px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 56px;
+  }
+  label {
+    display: block;
+    margin: 16px 0;
+  }
+  input,
+  select {
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 13px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button {
+    color: inherit;
+    background: none;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+  }
+  .primary {
+    background: #e8dc9d;
+    color: #181915;
+    border: 0;
+  }
+  .objects {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .objects img {
+    width: 100%;
+    border-radius: 8px;
+  }
+  .chosen {
+    border-color: #e8dc9d;
+  }
+  .tones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .preview img {
+    width: 100%;
+    border-radius: 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 44px;
+    gap: 12px;
+    align-items: end;
+    margin: 12px 0;
+  }
+  .workout {
+    max-width: 620px;
+    margin: auto;
+  }
+  header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .overline {
+    font:
+      10px 'DM Mono',
+      monospace;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 680px) {
+    aside {
+      display: none;
+    }
+    main {
+      margin: 0;
+      padding: 24px 20px;
+    }
+    h1 {
+      font-size: 50px;
+    }
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    section {
+      padding: 22px 18px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    .row {
+      gap: 8px;
+      grid-template-columns: 28px 1fr 1fr 44px;
+    }
+  }
+</style>
+<main style="margin: 0">
+  <section class="workout">
+    <p class="overline">QUICK LOG</p>
+    <h2>What happened?</h2>
+    <header><button>Activity</button><button class="chosen">Exercise</button></header>
+    <label>Exercise<input value="Bench press" /></label><label>When<input value="2026-10-10" /></label>
+    <label
+      >Workout<select>
+        <option>Push day · Oct 10</option>
+      </select></label
+    >
+    <div style="border: 1px solid #38392f; border-radius: 12px; padding: 18px">
+      <p class="overline">LAST TIME · OCT 7</p>
+      <p>1 · 10 reps · 40 kg</p>
+      <p>2 · 8 reps · 45 kg</p>
+      <button>Use previous sets</button>
+    </div>
+    <p class="overline">EXERCISE SETS</p>
+    <label
+      >Weight unit<select>
+        <option>kg</option>
+        <option>lb</option>
+      </select></label
+    >
+    <div class="row">
+      <span>1</span><label>Reps<input value="10" /></label><label>Weight<input value="40" /></label
+      ><button aria-label="Remove set">×</button>
+    </div>
+    <div class="row">
+      <span>2</span><label>Reps<input value="8" /></label><label>Weight<input value="45" /></label
+      ><button aria-label="Remove set">×</button>
+    </div>
+    <div class="row">
+      <span>3</span><label>Reps<input value="6" /></label><label>Weight<input value="50" /></label
+      ><button aria-label="Remove set">×</button>
+    </div>
+    <button>+ Add set</button>
+    <p>3 sets · 24 reps</p>
+    <label>Private note · optional<input placeholder="Anything you want to remember" /></label
+    ><button class="primary">Save log</button>
+  </section>
+</main>

@@ -42,7 +42,17 @@ export interface Item {
   lastLoggedOn: string | null;
 }
 
+export interface WorkoutSession {
+  id: string;
+  listId: string;
+  title: string;
+  happenedOn: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Log {
+  workoutId?: string | null;
   exerciseSets?: ExerciseSet[];
   weightUnit?: 'kg' | 'lb';
   id: string;

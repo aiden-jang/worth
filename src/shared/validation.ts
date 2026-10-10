@@ -66,7 +66,11 @@ export const itemsBatchInput = z.object({
     }),
 });
 
+export const workoutInput = z.object({ title: z.string().trim().max(80).default(''), happenedOn: date });
+export const workoutPatch = workoutInput.partial().refine((value) => Object.keys(value).length > 0);
+
 export const logInput = z.object({
+  workoutId: z.string().uuid().nullable().default(null),
   exerciseSets: z
     .array(
       z.object({

@@ -1,5 +1,6 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
+  WorkoutSession,
   CollectionArt,
   ExerciseSet,
   Item,
@@ -63,6 +64,12 @@ export const api = {
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => request<void>(`/items/${id}`, { method: 'DELETE' }),
+  workouts: (listId: string) => request<{ workouts: WorkoutSession[] }>(`/lists/${listId}/workouts`),
+  createWorkout: (listId: string, body: { title: string; happenedOn: string }) =>
+    request<{ workout: WorkoutSession }>(`/lists/${listId}/workouts`, json('POST', body)),
+  updateWorkout: (id: string, body: { title?: string; happenedOn?: string }) =>
+    request<{ workout: WorkoutSession }>(`/workouts/${id}`, json('PATCH', body)),
+  deleteWorkout: (id: string) => request<void>(`/workouts/${id}`, { method: 'DELETE' }),
   logs: (listId: string) => request<{ logs: Log[] }>(`/lists/${listId}/logs`),
   createLog: (listId: string, body: LogInput) =>
     request<{ log: Log }>(`/lists/${listId}/logs`, json('POST', body)),
@@ -107,6 +114,7 @@ export interface ItemInput {
 }
 
 export interface LogInput {
+  workoutId?: string | null;
   exerciseSets?: ExerciseSet[];
   weightUnit?: 'kg' | 'lb';
   itemId: string | null;

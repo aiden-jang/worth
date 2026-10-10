@@ -1,7 +1,9 @@
+import { formatActivityMetric, previousExercise } from '../shared/workouts';
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
-import type { Log } from '../shared/models';
+import { WorkoutSessions } from './WorkoutSessions';
+import type { Log, WorkoutSession } from '../shared/models';
 import { api, type LogInput } from '../api';
 import { formatDate, formatElapsedDays, today } from '../format';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -28,6 +30,10 @@ export function ActivityView({
   onCloseNew: () => void;
   onNew: () => void;
 }) {
+  const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
+  const workouts = workoutsQuery.data?.workouts ?? [];
+  const [creatingWorkout, setCreatingWorkout] = useState(false);
+  const [initialWorkout, setInitialWorkout] = useState<WorkoutSession | null>(null);
   const [selected, setSelected] = useState<Log | null>(null);
   const [repeatLog, setRepeatLog] = useState<Log | null>(null);
   const [query, setQuery] = useState('');
@@ -37,7 +43,9 @@ export function ActivityView({
   const visible = logs
     .filter(
       (log) =>
-        `${log.title} ${log.note}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()) &&
+        `${log.title} ${log.note} ${workouts.find((workout) => workout.id === log.workoutId)?.title ?? ''}`
+          .toLocaleLowerCase()
+          .includes(query.toLocaleLowerCase()) &&
         (!periodStart || log.happenedOn >= periodStart),
     )
     .sort((a, b) =>
@@ -51,11 +59,14 @@ export function ActivityView({
     (latest, log) => (!latest || log.happenedOn > latest.happenedOn ? log : latest),
     null,
   );
+  const ungrouped = visible.filter((log) => !log.workoutId || workoutsQuery.isError);
   const hasFilters = Boolean(query.trim()) || sort !== 'newest' || period !== 'all';
 
   useEffect(() => {
+    setCreatingWorkout(false);
     setSelected(null);
     setRepeatLog(null);
+    setInitialWorkout(null);
     setQuery('');
     setSort('newest');
     setPeriod('all');
@@ -70,6 +81,7 @@ export function ActivityView({
   function close() {
     setSelected(null);
     setRepeatLog(null);
+    setInitialWorkout(null);
     if (newOpen) onCloseNew();
   }
 
@@ -129,6 +141,7 @@ export function ActivityView({
             className="activity-summary-again"
             type="button"
             onClick={() => {
+              setInitialWorkout(null);
               setRepeatLog(lastLog);
               onNew();
             }}
@@ -137,6 +150,16 @@ export function ActivityView({
           </button>
         </section>
       )}
+      <div className="workout-launch">
+        <button
+          type="button"
+          className="button button-outline"
+          disabled={workoutsQuery.isPending || workoutsQuery.isError}
+          onClick={() => setCreatingWorkout(true)}
+        >
+          <Plus size={17} /> New workout
+        </button>
+      </div>
       <div className="activity-tools">
         <input
           aria-label="Search activity"
@@ -173,7 +196,33 @@ export function ActivityView({
         </span>
       </div>
       <p className="activity-shortcut-hint">Press A to log from anywhere on this page.</p>
-      {!visible.length ? (
+      {workoutsQuery.isError ? (
+        <p className="error-banner" role="alert">
+          Couldn't load workouts. <button onClick={() => void workoutsQuery.refetch()}>Try again</button>
+        </p>
+      ) : workoutsQuery.isPending ? (
+        <p className="loading-line">Loading workouts…</p>
+      ) : (
+        <WorkoutSessions
+          listId={listId}
+          creating={creatingWorkout}
+          onCloseCreate={() => setCreatingWorkout(false)}
+          workouts={workouts}
+          logs={logs}
+          visibleLogs={visible}
+          query={query}
+          periodStart={periodStart}
+          sort={sort}
+          onOpen={setSelected}
+          onAdd={(workout) => {
+            setRepeatLog(null);
+            setInitialWorkout(workout);
+            onNew();
+          }}
+        />
+      )}
+      {ungrouped.length > 0 && workouts.length > 0 && <p className="activity-month">OTHER LOGS</p>}
+      {!visible.length && !workouts.length ? (
         <div className="empty-list">
           <h2>{logs.length ? 'Nothing matches.' : 'Nothing here yet.'}</h2>
           <p>{logs.length ? 'Try another search.' : 'Log a run, a night out, or whatever belongs here.'}</p>
@@ -190,8 +239,8 @@ export function ActivityView({
         </div>
       ) : (
         <div className="activity-rows">
-          {visible.map((log, index) => {
-            const previous = visible[index - 1];
+          {ungrouped.map((log, index) => {
+            const previous = ungrouped[index - 1];
             const month = activityMonthLabel(log.happenedOn);
             const showMonth =
               sort !== 'name' && (!previous || activityMonthLabel(previous.happenedOn) !== month);
@@ -205,7 +254,7 @@ export function ActivityView({
                   </span>
                   <button className="activity-main" onClick={() => setSelected(log)}>
                     <strong>{log.title}</strong>
-                    <small>{formatMetric(log) || log.note || 'View detail'}</small>
+                    <small>{formatActivityMetric(log) || log.note || 'View detail'}</small>
                   </button>
                   {log.hasPhoto && (
                     <img src={`/api/logs/${log.id}/photo?v=${log.updatedAt}`} alt="" loading="lazy" />
@@ -213,6 +262,7 @@ export function ActivityView({
                   <button
                     className="activity-again"
                     onClick={() => {
+                      setInitialWorkout(null);
                       setRepeatLog(log);
                       onNew();
                     }}
@@ -227,11 +277,19 @@ export function ActivityView({
       )}
       {(newOpen || selected) && (
         <ActivityEditor
-          key={selected?.id ?? `new-${repeatLog?.id ?? 'blank'}`}
+          key={selected?.id ?? `new-${repeatLog?.id ?? initialWorkout?.id ?? 'blank'}`}
           listId={listId}
           log={newOpen ? null : selected}
           repeatLog={repeatLog}
           existingTitles={logs.map((entry) => entry.title)}
+          logs={logs}
+          workouts={
+            initialWorkout && !workouts.some((workout) => workout.id === initialWorkout.id)
+              ? [initialWorkout, ...workouts]
+              : workouts
+          }
+          initialWorkout={initialWorkout}
+          workoutsLoading={workoutsQuery.isPending || workoutsQuery.isError}
           onClose={close}
         />
       )}
@@ -258,28 +316,77 @@ function ActivityEditor({
   log,
   repeatLog,
   existingTitles,
+  logs,
+  workouts,
+  initialWorkout,
+  workoutsLoading,
   onClose,
 }: {
   listId: string;
   log: Log | null;
   repeatLog: Log | null;
   existingTitles: string[];
+  logs: Log[];
+  workouts: WorkoutSession[];
+  initialWorkout: WorkoutSession | null;
+  workoutsLoading: boolean;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const client = useQueryClient();
   const [form, setForm] = useState<LogInput>(
-    log ? fromLog(log) : repeatLog ? { ...fromLog(repeatLog), happenedOn: today(), note: '' } : emptyLog(),
+    log
+      ? fromLog(log)
+      : repeatLog
+        ? { ...fromLog(repeatLog), workoutId: null, happenedOn: today(), note: '' }
+        : initialWorkout
+          ? {
+              ...emptyLog(),
+              workoutId: initialWorkout.id,
+              happenedOn: initialWorkout.happenedOn,
+              exerciseSets: [{ reps: null, weight: null }],
+            }
+          : emptyLog(),
   );
-  const [exerciseMode, setExerciseMode] = useState(Boolean((log ?? repeatLog)?.exerciseSets?.length));
+  const [exerciseMode, setExerciseMode] = useState(
+    Boolean(initialWorkout || (log ?? repeatLog)?.exerciseSets?.length),
+  );
+  const [confirmingPrevious, setConfirmingPrevious] = useState(false);
+  const activeWorkout =
+    workouts.find((workout) => workout.id === form.workoutId) ??
+    (form.workoutId === initialWorkout?.id ? initialWorkout : null);
+  const previous = previousExercise(logs, {
+    title: form.title,
+    happenedOn: form.happenedOn,
+    excludeId: log?.id,
+    workoutId: form.workoutId,
+    beforeCreatedAt: activeWorkout?.createdAt ?? log?.createdAt,
+    workouts,
+  });
+  function usePrevious() {
+    if (!previous?.exerciseSets?.length) return;
+    setForm({
+      ...form,
+      exerciseSets: previous.exerciseSets.map((set) => ({ ...set })),
+      weightUnit: previous.weightUnit ?? 'kg',
+    });
+    setConfirmingPrevious(false);
+  }
   const [confirmingActivity, setConfirmingActivity] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const originalForm = log
     ? fromLog(log)
     : repeatLog
-      ? { ...fromLog(repeatLog), happenedOn: today(), note: '' }
-      : emptyLog();
+      ? { ...fromLog(repeatLog), workoutId: null, happenedOn: today(), note: '' }
+      : initialWorkout
+        ? {
+            ...emptyLog(),
+            workoutId: initialWorkout.id,
+            happenedOn: initialWorkout.happenedOn,
+            exerciseSets: [{ reps: null, weight: null }],
+          }
+        : emptyLog();
   const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
   const hasUnsavedChanges = hasLogChanges;
   useEffect(() => {
@@ -366,7 +473,7 @@ function ActivityEditor({
                   setConfirmingActivity(true);
                   return;
                 }
-                setForm({ ...form, exerciseSets: [] });
+                setForm({ ...form, exerciseSets: [], workoutId: null });
                 setExerciseMode(false);
               }}
             >
@@ -392,6 +499,7 @@ function ActivityEditor({
               maxLength={120}
               value={form.title}
               list={`activity-titles-${listId}`}
+              aria-label={exerciseMode ? 'Exercise' : 'What'}
               onChange={(event) => setForm({ ...form, title: event.target.value })}
               placeholder="Evening run, haircut, bench press…"
             />
@@ -409,11 +517,88 @@ function ActivityEditor({
             When
             <input
               type="date"
+              disabled={Boolean(form.workoutId)}
               required
               value={form.happenedOn}
               onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
             />
           </label>
+          {exerciseMode && (
+            <label>
+              Workout <span className="optional">optional</span>
+              <select
+                value={form.workoutId ?? ''}
+                disabled={workoutsLoading}
+                onChange={(event) => {
+                  const chosen = workouts.find((workout) => workout.id === event.target.value);
+                  setForm({
+                    ...form,
+                    workoutId: chosen?.id ?? null,
+                    happenedOn: chosen?.happenedOn ?? form.happenedOn,
+                  });
+                }}
+              >
+                <option value="">No workout</option>
+                {workouts.map((workout) => (
+                  <option key={workout.id} value={workout.id}>
+                    {workout.title} · {formatDate(workout.happenedOn)}
+                  </option>
+                ))}
+              </select>
+              {form.workoutId && (
+                <span className="exercise-helper">
+                  Date follows this workout. Edit its date from the workout card.
+                </span>
+              )}
+            </label>
+          )}
+          {exerciseMode && (
+            <section className="previous-exercise" aria-label="Previous exercise">
+              <p className="overline">LAST TIME{previous ? ` · ${formatDate(previous.happenedOn)}` : ''}</p>
+              {previous ? (
+                <>
+                  <p>{formatActivityMetric(previous)}</p>
+                  {Boolean(previous.exerciseSets?.length) && (
+                    <>
+                      <details>
+                        <summary>View previous sets</summary>
+                        <ol>
+                          {previous.exerciseSets?.map((set, index) => (
+                            <li key={index}>
+                              {set.reps} reps ·{' '}
+                              {set.weight === null
+                                ? 'bodyweight'
+                                : `${set.weight} ${previous.weightUnit ?? 'kg'}`}
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        onClick={() => {
+                          if (
+                            form.exerciseSets?.some((set) => set.reps !== null || set.weight !== null) &&
+                            JSON.stringify(form.exerciseSets) !== JSON.stringify(previous.exerciseSets)
+                          )
+                            setConfirmingPrevious(true);
+                          else usePrevious();
+                        }}
+                      >
+                        Use previous sets
+                      </button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p>
+                  {form.title.trim()
+                    ? 'No earlier sets for this exercise.'
+                    : 'Enter an exercise to see its previous sets.'}
+                </p>
+              )}
+            </section>
+          )}
           {exerciseMode && (
             <fieldset className="exercise-sets">
               <legend>Exercise sets</legend>
@@ -493,6 +678,14 @@ function ActivityEditor({
                   >
                     <X size={18} />
                   </button>
+                  {previous?.exerciseSets?.[index] && (
+                    <p className="set-previous">
+                      Last: {previous.exerciseSets[index].reps} reps ·{' '}
+                      {previous.exerciseSets[index].weight === null
+                        ? 'bodyweight'
+                        : `${previous.exerciseSets[index].weight} ${previous.weightUnit ?? 'kg'}`}
+                    </p>
+                  )}
                 </div>
               ))}
               <button
@@ -513,7 +706,7 @@ function ActivityEditor({
                 <Plus size={16} /> Add set
               </button>
               <p className="exercise-total">
-                {form.exerciseSets?.length ?? 0} sets ·{' '}
+                {form.exerciseSets?.length ?? 0} {form.exerciseSets?.length === 1 ? 'set' : 'sets'} ·{' '}
                 {(form.exerciseSets ?? []).reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps
               </p>
             </fieldset>
@@ -640,6 +833,17 @@ function ActivityEditor({
             onClose={() => setConfirmingDelete(false)}
           />
         )}
+        {confirmingPrevious && (
+          <ConfirmDialog
+            eyebrow="USE PREVIOUS SETS"
+            title="Replace the current sets?"
+            description="This copies the previous reps, weights and weight unit into this draft. Your workout, date and note stay intact."
+            confirmLabel="Use previous sets"
+            cancelLabel="Keep editing"
+            onConfirm={usePrevious}
+            onClose={() => setConfirmingPrevious(false)}
+          />
+        )}
         {confirmingActivity && (
           <ConfirmDialog
             eyebrow="CHANGE LOG TYPE"
@@ -648,7 +852,7 @@ function ActivityEditor({
             cancelLabel="Keep editing"
             confirmLabel="Use Activity"
             onConfirm={() => {
-              setForm({ ...form, exerciseSets: [] });
+              setForm({ ...form, exerciseSets: [], workoutId: null });
               setExerciseMode(false);
               setConfirmingActivity(false);
             }}
@@ -676,6 +880,7 @@ function ActivityEditor({
 
 function emptyLog(title = ''): LogInput {
   return {
+    workoutId: null,
     exerciseSets: [],
     weightUnit: 'kg',
     itemId: null,
@@ -691,6 +896,7 @@ function emptyLog(title = ''): LogInput {
 
 function fromLog(log: Log): LogInput {
   return {
+    workoutId: log.workoutId ?? null,
     exerciseSets: (log.exerciseSets ?? []).map((set) => ({ ...set })),
     weightUnit: log.weightUnit ?? 'kg',
     itemId: null,
@@ -706,21 +912,4 @@ function fromLog(log: Log): LogInput {
 
 function cleanLogInput(input: LogInput): LogInput {
   return { ...input, title: input.title.trim(), unit: input.unit.trim(), note: input.note.trim() };
-}
-
-function formatMetric(log: Log): string {
-  if (log.exerciseSets?.length) {
-    const weights = log.exerciseSets.flatMap((set) => (set.weight === null ? [] : [set.weight]));
-    const totalReps = log.exerciseSets.reduce((sum, set) => sum + (set.reps ?? 0), 0);
-    const low = Math.min(...weights),
-      high = Math.max(...weights);
-    const weight = weights.length
-      ? `${low === high ? low : `${low}–${high}`} ${log.weightUnit ?? 'kg'}${weights.length < log.exerciseSets.length ? ' + bodyweight' : ''}`
-      : 'bodyweight';
-    return `${log.exerciseSets.length} sets · ${totalReps} reps · ${weight}`;
-  }
-  const parts = [];
-  if (log.amount !== null) parts.push(`${log.amount}${log.unit ? ` ${log.unit}` : ''}`);
-  if (log.sets !== null && log.reps !== null) parts.push(`${log.sets} sets × ${log.reps} reps`);
-  return parts.join(' · ');
 }

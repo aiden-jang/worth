@@ -1,3 +1,4 @@
+import { validateWorkoutTarget } from '../data';
 import type { Hono } from 'hono';
 import { itemInput, itemPatch, itemsBatchInput, logInput, logPatch } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
@@ -138,12 +139,21 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
     const input = await readJson(c.req.raw, logInput);
     await validateLogTarget(c.env.DB, c.get('ownerId'), list.id, list.kind, input.itemId, input.title);
+    await validateWorkoutTarget(
+      c.env.DB,
+      c.get('ownerId'),
+      list.id,
+      input.workoutId,
+      input.happenedOn,
+      input.exerciseSets,
+      input.itemId,
+    );
     const id = crypto.randomUUID();
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO logs
-      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, exercise_sets, weight_unit, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, exercise_sets, weight_unit, workout_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -159,6 +169,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         input.reps,
         JSON.stringify(input.exerciseSets),
         input.weightUnit,
+        input.workoutId,
         now,
         now,
       )
@@ -174,6 +185,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     const list = await requireList(c.env.DB, c.get('ownerId'), log.listId);
     const patch = await readJson(c.req.raw, logPatch);
     const merged = logInput.safeParse({
+      workoutId: patch.workoutId === undefined ? (log.workoutId ?? null) : patch.workoutId,
       exerciseSets: patch.exerciseSets ?? log.exerciseSets ?? [],
       weightUnit: patch.weightUnit ?? log.weightUnit ?? 'kg',
       itemId: patch.itemId === undefined ? log.itemId : patch.itemId,
@@ -188,12 +200,21 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     if (!merged.success)
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid log');
     const value = merged.data;
+    await validateWorkoutTarget(
+      c.env.DB,
+      c.get('ownerId'),
+      list.id,
+      value.workoutId,
+      value.happenedOn,
+      value.exerciseSets,
+      value.itemId,
+    );
     await validateLogTarget(c.env.DB, c.get('ownerId'), list.id, list.kind, value.itemId, value.title);
     const now = Date.now();
     await c.env.DB.batch([
       c.env.DB.prepare(
         `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
-          unit = ?, sets = ?, reps = ?, exercise_sets = ?, weight_unit = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
+          unit = ?, sets = ?, reps = ?, exercise_sets = ?, weight_unit = ?, workout_id = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
       ).bind(
         value.itemId,
         value.title,
@@ -205,6 +226,7 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
         value.reps,
         JSON.stringify(value.exerciseSets),
         value.weightUnit,
+        value.workoutId,
         now,
         log.id,
         c.get('ownerId'),
