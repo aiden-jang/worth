@@ -197,3 +197,12 @@ and bars remain factual. Opened dialogs, settings and selected slips settle with
 200ms/6px entrance; reduced motion keeps them still. Settings and sharing keep their
 accepted compositions and factual visibility/destructive copy. The signature landing
 is verified with its interactive examples and retains its accepted composition.
+
+## Illustrated landing cabinet
+
+The user rejected the prior signed-out composition and asked for a stronger visual idea.
+The current [landing reference](art/ui-mocks/taste-cabinet/landing-cabinet/README.md)
+centers `Your taste. A place to keep it.` over three staggered illustrated folders and a
+small explicitly labeled example Meh slip. Signup remains prominent. A separate working
+example sits below the hero; mobile shows its index before the opinion slip. This supersedes
+earlier landing layouts only. The accepted private cabinet screens remain current.

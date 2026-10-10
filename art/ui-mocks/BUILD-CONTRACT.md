@@ -336,3 +336,16 @@ No sample content, automatic opinions or inferred scores appear in private pages
 Dialogs, settings and newly mounted selected slips settle over 200ms with a 6px rise.
 Reduced motion disables this entrance. Existing capture and call feedback stays finite.
 Sharing visibility and destructive confirmations retain factual copy and explicit actions.
+
+## Illustrated landing cabinet — October 10, current signed-out target
+
+The user rejected the signature landing and requested a stronger visual idea. Use
+[illustrated landing references](taste-cabinet/landing-cabinet/README.md). This supersedes
+only earlier signed-out compositions. Keep the signed-in cabinet edition.
+Center `Your taste. A place to keep it.` above signup and three illustrated folder objects.
+Use the accepted palette and fonts, maximum 92px heading, 1232px page width, 40px desktop
+and 20px mobile insets. Category folders use sage/clay/butter and native starter artwork;
+a cream Cold brew / EXAMPLE slip carries the dry Meh reaction. The example labels remain.
+Below the hero, a distinct example section contains the existing interactive collection.
+Desktop pairs its index with a 340px opinion slip (300px <=900px); <=680px stacks index
+then slip. Auth, reversible calls, independent ranks and name-only demo capture remain.

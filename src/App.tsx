@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { Route, Routes } from 'react-router';
 import { api } from './api';
-import { CallBadge } from './components/PersonalCall';
+import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
 import { ArchivePage } from './pages/ArchivePage';
@@ -55,37 +55,59 @@ function PrivateApp() {
 function Welcome({ authOrigin }: { authOrigin: string }) {
   const returnTo = window.location.href;
   return (
-    <main className="cabinet-landing">
+    <main className="cabinet-landing landing-cabinet">
       <header className="cabinet-landing-top">
         <span className="product-wordmark">worth</span>
         <a href={loginUrl(authOrigin, returnTo)}>
           Sign in <span aria-hidden="true">→</span>
         </a>
       </header>
-      <LandingExample
-        introduction={
-          <section className="cabinet-landing-hero" aria-labelledby="landing-title">
-            <div>
-              <p className="overline">YOUR TASTE, ON RECORD</p>
-              <h1 id="landing-title">
-                For the good.
-                <br />
-                And the <em>meh.</em>
-              </h1>
+      <section className="landing-cabinet-hero" aria-labelledby="landing-title">
+        <p className="overline">YOUR TASTE, ON RECORD</p>
+        <h1 id="landing-title">
+          Your taste.
+          <br />
+          <em>A place to keep it.</em>
+        </h1>
+        <p>
+          Collect what you try. Rank what holds up.
+          <br />
+          Keep the meh, too.
+        </p>
+        <div className="landing-cabinet-actions">
+          <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
+            Start your archive <span aria-hidden="true">→</span>
+          </a>
+          <a href="#worth-example">
+            Try the example <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+      </section>
+      <figure className="landing-cabinet-visual">
+        <div className="landing-cabinet-folders" aria-hidden="true">
+          {['Drinks', 'Movies', 'Places'].map((name) => (
+            <div className="landing-cabinet-folder" key={name}>
+              <span>{name}</span>
+              <img src={`/art/starter-covers/${name.toLowerCase()}-v2.svg`} alt="" />
             </div>
-            <div className="cabinet-landing-intro">
-              <p>
-                Keep what you try.
-                <br />
-                Find what’s worth repeating.
-              </p>
-              <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
-                Start your archive <span aria-hidden="true">→</span>
-              </a>
-            </div>
-          </section>
-        }
-      />
+          ))}
+        </div>
+        <div className="landing-cabinet-note">
+          <p className="overline">COLD BREW / EXAMPLE</p>
+          <div>
+            <strong>Meh.</strong>
+            <CallFace value="meh" />
+          </div>
+          <p>It was a thing.</p>
+        </div>
+        <figcaption>EXAMPLE / A FEW THINGS, FILED.</figcaption>
+      </figure>
+      <header className="landing-example-heading" id="worth-example">
+        <p className="overline">EXAMPLE / MAKE YOUR CALL</p>
+        <h2>Go on. Have an opinion.</h2>
+        <p>Try the example. Nothing here is saved.</p>
+      </header>
+      <LandingExample />
       <footer className="cabinet-landing-bottom">
         <strong>Meh is a complete sentence.</strong>
         <span>Collections, rankings & a place to remember.</span>
@@ -113,7 +135,7 @@ const exampleCollections: Record<string, ExampleItem[]> = {
   ],
 };
 
-function LandingExample({ introduction }: { introduction: ReactNode }) {
+function LandingExample() {
   const exampleRef = useRef<HTMLElement>(null);
   const [collections, setCollections] = useState(exampleCollections);
   const [category, setCategory] = useState('Drinks');
@@ -132,7 +154,6 @@ function LandingExample({ introduction }: { introduction: ReactNode }) {
   }
   return (
     <section ref={exampleRef} className="cabinet-demo" aria-label="Interactive collection example">
-      {introduction}
       <OpinionSlip
         example
         title={item.title}

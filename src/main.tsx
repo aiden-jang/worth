@@ -28,3 +28,5 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+import './landing-cabinet.css';

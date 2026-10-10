@@ -3,7 +3,8 @@
 Current target: [cabinet edition references](edition/README.md). The user approved the broader
 art-direction plan after the earlier refinement passes. The edition archive, first-use,
 collection and creation references supersede the corresponding earlier images below.
-The landing retains its existing signature composition.
+The current signed-out target is the [illustrated cabinet landing](landing-cabinet/README.md),
+requested after the user rejected the signature composition.
 
 October 10 direction: cute, dry, nonchalant and coherent. The user authorized a stronger
 redesign after rejecting incremental polish. These standalone compositions were authored

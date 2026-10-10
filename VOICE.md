@@ -147,3 +147,8 @@ Faceless slip art preserves the distinction between undecided and Meh.
 Search start: `Somewhere in here.` with the clear two-character search instruction.
 Empty Patterns: `Too soon to tell.` / `Keep a few items or activity logs. Patterns will appear here.`
 Both use faceless paper artwork; no reaction or personal judgment is invented.
+
+Current landing headline: `Your taste. A place to keep it.`
+Product copy: `Collect what you try. Rank what holds up. Keep the meh, too.`
+Example invitation: `Go on. Have an opinion.` / `Try the example. Nothing here is saved.`
+The hero's Cold brew opinion is explicitly labeled EXAMPLE; it is not a user's recorded call.
