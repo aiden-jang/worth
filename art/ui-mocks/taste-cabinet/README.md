@@ -84,3 +84,5 @@ accepted compositions; long personal titles wrap. See
 [Workout sessions and comparisons](workouts/README.md) extend the activity index and editor with explicitly grouped visits and factual last-time recall.
 
 Reusable routines extend the [workout references](workouts/README.md#reusable-routines): saved exercise lineups, blank new visits, and a checklist leading into the existing set editor.
+
+[Exercise progress](workouts/README.md#exercise-history-and-progress) adds read-only per-exercise charts and exact set history, reached from the activity directory or a set editor.

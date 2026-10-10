@@ -226,3 +226,7 @@ Exercise logging shows the latest earlier matching entry from this activity list
 ## Reusable workout routines
 
 Activity lists can save a named, ordered exercise lineup and start a fresh dated visit from it. Each visit snapshots the names, then offers an unlogged checklist; opening a name sets up blank reps/weight with last time available for reference. Only saving an exercise creates a log and contributes to workout counts. Editing/deleting a routine preserves existing visits, and Save as routine opens an editable draft from a workout. Routine and visit plans are private and exportable. See [routine references](art/ui-mocks/taste-cabinet/workouts/README.md#reusable-routines) for the shelf and deliberate integration differences.
+
+## Exercise history and progress
+
+A collapsed exercise directory and a set-editor action open read-only history for a normalized exercise name in the current activity list. Charts show total individually recorded reps or the heaviest logged weight per entry, keeping kg/lb separate and bodyweight/legacy gaps visible. Each point reveals its exact sets; history includes preserved notes and older measurements. Same-day visits remain separate. Empty and single-entry states avoid invented trends. Opening and closing history preserves an unfinished exercise draft. See [exercise progress references](art/ui-mocks/taste-cabinet/workouts/README.md#exercise-history-and-progress) for the cabinet composition and accessibility adaptations.

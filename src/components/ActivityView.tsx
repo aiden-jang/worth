@@ -2,6 +2,7 @@ import { formatActivityMetric, previousExercise } from '../shared/workouts';
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
+import { ExerciseDirectory, ExerciseHistory } from './ExerciseHistory';
 import { WorkoutRoutines, type RoutineDraft } from './WorkoutRoutines';
 import { WorkoutSessions } from './WorkoutSessions';
 import type { Log, WorkoutSession } from '../shared/models';
@@ -33,6 +34,7 @@ export function ActivityView({
 }) {
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
+  const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [routineSeed, setRoutineSeed] = useState<RoutineDraft | null>(null);
   const [initialExercise, setInitialExercise] = useState('');
   const [creatingWorkout, setCreatingWorkout] = useState(false);
@@ -68,6 +70,7 @@ export function ActivityView({
   useEffect(() => {
     setCreatingWorkout(false);
     setRoutineSeed(null);
+    setHistoryTitle(null);
     setSelected(null);
     setRepeatLog(null);
     setInitialWorkout(null);
@@ -163,6 +166,7 @@ export function ActivityView({
         onCloseSeed={() => setRoutineSeed(null)}
         onStarted={clearFilters}
       />
+      {!loading && !error && <ExerciseDirectory logs={logs} listId={listId} onOpen={setHistoryTitle} />}
       <div className="workout-launch">
         <button
           type="button"
@@ -306,6 +310,16 @@ export function ActivityView({
           })}
         </div>
       )}
+      {historyTitle && (
+        <ExerciseHistory
+          key={historyTitle}
+          listId={listId}
+          title={historyTitle}
+          logs={logs}
+          workouts={workouts}
+          onClose={() => setHistoryTitle(null)}
+        />
+      )}
       {(newOpen || selected) && (
         <ActivityEditor
           key={selected?.id ?? `new-${repeatLog?.id ?? initialWorkout?.id ?? 'blank'}-${initialExercise}`}
@@ -386,6 +400,7 @@ function ActivityEditor({
   const [exerciseMode, setExerciseMode] = useState(
     Boolean(initialWorkout || (log ?? repeatLog)?.exerciseSets?.length),
   );
+  const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [confirmingPrevious, setConfirmingPrevious] = useState(false);
   const activeWorkout =
     workouts.find((workout) => workout.id === form.workoutId) ??
@@ -549,6 +564,15 @@ function ActivityEditor({
               </datalist>
             )}
           </label>
+          {exerciseMode && form.title.trim() && (
+            <button
+              type="button"
+              className="button button-outline exercise-history-open"
+              onClick={() => setHistoryTitle(form.title.trim())}
+            >
+              View exercise history
+            </button>
+          )}
           <label>
             When
             <input
@@ -867,6 +891,16 @@ function ActivityEditor({
             error={remove.isError ? remove.error.message : undefined}
             onConfirm={() => remove.mutate()}
             onClose={() => setConfirmingDelete(false)}
+          />
+        )}
+        {historyTitle && (
+          <ExerciseHistory
+            key={historyTitle}
+            listId={listId}
+            title={historyTitle}
+            logs={logs}
+            workouts={workouts}
+            onClose={() => setHistoryTitle(null)}
           />
         )}
         {confirmingPrevious && (

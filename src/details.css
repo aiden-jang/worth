@@ -974,7 +974,7 @@
 .exercise-sets legend {
   padding: 0;
   margin-bottom: 12px;
-  color: var(--text);
+  color: var(--paper);
   font-size: 14px;
 }
 .artwork-auto {
@@ -1338,5 +1338,200 @@
   }
   .planned-action {
     font-size: 12px;
+  }
+}
+
+.exercise-directory {
+  margin: 24px 0;
+  border-block: 1px solid var(--line);
+}
+.exercise-directory > summary {
+  padding: 18px 0;
+  cursor: pointer;
+  font-size: 15px;
+}
+.exercise-directory > summary > span {
+  color: var(--muted);
+  margin-left: 12px;
+  font-size: 12px;
+}
+.exercise-directory .workout-exercises {
+  margin: 0;
+}
+.exercise-history-dialog {
+  width: min(840px, calc(100% - 32px));
+  max-width: 840px;
+}
+.exercise-history-dialog .editor-head h2 {
+  font-size: 32px;
+  overflow-wrap: anywhere;
+}
+.exercise-history-range {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 22px;
+}
+.exercise-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.exercise-metrics button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+  font-size: 14px;
+}
+.exercise-metrics button[aria-pressed='true'] {
+  background: #e8dc9d;
+  color: #181915;
+  border-color: #e8dc9d;
+}
+.exercise-chart-grid {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+.exercise-chart-axis {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.exercise-chart-plot {
+  position: relative;
+  height: 200px;
+}
+.exercise-chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.exercise-chart-rules {
+  fill: none;
+  stroke: #38392f;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.exercise-chart-line {
+  fill: none;
+  stroke: #e8dc9d;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+.exercise-chart-point {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 50%;
+}
+.exercise-chart-point::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e8dc9d;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.exercise-chart-point[aria-pressed='true']::after {
+  width: 13px;
+  height: 13px;
+  outline: 2px solid #aaa99b;
+  outline-offset: 3px;
+}
+.exercise-chart-dates {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-left: 56px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 18px;
+}
+.exercise-chart-dates span:last-child:not(:first-child) {
+  text-align: right;
+}
+.exercise-chart .exercise-helper {
+  margin: 10px 0;
+}
+.exercise-history-entries {
+  margin-top: 28px;
+}
+.exercise-history-entries article {
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin: 20px;
+}
+.exercise-history-entries article.selected {
+  border-top-color: #e8dc9d;
+}
+.exercise-history-entries .overline {
+  overflow-wrap: anywhere;
+}
+.exercise-history-entries article > p:nth-child(2) {
+  color: var(--muted);
+  font-size: 14px;
+}
+.exercise-history-entries ol {
+  padding: 0;
+  margin: 18px 0 0;
+  list-style: none;
+}
+.exercise-history-entries li {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.exercise-history-entries li > span:first-child {
+  color: var(--muted);
+}
+.exercise-history-entries details {
+  margin-top: 16px;
+  font-size: 14px;
+}
+.exercise-history-entries summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.exercise-history-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.exercise-history-open {
+  justify-self: start;
+}
+@media (max-width: 680px) {
+  .exercise-history-dialog .editor-head h2 {
+    font-size: 28px;
+  }
+  .exercise-history-entries article {
+    padding: 20px 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .exercise-history-dialog {
+    width: calc(100% - 24px);
+  }
+  .exercise-chart-point {
+    width: 44px;
+    height: 44px;
   }
 }

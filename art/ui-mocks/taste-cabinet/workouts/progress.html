@@ -1,0 +1,196 @@
+<link rel="stylesheet" href="../../../../src/styles.css" /><style>
+  body {
+    margin: 0;
+    background: #181915;
+    color: #f0ecdf;
+    font:
+      15px 'DM Sans',
+      sans-serif;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  aside {
+    position: fixed;
+    width: 192px;
+    padding: 32px;
+    border-right: 1px solid #38392f;
+    height: 100vh;
+  }
+  main {
+    margin-left: 192px;
+    padding: 40px;
+    max-width: 1232px;
+  }
+  h1 {
+    font-size: 68px;
+    font-weight: 500;
+    letter-spacing: -3px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 12px 0 32px;
+  }
+  p,
+  small {
+    color: #aaa99b;
+  }
+  section {
+    border: 1px solid #38392f;
+    border-radius: 22px;
+    padding: 32px;
+    max-width: 960px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 56px;
+  }
+  label {
+    display: block;
+    margin: 16px 0;
+  }
+  input,
+  select {
+    color: inherit;
+    font: inherit;
+    background: transparent;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 13px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button {
+    color: inherit;
+    background: none;
+    border: 1px solid #38392f;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+  }
+  .primary {
+    background: #e8dc9d;
+    color: #181915;
+    border: 0;
+  }
+  .objects {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .objects img {
+    width: 100%;
+    border-radius: 8px;
+  }
+  .chosen {
+    border-color: #e8dc9d;
+  }
+  .tones {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .preview img {
+    width: 100%;
+    border-radius: 16px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 44px;
+    gap: 12px;
+    align-items: end;
+    margin: 12px 0;
+  }
+  .workout {
+    max-width: 620px;
+    margin: auto;
+  }
+  header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .overline {
+    font:
+      10px 'DM Mono',
+      monospace;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 680px) {
+    aside {
+      display: none;
+    }
+    main {
+      margin: 0;
+      padding: 24px 20px;
+    }
+    h1 {
+      font-size: 50px;
+    }
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    section {
+      padding: 22px 18px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    .row {
+      gap: 8px;
+      grid-template-columns: 28px 1fr 1fr 44px;
+    }
+  }
+</style>
+<main style="margin: 0">
+  <section class="workout" style="max-width: 840px">
+    <p class="overline">EXERCISE HISTORY</p>
+    <h2>Bench press</h2>
+    <p>3 entries · Oct 1 – Oct 10, 2026</p>
+    <header><button class="primary">Top weight · kg</button><button>Total reps</button></header>
+    <p class="overline">HEAVIEST LOGGED SET · KG</p>
+    <svg
+      viewBox="0 0 640 230"
+      style="width: 100%; display: block"
+      role="img"
+      aria-label="Heaviest weight in kg by logged entry"
+    >
+      <g stroke="#38392f"><path d="M48 20H620M48 100H620M48 180H620" /></g>
+      <g fill="#aaa99b" font-size="13">
+        <text x="0" y="24">50</text>
+        <text x="0" y="104">25</text>
+        <text x="0" y="184">0</text>
+        <text x="48" y="218">Oct 1</text>
+        <text x="620" y="218" text-anchor="end">Oct 10</text>
+      </g>
+      <path d="M48 36L334 20L620 28" fill="none" stroke="#e8dc9d" stroke-width="2" />
+      <g fill="#e8dc9d">
+        <circle cx="48" cy="36" r="5" />
+        <circle cx="334" cy="20" r="5" />
+        <circle cx="620" cy="28" r="5" />
+      </g>
+    </svg>
+    <p>Each point is one logged entry. Units stay as recorded.</p>
+    <div style="border-top: 1px solid #38392f; padding-top: 20px">
+      <p class="overline">OCT 10, 2026 · PUSH DAY</p>
+      <p>2 sets · 18 reps · 45–47.5 kg</p>
+      <p>Set 1 &nbsp; 10 reps · 45 kg<br />Set 2 &nbsp; 8 reps · 47.5 kg</p>
+    </div>
+    <div style="border-top: 1px solid #38392f; padding-top: 20px">
+      <p class="overline">OCT 7, 2026</p>
+      <p>2 sets · 16 reps · 45–50 kg</p>
+      <p>Set 1 &nbsp; 8 reps · 45 kg<br />Set 2 &nbsp; 8 reps · 50 kg</p>
+    </div>
+    <div style="border-top: 1px solid #38392f; padding-top: 20px">
+      <p class="overline">OCT 1, 2026</p>
+      <p>2 sets · 20 reps · 40–45 kg</p>
+      <p>Set 1 &nbsp; 10 reps · 40 kg<br />Set 2 &nbsp; 10 reps · 45 kg</p>
+    </div>
+  </section>
+</main>
