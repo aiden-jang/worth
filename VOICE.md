@@ -133,3 +133,13 @@ Give the opinion character room in the first view, keeping the same short captio
 straight card and sliding selected capsule provide personality without adding slogans.
 Clear a call to remove its face and selected pill; never invent an opinion. Reduced motion
 changes the selection immediately. Labels and keyboard focus remain clear.
+
+## Cabinet edition
+
+The empty archive keeps `A clean slate. Suspicious.` with `Keep the things you try in a
+collection. A name is enough to get started.` The decorative card says `ROOM FOR OPINIONS`.
+Its small flow labels are `Keep a name`, `Make a call, if you want`, `Find it again`.
+Creation previews say `A name is enough. The rest can wait.` Suggestions fill only the
+collection/activity name; brand descriptions are never silently saved as personal content.
+Empty collections retain `Nothing to judge. Yet.` and a functional `Add a name` action.
+Faceless slip art preserves the distinction between undecided and Meh.

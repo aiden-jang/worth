@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { starterCollectionCover } from '../shared/starter-covers';
 import { preparePhoto } from '../shared/photos';
 import { formatRelativeTimestamp } from '../format';
+import { CollectionArtwork } from '../components/CollectionArtwork';
 
 type CollectionOrder = 'recent' | 'name' | 'items' | 'ranked' | 'favorites';
 
@@ -30,25 +31,25 @@ const suggestions: { name: string; kind: ListKind; description: string; cover?: 
     name: 'Drinks',
     kind: 'collection',
     description: 'Wines, whiskeys, and the occasional good idea.',
-    cover: '/art/starter-covers/drinks-v1.webp',
+    cover: '/art/starter-covers/drinks-v2.svg',
   },
   {
     name: 'Movies',
     kind: 'collection',
     description: 'The ones you would watch again.',
-    cover: '/art/starter-covers/movies-v1.webp',
+    cover: '/art/starter-covers/movies-v2.svg',
   },
   {
     name: 'Places',
     kind: 'collection',
     description: 'Restaurants and stops worth remembering.',
-    cover: '/art/starter-covers/places-v1.webp',
+    cover: '/art/starter-covers/places-v2.svg',
   },
   {
     name: 'Cars',
     kind: 'collection',
     description: 'The ones you owned, drove, or loved.',
-    cover: '/art/starter-covers/cars-v1.webp',
+    cover: '/art/starter-covers/cars-v2.svg',
   },
   { name: 'Books', kind: 'collection', description: 'The ones worth lending out.' },
   { name: 'Music', kind: 'collection', description: 'Albums and songs you keep returning to.' },
@@ -72,6 +73,7 @@ export function ListsPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const coverInput = useRef<HTMLInputElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useState('');
@@ -135,7 +137,9 @@ export function ListsPage() {
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
-      navigate(`/lists/${list.id}`, { state: coverError ? { coverError } : undefined });
+      navigate(`/lists/${list.id}${list.kind === 'collection' ? '?capture=1' : ''}`, {
+        state: coverError ? { coverError } : undefined,
+      });
     },
   });
 
@@ -160,7 +164,7 @@ export function ListsPage() {
   function chooseSuggestion(suggestion: (typeof suggestions)[number]) {
     setName(suggestion.name);
     setKind(suggestion.kind);
-    setDescription(suggestion.description);
+    setDescription('');
     setCoverFile(null);
     setParams({ create: '1', kind: suggestion.kind });
   }
@@ -200,20 +204,22 @@ export function ListsPage() {
           <h1>{pageTitle}</h1>
           <p>{pageDescription}</p>
         </div>
-        <div className="list-page-actions">
-          <button className="button button-accent" onClick={openCreate}>
-            <Plus size={18} />{' '}
-            {listScope === 'activity'
-              ? 'New activity'
-              : listScope === 'collection'
-                ? 'New collection'
-                : 'New list'}
-          </button>
-        </div>
+        {!creating && (
+          <div className="list-page-actions">
+            <button className="button button-accent" onClick={openCreate}>
+              <Plus size={18} />{' '}
+              {listScope === 'activity'
+                ? 'New activity'
+                : listScope === 'collection'
+                  ? 'New collection'
+                  : 'New list'}
+            </button>
+          </div>
+        )}
       </div>
 
       {creating && (
-        <section className="create-panel" aria-label="Create a list">
+        <section className="create-panel cabinet-create" aria-label="Create a list">
           <div className="panel-title">
             <div>
               <p className="overline">NEW {kind.toUpperCase()}</p>
@@ -223,88 +229,121 @@ export function ListsPage() {
               <X size={20} />
             </button>
           </div>
-          <form onSubmit={submit} className="create-form">
-            <label>
-              Name
-              <input
-                autoFocus
-                value={name}
-                maxLength={80}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Whiskey, movies, runs…"
-                required
-              />
-            </label>
-            {!listScope && (
+          <div
+            className={
+              kind === 'collection'
+                ? 'cabinet-create-layout'
+                : 'cabinet-create-layout cabinet-create-activity'
+            }
+          >
+            <form onSubmit={submit} className="create-form">
               <label>
-                Type
-                <select
-                  value={kind}
-                  onChange={(event) => {
-                    const nextKind = event.target.value as ListKind;
-                    setKind(nextKind);
-                    if (nextKind === 'activity') setCoverFile(null);
-                  }}
-                >
-                  <option value="collection">Collection: things you can revisit and rank</option>
-                  <option value="activity">Activity: things you log over time</option>
-                </select>
-              </label>
-            )}
-            <details className="create-extras form-wide">
-              <summary>
-                {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
-                <span className="optional">optional</span>
-              </summary>
-              <label className="form-wide">
-                A short description <span className="optional">optional</span>
+                Name
                 <input
-                  value={description}
-                  maxLength={280}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="A line to remind yourself what belongs here"
+                  ref={nameInput}
+                  autoFocus
+                  value={name}
+                  maxLength={80}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Whiskey, movies, runs…"
+                  required
                 />
               </label>
-              {kind === 'collection' && (
-                <div className="form-wide collection-cover-picker">
-                  <label htmlFor="collection-cover-file">
-                    Cover photo <span className="optional">optional · private</span>
-                  </label>
-                  <input
-                    id="collection-cover-file"
-                    ref={coverInput}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
-                  />
-                  {coverPreview && (
-                    <div className="collection-cover-preview">
-                      <img src={coverPreview} alt="Selected collection cover preview" />
-                      <div>
-                        <strong>{coverFile?.name}</strong>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCoverFile(null);
-                            if (coverInput.current) coverInput.current.value = '';
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <small>
-                    {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
-                  </small>
-                </div>
+              <div className="cabinet-name-ideas" role="group" aria-label="Name suggestions">
+                <span>A few ideas</span>
+                {(kind === 'collection' ? ['Drinks', 'Movies', 'Books'] : ['Runs', 'Upkeep']).map((idea) => (
+                  <button
+                    key={idea}
+                    type="button"
+                    disabled={create.isPending}
+                    onClick={() => {
+                      setName(idea);
+                      nameInput.current?.focus();
+                    }}
+                  >
+                    {idea}
+                  </button>
+                ))}
+              </div>
+              {!listScope && (
+                <label>
+                  Type
+                  <select
+                    value={kind}
+                    onChange={(event) => {
+                      const nextKind = event.target.value as ListKind;
+                      setKind(nextKind);
+                      if (nextKind === 'activity') setCoverFile(null);
+                    }}
+                  >
+                    <option value="collection">Collection: things you can revisit and rank</option>
+                    <option value="activity">Activity: things you log over time</option>
+                  </select>
+                </label>
               )}
-            </details>
-            {create.isError && <p className="form-error">{create.error.message}</p>}
-            <button className="button button-accent" disabled={create.isPending}>
-              {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
-            </button>
-          </form>
+              <details className="create-extras form-wide">
+                <summary>
+                  {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
+                  <span className="optional">optional</span>
+                </summary>
+                <label className="form-wide">
+                  A short description <span className="optional">optional</span>
+                  <input
+                    value={description}
+                    maxLength={280}
+                    onChange={(event) => setDescription(event.target.value)}
+                    placeholder="A line to remind yourself what belongs here"
+                  />
+                </label>
+                {kind === 'collection' && (
+                  <div className="form-wide collection-cover-picker">
+                    <label htmlFor="collection-cover-file">
+                      Cover photo <span className="optional">optional · private</span>
+                    </label>
+                    <input
+                      id="collection-cover-file"
+                      ref={coverInput}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                    />
+                    {coverPreview && (
+                      <div className="collection-cover-preview">
+                        <img src={coverPreview} alt="Selected collection cover preview" />
+                        <div>
+                          <strong>{coverFile?.name}</strong>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCoverFile(null);
+                              if (coverInput.current) coverInput.current.value = '';
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <small>
+                      {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
+                    </small>
+                  </div>
+                )}
+              </details>
+              {create.isError && <p className="form-error">{create.error.message}</p>}
+              <button className="button button-accent" disabled={create.isPending}>
+                {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
+              </button>
+            </form>
+            {kind === 'collection' && (
+              <aside className="cabinet-create-preview" aria-label="Collection preview">
+                <p className="overline">YOUR COLLECTION</p>
+                <CollectionArtwork name={name} cover={coverPreview || starterCollectionCover(name)} />
+                <h3>{name.trim() || 'Your collection'}</h3>
+                <p>A name is enough. The rest can wait.</p>
+              </aside>
+            )}
+          </div>
           {confirmingDiscard && (
             <ConfirmDialog
               eyebrow="DISCARD DRAFT"
@@ -319,39 +358,40 @@ export function ListsPage() {
         </section>
       )}
 
-      {lists.isPending ? (
-        <p className="loading-line" role="status">
-          Loading your lists…
-        </p>
-      ) : lists.isError ? (
-        <p className="error-banner" role="alert">
-          Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
-        </p>
-      ) : lists.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
-        <div className="list-groups">
-          {visibleCollectionLists.length > 0 && (
-            <ListDirectory
-              heading="Collections"
-              detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
-              lists={orderedCollectionLists}
-              isCollectionDirectory
-              collectionOrder={collectionOrder}
-              onCollectionOrderChange={setCollectionOrder}
-              collectionQuery={collectionQuery}
-              onCollectionQueryChange={setCollectionQuery}
-            />
-          )}
-          {visibleActivityLists.length > 0 && (
-            <ListDirectory
-              heading="Activity"
-              detail={listScope === 'activity' ? '' : 'Things you want to log over time.'}
-              lists={visibleActivityLists}
-            />
-          )}
-        </div>
-      ) : (
-        <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />
-      )}
+      {!creating &&
+        (lists.isPending ? (
+          <p className="loading-line" role="status">
+            Loading your lists…
+          </p>
+        ) : lists.isError ? (
+          <p className="error-banner" role="alert">
+            Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
+          </p>
+        ) : lists.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
+          <div className="list-groups">
+            {visibleCollectionLists.length > 0 && (
+              <ListDirectory
+                heading="Collections"
+                detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
+                lists={orderedCollectionLists}
+                isCollectionDirectory
+                collectionOrder={collectionOrder}
+                onCollectionOrderChange={setCollectionOrder}
+                collectionQuery={collectionQuery}
+                onCollectionQueryChange={setCollectionQuery}
+              />
+            )}
+            {visibleActivityLists.length > 0 && (
+              <ListDirectory
+                heading="Activity"
+                detail={listScope === 'activity' ? '' : 'Things you want to log over time.'}
+                lists={visibleActivityLists}
+              />
+            )}
+          </div>
+        ) : (
+          <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />
+        ))}
     </main>
   );
 }
@@ -377,11 +417,17 @@ function EmptyListScope({
       <div>
         {scopedSuggestions.map((suggestion) => (
           <button
-            className={suggestion.cover ? 'starter-card has-cover' : 'starter-card'}
+            className="starter-card cabinet-starter-card"
             key={suggestion.name}
             onClick={() => onChoose(suggestion)}
           >
-            {suggestion.cover && <img src={suggestion.cover} alt="" />}
+            <div className="cabinet-directory-picture">
+              <CollectionArtwork
+                name={suggestion.name}
+                cover={suggestion.cover}
+                neutral={suggestion.kind === 'activity'}
+              />
+            </div>
             <span className="starter-card-copy">
               <strong>{suggestion.name}</strong>
               <small>{suggestion.kind}</small>
@@ -474,12 +520,11 @@ function ListDirectory({
                 : starterCollectionCover(list.name);
               return (
                 <div className="collection-directory-entry" key={list.id}>
-                  <Link
-                    to={`/lists/${list.id}`}
-                    className={cover ? 'collection-directory-card has-cover' : 'collection-directory-card'}
-                  >
-                    {cover && <img src={cover} alt="" />}
-                    <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+                  <Link to={`/lists/${list.id}`} className="collection-directory-card cabinet-directory-card">
+                    <div className="cabinet-directory-picture">
+                      <CollectionArtwork name={list.name} cover={cover} />
+                      <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
+                    </div>
                     <span className="collection-directory-copy">
                       <strong>{list.name}</strong>
                       <small>

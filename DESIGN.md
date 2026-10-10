@@ -95,7 +95,7 @@ within that pick's collection. Use the user's current data; never invent a Favor
 Without rankings, show an unranked prompt; without collections, show actual activity instead.
 
 Private uploaded covers take precedence. Only exact Drinks, Movies, Places and Cars starter
-names get eligible bundled art. Other lists use their initial on a neutral field. Home shows up
+names get eligible bundled art. Other lists use layered monogram slips on a subdued field. Home shows up
 to six directories; View all opens the complete directory. Empty accounts have useful creation actions.
 Patterns keeps factual counts and recall. A cream panel shows actual Favorite / Meh / Not again counts, with proportional bars across recorded calls only. It does not turn those calls into a score.
 
@@ -173,3 +173,16 @@ change to the resting composition, stored data or required capture fields.
 
 After successful single or batch capture, restore input focus after the pending state clears
 so another name can be added immediately.
+
+## Cabinet edition
+
+The approved art-direction plan extends the characters' visual craft into the collection
+shelf and first-use journey. Current [edition references](art/ui-mocks/taste-cabinet/edition/README.md)
+include an identity sheet, empty/sparse/populated archives, empty/selected collections and
+creation. Authored category objects replace photographic starter covers; private uploaded
+covers remain first. Custom names receive layered monogram artwork. The archive and
+directory use one shared cover object. The empty archive pairs its dry headline with a
+cream brand illustration; empty collections and undecided slips use faceless paper art.
+Creation pairs name-first capture with a live artwork preview. Suggestions fill names only,
+and the first saved collection opens with capture focused. No opinions, ranks, descriptions
+or sample records are invented.

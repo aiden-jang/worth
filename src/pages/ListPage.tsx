@@ -103,7 +103,7 @@ export function ListPage() {
           <h1>{list.name}</h1>
           <p className="list-record-count">
             {list.kind === 'collection'
-              ? `${list.itemCount} ${list.itemCount === 1 ? 'item' : 'items'} · ${list.rankedCount} ranked`
+              ? `${list.itemCount} ${list.itemCount === 1 ? 'item' : 'items'}${list.rankedCount ? ` · ${list.rankedCount} ranked` : ''}`
               : `${list.logCount} ${list.logCount === 1 ? 'log' : 'logs'}`}
           </p>
           {list.description && <p className="list-user-description">{list.description}</p>}

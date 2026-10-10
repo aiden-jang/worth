@@ -1,0 +1,24 @@
+{
+  "errors": [],
+  "checks": [
+    "empty first view has no fabricated records",
+    "name suggestions do not create lists or fill descriptions",
+    "live monogram preview",
+    "starter choice opens a draft without saving",
+    "activity creation retains its separate log flow",
+    "creation opens focused name-only capture",
+    "empty collection action focuses capture",
+    "first item is unranked with no call and faceless art",
+    "Meh reversible and independent of rank",
+    "personal description and chosen cover survive name suggestions",
+    "draft confirmation retains or discards unsaved changes",
+    "sparse custom archive has a monogram",
+    "starter covers use authored SVG artwork",
+    "archive and directory share artwork",
+    "private uploaded cover has precedence",
+    "one visible opinion slip on mobile",
+    "reduced motion keeps artwork still",
+    "no overflow at 320/390/430/768/900/1180/1440",
+    "all fixture mutations intercepted; no database writes"
+  ]
+}

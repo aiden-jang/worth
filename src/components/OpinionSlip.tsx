@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { ItemDecision } from '../shared/models';
 import { callAsides, decisionLabel } from '../shared/decisions';
 import { CallChoices, CallFace } from './PersonalCall';
+import { BlankSlips } from './BlankSlips';
 
 export function OpinionSlip({
   title,
@@ -33,7 +34,11 @@ export function OpinionSlip({
       <h3>{title}</h3>
       {type && <p className="opinion-slip-type">{type}</p>}
       <div className="opinion-slip-verdict" aria-live="polite">
-        {decision && <CallFace key={decision} value={decision} arms />}
+        {decision ? (
+          <CallFace key={decision} value={decision} arms />
+        ) : (
+          <BlankSlips className="undecided-slips" />
+        )}
         <strong>{decision ? `${decisionLabel(decision)}.` : 'Undecided.'}</strong>
         <span>{decision ? callAsides[decision] : 'No opinion required.'}</span>
       </div>

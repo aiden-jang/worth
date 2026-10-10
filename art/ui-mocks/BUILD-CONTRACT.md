@@ -127,6 +127,33 @@ motion keeps them still; touch devices do not get a sticky animated hover. Resti
 and all call, rank, capture and privacy semantics remain unchanged. See
 [interaction verification](../ui-qa/interaction-polish/README.md).
 
+## Cabinet edition — October 10, current target
+
+The user approved the comprehensive art-direction plan. Use the named
+[edition references](taste-cabinet/edition/README.md) for archive, empty/sparse states,
+collection and creation. The signature landing remains current. This revision supersedes
+the earlier photographic starter covers and generic empty-state layouts.
+
+- Keep the established dark canvas, DM Sans/DM Mono, rail, headline scale and opinion palette.
+- Exact starter names Drinks/Movies/Places/Cars use authored flat SVG category artwork,
+  with uploaded private covers first. Other names use layered cream monogram slips on a
+  subdued sage/clay/butter field. Initial artwork never implies a call or rank.
+- Archive shelf and collection directory share the same 1.6-ratio cover object. Numbering
+  uses a 10px mono cream capsule at 14px left / 12px bottom. Category colors are confined
+  to the artwork: sage #bec7ad, clay #cdb0a4, butter #d8cf9d; cream #eae5d5, ink #34382d.
+- Empty archive: 76px heading, introduction/actions left, 380px cream illustration right,
+  64px gap. The decorative Meh graphic represents the brand, not an actual recorded call.
+  At <=960px stack; mobile heading 52px, full-width 290px-high card.
+- Empty collection: faceless blank slips beside concise copy and Add a name; mobile stacks.
+  Selection marks the row's actual rank/dash with a butter capsule. No-call opinion shows
+  faceless slips and Undecided; choices remain optional and independent of ranking.
+- Creation: max-width 960px, 32px padding, 22px corners. Form beside 310px live preview with
+  56px gap; stack at <=960px. At <=680px use 22px/18px panel padding and 27px heading.
+  Name suggestions fill only the name; no default description is saved. User descriptions
+  and selected covers remain intact. Creating a collection enters its focused capture flow.
+- Keep existing errors, optional disclosures, cover upload, draft confirmation and activity
+  semantics. No accounts are prepopulated. Production private pages use real data only.
+
 ## History
 
 ## October 9 personality refinement — historical override

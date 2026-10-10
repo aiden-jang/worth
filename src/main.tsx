@@ -13,6 +13,7 @@ import './styles.css';
 import './product.css';
 import './cabinet.css';
 import './details.css';
+import './cabinet-edition.css';
 
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } },

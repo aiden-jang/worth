@@ -13,6 +13,7 @@ import {
 import { api, RequestError } from '../api';
 import { CallBadge, CallFace } from './PersonalCall';
 import { OpinionSlip } from './OpinionSlip';
+import { BlankSlips } from './BlankSlips';
 import { decisionLabel } from '../shared/decisions';
 import {
   batchCaptureLimit,
@@ -425,65 +426,78 @@ export function CollectionView({
           )}
 
           <div className="collection-index-layout">
-            <div className="cabinet-index-toolbar">
-              <nav className="collection-browse" aria-label="Browse collection">
-                <span>Show</span>
-                {browseModes.map((mode) => (
-                  <button
-                    type="button"
-                    key={mode.id}
-                    className={browse === mode.id ? 'active' : ''}
-                    aria-pressed={browse === mode.id}
-                    onClick={() => selectBrowse(mode.id)}
-                  >
-                    {mode.label}
-                    <small>{collectionBrowseCount(mode.id, items)}</small>
-                  </button>
-                ))}
-              </nav>
-
-              <div className="collection-utilities">
-                <button
-                  className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
-                  type="button"
-                  aria-expanded={showSearch}
-                  aria-controls="collection-search"
-                  onClick={() => setShowSearch((current) => !current)}
-                >
-                  <MagnifyingGlass size={16} /> Search
-                </button>
-                <button
-                  className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
-                  type="button"
-                  aria-expanded={showFilters}
-                  aria-controls="collection-filters"
-                  onClick={() => setShowFilters((current) => !current)}
-                >
-                  Filter{hasAdvancedFilters ? ' ·' : ''}
-                </button>
-              </div>
-            </div>
-            <div className="collection-index">
-              {!visible.length ? (
-                <div className="collection-index-empty">
-                  {!items.length && <CallFace value="meh" arms />}
-                  <h2>{items.length ? 'No matching items.' : 'Nothing to judge. Yet.'}</h2>
-                  <p>
-                    {items.length
-                      ? 'Try another view or search for a different name.'
-                      : 'Add the first thing you tried. A name will do.'}
-                  </p>
-                  {items.length > 0 && (browse !== 'all' || search) && (
+            {items.length > 0 && (
+              <div className="cabinet-index-toolbar">
+                <nav className="collection-browse" aria-label="Browse collection">
+                  <span>Show</span>
+                  {browseModes.map((mode) => (
                     <button
                       type="button"
-                      onClick={() => {
-                        setBrowse('all');
-                        setSearch('');
-                      }}
+                      key={mode.id}
+                      className={browse === mode.id ? 'active' : ''}
+                      aria-pressed={browse === mode.id}
+                      onClick={() => selectBrowse(mode.id)}
                     >
-                      Show everything
+                      {mode.label}
+                      <small>{collectionBrowseCount(mode.id, items)}</small>
                     </button>
-                  )}
+                  ))}
+                </nav>
+
+                <div className="collection-utilities">
+                  <button
+                    className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
+                    type="button"
+                    aria-expanded={showSearch}
+                    aria-controls="collection-search"
+                    onClick={() => setShowSearch((current) => !current)}
+                  >
+                    <MagnifyingGlass size={16} /> Search
+                  </button>
+                  <button
+                    className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
+                    type="button"
+                    aria-expanded={showFilters}
+                    aria-controls="collection-filters"
+                    onClick={() => setShowFilters((current) => !current)}
+                  >
+                    Filter{hasAdvancedFilters ? ' ·' : ''}
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="collection-index">
+              {!visible.length ? (
+                <div className={items.length ? 'collection-index-empty' : 'collection-empty-composition'}>
+                  {!items.length && <BlankSlips />}
+                  <div>
+                    <h2>{items.length ? 'No matching items.' : 'Nothing to judge. Yet.'}</h2>
+                    <p>
+                      {items.length
+                        ? 'Try another view or search for a different name.'
+                        : 'Add the first thing you tried. A name will do.'}
+                    </p>
+                    {items.length > 0 && (browse !== 'all' || search) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBrowse('all');
+                          setSearch('');
+                        }}
+                      >
+                        Show everything
+                      </button>
+                    )}
+                    {!items.length && (
+                      <button
+                        className="button button-outline"
+                        type="button"
+                        onClick={() => (batchMode ? batchCaptureRef.current : captureRef.current)?.focus()}
+                      >
+                        Add a name <ArrowRight size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>

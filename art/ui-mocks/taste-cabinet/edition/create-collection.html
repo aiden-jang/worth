@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>
+    Worth · create-collection</title
+  ><link rel="stylesheet" href="../../../../node_modules/@fontsource/dm-sans/latin-400.css" /><link
+    rel="stylesheet"
+    href="../../../../node_modules/@fontsource/dm-sans/latin-500.css"
+  /><link rel="stylesheet" href="../../../../node_modules/@fontsource/dm-sans/latin-600.css" /><link
+    rel="stylesheet"
+    href="../../../../node_modules/@fontsource/dm-sans/latin-700.css"
+  /><link rel="stylesheet" href="../../../../node_modules/@fontsource/dm-mono/latin-400.css" /><link
+    rel="stylesheet"
+    href="../../../../src/styles.css"
+  /><link rel="stylesheet" href="../../../../src/product.css" /><link
+    rel="stylesheet"
+    href="../../../../src/cabinet.css"
+  /><link rel="stylesheet" href="../../../../src/details.css" /><link
+    rel="stylesheet"
+    href="../../../../src/cabinet-edition.css"
+  />
+  <body>
+    <div class="app-shell app-shell-dark">
+      <aside class="app-rail">
+        <a class="brand">worth</a><button class="mobile-menu-toggle icon-button">☰</button>
+        <nav class="main-nav">
+          <a class="">Archive</a><a class="active">Collections</a><a class="">Activity</a
+          ><a class="">Patterns</a><a class="">Search</a>
+        </nav>
+        <nav class="rail-collections">
+          <p>Collections</p>
+          <a>Drinks <small>8</small></a
+          ><a>Movies <small>1</small></a
+          ><a>Places <small>1</small></a>
+        </nav>
+        <div class="rail-actions">
+          <button class="button header-add">Add something +</button
+          ><a class="account-link"
+            ><span class="account-avatar">P</span
+            ><span>Preview archive<small>Account settings ↗</small></span></a
+          >
+        </div>
+      </aside>
+      <div class="app-content">
+        <main class="light-page lists-page page-width">
+          <div class="page-head">
+            <div>
+              <p class="overline">YOUR ARCHIVE</p>
+              <h1>Collections</h1>
+              <p>The good, the meh, and the “not again.”</p>
+            </div>
+          </div>
+          <section class="create-panel cabinet-create">
+            <div class="panel-title">
+              <div>
+                <p class="overline">NEW COLLECTION</p>
+                <h2>What are you collecting?</h2>
+              </div>
+              <button class="icon-button" aria-label="Close">×</button>
+            </div>
+            <div class="cabinet-create-layout">
+              <form class="create-form">
+                <label>Name<input value="Books" placeholder="Whiskey, movies, runs…" /></label>
+                <div class="cabinet-name-ideas">
+                  <span>A few ideas</span><button type="button">Drinks</button
+                  ><button type="button">Movies</button><button type="button">Books</button>
+                </div>
+                <details class="create-extras">
+                  <summary>Description &amp; cover <span class="optional">optional</span></summary>
+                </details>
+                <button class="button button-accent">Create collection →</button>
+              </form>
+              <aside class="cabinet-create-preview" aria-label="Collection preview">
+                <p class="overline">YOUR COLLECTION</p>
+                <div class="collection-artwork cabinet-monogram" data-tone="sage">
+                  <span class="monogram-sheet"></span><span class="monogram-letter">B</span
+                  ><span class="monogram-orbit"></span>
+                </div>
+                <h3>Books</h3>
+                <p>A name is enough. The rest can wait.</p>
+              </aside>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

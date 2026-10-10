@@ -1,5 +1,10 @@
 # Worth — taste cabinet
 
+Current target: [cabinet edition references](edition/README.md). The user approved the broader
+art-direction plan after the earlier refinement passes. The edition archive, first-use,
+collection and creation references supersede the corresponding earlier images below.
+The landing retains its existing signature composition.
+
 October 10 direction: cute, dry, nonchalant and coherent. The user authorized a stronger
 redesign after rejecting incremental polish. These standalone compositions were authored
 and inspected before changing the app's primary layouts. They are design references, not

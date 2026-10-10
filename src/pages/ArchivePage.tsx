@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { api } from '../api';
 import { formatElapsedDays, formatRelativeTimestamp } from '../format';
 import { starterCollectionCover } from '../shared/starter-covers';
+import { CollectionArtwork } from '../components/CollectionArtwork';
 
 const dateLabel = (value: string) =>
   new Intl.DateTimeFormat('en-US', {
@@ -93,13 +94,7 @@ export function ArchivePage() {
               <li key={list.id}>
                 <Link to={`/lists/${list.id}`} className="cabinet-folder">
                   <div className="cabinet-folder-picture">
-                    {cover ? (
-                      <img src={cover} alt="" />
-                    ) : (
-                      <span className="cabinet-folder-blank" aria-hidden="true">
-                        {list.name.slice(0, 1)}
-                      </span>
-                    )}
+                    <CollectionArtwork name={list.name} cover={cover} neutral={list.kind === 'activity'} />
                     <span className="cabinet-folder-number" aria-hidden="true">
                       {String(index + 1).padStart(2, '0')}
                     </span>
@@ -194,13 +189,11 @@ export function ArchivePage() {
 
 function EmptyArchive() {
   return (
-    <section className="empty-archive page-width">
-      <div className="empty-index">
-        <CallFace value="meh" arms />
-      </div>
-      <div>
+    <section className="cabinet-first-use page-width">
+      <div className="cabinet-first-use-intro">
+        <p className="overline">YOUR TASTE, ON RECORD</p>
         <h1>A clean slate. Suspicious.</h1>
-        <p>Start a collection for what you try, or an activity for what you do. A name is enough.</p>
+        <p>Keep the things you try in a collection. A name is enough to get started.</p>
         <div className="empty-archive-actions">
           <Link className="button button-accent" to="/lists?create=1&kind=collection">
             Start a collection <ArrowRight size={18} />
@@ -210,12 +203,17 @@ function EmptyArchive() {
           </Link>
         </div>
       </div>
-      <div className="empty-kinds">
-        <span>DRINKS</span>
-        <span>PLACES</span>
-        <span>MOVIES</span>
-        <span>RUNS</span>
-        <span>WHATEVER ELSE</span>
+      <div className="cabinet-first-look" aria-hidden="true">
+        <p className="overline">ROOM FOR OPINIONS</p>
+        <span>00</span>
+        <CallFace value="meh" arms />
+        <div className="cabinet-blank-rules" />
+      </div>
+      <div className="cabinet-first-use-footer">
+        <p>Make room for your taste.</p>
+        <span>Keep a name</span>
+        <span>Make a call, if you want</span>
+        <span>Find it again</span>
       </div>
     </section>
   );
