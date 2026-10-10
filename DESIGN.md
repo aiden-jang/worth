@@ -186,3 +186,14 @@ cream brand illustration; empty collections and undecided slips use faceless pap
 Creation pairs name-first capture with a live artwork preview. Suggestions fill names only,
 and the first saved collection opens with capture focused. No opinions, ranks, descriptions
 or sample records are invented.
+
+## Cabinet finishing pass
+
+Search and Patterns now use the edition's faceless paper empty states. Search uses the
+same rounded controls and labeled capsules as the collection; results and recall titles
+wrap so a personal name is readable. Clearing search restores the field's focus. Empty
+Patterns opens a creation draft, never a prefilled archive. Existing recorded-call counts
+and bars remain factual. Opened dialogs, settings and selected slips settle with a brief
+200ms/6px entrance; reduced motion keeps them still. Settings and sharing keep their
+accepted compositions and factual visibility/destructive copy. The signature landing
+is verified with its interactive examples and retains its accepted composition.

@@ -70,3 +70,8 @@ changes under reduced motion. See [signature verification](../../ui-qa/signature
 The everyday interaction pass aligns capture corners to 12px and keeps selected rows raised
 on hover. Focus, confirmation and link reactions preserve the resting compositions. See
 [interaction verification](../../ui-qa/interaction-polish/README.md).
+
+The cabinet finishing pass adds [Search and Patterns references](edition/README.md#finishing-references)
+and brief opened-panel motion. Signed-out landing, settings and sharing retain their
+accepted compositions; long personal titles wrap. See
+[finishing verification](../../ui-qa/cabinet-finishing/README.md).

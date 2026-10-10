@@ -32,3 +32,18 @@ and artwork, without invented records, ranks or opinions.
 `src/cabinet-edition.css`. Viewports are 1440 × 900 and 390 × 780; mobile pages scroll
 naturally. The identity sheet is a design artifact, not a production screen. Fixture names
 and timestamps vary in the app, and working navigation/account affordances remain.
+
+## Finishing references
+
+The October 10 finishing pass extends the accepted cabinet to Search and Patterns.
+`build-finishing.py` regenerates these fixtures. Personal names wrap rather than disappear.
+
+| Screen         | Desktop                                 | Mobile                                 |
+| -------------- | --------------------------------------- | -------------------------------------- |
+| Search start   | [Reference](search-empty-desktop.png)   | [Reference](search-empty-mobile.png)   |
+| Search results | [Reference](search-results-desktop.png) | [Reference](search-results-mobile.png) |
+| Empty Patterns | [Reference](patterns-empty-desktop.png) | [Reference](patterns-empty-mobile.png) |
+| Patterns       | [Reference](patterns-desktop.png)       | [Reference](patterns-mobile.png)       |
+
+Motion is a finite 200ms/6px entrance on opened panels and selected slips, disabled for
+reduced motion. The signature landing, settings and sharing retain their existing layout.

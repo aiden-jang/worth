@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MagnifyingGlass, ArrowUpRight, X } from '@phosphor-icons/react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
+import { CabinetEmptyState } from '../components/CabinetEmptyState';
 import type { SearchResult } from '../shared/models';
 
 type SearchScope = 'all' | 'lists' | 'items' | 'logs';
@@ -16,6 +17,7 @@ export function SearchPage() {
   const routeQuery = params.get('q') ?? '';
   const scope = searchScope(params.get('scope'));
   const [query, setQuery] = useState(routeQuery);
+  const input = useRef<HTMLInputElement>(null);
   useEffect(() => setQuery(routeQuery), [routeQuery]);
   const term = query.trim();
   const results = useQuery({
@@ -48,6 +50,7 @@ export function SearchPage() {
         <MagnifyingGlass size={26} />
         <span className="sr-only">Search all lists</span>
         <input
+          ref={input}
           autoFocus
           placeholder="A film, a place, a good drink…"
           value={query}
@@ -65,6 +68,7 @@ export function SearchPage() {
             onClick={() => {
               setQuery('');
               updateSearch('');
+              input.current?.focus();
             }}
           >
             <X size={18} />
@@ -72,7 +76,10 @@ export function SearchPage() {
         )}
       </label>
       {term.length < 2 ? (
-        <p className="search-hint">Type at least two characters to search your lists and logs.</p>
+        <CabinetEmptyState
+          title="Somewhere in here."
+          description="Type at least two characters to search your lists and logs."
+        />
       ) : results.isPending ? (
         <p className="search-hint" role="status">
           Searching…
@@ -119,10 +126,10 @@ export function SearchPage() {
           )}
         </section>
       ) : (
-        <div className="search-empty">
-          <h2>Nothing under that name.</h2>
-          <p>Try a shorter search or a different spelling.</p>
-        </div>
+        <CabinetEmptyState
+          title="Nothing under that name."
+          description="Try a shorter search or a different spelling."
+        />
       )}
     </main>
   );

@@ -322,3 +322,17 @@ Do not rely on facial expression or color alone for interactive choices.
 The archive mock omits a printed EXAMPLE label; its rows are still synthetic mock fixtures.
 Production private screens use real data. The signed-out proof must retain its EXAMPLE label.
 Later user instructions supersede this reference set; routine implementation needs no separate approval.
+
+## Cabinet finishing pass — October 10
+
+Search and Patterns use the [edition secondary references](taste-cabinet/edition/README.md).
+The accepted archive, collection and signature landing compositions remain current.
+Search's field uses 12px corners and a butter focus rule. Result filters are labeled
+44px capsules; results and pattern recall titles wrap rather than hide personal text.
+Empty Search and Patterns share faceless paper artwork, a 28px heading and concise copy,
+with a 32px gap and 760px maximum width. At <=680px stack the artwork and copy, use
+120 × 104px artwork and 26px headings. Start a collection opens an explicit draft.
+No sample content, automatic opinions or inferred scores appear in private pages.
+Dialogs, settings and newly mounted selected slips settle over 200ms with a 6px rise.
+Reduced motion disables this entrance. Existing capture and call feedback stays finite.
+Sharing visibility and destructive confirmations retain factual copy and explicit actions.

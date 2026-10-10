@@ -143,3 +143,7 @@ Creation previews say `A name is enough. The rest can wait.` Suggestions fill on
 collection/activity name; brand descriptions are never silently saved as personal content.
 Empty collections retain `Nothing to judge. Yet.` and a functional `Add a name` action.
 Faceless slip art preserves the distinction between undecided and Meh.
+
+Search start: `Somewhere in here.` with the clear two-character search instruction.
+Empty Patterns: `Too soon to tell.` / `Keep a few items or activity logs. Patterns will appear here.`
+Both use faceless paper artwork; no reaction or personal judgment is invented.

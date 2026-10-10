@@ -3,6 +3,7 @@ import { ArrowRight } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
 import { CallFace } from '../components/PersonalCall';
+import { CabinetEmptyState } from '../components/CabinetEmptyState';
 import { decisionLabel, callAsides } from '../shared/decisions';
 import type { ItemDecision } from '../shared/models';
 
@@ -33,14 +34,14 @@ export function PatternsPage() {
         <p>A few patterns. No personality diagnosis.</p>
       </header>
       {data.totalRecords === 0 ? (
-        <section className="patterns-empty">
-          <p className="overline">NOTHING TO READ YET</p>
-          <h2>Nothing to summarize yet.</h2>
-          <p>Add items or activity logs to see patterns here.</p>
-          <Link className="button button-accent" to="/lists?kind=collection">
-            Open collections <ArrowRight size={18} />
+        <CabinetEmptyState
+          title="Too soon to tell."
+          description="Keep a few items or activity logs. Patterns will appear here."
+        >
+          <Link className="button button-accent" to="/lists?create=1&kind=collection">
+            Start a collection <ArrowRight size={18} />
           </Link>
-        </section>
+        </CabinetEmptyState>
       ) : (
         <>
           <section className="pattern-stat-grid" aria-label="Archive patterns">
