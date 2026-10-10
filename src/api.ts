@@ -1,6 +1,7 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
   WorkoutSession,
+  WorkoutRoutine,
   CollectionArt,
   ExerciseSet,
   Item,
@@ -64,8 +65,14 @@ export const api = {
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => request<void>(`/items/${id}`, { method: 'DELETE' }),
+  routines: (listId: string) => request<{ routines: WorkoutRoutine[] }>(`/lists/${listId}/routines`),
+  createRoutine: (listId: string, body: { title: string; exercises: string[] }) =>
+    request<{ routine: WorkoutRoutine }>(`/lists/${listId}/routines`, json('POST', body)),
+  updateRoutine: (id: string, body: { title: string; exercises: string[] }) =>
+    request<{ routine: WorkoutRoutine }>(`/routines/${id}`, json('PUT', body)),
+  deleteRoutine: (id: string) => request<void>(`/routines/${id}`, { method: 'DELETE' }),
   workouts: (listId: string) => request<{ workouts: WorkoutSession[] }>(`/lists/${listId}/workouts`),
-  createWorkout: (listId: string, body: { title: string; happenedOn: string }) =>
+  createWorkout: (listId: string, body: { title: string; happenedOn: string; routineId?: string }) =>
     request<{ workout: WorkoutSession }>(`/lists/${listId}/workouts`, json('POST', body)),
   updateWorkout: (id: string, body: { title?: string; happenedOn?: string }) =>
     request<{ workout: WorkoutSession }>(`/workouts/${id}`, json('PATCH', body)),

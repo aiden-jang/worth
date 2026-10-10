@@ -17,6 +17,7 @@ export function WorkoutSessions({
   sort,
   onAdd,
   onOpen,
+  onSaveRoutine,
   creating,
   onCloseCreate,
 }: {
@@ -29,7 +30,8 @@ export function WorkoutSessions({
   query: string;
   periodStart: string | null;
   sort: 'newest' | 'oldest' | 'name';
-  onAdd: (workout: WorkoutSession) => void;
+  onAdd: (workout: WorkoutSession, title?: string) => void;
+  onSaveRoutine: (workout: WorkoutSession, entries: Log[]) => void;
   onOpen: (log: Log) => void;
 }) {
   const [editing, setEditing] = useState<WorkoutSession | null>(null);
@@ -39,7 +41,8 @@ export function WorkoutSessions({
         (!periodStart || workout.happenedOn >= periodStart) &&
         (!query.trim() ||
           workout.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
-          visibleLogs.some((log) => log.workoutId === workout.id)),
+          visibleLogs.some((log) => log.workoutId === workout.id) ||
+          workout.plannedExercises?.some((name) => name.toLowerCase().includes(query.trim().toLowerCase()))),
     )
     .sort((a, b) =>
       sort === 'name'
@@ -61,6 +64,16 @@ export function WorkoutSessions({
         const entries = logs
           .filter((log) => log.workoutId === workout.id)
           .sort((a, b) => a.createdAt - b.createdAt);
+        const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
+        const pending = (workout.plannedExercises ?? []).filter(
+          (name) => !entries.some((entry) => normalize(entry.title) === normalize(name)),
+        );
+        const visiblePending = pending.filter(
+          (name) =>
+            !query.trim() ||
+            workout.title.toLowerCase().includes(query.trim().toLowerCase()) ||
+            name.toLowerCase().includes(query.trim().toLowerCase()),
+        );
         const shown = entries.filter((log) => visibleLogs.some((entry) => entry.id === log.id));
         const sets = entries.reduce((sum, entry) => sum + (entry.exerciseSets?.length ?? 0), 0);
         const reps = entries.reduce(
@@ -72,7 +85,9 @@ export function WorkoutSessions({
             <div className="workout-card-heading">
               <div>
                 <p className="overline">WORKOUT · {formatDate(workout.happenedOn)}</p>
-                <h2>{workout.title}</h2>
+                <h2 id={`workout-heading-${workout.id}`} tabIndex={-1}>
+                  {workout.title}
+                </h2>
               </div>
               <button
                 type="button"
@@ -84,7 +99,7 @@ export function WorkoutSessions({
               </button>
             </div>
             <p className="workout-count">
-              {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} · {sets}{' '}
+              {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged · {sets}{' '}
               {sets === 1 ? 'set' : 'sets'} · {reps} {reps === 1 ? 'rep' : 'reps'}
               {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
             </p>
@@ -99,15 +114,52 @@ export function WorkoutSessions({
                 </button>
               ))}
             </div>
-            {!entries.length && <p className="workout-empty">Add the first exercise to this visit.</p>}
-            <button
-              type="button"
-              className="button button-outline"
-              aria-label={`Add exercise to ${workout.title}`}
-              onClick={() => onAdd(workout)}
-            >
-              <Plus size={17} /> Add exercise
-            </button>
+            {visiblePending.length > 0 && (
+              <div className="planned-exercises">
+                <p className="overline">EXERCISES TO LOG</p>
+                <div className="workout-exercises">
+                  {visiblePending.map((name) => (
+                    <button
+                      type="button"
+                      key={name}
+                      onClick={() => onAdd(workout, name)}
+                      aria-label={`Log ${name} in ${workout.title}`}
+                    >
+                      <span>
+                        <strong>{name}</strong>
+                        <small>Not logged</small>
+                      </span>
+                      <span className="planned-action">
+                        Log exercise <ArrowRight size={18} />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!entries.length && !pending.length && (
+              <p className="workout-empty">Add the first exercise to this visit.</p>
+            )}
+            <div className="routine-actions">
+              <button
+                type="button"
+                className="button button-outline"
+                aria-label={`Add exercise to ${workout.title}`}
+                onClick={() => onAdd(workout)}
+              >
+                <Plus size={17} /> Add exercise
+              </button>
+              {entries.length > 0 || workout.plannedExercises?.length ? (
+                <button
+                  type="button"
+                  className="button button-outline"
+                  aria-label={`Save ${workout.title} as routine`}
+                  onClick={() => onSaveRoutine(workout, entries)}
+                >
+                  Save as routine
+                </button>
+              ) : null}
+            </div>
           </article>
         );
       })}

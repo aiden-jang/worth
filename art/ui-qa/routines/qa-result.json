@@ -1,0 +1,87 @@
+{
+  "errors": [],
+  "checks": [
+    "create and edit ordered routine",
+    "fresh visits without completed logs",
+    "blank reps/weight with previous reference",
+    "logging removes pending exercise and counts actual sets only",
+    "routine changes affect future visits only",
+    "same-day visits remain separate",
+    "save workout as routine",
+    "filter planned names",
+    "discard protection",
+    "deletion preserves visits and logs",
+    "320/390/430/768/1440 overflow"
+  ],
+  "writes": [
+    {
+      "path": "/lists/gym/routines",
+      "method": "POST",
+      "input": {
+        "title": "Push day",
+        "exercises": ["Bench press", "Shoulder press", "Triceps extension"]
+      }
+    },
+    {
+      "path": "/lists/gym/workouts",
+      "method": "POST",
+      "input": {
+        "title": "Push day",
+        "happenedOn": "2026-10-10",
+        "routineId": "r-1"
+      }
+    },
+    {
+      "path": "/lists/gym/logs",
+      "method": "POST",
+      "input": {
+        "workoutId": "11111111-1111-4111-8111-000000000001",
+        "exerciseSets": [
+          {
+            "reps": 12,
+            "weight": 20
+          }
+        ],
+        "weightUnit": "kg",
+        "itemId": null,
+        "title": "Bench press",
+        "happenedOn": "2026-10-10",
+        "note": "",
+        "amount": null,
+        "unit": "",
+        "sets": null,
+        "reps": null
+      }
+    },
+    {
+      "path": "/routines/r-1",
+      "method": "PUT",
+      "input": {
+        "title": "Push day",
+        "exercises": ["Triceps extension", "Bench press"]
+      }
+    },
+    {
+      "path": "/lists/gym/workouts",
+      "method": "POST",
+      "input": {
+        "title": "Push day",
+        "happenedOn": "2026-10-10",
+        "routineId": "r-1"
+      }
+    },
+    {
+      "path": "/lists/gym/routines",
+      "method": "POST",
+      "input": {
+        "title": "Alternate",
+        "exercises": ["Triceps extension", "Bench press"]
+      }
+    },
+    {
+      "path": "/routines/r-1",
+      "method": "DELETE",
+      "input": null
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
 import { workoutInput, workoutPatch } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
-import { ApiError, listWorkouts, requireList, requireWorkout } from '../data';
+import { ApiError, listWorkouts, requireList, requireWorkout, requireRoutine } from '../data';
 import { readJson } from '../http';
 
 export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
@@ -18,10 +18,24 @@ export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
     const input = await readJson(c.req.raw, workoutInput),
       id = crypto.randomUUID(),
       now = Date.now();
+    const routine = input.routineId
+      ? await requireRoutine(c.env.DB, c.get('ownerId'), input.routineId)
+      : null;
+    if (routine && routine.listId !== list.id)
+      throw new ApiError(400, 'INVALID_ROUTINE', 'Choose a routine in this activity list');
     await c.env.DB.batch([
       c.env.DB.prepare(
-        'INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      ).bind(id, list.id, c.get('ownerId'), input.title || 'Workout', input.happenedOn, now, now),
+        'INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, created_at, updated_at, planned_exercises) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      ).bind(
+        id,
+        list.id,
+        c.get('ownerId'),
+        input.title || routine?.title || 'Workout',
+        input.happenedOn,
+        now,
+        now,
+        JSON.stringify(routine?.exercises ?? []),
+      ),
       c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
         now,
         list.id,

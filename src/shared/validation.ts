@@ -66,8 +66,26 @@ export const itemsBatchInput = z.object({
     }),
 });
 
-export const workoutInput = z.object({ title: z.string().trim().max(80).default(''), happenedOn: date });
-export const workoutPatch = workoutInput.partial().refine((value) => Object.keys(value).length > 0);
+const plannedExercises = z
+  .array(shortText(120))
+  .max(40)
+  .refine(
+    (names) => new Set(names.map((name) => name.replace(/\s+/g, ' ').toLowerCase())).size === names.length,
+    'Each exercise can only appear once',
+  );
+export const routineInput = z.object({
+  title: shortText(80),
+  exercises: plannedExercises.refine((names) => names.length > 0, 'Add at least one exercise'),
+});
+export const workoutInput = z.object({
+  title: z.string().trim().max(80).default(''),
+  happenedOn: date,
+  routineId: z.string().uuid().optional(),
+});
+export const workoutPatch = workoutInput
+  .omit({ routineId: true })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0);
 
 export const logInput = z.object({
   workoutId: z.string().uuid().nullable().default(null),

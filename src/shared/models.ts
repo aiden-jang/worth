@@ -42,7 +42,17 @@ export interface Item {
   lastLoggedOn: string | null;
 }
 
+export interface WorkoutRoutine {
+  id: string;
+  listId: string;
+  title: string;
+  exercises: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface WorkoutSession {
+  plannedExercises?: string[];
   id: string;
   listId: string;
   title: string;

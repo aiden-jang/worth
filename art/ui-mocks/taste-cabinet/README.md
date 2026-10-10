@@ -82,3 +82,5 @@ accepted compositions; long personal titles wrap. See
 [Artwork and exercise references](personal-tools/README.md) extend the approved cabinet with saved custom artwork and individual exercise sets. Creation, settings and activity retain their existing screen compositions.
 
 [Workout sessions and comparisons](workouts/README.md) extend the activity index and editor with explicitly grouped visits and factual last-time recall.
+
+Reusable routines extend the [workout references](workouts/README.md#reusable-routines): saved exercise lineups, blank new visits, and a checklist leading into the existing set editor.

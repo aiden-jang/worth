@@ -2,6 +2,7 @@ import { formatActivityMetric, previousExercise } from '../shared/workouts';
 import { Fragment, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, Trash, X } from '@phosphor-icons/react';
+import { WorkoutRoutines, type RoutineDraft } from './WorkoutRoutines';
 import { WorkoutSessions } from './WorkoutSessions';
 import type { Log, WorkoutSession } from '../shared/models';
 import { api, type LogInput } from '../api';
@@ -32,6 +33,8 @@ export function ActivityView({
 }) {
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
+  const [routineSeed, setRoutineSeed] = useState<RoutineDraft | null>(null);
+  const [initialExercise, setInitialExercise] = useState('');
   const [creatingWorkout, setCreatingWorkout] = useState(false);
   const [initialWorkout, setInitialWorkout] = useState<WorkoutSession | null>(null);
   const [selected, setSelected] = useState<Log | null>(null);
@@ -64,9 +67,11 @@ export function ActivityView({
 
   useEffect(() => {
     setCreatingWorkout(false);
+    setRoutineSeed(null);
     setSelected(null);
     setRepeatLog(null);
     setInitialWorkout(null);
+    setInitialExercise('');
     setQuery('');
     setSort('newest');
     setPeriod('all');
@@ -82,6 +87,7 @@ export function ActivityView({
     setSelected(null);
     setRepeatLog(null);
     setInitialWorkout(null);
+    setInitialExercise('');
     if (newOpen) onCloseNew();
   }
 
@@ -142,6 +148,7 @@ export function ActivityView({
             type="button"
             onClick={() => {
               setInitialWorkout(null);
+              setInitialExercise('');
               setRepeatLog(lastLog);
               onNew();
             }}
@@ -150,6 +157,12 @@ export function ActivityView({
           </button>
         </section>
       )}
+      <WorkoutRoutines
+        listId={listId}
+        seed={routineSeed}
+        onCloseSeed={() => setRoutineSeed(null)}
+        onStarted={clearFilters}
+      />
       <div className="workout-launch">
         <button
           type="button"
@@ -214,9 +227,26 @@ export function ActivityView({
           periodStart={periodStart}
           sort={sort}
           onOpen={setSelected}
-          onAdd={(workout) => {
+          onSaveRoutine={(workout, entries) => {
+            const names = [
+              ...(workout.plannedExercises ?? []),
+              ...entries.map((entry) => entry.title),
+            ].filter((name) => name.trim());
+            const seen = new Set<string>();
+            setRoutineSeed({
+              title: workout.title,
+              exercises: names.filter((name) => {
+                const key = name.trim().replace(/\s+/g, ' ').toLowerCase();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              }),
+            });
+          }}
+          onAdd={(workout, title = '') => {
             setRepeatLog(null);
             setInitialWorkout(workout);
+            setInitialExercise(title);
             onNew();
           }}
         />
@@ -263,6 +293,7 @@ export function ActivityView({
                     className="activity-again"
                     onClick={() => {
                       setInitialWorkout(null);
+                      setInitialExercise('');
                       setRepeatLog(log);
                       onNew();
                     }}
@@ -277,7 +308,7 @@ export function ActivityView({
       )}
       {(newOpen || selected) && (
         <ActivityEditor
-          key={selected?.id ?? `new-${repeatLog?.id ?? initialWorkout?.id ?? 'blank'}`}
+          key={selected?.id ?? `new-${repeatLog?.id ?? initialWorkout?.id ?? 'blank'}-${initialExercise}`}
           listId={listId}
           log={newOpen ? null : selected}
           repeatLog={repeatLog}
@@ -289,6 +320,7 @@ export function ActivityView({
               : workouts
           }
           initialWorkout={initialWorkout}
+          initialExercise={initialExercise}
           workoutsLoading={workoutsQuery.isPending || workoutsQuery.isError}
           onClose={close}
         />
@@ -319,6 +351,7 @@ function ActivityEditor({
   logs,
   workouts,
   initialWorkout,
+  initialExercise,
   workoutsLoading,
   onClose,
 }: {
@@ -329,6 +362,7 @@ function ActivityEditor({
   logs: Log[];
   workouts: WorkoutSession[];
   initialWorkout: WorkoutSession | null;
+  initialExercise: string;
   workoutsLoading: boolean;
   onClose: () => void;
 }) {
@@ -342,6 +376,7 @@ function ActivityEditor({
         : initialWorkout
           ? {
               ...emptyLog(),
+              title: initialExercise,
               workoutId: initialWorkout.id,
               happenedOn: initialWorkout.happenedOn,
               exerciseSets: [{ reps: null, weight: null }],
@@ -382,6 +417,7 @@ function ActivityEditor({
       : initialWorkout
         ? {
             ...emptyLog(),
+            title: initialExercise,
             workoutId: initialWorkout.id,
             happenedOn: initialWorkout.happenedOn,
             exerciseSets: [{ reps: null, weight: null }],

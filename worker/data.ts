@@ -1,5 +1,6 @@
 import type {
   WorkoutSession,
+  WorkoutRoutine,
   Item,
   ItemDecision,
   ListDetail,
@@ -16,6 +17,7 @@ export type RecordExport = {
   items: Item[];
   logs: Log[];
   workoutSessions: WorkoutSession[];
+  workoutRoutines: WorkoutRoutine[];
 };
 
 export class ApiError extends Error {
@@ -249,7 +251,7 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
 }
 
 export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
-  const [listResult, itemResult, logResult, workoutResult] = await Promise.all([
+  const [listResult, itemResult, logResult, workoutResult, routineResult] = await Promise.all([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId).all<ListRow>(),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId).all<ItemRow>(),
     db
@@ -263,6 +265,10 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? ORDER BY happened_on ASC, created_at ASC')
       .bind(ownerId)
       .all<WorkoutRow>(),
+    db
+      .prepare('SELECT * FROM workout_routines WHERE owner_id = ? ORDER BY created_at ASC')
+      .bind(ownerId)
+      .all<RoutineRow>(),
   ]);
   return {
     schemaVersion: 1,
@@ -272,10 +278,12 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     items: itemResult.results.map(mapItem),
     logs: logResult.results.map(mapLog),
     workoutSessions: workoutResult.results.map(mapWorkout),
+    workoutRoutines: routineResult.results.map(mapRoutine),
   };
 }
 
 type WorkoutRow = {
+  planned_exercises: string;
   id: string;
   list_id: string;
   owner_id: string;
@@ -286,6 +294,7 @@ type WorkoutRow = {
 };
 function mapWorkout(row: WorkoutRow): WorkoutSession {
   return {
+    plannedExercises: JSON.parse(row.planned_exercises ?? '[]'),
     id: row.id,
     listId: row.list_id,
     title: row.title,
@@ -332,4 +341,45 @@ export async function validateWorkoutTarget(
     throw new ApiError(400, 'INVALID_WORKOUT_DATE', 'The exercise date must match its workout');
   if (!exerciseSets.length || itemId)
     throw new ApiError(400, 'INVALID_WORKOUT_EXERCISE', 'Workout entries must contain exercise sets');
+}
+
+type RoutineRow = {
+  id: string;
+  list_id: string;
+  owner_id: string;
+  title: string;
+  exercises: string;
+  created_at: number;
+  updated_at: number;
+};
+function mapRoutine(row: RoutineRow): WorkoutRoutine {
+  return {
+    id: row.id,
+    listId: row.list_id,
+    title: row.title,
+    exercises: JSON.parse(row.exercises),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+export async function listRoutines(
+  db: D1Database,
+  ownerId: string,
+  listId: string,
+): Promise<WorkoutRoutine[]> {
+  const { results } = await db
+    .prepare(
+      'SELECT * FROM workout_routines WHERE owner_id = ? AND list_id = ? ORDER BY title COLLATE NOCASE, created_at',
+    )
+    .bind(ownerId, listId)
+    .all<RoutineRow>();
+  return results.map(mapRoutine);
+}
+export async function requireRoutine(db: D1Database, ownerId: string, id: string): Promise<WorkoutRoutine> {
+  const row = await db
+    .prepare('SELECT * FROM workout_routines WHERE owner_id = ? AND id = ?')
+    .bind(ownerId, id)
+    .first<RoutineRow>();
+  if (!row) throw new ApiError(404, 'NOT_FOUND', 'Routine not found');
+  return mapRoutine(row);
 }

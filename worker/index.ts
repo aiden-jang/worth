@@ -7,6 +7,7 @@ import { registerListRoutes } from './routes/lists';
 import { registerRecordRoutes } from './routes/records';
 import { registerShareRoutes, registerPublicShareRoute } from './routes/shares';
 import { registerPhotoRoutes } from './routes/photos';
+import { registerRoutineRoutes } from './routes/routines';
 import { registerWorkoutRoutes } from './routes/workouts';
 import { registerExportRoutes } from './routes/export';
 
@@ -49,6 +50,7 @@ registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
 registerExportRoutes(privateApi);
 registerWorkoutRoutes(privateApi);
+registerRoutineRoutes(privateApi);
 
 app.route('/api', publicApi);
 app.route('/api', privateApi);

@@ -25,6 +25,7 @@ beforeAll(async () => {
     '0005_meh_decision.sql',
     '0006_personal_tools.sql',
     '0007_workout_sessions.sql',
+    '0008_workout_routines.sql',
   ]) {
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
@@ -808,4 +809,78 @@ test('workout visits are private, separate on the same date, and preserve exerci
   expect(((await detached.json()) as { log: { workoutId: string | null } }).log.workoutId).toBeNull();
   expect((await call(`/lists/${gymId}`, 'workouts', 'DELETE')).status).toBe(204);
   expect((await call(`/workouts/${evening.id}`, 'workouts', 'PATCH', { title: 'Gone' })).status).toBe(404);
+});
+
+test('routines start blank visits, snapshot ordered names, and remain owner-scoped', async () => {
+  const createList = async (name: string, kind = 'activity') =>
+    ((await (await call('/lists', 'routines', 'POST', { name, kind })).json()) as { list: { id: string } })
+      .list.id;
+  const gym = await createList('Routine gym'),
+    other = await createList('Other gym'),
+    collection = await createList('Drinks', 'collection');
+  const input = { title: 'Push day', exercises: ['Bench press', 'Shoulder press'] };
+  expect((await call(`/lists/${collection}/routines`, 'routines', 'POST', input)).status).toBe(400);
+  expect((await call(`/lists/${gym}/routines`, 'routines', 'POST', { ...input, exercises: [] })).status).toBe(
+    400,
+  );
+  expect(
+    (
+      await call(`/lists/${gym}/routines`, 'routines', 'POST', {
+        ...input,
+        exercises: ['Bench press', ' BENCH  press '],
+      })
+    ).status,
+  ).toBe(400);
+  const created = await call(`/lists/${gym}/routines`, 'routines', 'POST', input);
+  expect(created.status).toBe(201);
+  const { routine } = (await created.json()) as { routine: { id: string; exercises: string[] } };
+  expect(routine.exercises).toEqual(input.exercises);
+  expect((await call(`/lists/${gym}/routines`, 'stranger')).status).toBe(404);
+  expect((await call(`/routines/${routine.id}`, 'stranger', 'PUT', input)).status).toBe(404);
+  expect((await call(`/routines/${routine.id}`, 'stranger', 'DELETE')).status).toBe(404);
+  const start = { routineId: routine.id, happenedOn: '2026-10-10' };
+  expect((await call(`/lists/${other}/workouts`, 'routines', 'POST', start)).status).toBe(400);
+  const first = await call(`/lists/${gym}/workouts`, 'routines', 'POST', start);
+  expect(first.status).toBe(201);
+  const { workout } = (await first.json()) as {
+    workout: { id: string; title: string; plannedExercises: string[] };
+  };
+  expect(workout.title).toBe(input.title);
+  expect(workout.plannedExercises).toEqual(input.exercises);
+  expect(((await (await call(`/lists/${gym}/logs`, 'routines')).json()) as { logs: unknown[] }).logs).toEqual(
+    [],
+  );
+  const updated = { title: 'Upper body', exercises: ['Shoulder press', 'Bench press', 'Triceps extension'] };
+  expect((await call(`/routines/${routine.id}`, 'routines', 'PUT', updated)).status).toBe(200);
+  const next = (await (await call(`/lists/${gym}/workouts`, 'routines', 'POST', start)).json()) as {
+    workout: { id: string; plannedExercises: string[] };
+  };
+  expect(next.workout.id).not.toBe(workout.id);
+  expect(next.workout.plannedExercises).toEqual(updated.exercises);
+  const visits = (await (await call(`/lists/${gym}/workouts`, 'routines')).json()) as {
+    workouts: { id: string; plannedExercises: string[] }[];
+  };
+  expect(visits.workouts.find((w) => w.id === workout.id)?.plannedExercises).toEqual(input.exercises);
+  const exported = (await (await call('/export/records', 'routines')).json()) as {
+    workoutRoutines: unknown[];
+    workoutSessions: unknown[];
+  };
+  expect(exported.workoutRoutines).toContainEqual(expect.objectContaining({ id: routine.id, ...updated }));
+  expect(exported.workoutSessions).toContainEqual(
+    expect.objectContaining({ id: workout.id, plannedExercises: input.exercises }),
+  );
+  const privateExport = (await (await call('/export/records', 'stranger')).json()) as {
+    workoutRoutines: unknown[];
+  };
+  expect(privateExport.workoutRoutines).toEqual([]);
+  expect((await call(`/routines/${routine.id}`, 'routines', 'DELETE')).status).toBe(204);
+  expect((await call(`/lists/${gym}/workouts`, 'routines', 'POST', start)).status).toBe(404);
+  expect(
+    ((await (await call(`/lists/${gym}/workouts`, 'routines')).json()) as { workouts: unknown[] }).workouts,
+  ).toHaveLength(2);
+  const saved = (await (await call(`/lists/${gym}/routines`, 'routines', 'POST', input)).json()) as {
+    routine: { id: string };
+  };
+  await call(`/lists/${gym}`, 'routines', 'DELETE');
+  expect((await call(`/routines/${saved.routine.id}`, 'routines', 'PUT', input)).status).toBe(404);
 });
