@@ -9,10 +9,11 @@ The history below does not override this section.
 
 - Canvas `#181915`, panel `#20211c`, raised `#292a23`; text `#f0ecdf`, secondary `#aaa99b`.
 - Butter `#e8dc9d` primary action with dark text; cream `#eae5d5` opinion slips / rank picks.
-- Flat fills, 7px controls, 10px slips/images, no texture, gradients or glossy effects.
+- Flat fills; 22px cream cards/dialogs, 16px shelf images, 12px standard buttons and selected rows.
+  Primary archive/signup actions and call choices use capsules. No texture, gradients or glossy effects.
 - Existing DM Sans and DM Mono. Desktop rail 192px. Page width max 1200px with 44px desktop insets.
 - Signed-in title 68px; collection mobile 50px, archive mobile 44px. Item names 20px.
-- Landing headline max 104px; mobile responsive 55–82px. `For the good. And the meh.`
+- Landing headline max 96px; mobile responsive 48–82px. `For the good. And the meh.`
 - Landing: open example list with three categories and one selected opinion slip; no framed demo.
 - Archive: actual collection shelf first, recent records below, one explicitly collection-scoped rank pick.
 - Collection: capture and one toolbar in the list column; 310px selected opinion slip beside it.
@@ -49,6 +50,71 @@ Opinion faces are ivory against the cream slip. Compact badges remain simple.
 The large opinion face settles once after a call change; pointer hover adds a slight tilt.
 Reduced motion disables both. No-call remains faceless; no call or ranking semantics change.
 See [cute pass captures](../ui-qa/cute-pass/README.md) for desktop/mobile verification.
+
+## Soft characters — October 10, second cute pass
+
+The user asked for a more visibly cute direction. The first oval-face pass was too slight.
+This deliberate revision gives each call its own soft silhouette: a low, slouched Meh,
+a pear-shaped Favorite with raised hands and a blush heart, and an asymmetric Not again
+with a sideways expression. Large illustrations add tiny feet; compact row badges keep
+only the expressive silhouette and face. Main verdict illustrations are 144 × 132px;
+mobile inline slips use 132 × 121px. Cards grow naturally to accommodate the larger art.
+
+Cream cards and dialogs now use 22px corners, shelf images 16px, standard buttons and
+selected rows 12px. Call choices and primary signup/archive buttons are capsules; the slip's
+rank has a quiet outlined capsule. The existing composition, dark palette, typography,
+plain control labels and concise dry captions remain the foundation. A single squash-and-settle
+reaction respects reduced motion. No-call stays faceless and rank remains independent.
+
+See [soft character captures](../ui-qa/soft-characters/README.md). Updated reference images
+record these intentional changes rather than silently treating them as the old mock.
+
+## Animated reactions — October 10
+
+The user approved the soft characters and requested more animation. Large opinion faces
+now have distinct arrival reactions: a 720ms happy hop for Favorite, a slumped arrival for Meh,
+and a reluctant wobble for Not again. Hands shrug or wave once; Favorite's heart floats into
+place. Eyes blink twice over 4.8 seconds, then remain still. No character animation loops.
+Hover gives a small lean and lifted hands; call choices compress on press. All character
+motion is disabled under reduced motion, including descendants and hover. Compact row
+badges stay static, and no-call stays faceless. Layout and resting poses match the references.
+
+See [motion captures and recording](../ui-qa/animated-calls/README.md).
+
+## Editorial cute — October 10, current refinement
+
+The user requested a more tasteful, current direction after approving the animated characters.
+Keep the accepted composition and typography. Characters now use flat matte butter `#e4d79a`
+(Favorite), sage `#d4dac3` (Meh) and clay `#e3c2b5` (Not again), with body strokes matching
+the fill. Smaller translucent cheek marks, finer features, simplified hands and short rounded
+feet replace the more emphatic drawing. This palette is consistent in row badges and Patterns.
+Text labels and distinct expressions remain; color is never the only call indicator.
+
+Call choices share one `#dedaca` capsule track with a dark selected segment. Preserve each
+button's accessible pressed state, reversible selection and keyboard focus. The rail adds 8px
+of total padding height. Other card and layout dimensions stay consistent.
+
+Arrival reactions run for 800ms with gentler amplitude; one blink ends within 3.2 seconds.
+Hands and heart settle earlier. Motion stays finite and respects reduced motion. Reference
+HTML and PNGs are updated; [verification](../ui-qa/editorial-cute/README.md) includes the
+three calls, desktop/mobile layouts and motion recording.
+
+## Signature composition — October 10, current target
+
+This deliberate refinement supersedes the earlier landing arrangement. Desktop puts the
+headline and signup at left and a straight 400px opinion card at right, with an 88px gap.
+The headline reaches 96px; the character is 192 × 176px. The example index follows the
+introduction in the left column. At 681–900px, use a 300px card and let the index span both
+columns. At <=680px, order headline/signup, full-width card, then example index, with a
+168 × 154px character. Keep the signed-out wordmark/sign-in header and EXAMPLE labels.
+
+Pointer category/item selection on mobile scrolls the changed opinion into view; keyboard
+activation retains focus. Reduced motion uses immediate scrolling. The call track has one
+dark selected pill, sliding in 280ms. No-call hides the pill and character. Text labels,
+pressed states, reversible choices and rank independence remain unchanged.
+
+See [signature captures and recording](../ui-qa/signature/README.md). Updated static
+references reflect this arrangement; private pages retain their established compositions.
 
 ## History
 

@@ -91,3 +91,45 @@ unimpressed frown and resting arms. Compact row faces omit hands and the heart.
 A changed opinion gives the large face one small settling motion. A pointer hover adds a slight
 tilt; reduced motion disables both. There is no repeating animation or added mascot copy.
 No-call still has no face, and all choices keep their plain labels and existing meanings.
+
+## Soft character refinement
+
+The second cute pass develops the reactions into small, soft characters: Meh slouches with
+a low bean shape and a half-hearted shrug; Favorite is pear-shaped with raised hands;
+Not again leans slightly with a sideways expression. Tiny feet appear only on large faces.
+Small eyes, short mouths and blush carry the personality. Compact badges omit limbs and
+the heart. Keep the same short captions; do not add chatter to explain the drawings.
+
+Rounder cards and capsule choices extend the softness into the interface. A single gentle
+squash-and-settle animation follows a call change, with reduced motion fully respected.
+
+## Animated reactions
+
+The user requested more animation after accepting the soft characters. Favorite gives a
+small squash-and-hop, waves, and lets its heart float into place. Meh slumps and shrugs.
+Not again gives a reluctant wobble. Two slow blinks finish within 4.8 seconds; all animations
+run once. Hover adds a small lean or lifted hands, and call buttons compress slightly on press.
+Only the large opinion character animates. Row badges remain still. Changing a call mounts
+its fresh reaction; clearing it removes the character. Reduced motion disables all of these
+character animations and hover transforms. The humor stays in the gesture, with no extra copy.
+
+## Editorial cute refinement
+
+The user requested a more tasteful, current 2026 direction. Use matte butter for Favorite,
+sage for Meh, and soft clay for Not again. Bodies have no contrasting outline; gestures use
+finer ink strokes, blush is faint, feet are small and rounded, and Favorite has a small warm
+heart. The shared silhouette, face and text label communicate the call together. These colors
+never assign a call to an undecided record.
+
+The choice buttons sit in one quiet inset capsule. Reactions use smaller movements and
+one unhurried blink, settling within 3.2 seconds. Preserve dry captions and useful labels.
+This is our interpretation of the 2026 interest in human imperfection, simplicity and purposeful
+motion, informed by [Canva's trend report](https://www.canva.com/design-trends/) and
+[Adobe's motion principles](https://spectrum.adobe.com/foundations/behavior/motion).
+
+## Signature composition
+
+Give the opinion character room in the first view, keeping the same short captions. The
+straight card and sliding selected capsule provide personality without adding slogans.
+Clear a call to remove its face and selected pill; never invent an opinion. Reduced motion
+changes the selection immediately. Labels and keyboard focus remain clear.

@@ -18,17 +18,60 @@
   <body>
     <main class="cabinet-landing">
       <header class="cabinet-landing-top"><span class="product-wordmark">worth</span><a>Sign in →</a></header>
-      <section class="cabinet-landing-hero">
-        <div>
-          <p class="overline">YOUR TASTE, ON RECORD</p>
-          <h1>For the good.<br />And the <em>meh.</em></h1>
-        </div>
-        <div class="cabinet-landing-intro">
-          <p>Keep what you try.<br />Find what’s worth repeating.</p>
-          <a class="button button-accent">Start your archive <span>→</span></a>
-        </div>
-      </section>
       <section class="cabinet-demo">
+        <section class="cabinet-landing-hero">
+          <div>
+            <p class="overline">YOUR TASTE, ON RECORD</p>
+            <h1>For the good.<br />And the <em>meh.</em></h1>
+          </div>
+          <div class="cabinet-landing-intro">
+            <p>Keep what you try.<br />Find what’s worth repeating.</p>
+            <a class="button button-accent">Start your archive <span>→</span></a>
+          </div>
+        </section>
+        <aside class="opinion-slip">
+          <div class="opinion-slip-top">
+            <p class="overline">YOUR CALL / EXAMPLE</p>
+            <span>02</span>
+          </div>
+          <h3>Cold brew</h3>
+          <p class="opinion-slip-type">Coffee</p>
+          <div class="opinion-slip-verdict">
+            <svg class="call-face call-face-meh" viewBox="0 0 120 110" fill="none" aria-hidden="true">
+              <g
+                class="call-face-limbs"
+                stroke="var(--face-outline)"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path class="call-face-hands" d="M19 65q-10 7-13-3 M101 65q10 7 13-3" />
+                <path class="call-face-feet" d="M44 86v7m-4 2h8 M76 86v7m-4 2h8" />
+              </g>
+              <path
+                class="call-face-body"
+                d="M15 65C12 45 26 27 45 29c11 2 14-5 29-2 19 3 33 20 32 39-1 19-17 24-46 24S18 84 15 65Z"
+                fill="var(--face-fill)"
+                stroke="var(--face-fill)"
+                stroke-width="2.4"
+                stroke-linejoin="round"
+              />
+              <g fill="var(--face-blush, #bd9986)" opacity="0.65">
+                <ellipse cx="36" cy="67" rx="4.5" ry="2.6" />
+                <ellipse cx="83" cy="67" rx="4.5" ry="2.6" />
+              </g>
+              <g class="call-face-eyes" stroke="var(--face-ink)" stroke-width="2.8" stroke-linecap="round">
+                <path d="m42 54 12 1 m13 0 12-1 M49 57v2 M71 57v2" />
+              </g>
+              <path d="M55 72h11" stroke="var(--face-ink)" stroke-width="3" stroke-linecap="round" /></svg
+            ><strong>Meh.</strong><span>It was a thing.</span>
+          </div>
+          <div class="call-choices" data-choice="meh">
+            <button class="" aria-pressed="false"><span>Favorite</span></button
+            ><button class="active" aria-pressed="true"><span>Meh</span></button
+            ><button class="" aria-pressed="false"><span>Not again</span></button>
+          </div>
+        </aside>
         <div class="cabinet-demo-index">
           <div class="demo-tabs">
             <button aria-pressed="true">Drinks</button><button>Movies</button><button>Places</button>
@@ -51,30 +94,32 @@
                     fill="none"
                     aria-hidden="true"
                   >
-                    <ellipse
-                      cx="60"
-                      cy="54"
-                      rx="43"
-                      ry="41"
+                    <path
+                      class="call-face-body"
+                      d="M20 60c2-14 10-20 14-30C40 14 54 12 64 18c12-5 24 4 28 18 4 10 13 17 12 30-1 19-20 25-43 25S17 81 20 60Z"
                       fill="var(--face-fill)"
-                      stroke="var(--face-outline)"
-                      stroke-width="2.5"
+                      stroke="var(--face-fill)"
+                      stroke-width="2.4"
+                      stroke-linejoin="round"
                     />
-                    <g stroke="var(--face-ink)" stroke-width="3.5" stroke-linecap="round">
-                      <path d="M48 62 Q60 75 72 62" />
+                    <g fill="var(--face-blush, #bd9986)" opacity="0.65">
+                      <ellipse cx="36" cy="67" rx="4.5" ry="2.6" />
+                      <ellipse cx="83" cy="67" rx="4.5" ry="2.6" />
                     </g>
                     <g
                       class="call-face-eyes"
                       stroke="var(--face-ink)"
-                      stroke-width="3.5"
+                      stroke-width="2.8"
                       stroke-linecap="round"
                     >
-                      <path d="M40 47q4-6 8 0 M72 47q4-6 8 0" />
+                      <path d="M44 55q4-5 8 0 M68 55q4-5 8 0" />
                     </g>
-                    <g fill="#d7a092">
-                      <ellipse cx="34" cy="60" rx="5.5" ry="4" />
-                      <ellipse cx="86" cy="60" rx="5.5" ry="4" />
-                    </g></svg
+                    <path
+                      d="M55 69q6 7 12-1"
+                      stroke="var(--face-ink)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    /></svg
                   ><span>Favorite</span></span
                 >
               </button>
@@ -85,26 +130,32 @@
                 ><span class="demo-item-name"><strong>Cold brew</strong><small>Coffee</small></span
                 ><span class="call-badge call-badge-meh"
                   ><svg class="call-face call-face-meh" viewBox="0 0 120 110" fill="none" aria-hidden="true">
-                    <ellipse
-                      cx="60"
-                      cy="54"
-                      rx="43"
-                      ry="41"
+                    <path
+                      class="call-face-body"
+                      d="M15 65C12 45 26 27 45 29c11 2 14-5 29-2 19 3 33 20 32 39-1 19-17 24-46 24S18 84 15 65Z"
                       fill="var(--face-fill)"
-                      stroke="var(--face-outline)"
-                      stroke-width="2.5"
+                      stroke="var(--face-fill)"
+                      stroke-width="2.4"
+                      stroke-linejoin="round"
                     />
-                    <g stroke="var(--face-ink)" stroke-width="3.5" stroke-linecap="round">
-                      <path d="M37 43h15 M68 43h15 M50 63h20" />
+                    <g fill="var(--face-blush, #bd9986)" opacity="0.65">
+                      <ellipse cx="36" cy="67" rx="4.5" ry="2.6" />
+                      <ellipse cx="83" cy="67" rx="4.5" ry="2.6" />
                     </g>
-                    <g class="call-face-eyes" fill="var(--face-ink)">
-                      <circle cx="44" cy="46" r="3.8" />
-                      <circle cx="76" cy="46" r="3.8" />
+                    <g
+                      class="call-face-eyes"
+                      stroke="var(--face-ink)"
+                      stroke-width="2.8"
+                      stroke-linecap="round"
+                    >
+                      <path d="m42 54 12 1 m13 0 12-1 M49 57v2 M71 57v2" />
                     </g>
-                    <g fill="#d7a092">
-                      <ellipse cx="34" cy="60" rx="5.5" ry="4" />
-                      <ellipse cx="86" cy="60" rx="5.5" ry="4" />
-                    </g></svg
+                    <path
+                      d="M55 72h11"
+                      stroke="var(--face-ink)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    /></svg
                   ><span>Meh</span></span
                 >
               </button>
@@ -120,26 +171,32 @@
                     fill="none"
                     aria-hidden="true"
                   >
-                    <ellipse
-                      cx="60"
-                      cy="54"
-                      rx="43"
-                      ry="41"
+                    <path
+                      class="call-face-body"
+                      d="M16 61c-1-19 13-36 31-37 14-1 22 6 33 7 18 3 25 20 23 36-2 19-19 24-43 23S17 82 16 61Z"
                       fill="var(--face-fill)"
-                      stroke="var(--face-outline)"
-                      stroke-width="2.5"
+                      stroke="var(--face-fill)"
+                      stroke-width="2.4"
+                      stroke-linejoin="round"
                     />
-                    <g stroke="var(--face-ink)" stroke-width="3.5" stroke-linecap="round">
-                      <path d="M49 67 Q60 57 71 67" />
+                    <g fill="var(--face-blush, #bd9986)" opacity="0.65">
+                      <ellipse cx="36" cy="67" rx="4.5" ry="2.6" />
+                      <ellipse cx="83" cy="67" rx="4.5" ry="2.6" />
                     </g>
-                    <g class="call-face-eyes" fill="var(--face-ink)">
-                      <circle cx="44" cy="47" r="3.8" />
-                      <circle cx="76" cy="47" r="3.8" />
+                    <g
+                      class="call-face-eyes"
+                      stroke="var(--face-ink)"
+                      stroke-width="2.8"
+                      stroke-linecap="round"
+                    >
+                      <path d="M49 55v3 M71 58v3" />
                     </g>
-                    <g fill="#d7a092">
-                      <ellipse cx="34" cy="60" rx="5.5" ry="4" />
-                      <ellipse cx="86" cy="60" rx="5.5" ry="4" />
-                    </g></svg
+                    <path
+                      d="M55 74q5-4 11-2"
+                      stroke="var(--face-ink)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    /></svg
                   ><span>Not again</span></span
                 >
               </button>
@@ -152,50 +209,6 @@
           </form>
           <p class="demo-footnote">Just an example. Your actual opinions go in your archive.</p>
         </div>
-        <aside class="opinion-slip">
-          <div class="opinion-slip-top">
-            <p class="overline">YOUR CALL / EXAMPLE</p>
-            <span>02</span>
-          </div>
-          <h3>Cold brew</h3>
-          <p class="opinion-slip-type">Coffee</p>
-          <div class="opinion-slip-verdict">
-            <svg class="call-face call-face-meh" viewBox="0 0 120 110" fill="none" aria-hidden="true">
-              <path
-                d="M21 67q-8 9-12 5l-3-8 M99 67q8 9 12 5l3-8"
-                stroke="var(--face-outline)"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <ellipse
-                cx="60"
-                cy="54"
-                rx="43"
-                ry="41"
-                fill="var(--face-fill)"
-                stroke="var(--face-outline)"
-                stroke-width="2.5"
-              />
-              <g stroke="var(--face-ink)" stroke-width="3.5" stroke-linecap="round">
-                <path d="M37 43h15 M68 43h15 M50 63h20" />
-              </g>
-              <g class="call-face-eyes" fill="var(--face-ink)">
-                <circle cx="44" cy="46" r="3.8" />
-                <circle cx="76" cy="46" r="3.8" />
-              </g>
-              <g fill="#d7a092">
-                <ellipse cx="34" cy="60" rx="5.5" ry="4" />
-                <ellipse cx="86" cy="60" rx="5.5" ry="4" />
-              </g></svg
-            ><strong>Meh.</strong><span>It was a thing.</span>
-          </div>
-          <div class="call-choices">
-            <button class="" aria-pressed="false"><span>Favorite</span></button
-            ><button class="active" aria-pressed="true"><span>Meh</span></button
-            ><button class="" aria-pressed="false"><span>Not again</span></button>
-          </div>
-        </aside>
       </section>
       <footer class="cabinet-landing-bottom">
         <strong>Meh is a complete sentence.</strong><span>Collections, rankings & a place to remember.</span>

@@ -40,3 +40,24 @@ soft oval heads, fuller cheeks and small hands on the large opinion face. Favori
 smile eyes and a tiny blush heart; Meh shrugs; Not again keeps a gentle unimpressed frown.
 The app adds a single settling reaction with reduced-motion support. See
 [cute pass verification](../../ui-qa/cute-pass/README.md).
+
+The second cute pass replaces oval heads with distinct soft character silhouettes and tiny
+feet on large reactions. Cream cards/dialogs use 22px corners, shelf images 16px, and call
+choices use capsules. Larger verdict art intentionally adds a little vertical space. The
+composition and concise copy remain consistent. These reference renders reflect that revision;
+see [soft character verification](../../ui-qa/soft-characters/README.md).
+
+Large opinion characters now have distinct finite arrival animations, a shrug/wave, a
+floating Favorite heart, and two slow blinks. They settle within five seconds. These static
+references show resting poses; the same shared CSS animates the HTML references and app.
+See [motion verification and recording](../../ui-qa/animated-calls/README.md).
+
+The current editorial cute refinement uses matte butter, sage and clay characters with
+finer ink gestures and no contrasting body outline. A single inset capsule replaces the
+three outlined call buttons. Smaller reactions and one slow blink settle within 3.2 seconds.
+Reference PNGs and HTML reflect this revision. See [verification](../../ui-qa/editorial-cute/README.md).
+
+The latest signature composition puts a straight, larger opinion card beside the landing
+headline and moves the example index underneath the introduction. Mobile shows signup,
+opinion card, then index. The selected call slides inside its capsule, with immediate
+changes under reduced motion. See [signature verification](../../ui-qa/signature/README.md).

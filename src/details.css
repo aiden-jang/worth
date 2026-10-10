@@ -5,7 +5,7 @@
   max-height: calc(100dvh - 48px);
   overflow: auto;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   padding: 0;
   background: var(--ink);
   color: var(--paper);
@@ -246,7 +246,7 @@
   margin: 24px 0;
   padding: 24px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   background: var(--slip);
   color: var(--ink);
 }
@@ -349,7 +349,7 @@
 .call-distribution {
   background: var(--slip);
   color: var(--ink);
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   padding: 28px;
 }
 .call-distribution > header {
@@ -387,7 +387,6 @@
   min-width: 0;
 }
 .call-distribution .call-face {
-  --face-fill: var(--paper);
   --face-ink: var(--ink);
   --face-outline: var(--ink);
   width: 60px;
@@ -523,7 +522,7 @@
 .show-favorite,
 .public-favorite {
   padding: 24px;
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   background: var(--slip);
   color: var(--ink);
   min-width: 0;

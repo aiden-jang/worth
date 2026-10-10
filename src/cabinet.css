@@ -10,6 +10,8 @@
   --line-strong: #737566;
   --acid: #e8dc9d;
   --slip: #eae5d5;
+  --radius-soft: 22px;
+  --radius-control: 12px;
   --face-fill: #f0ecdf;
   --face-ink: #24251e;
   --face-outline: #f0ecdf;
@@ -29,7 +31,7 @@
   color: var(--ink);
 }
 .button {
-  border-radius: 7px;
+  border-radius: var(--radius-control);
 }
 .app-shell-dark {
   grid-template-columns: 192px minmax(0, 1fr);
@@ -96,7 +98,17 @@
 .header-add {
   background: var(--acid);
   color: var(--ink);
-  border-radius: 7px;
+  border-radius: 999px;
+}
+.quick-capture-ready .header-add {
+  border-radius: 999px 0 0 999px;
+}
+.quick-capture-picker {
+  border-radius: 0 999px 999px 0;
+  color: var(--ink);
+}
+.quick-capture-picker:hover {
+  background: #f4e9b4;
 }
 .site-footer {
   border: 0;
@@ -105,6 +117,18 @@
 }
 .call-face {
   overflow: visible;
+}
+.call-face-favorite {
+  --face-fill: #e4d79a;
+  --face-blush: #af895e;
+}
+.call-face-meh {
+  --face-fill: #d4dac3;
+  --face-blush: #a58f76;
+}
+.call-face-would_not_again {
+  --face-fill: #e3c2b5;
+  --face-blush: #b78676;
 }
 .call-choices button.active,
 .item-decision .call-choices button.active {
@@ -190,7 +214,7 @@
 }
 .cabinet-folder-picture {
   aspect-ratio: 1.6;
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
   background: var(--raised);
   position: relative;
@@ -284,7 +308,7 @@
 .cabinet-pick {
   background: var(--slip);
   color: var(--ink);
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   padding: 25px 28px;
   display: block;
   min-height: 270px;
@@ -338,7 +362,7 @@
 .opinion-slip {
   background: var(--slip);
   color: var(--ink);
-  border-radius: 10px;
+  border-radius: var(--radius-soft);
   padding: 26px;
   --face-outline: #272820;
   --muted: #67695b;
@@ -359,6 +383,9 @@
 .opinion-slip-top > span {
   font: 11px var(--mono);
   color: #67695b;
+  border: 1px solid #cbc9b8;
+  border-radius: 999px;
+  padding: 5px 8px;
 }
 .opinion-slip h3 {
   font-size: 26px;
@@ -382,37 +409,177 @@
   padding: 18px 0 22px;
 }
 .opinion-slip-verdict .call-face {
-  width: 120px;
-  height: 110px;
+  width: 144px;
+  height: 132px;
 }
-@keyframes call-settle {
+/* Brief reactions give each call a personality; all motion settles within five seconds. */
+@keyframes call-meh-arrive {
   0% {
-    transform: translateY(3px) rotate(-5deg) scale(0.94);
+    transform: translateY(-3px) scale(0.97, 1.03);
   }
-  65% {
-    transform: translateY(-1px) rotate(2deg) scale(1.025);
+  45% {
+    transform: translateY(2px) scale(1.035, 0.96);
+  }
+  75% {
+    transform: translateY(1px) scale(1.015, 0.985);
   }
   100% {
     transform: none;
   }
 }
+@keyframes call-favorite-arrive {
+  0% {
+    transform: translateY(3px) scale(1.045, 0.95);
+  }
+  35% {
+    transform: translateY(-6px) rotate(-2deg) scale(0.985, 1.02);
+  }
+  65% {
+    transform: translateY(1px) rotate(1deg) scale(1.02, 0.98);
+  }
+  85% {
+    transform: translateY(-1px);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes call-not-again-arrive {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(2.5deg);
+  }
+  75% {
+    transform: rotate(-2deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes call-shrug {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40%,
+  65% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes call-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-4deg);
+  }
+  70% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes call-heart-float {
+  0% {
+    opacity: 0;
+    transform: translateY(5px) scale(0.8) rotate(-8deg);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.04) rotate(4deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(0.96) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes call-blink {
+  0%,
+  70%,
+  76%,
+  100% {
+    transform: scaleY(1);
+  }
+  73% {
+    transform: scaleY(0.12);
+  }
+}
 .opinion-slip-verdict > .call-face {
-  transform-origin: 50% 70%;
-  animation: call-settle 320ms ease-out backwards;
+  transform-origin: 50% 88%;
+  animation: var(--call-arrival) 800ms cubic-bezier(0.22, 0.65, 0.35, 1) backwards;
+}
+.opinion-slip-verdict > .call-face-meh {
+  --call-arrival: call-meh-arrive;
+}
+.opinion-slip-verdict > .call-face-favorite {
+  --call-arrival: call-favorite-arrive;
+}
+.opinion-slip-verdict > .call-face-would_not_again {
+  --call-arrival: call-not-again-arrive;
+}
+.opinion-slip-verdict .call-face-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: call-blink 3.2s ease-in-out;
+}
+.opinion-slip-verdict .call-face-hands {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.opinion-slip-verdict .call-face-meh .call-face-hands {
+  animation: call-shrug 1100ms 180ms ease-in-out backwards;
+}
+.opinion-slip-verdict .call-face-favorite .call-face-hands {
+  animation: call-wave 1100ms 180ms ease-in-out backwards;
+}
+.opinion-slip-verdict .call-face-heart {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: call-heart-float 1400ms 120ms ease-out backwards;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .opinion-slip-verdict:hover > .call-face-meh {
-    transform: rotate(-4deg);
+    transform: rotate(-3deg) translateY(1px);
   }
   .opinion-slip-verdict:hover > .call-face-favorite {
-    transform: rotate(4deg);
+    transform: rotate(3deg) translateY(-3px);
   }
-  .opinion-slip-verdict > .call-face {
-    transition: transform 180ms ease;
+  .opinion-slip-verdict:hover > .call-face-would_not_again {
+    transform: rotate(-4deg);
+  }
+  .opinion-slip-verdict:hover .call-face-hands {
+    transform: translateY(-3px);
+  }
+  .opinion-slip-verdict:hover .call-face-heart {
+    transform: translateY(-4px) rotate(10deg);
+  }
+  .opinion-slip-verdict > .call-face,
+  .opinion-slip-verdict .call-face-hands,
+  .opinion-slip-verdict .call-face-heart {
+    transition: transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .opinion-slip .call-choices button {
+    transition:
+      transform 140ms ease,
+      background-color 160ms ease;
+  }
+  .opinion-slip .call-choices button:not(:disabled):active {
+    transform: scale(0.97);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .opinion-slip-verdict > .call-face {
+  .opinion-slip-verdict > .call-face,
+  .opinion-slip-verdict .call-face * {
     animation: none;
     transition: none;
     transform: none;
@@ -433,17 +600,50 @@
   color: #67695b;
   margin-top: 9px;
 }
+/* A single moving selection keeps the control quiet and makes call changes legible. */
 .opinion-slip .call-choices {
-  gap: 5px;
-  padding: 0;
-  background: transparent;
+  --call-position: 0;
+  position: relative;
+  isolation: isolate;
+  gap: 0;
+  padding: 4px;
+  background: #dedaca;
   border: 0;
+  border-radius: 999px;
+}
+.opinion-slip .call-choices[data-choice='meh'] {
+  --call-position: 1;
+}
+.opinion-slip .call-choices[data-choice='would_not_again'] {
+  --call-position: 2;
+}
+.opinion-slip .call-choices::before {
+  content: '';
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc((100% - 8px) / 3);
+  border-radius: 999px;
+  background: var(--ink);
+  transform: translateX(calc(var(--call-position) * 100%));
+  pointer-events: none;
+}
+.opinion-slip .call-choices[data-choice='none']::before {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .opinion-slip .call-choices::before {
+    transition:
+      transform 280ms cubic-bezier(0.22, 0.8, 0.3, 1),
+      opacity 160ms ease;
+  }
 }
 .opinion-slip .call-choices button {
+  position: relative;
+  z-index: 1;
   min-height: 43px;
   padding: 7px 4px;
-  border: 1px solid #aaa996;
-  border-radius: 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: #414336;
   background: transparent;
   font-size: 12px;
@@ -451,12 +651,12 @@
   flex-direction: row;
 }
 .opinion-slip .call-choices button.active {
-  background: var(--ink);
+  background: transparent;
   color: var(--slip);
-  border-color: var(--ink);
+  border-color: transparent;
 }
-.opinion-slip .call-choices button:hover {
-  border-color: var(--ink);
+.opinion-slip .call-choices button:not(.active):not(:disabled):hover {
+  background: #eeebdf;
 }
 .opinion-slip :is(button, summary, select):focus-visible {
   outline: 2px solid var(--ink);
@@ -519,7 +719,7 @@
 .opinion-slip .collection-rank-placement select {
   color: var(--ink);
   background: var(--slip);
-  border: 1px solid #aaa996;
+  border: 1px solid transparent;
 }
 .opinion-slip-empty {
   text-align: center;
@@ -775,7 +975,7 @@
 .collection-index-rows li.selected .collection-index-row {
   background: var(--raised);
   box-shadow: none;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   padding-left: 12px;
   border-left: 0;
 }
@@ -844,14 +1044,13 @@
   font-size: 13px;
 }
 .cabinet-landing-hero {
-  padding: 44px 0 38px;
-  display: flex;
-  justify-content: space-between;
-  gap: 40px;
-  align-items: end;
+  grid-column: 1;
+  grid-row: 1;
+  padding: 0;
+  min-width: 0;
 }
 .cabinet-landing-hero h1 {
-  font-size: clamp(60px, 7.2vw, 104px);
+  font-size: clamp(60px, 6.65vw, 96px);
   line-height: 0.99;
   letter-spacing: -0.075em;
   font-weight: 500;
@@ -862,31 +1061,36 @@
   color: var(--acid);
 }
 .cabinet-landing-intro {
-  max-width: 280px;
-  padding-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-top: 28px;
 }
 .cabinet-landing-intro p {
   font-size: 17px;
   color: var(--muted);
   line-height: 1.6;
-  margin: 0 0 24px;
+  margin: 0;
 }
 .cabinet-landing-intro .button {
+  border-radius: 999px;
   font-size: 14px;
   padding: 15px 20px;
 }
 .cabinet-demo {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 355px;
-  gap: 58px;
-  align-items: center;
-  padding: 25px 0 40px;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 40px 88px;
+  align-items: start;
+  padding: 48px 0 44px;
 }
 .cabinet-demo-index {
+  grid-column: 1;
+  grid-row: 2;
   min-width: 0;
 }
 .cabinet-demo .demo-tabs {
-  margin: 0 0 26px;
+  margin: 0 0 22px;
   border: 0;
   gap: 8px;
   display: flex;
@@ -941,11 +1145,11 @@
 .cabinet-demo .demo-index li.selected {
   box-shadow: none;
   background: var(--raised);
-  border-radius: 6px;
+  border-radius: var(--radius-control);
 }
 .cabinet-demo .demo-index li > button {
-  min-height: 78px;
-  padding: 13px 16px;
+  min-height: 68px;
+  padding: 10px 16px;
   grid-template-columns: 28px minmax(0, 1fr) auto;
   gap: 14px;
   display: grid;
@@ -1007,12 +1211,24 @@
   font-size: 12px;
 }
 .cabinet-demo .opinion-slip {
-  transform: rotate(2deg);
-  padding: 27px;
-  min-height: 375px;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: start;
+  margin-top: 28px;
+  transform: none;
+  padding: 30px;
+  min-height: 470px;
+}
+.cabinet-demo .opinion-slip h3 {
+  font-size: 30px;
 }
 .cabinet-demo .opinion-slip-verdict {
-  min-height: 210px;
+  min-height: 290px;
+  padding-block: 22px 26px;
+}
+.cabinet-demo .opinion-slip-verdict .call-face {
+  width: 192px;
+  height: 176px;
 }
 .cabinet-demo .demo-footnote {
   font-size: 11px;
@@ -1252,8 +1468,8 @@
     padding: 12px 0 20px;
   }
   .collection-action-tray .opinion-slip-verdict .call-face {
-    width: 100px;
-    height: 92px;
+    width: 132px;
+    height: 121px;
   }
   .collection-index-row {
     grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -1366,5 +1582,100 @@
 @media (prefers-reduced-motion: reduce) {
   .cabinet-folder:hover img {
     transform: none;
+  }
+}
+
+/* Signature landing: the working opinion appears with the headline, before the index on phones. */
+@media (min-width: 681px) and (max-width: 1180px) {
+  .cabinet-demo {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 32px 40px;
+    padding-top: 36px;
+  }
+  .cabinet-landing-hero h1 {
+    font-size: clamp(52px, 6.65vw, 78px);
+  }
+  .cabinet-landing-intro {
+    display: block;
+    margin-top: 24px;
+    max-width: none;
+  }
+  .cabinet-landing-intro p {
+    margin-bottom: 20px;
+  }
+  .cabinet-demo .opinion-slip {
+    padding: 26px;
+  }
+}
+@media (min-width: 681px) and (max-width: 900px) {
+  .cabinet-landing {
+    width: calc(100% - 64px);
+  }
+  .cabinet-demo {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 32px;
+  }
+  .cabinet-landing-hero h1 {
+    font-size: 50px;
+  }
+  .cabinet-demo-index {
+    grid-column: 1 / -1;
+  }
+  .cabinet-demo .opinion-slip {
+    grid-row: 1;
+    margin-top: 0;
+    min-height: 0;
+    padding: 22px;
+  }
+  .cabinet-demo .opinion-slip-verdict {
+    min-height: 230px;
+  }
+  .cabinet-demo .opinion-slip-verdict .call-face {
+    width: 156px;
+    height: 143px;
+  }
+  .cabinet-demo .opinion-slip h3 {
+    font-size: 26px;
+  }
+}
+@media (max-width: 680px) {
+  .cabinet-demo {
+    gap: 34px;
+    padding: 26px 0 30px;
+  }
+  .cabinet-landing-hero {
+    padding: 0;
+  }
+  .cabinet-landing-hero h1 {
+    font-size: clamp(48px, 14.5vw, 82px);
+  }
+  .cabinet-landing-intro {
+    display: block;
+    max-width: none;
+    margin-top: 23px;
+  }
+  .cabinet-landing-intro p {
+    margin-bottom: 18px;
+  }
+  .cabinet-demo .opinion-slip {
+    margin: 0;
+    align-self: stretch;
+    padding: 24px;
+    min-height: 0;
+  }
+  .cabinet-demo .opinion-slip h3 {
+    margin-top: 18px;
+    font-size: 27px;
+  }
+  .cabinet-demo .opinion-slip-verdict {
+    min-height: 245px;
+    padding-block: 14px 22px;
+  }
+  .cabinet-demo .opinion-slip-verdict .call-face {
+    width: 168px;
+    height: 154px;
+  }
+  .cabinet-demo-index {
+    padding-top: 4px;
   }
 }

@@ -1,0 +1,41 @@
+{
+  "errors": [],
+  "viewports": [1440, 390, 320, 430, 768],
+  "reactions": [
+    {
+      "label": "Favorite",
+      "name": "call-favorite-arrive",
+      "pose": "matrix(0.984612, -0.0342641, 0.0354657, 1.01914, 0, -5.96881)",
+      "eyes": "matrix(1, 0, 0, 0.12, 0, 0)",
+      "finite": true,
+      "maxDuration": 3200
+    },
+    {
+      "label": "Not again",
+      "name": "call-not-again-arrive",
+      "pose": "matrix(0.999977, 0.00680879, -0.00680879, 0.999977, 0, 0)",
+      "eyes": "matrix(1, 0, 0, 0.12, 0, 0)",
+      "finite": true,
+      "maxDuration": 3200
+    },
+    {
+      "label": "Meh",
+      "name": "call-meh-arrive",
+      "pose": "matrix(1.03278, 0, 0, 0.962389, 0, 1.82936)",
+      "eyes": "matrix(1, 0, 0, 0.12, 0, 0)",
+      "finite": true,
+      "maxDuration": 3200
+    }
+  ],
+  "checks": [
+    "distinct arrival motion for every call",
+    "eyes blink on large character only",
+    "every animation finite and at most 3.2 seconds",
+    "compact row faces remain static",
+    "reduced motion disables all character motion including hover",
+    "clearing call removes character",
+    "one visible slip",
+    "no overflow",
+    "browser-only signed-in fixtures; no data writes"
+  ]
+}

@@ -18,13 +18,14 @@ reworking the app. The reference HTML and running app share `src/cabinet.css`; c
 
 This intentionally replaces the October 9 personality layout: collections now lead the archive;
 a selected collection item has a cream opinion slip alongside the list on desktop and beneath
-its row on mobile. The landing uses an open example index, with its selected opinion on a slightly
-tilted slip. The dark olive canvas, warm paper and butter accent form one consistent system.
+its row on mobile. The landing places a large straight opinion card beside the headline, with an open example
+index beneath the introduction. Mobile presents the opinion before the index. The dark olive canvas, warm paper and butter accent form one consistent system.
 There are no paper textures, fake analytics or mandatory opinions.
 
 Typography is existing DM Sans, mostly 400–500, with DM Mono for small structural labels.
 The desktop rail is 192px; signed-in titles are 68px and mobile collection titles are 50px.
-Opinion slips and collection images have 10px corners, controls 7px. The exact tokens and
+Cream cards and dialogs have 22px corners, shelf images 16px, standard buttons 12px.
+Call choices share one inset capsule track; primary signup/archive actions use capsules. The exact tokens and
 responsive behavior are in the build contract. Earlier mock sets remain historical.
 
 ## Personality and voice
@@ -37,9 +38,12 @@ The opinion slip expresses one actual call with a face and a short caption: `Yes
 `It was a thing.`, or `Once was plenty.`. An item without a call says `Undecided.` / `No opinion required.`
 and has no opinion face. Three plain, labeled buttons make the choice reversible.
 The large face replaces repeated face graphics on those buttons; compact row faces remain.
-The cute refinement adds soft oval heads, fuller blush, small shrug/wave arms and a tiny
-Favorite heart on large faces. One brief settling reaction respects reduced motion. The layout,
-palette and concise copy stay the same; no-call remains faceless.
+The second cute pass gives reactions distinct soft silhouettes: slouched Meh, pear-shaped
+Favorite and an asymmetric Not again. Large faces have tiny feet and expressive hands;
+Favorite keeps a small warm-brown heart. Matte butter, sage and clay fills replace dark body outlines;
+finer features and faint blush give the characters a quieter expression.
+Brief arrival reactions, simplified gestures, a floating heart and one slow blink respect reduced motion. The larger illustrations and
+rounder cards keep the established composition; no-call remains faceless.
 
 [VOICE.md](VOICE.md) defines the copy and boundaries. Preserve user-written text. Functional
 labels, account access, errors, deletion, privacy and sharing stay factual. Cute expressions
@@ -135,7 +139,7 @@ People can download their lists, items, logs, ranks, and personal calls as JSON.
 | Primary action / state  | Butter `#e8dc9d`, dark text on filled actions                    |
 | Rules                   | `#38392f`, stronger `#737566`                                    |
 | Layout                  | Open collection shelf, single working list, focused opinion slip |
-| Motion                  | Small hover changes only; respect reduced motion                 |
+| Motion                  | Brief character reactions, one blink, then still; reduced motion |
 
 Avoid glossy effects, neon, gradients, texture, social mechanics and fabricated data. Cream
 slips are intentional flat contrast, not simulated paper material. Keep all control labels
@@ -148,3 +152,13 @@ Open the corresponding composition reference before implementation. Capture and 
 spacing, faces, capture, state and typography, allowing actual record content to vary.
 Exercise calls, clearing, ranking independence, name-only capture, filters, empty states and
 mobile navigation. Report deliberate deviations and limits; passing tests alone is insufficient.
+
+## Signature landing refinement
+
+The latest user request strengthens the first view: a 400px opinion card and 192 × 176px
+character sit beside the headline on desktop. Keep the card straight for crisp typography.
+On mobile, order the headline and signup action, full-width opinion card, then example index.
+Pointer selection in the mobile example reveals the changed opinion; keyboard selection
+preserves focus. The selected call slides inside its capsule; clearing a call removes the
+selection and face. Reduced motion keeps selection changes immediate. See
+[signature verification](art/ui-qa/signature/README.md).

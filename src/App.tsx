@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router';
 import { api } from './api';
 import { CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
-import { useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
 import { ArchivePage } from './pages/ArchivePage';
@@ -62,27 +62,30 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
           Sign in <span aria-hidden="true">→</span>
         </a>
       </header>
-      <section className="cabinet-landing-hero" aria-labelledby="landing-title">
-        <div>
-          <p className="overline">YOUR TASTE, ON RECORD</p>
-          <h1 id="landing-title">
-            For the good.
-            <br />
-            And the <em>meh.</em>
-          </h1>
-        </div>
-        <div className="cabinet-landing-intro">
-          <p>
-            Keep what you try.
-            <br />
-            Find what’s worth repeating.
-          </p>
-          <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
-            Start your archive <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
-      <LandingExample />
+      <LandingExample
+        introduction={
+          <section className="cabinet-landing-hero" aria-labelledby="landing-title">
+            <div>
+              <p className="overline">YOUR TASTE, ON RECORD</p>
+              <h1 id="landing-title">
+                For the good.
+                <br />
+                And the <em>meh.</em>
+              </h1>
+            </div>
+            <div className="cabinet-landing-intro">
+              <p>
+                Keep what you try.
+                <br />
+                Find what’s worth repeating.
+              </p>
+              <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
+                Start your archive <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </section>
+        }
+      />
       <footer className="cabinet-landing-bottom">
         <strong>Meh is a complete sentence.</strong>
         <span>Collections, rankings & a place to remember.</span>
@@ -110,25 +113,50 @@ const exampleCollections: Record<string, ExampleItem[]> = {
   ],
 };
 
-function LandingExample() {
+function LandingExample({ introduction }: { introduction: ReactNode }) {
+  const exampleRef = useRef<HTMLElement>(null);
   const [collections, setCollections] = useState(exampleCollections);
   const [category, setCategory] = useState('Drinks');
   const [selected, setSelected] = useState(1);
   const [title, setTitle] = useState('');
   const items = collections[category];
   const item = items[selected];
+  function revealOpinion(pointerClick: boolean) {
+    if (!pointerClick || !window.matchMedia('(max-width: 680px)').matches) return;
+    requestAnimationFrame(() => {
+      exampleRef.current?.querySelector('.opinion-slip')?.scrollIntoView({
+        block: 'center',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+      });
+    });
+  }
   return (
-    <section className="cabinet-demo" aria-label="Interactive collection example">
+    <section ref={exampleRef} className="cabinet-demo" aria-label="Interactive collection example">
+      {introduction}
+      <OpinionSlip
+        example
+        title={item.title}
+        type={item.type}
+        rank={item.ranked ? selected + 1 : undefined}
+        decision={item.decision}
+        onChange={(decision) =>
+          setCollections({
+            ...collections,
+            [category]: items.map((entry, index) => (index === selected ? { ...entry, decision } : entry)),
+          })
+        }
+      />
       <div className="cabinet-demo-index">
         <div className="demo-tabs" role="group" aria-label="Example collection">
           {Object.keys(collections).map((name) => (
             <button
               key={name}
               aria-pressed={name === category}
-              onClick={() => {
+              onClick={(event) => {
                 setCategory(name);
                 setSelected(1);
                 setTitle('');
+                revealOpinion(event.detail > 0);
               }}
             >
               {name}
@@ -144,7 +172,13 @@ function LandingExample() {
         <ol className="demo-index">
           {items.map((entry, index) => (
             <li key={index} className={selected === index ? 'selected' : ''}>
-              <button aria-pressed={selected === index} onClick={() => setSelected(index)}>
+              <button
+                aria-pressed={selected === index}
+                onClick={(event) => {
+                  setSelected(index);
+                  revealOpinion(event.detail > 0);
+                }}
+              >
                 <span className="demo-rank">{entry.ranked ? String(index + 1).padStart(2, '0') : '—'}</span>
                 <span className="demo-item-name">
                   <strong>{entry.title}</strong>
@@ -181,19 +215,6 @@ function LandingExample() {
         </form>
         <p className="demo-footnote">Just an example. Your actual opinions go in your archive.</p>
       </div>
-      <OpinionSlip
-        example
-        title={item.title}
-        type={item.type}
-        rank={item.ranked ? selected + 1 : undefined}
-        decision={item.decision}
-        onChange={(decision) =>
-          setCollections({
-            ...collections,
-            [category]: items.map((entry, index) => (index === selected ? { ...entry, decision } : entry)),
-          })
-        }
-      />
     </section>
   );
 }
