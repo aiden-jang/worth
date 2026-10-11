@@ -242,3 +242,12 @@ exercise scope and matching note context. Optional new-record photos, account-sc
 local draft recovery, clear saving/offline status and on-demand pages extend the accepted
 cabinet. See [product-pass QA](art/ui-qa/product-pass/README.md) for reference comparisons,
 responsive adaptations and release limits.
+
+## Product completion
+
+[Settings and data](art/ui-mocks/taste-cabinet/completion/README.md) extend the cabinet
+with export/backup, restore preview, device cleanup and explicit Worth deletion.
+Privacy, Terms and Help are public, use the simple landing wordmark header, and
+keep factual readable copy. Footer links make them available before account creation.
+Existing cabinet screens retain their accepted compositions. The contact destination
+was supplied by the user; shared-account deletion remains clearly separate.

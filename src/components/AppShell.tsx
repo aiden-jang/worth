@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { logoutUrl, siteFooterLinks } from '@aidenjang/auth-client';
+import { logoutUrl } from '@aidenjang/auth-client';
 import {
   ArrowRight,
   CaretDown,
@@ -16,6 +16,8 @@ import {
 } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
+import { cleanDeviceData } from '../shared/device-data';
+import { ProductLinks } from './ProductLinks';
 import { useConnection } from '../hooks/useConnection';
 import { api } from '../api';
 import { preferredQuickCaptureList } from '../shared/quick-capture';
@@ -34,6 +36,9 @@ export function AppShell({
   authOrigin: string;
 }) {
   const online = useConnection();
+  useEffect(() => {
+    void cleanDeviceData(user.id).catch(() => {});
+  }, [user.id]);
   const location = useLocation();
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -229,13 +234,9 @@ export function AppShell({
               <small>Account settings ↗</small>
             </span>
           </a>
-          <a
-            className="rail-export"
-            href="/api/export/records"
-            title="Downloads records as JSON. Photos are not included."
-          >
-            <DownloadSimple size={15} aria-hidden="true" /> Export records
-          </a>
+          <Link className="rail-export" to="/settings">
+            <DownloadSimple size={15} aria-hidden="true" /> Settings & data
+          </Link>
           <button
             className="rail-shortcuts"
             type="button"
@@ -272,16 +273,7 @@ export function AppShell({
         {children}
         <footer className="site-footer">
           <span>worth</span>
-          {siteFooterLinks(authOrigin).map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noreferrer' : undefined}
-            >
-              {link.label}
-            </a>
-          ))}
+          <ProductLinks />
           <a href={logoutUrl(authOrigin, window.location.origin)}>Sign out</a>
         </footer>
       </div>

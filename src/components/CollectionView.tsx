@@ -184,9 +184,11 @@ export function CollectionView({
   });
 
   const batchCreate = useMutation({
-    mutationFn: (nextTitles: string[]) => api.createItems(list.id, nextTitles),
+    mutationFn: (nextTitles: string[]) =>
+      api.createItems(list.id, nextTitles, captureDraft.operationId.current),
     onSuccess: ({ items: created }) => {
       captureDraft.clear({ ...captureDraft.form, batchTitles: '' });
+      captureDraft.operationId.current = crypto.randomUUID();
       setBatchTitles('');
       setBrowse('all');
       setSearch('');
@@ -402,6 +404,18 @@ export function CollectionView({
             <p className="form-error collection-capture-error">
               {create.error?.message ?? batchCreate.error?.message}
             </p>
+          )}
+          {batchCreate.error instanceof RequestError && batchCreate.error.status === 409 && (
+            <button
+              className="button button-outline"
+              onClick={() => {
+                captureDraft.operationId.current = crypto.randomUUID();
+                batchCreate.reset();
+                void client.invalidateQueries({ queryKey: ['items', list.id] });
+              }}
+            >
+              Start a new batch
+            </button>
           )}
           {(queue.isError ||
             decide.isError ||

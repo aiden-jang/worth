@@ -43,6 +43,18 @@ function json(method: string, body: unknown): RequestInit {
 }
 
 export const api = {
+  exportArchive: (photos = false) =>
+    request<import('./shared/portability').ArchiveFile>(photos ? '/export/backup' : '/export/records'),
+  restoreArchive: (body: import('./shared/portability').ArchiveFile, key: string) =>
+    request<{ ids: string[] }>('/import', {
+      ...json('POST', body),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  deleteWorthData: () =>
+    request<void>('/data', {
+      method: 'DELETE',
+      headers: { 'X-Worth-Confirmation': 'delete-all-worth-data' },
+    }),
   me: () => request<{ user: AuthUser | null }>('/me'),
   overview: () => request<Overview>('/overview'),
   patterns: () => request<import('./shared/models').ArchivePatterns>('/patterns'),
@@ -66,8 +78,14 @@ export const api = {
         ...(operationId ? { 'Idempotency-Key': operationId } : {}),
       },
     }),
-  createItems: (listId: string, titles: string[]) =>
-    request<{ items: Item[] }>(`/lists/${listId}/items/batch`, json('POST', { titles })),
+  createItems: (listId: string, titles: string[], operationId?: string) =>
+    request<{ items: Item[] }>(`/lists/${listId}/items/batch`, {
+      ...json('POST', { titles }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(operationId ? { 'Idempotency-Key': operationId } : {}),
+      },
+    }),
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => request<void>(`/items/${id}`, { method: 'DELETE' }),

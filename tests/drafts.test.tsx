@@ -41,10 +41,12 @@ test('expired or malformed local drafts do not enter the editor', () => {
   localStorage.setItem(key, JSON.stringify({ form: { title: 'Old' }, updatedAt: Date.now() - 8 * 86400000 }));
   const old = renderHook(() => useDraft('test', initial, valid), { wrapper: setup('alice') });
   expect(old.result.current.form.title).toBe('');
+  expect(localStorage.getItem(key)).toBeNull();
   old.unmount();
   localStorage.setItem(key, JSON.stringify({ form: { title: 42 }, updatedAt: Date.now() }));
   const bad = renderHook(() => useDraft('test', initial, valid), { wrapper: setup('alice') });
   expect(bad.result.current.form.title).toBe('');
+  expect(localStorage.getItem(key)).toBeNull();
   bad.unmount();
 });
 test('unfinished sets survive validation while invalid workout references are rejected', () => {

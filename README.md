@@ -7,6 +7,8 @@ Collections hold repeatable things such as drinks, films, restaurants, and cars.
 ## What works
 
 - Create, edit, and delete collections, activities, items, and logs.
+- Open Settings & data for records export, photo-inclusive backup, validated restore, device cleanup and deletion of all Worth data.
+- Read Worth-specific Privacy, Terms and Help before signing in or from the footer.
 - Search collection names, records, and logs across your private archive.
 - Keep a title-only collection index, then optionally rank, revisit, or add context later.
 - Make an optional personal call: Favorite, Meh, or Not again. Selecting it again clears the call.

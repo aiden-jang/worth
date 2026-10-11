@@ -9,7 +9,9 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
   const read = () => {
     try {
       const value = key ? JSON.parse(localStorage.getItem(key) ?? 'null') : null;
-      return value && value.updatedAt > Date.now() - 7 * 86400000 && validate(value.form) ? value : null;
+      if (value && value.updatedAt > Date.now() - 7 * 86400000 && validate(value.form)) return value;
+      if (key) localStorage.removeItem(key);
+      return null;
     } catch {
       return null;
     }

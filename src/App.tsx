@@ -1,12 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
-import { Route, Routes } from 'react-router';
+import { ProductLinks } from './components/ProductLinks';
+import { InfoPage } from './pages/InfoPage';
+import { Route, Routes, useLocation } from 'react-router';
 import { api } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
 import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
+);
 const ArchivePage = lazy(() =>
   import('./pages/ArchivePage').then((module) => ({ default: module.ArchivePage })),
 );
@@ -38,6 +43,9 @@ export function App() {
         }
       >
         <Routes>
+          <Route path="/privacy" element={<InfoPage kind="privacy" />} />
+          <Route path="/terms" element={<InfoPage kind="terms" />} />
+          <Route path="/help" element={<InfoPage kind="help" />} />
           <Route path="/s/:token" element={<PublicSharePage />} />
           <Route path="*" element={<PrivateApp />} />
         </Routes>
@@ -67,6 +75,7 @@ class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean 
 }
 
 function PrivateApp() {
+  const location = useLocation();
   const session = useQuery({ queryKey: ['me'], queryFn: api.me, retry: false });
 
   return session.isPending ? (
@@ -82,11 +91,15 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
-        <Route path="*" element={<ArchivePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<InfoPage kind="missing" />} />
       </Routes>
     </AppShell>
-  ) : (
+  ) : ['/', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
+    /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
+  ) : (
+    <InfoPage kind="missing" />
   );
 }
 
@@ -162,6 +175,7 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
       <footer className="cabinet-landing-bottom">
         <strong>Meh is a complete sentence.</strong>
         <span>Collections, rankings & a place to remember.</span>
+        <ProductLinks />
       </footer>
     </main>
   );

@@ -45,9 +45,12 @@ export function ConfirmDialog({
         // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
         if (!dialog.current?.open) onClose();
       }}
-      onCancel={(event) => event.stopPropagation()}
+      onCancel={(event) => {
+        event.stopPropagation();
+        if (pending) event.preventDefault();
+      }}
       onClick={(event) => {
-        if (event.target === dialog.current) dialog.current.close();
+        if (!pending && event.target === dialog.current) dialog.current.close();
       }}
     >
       <div className="confirm-inner">
@@ -56,7 +59,12 @@ export function ConfirmDialog({
             <p className="overline">{eyebrow}</p>
             <h2 id={titleId}>{title}</h2>
           </div>
-          <button className="icon-button" aria-label="Cancel" onClick={() => dialog.current?.close()}>
+          <button
+            disabled={pending}
+            className="icon-button"
+            aria-label="Cancel"
+            onClick={() => dialog.current?.close()}
+          >
             <X size={20} />
           </button>
         </header>
@@ -67,10 +75,11 @@ export function ConfirmDialog({
             className="button button-outline"
             onClick={() => dialog.current?.close()}
             disabled={pending}
+            autoFocus
           >
             {cancelLabel}
           </button>
-          <button className="button button-danger" onClick={onConfirm} disabled={pending} autoFocus>
+          <button className="button button-danger" onClick={onConfirm} disabled={pending}>
             {pending ? 'Working…' : confirmLabel}
           </button>
         </div>

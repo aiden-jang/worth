@@ -27,6 +27,7 @@ beforeAll(async () => {
     '0007_workout_sessions.sql',
     '0008_workout_routines.sql',
     '0009_product_flow.sql',
+    '0010_completion.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1012,4 +1013,232 @@ test('product migration preserves earlier visits without marking all history act
     plannedExercises: ['Row'],
     skippedExercises: [],
   });
+});
+
+test('backup restores relationships and photos privately, and all-data deletion is owner scoped', async () => {
+  const owner = 'portable';
+  const collection = (
+    (await (await call('/lists', owner, 'POST', { name: 'Archive cup', kind: 'collection' })).json()) as any
+  ).list;
+  const item = (
+    (await (
+      await call(`/lists/${collection.id}/items`, owner, 'POST', {
+        title: 'Coffee',
+        decision: 'meh',
+        revisitQueued: true,
+        note: 'Keep this note',
+      })
+    ).json()) as any
+  ).item;
+  await call(`/lists/${collection.id}/rank`, owner, 'PUT', { itemIds: [item.id], expectedRevision: 0 });
+  await call(`/lists/${collection.id}/logs`, owner, 'POST', {
+    itemId: item.id,
+    happenedOn: '2026-10-10',
+    note: 'Second cup',
+  });
+  const activity = (
+    (await (await call('/lists', owner, 'POST', { name: 'Gym', kind: 'activity' })).json()) as any
+  ).list;
+  const routine = (
+    (await (
+      await call(`/lists/${activity.id}/routines`, owner, 'POST', { title: 'A', exercises: ['Row'] })
+    ).json()) as any
+  ).routine;
+  const workout = (
+    (await (
+      await call(`/lists/${activity.id}/workouts`, owner, 'POST', {
+        title: 'Visit',
+        happenedOn: '2026-10-10',
+        routineId: routine.id,
+      })
+    ).json()) as any
+  ).workout;
+  await call(`/lists/${activity.id}/logs`, owner, 'POST', {
+    title: 'Row',
+    happenedOn: '2026-10-10',
+    workoutId: workout.id,
+    exerciseSets: [{ reps: 8, weight: 40 }],
+    weightUnit: 'lb',
+  });
+  const photo = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+    'base64',
+  );
+  await platform.env.DB.prepare(
+    'INSERT INTO item_photos (item_id,owner_id,content_type,data,updated_at) VALUES (?,?,?,?,?)',
+  )
+    .bind(item.id, owner, 'image/png', new Uint8Array(photo), Date.now())
+    .run();
+  const backupResponse = await call('/export/backup', owner);
+  expect(backupResponse.status).toBe(200);
+  const backup = (await backupResponse.json()) as any;
+  expect(backup.photosExcluded).toBe(false);
+  expect(backup.photos[0].data).toBe(photo.toString('base64'));
+  const key = crypto.randomUUID();
+  const restore = (body = backup, user = 'recipient') =>
+    app.request(
+      'https://worth.test/api/import',
+      {
+        method: 'POST',
+        headers: {
+          Cookie: `preview_user=${user}`,
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'Idempotency-Key': key,
+        },
+        body: JSON.stringify(body),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  const first = await restore();
+  expect(first.status).toBe(201);
+  const result = (await first.json()) as any;
+  expect(result.ids).toHaveLength(2);
+  expect((await restore()).status).toBe(201);
+  const restored = (await (await call('/export/records', 'recipient')).json()) as any;
+  expect(restored.lists).toHaveLength(2);
+  expect(restored.items[0].decision).toBe('meh');
+  expect(restored.items[0].revisitQueued).toBe(true);
+  expect(restored.items[0].note).toBe('Keep this note');
+  expect(restored.lists.find((l: any) => l.kind === 'collection').rankedIds).toEqual([restored.items[0].id]);
+  expect(restored.logs.find((g: any) => g.title === 'Row').workoutId).toBe(restored.workoutSessions[0].id);
+  expect(restored.logs.find((g: any) => g.title === 'Row').exerciseSets).toEqual([{ reps: 8, weight: 40 }]);
+  expect(restored.items[0].hasPhoto).toBe(true);
+  expect(
+    (await restore({ ...backup, items: [{ ...backup.items[0], listId: crypto.randomUUID() }] }, 'invalid'))
+      .status,
+  ).toBe(400);
+  expect((await restore(backup, 'someone')).status).toBe(409);
+  expect((await call('/data', 'recipient', 'DELETE')).status).toBe(400);
+  const deleted = await app.request(
+    'https://worth.test/api/data',
+    {
+      method: 'DELETE',
+      headers: {
+        Cookie: 'preview_user=recipient',
+        Origin: 'https://worth.test',
+        'X-Worth-Confirmation': 'delete-all-worth-data',
+      },
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(deleted.status).toBe(204);
+  expect(((await (await call('/lists', 'recipient')).json()) as any).lists).toHaveLength(0);
+  expect(((await (await call('/lists', owner)).json()) as any).lists).toHaveLength(2);
+  expect(
+    await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM item_photos WHERE owner_id = ?')
+      .bind('recipient')
+      .first('n'),
+  ).toBe(0);
+  expect(
+    await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM capture_operations WHERE owner_id = ?')
+      .bind('recipient')
+      .first('n'),
+  ).toBe(0);
+});
+
+test('batch retry keys are atomic and reject changed payloads', async () => {
+  const owner = 'batches';
+  const list = (
+    (await (await call('/lists', owner, 'POST', { name: 'Batch', kind: 'collection' })).json()) as any
+  ).list;
+  const key = crypto.randomUUID();
+  const create = (titles = ['One', 'Two']) =>
+    app.request(
+      `https://worth.test/api/lists/${list.id}/items/batch`,
+      {
+        method: 'POST',
+        headers: {
+          Cookie: `preview_user=${owner}`,
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'Idempotency-Key': key,
+        },
+        body: JSON.stringify({ titles }),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  const [a, b] = await Promise.all([create(), create()]);
+  expect(a.status).toBe(201);
+  expect(b.status).toBe(201);
+  expect(((await a.json()) as any).items.map((i: any) => i.id)).toEqual(
+    ((await b.json()) as any).items.map((i: any) => i.id),
+  );
+  expect((await create(['Changed'])).status).toBe(409);
+  expect(((await (await call(`/lists/${list.id}/items`, owner)).json()) as any).items).toHaveLength(2);
+});
+
+test('authenticated write limits return retry information', async () => {
+  const window = Math.floor(Date.now() / 60000);
+  await platform.env.DB.prepare('INSERT INTO request_limits (owner_id,category,window,hits) VALUES (?,?,?,?)')
+    .bind('limited', 'write', window, 120)
+    .run();
+  const r = await call('/lists', 'limited', 'POST', { name: 'No', kind: 'collection' });
+  expect(r.status).toBe(429);
+  expect(Number(r.headers.get('Retry-After'))).toBeGreaterThan(0);
+  expect((await call('/lists', 'limited')).status).toBe(200);
+});
+
+test('restore validates photos before commit and batches a large archive without changing text', async () => {
+  const listId = crypto.randomUUID();
+  const file = {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    photosExcluded: true,
+    lists: [
+      { id: listId, name: 'Restored', kind: 'collection', description: '', rankedIds: [], updatedAt: 1 },
+    ],
+    items: Array.from({ length: 400 }, (_, n) => ({
+      id: crypto.randomUUID(),
+      listId,
+      title: `Item ${n}`,
+      type: '',
+      note: '  ' + 'n'.repeat(3990) + '\n',
+      createdAt: 1,
+      updatedAt: 1,
+    })),
+    logs: [],
+  };
+  const send = (body: unknown, user: string) =>
+    app.request(
+      'https://worth.test/api/import',
+      {
+        method: 'POST',
+        headers: {
+          Cookie: `preview_user=${user}`,
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'Idempotency-Key': crypto.randomUUID(),
+        },
+        body: JSON.stringify(body),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  const invalid = await send(
+    {
+      ...file,
+      photosExcluded: false,
+      photos: [
+        {
+          kind: 'item',
+          id: file.items[0].id,
+          contentType: 'image/png',
+          data: Buffer.from('not a photo').toString('base64'),
+        },
+      ],
+    },
+    'invalidphoto',
+  );
+  expect(invalid.status).toBe(415);
+  expect(((await (await call('/lists', 'invalidphoto')).json()) as any).lists).toHaveLength(0);
+  const response = await send(file, 'largerestore');
+  expect(response.status).toBe(201);
+  const restored = (await (await call('/export/records', 'largerestore')).json()) as any;
+  expect(restored.items).toHaveLength(400);
+  expect(restored.items[0].note).toBe(file.items[0].note);
+  expect(restored.lists).toHaveLength(1);
 });

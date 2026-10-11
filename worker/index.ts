@@ -9,6 +9,7 @@ import { registerShareRoutes, registerPublicShareRoute } from './routes/shares';
 import { registerPhotoRoutes } from './routes/photos';
 import { registerRoutineRoutes } from './routes/routines';
 import { registerWorkoutRoutes } from './routes/workouts';
+import { registerPortabilityRoutes } from './routes/portability';
 import { registerExportRoutes } from './routes/export';
 
 const app = new Hono<AppEnv>();
@@ -39,6 +40,23 @@ privateApi.use('*', async (c, next) => {
   if (session.state === 'unavailable')
     throw new ApiError(503, 'AUTH_UNAVAILABLE', 'Accounts is temporarily unavailable');
   if (session.state === 'signed-out') throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to continue');
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) || c.req.path.endsWith('/export/backup')) {
+    const heavy = /\/api\/(import|data|export\/backup)$/.test(c.req.path);
+    const window = Math.floor(Date.now() / 60000);
+    const category = heavy ? 'data' : 'write';
+    const row = await c.env.DB.prepare(
+      'INSERT INTO request_limits (owner_id, category, window, hits) VALUES (?, ?, ?, 1) ON CONFLICT (owner_id, category, window) DO UPDATE SET hits = hits + 1 RETURNING hits',
+    )
+      .bind(session.user.id, category, window)
+      .first<{ hits: number }>();
+    if ((row?.hits ?? 0) > (heavy ? 6 : 120)) {
+      c.header('Retry-After', String(60 - (Math.floor(Date.now() / 1000) % 60)));
+      throw new ApiError(429, 'RATE_LIMITED', 'Too many requests. Wait a minute and try again.');
+    }
+    await c.env.DB.prepare('DELETE FROM request_limits WHERE window < ?')
+      .bind(window - 2)
+      .run();
+  }
   c.set('ownerId', session.user.id);
   c.set('user', session.user);
   await next();
@@ -49,6 +67,7 @@ registerRecordRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
 registerExportRoutes(privateApi);
+registerPortabilityRoutes(privateApi);
 registerWorkoutRoutes(privateApi);
 registerRoutineRoutes(privateApi);
 
@@ -59,6 +78,8 @@ app.onError((error, c) => {
   if (error instanceof ApiError) {
     const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8' });
     securityHeaders(headers);
+    const retry = c.res.headers.get('Retry-After');
+    if (retry) headers.set('Retry-After', retry);
     return new Response(JSON.stringify({ error: error.code, message: error.message }), {
       status: error.status,
       headers,

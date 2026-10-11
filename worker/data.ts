@@ -253,34 +253,29 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
 }
 
 export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
-  const [listResult, itemResult, logResult, workoutResult, routineResult] = await Promise.all([
-    db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId).all<ListRow>(),
-    db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId).all<ItemRow>(),
+  const [listResult, itemResult, logResult, workoutResult, routineResult] = await db.batch([
+    db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
+    db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
     db
       .prepare(
         `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
         FROM logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
       )
-      .bind(ownerId)
-      .all<LogRow>(),
+      .bind(ownerId),
     db
       .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? ORDER BY happened_on ASC, created_at ASC')
-      .bind(ownerId)
-      .all<WorkoutRow>(),
-    db
-      .prepare('SELECT * FROM workout_routines WHERE owner_id = ? ORDER BY created_at ASC')
-      .bind(ownerId)
-      .all<RoutineRow>(),
+      .bind(ownerId),
+    db.prepare('SELECT * FROM workout_routines WHERE owner_id = ? ORDER BY created_at ASC').bind(ownerId),
   ]);
   return {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     photosExcluded: true,
-    lists: listResult.results.map(mapList),
-    items: itemResult.results.map(mapItem),
-    logs: logResult.results.map(mapLog),
-    workoutSessions: workoutResult.results.map(mapWorkout),
-    workoutRoutines: routineResult.results.map(mapRoutine),
+    lists: (listResult.results as ListRow[]).map(mapList),
+    items: (itemResult.results as ItemRow[]).map(mapItem),
+    logs: (logResult.results as LogRow[]).map(mapLog),
+    workoutSessions: (workoutResult.results as WorkoutRow[]).map(mapWorkout),
+    workoutRoutines: (routineResult.results as RoutineRow[]).map(mapRoutine),
   };
 }
 

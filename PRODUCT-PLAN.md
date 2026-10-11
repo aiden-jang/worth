@@ -26,20 +26,20 @@ The GitHub workflow deploys successful pushes to main and applies remote migrati
 The feature pass above is not a complete product-readiness checklist. These items
 remain open. Preserve the accepted cabinet design and keep policy/data copy factual.
 
-### Privacy, support and data controls
+### Privacy, support and data controls — implemented locally
 
-- [ ] Add accessible Privacy and Terms links to the signed-out landing. The signed-in footer already links to the shared accounts policies.
-- [ ] Verify the shared policies and provide Worth-specific privacy information covering records, photos, account identity, Cloudflare hosting/logs, public snapshots, local drafts, retention and deletion. Confirm operator/contact details and actual practices before publishing claims.
-- [ ] Add a Worth settings/data page: export, clear account-scoped device drafts/photos/timers, and delete all Worth data with explicit confirmation. Clearly distinguish Worth data deletion from shared account deletion; account settings already link to the shared service.
-- [ ] Add visible help/contact and a bug-report path, using a verified contact destination. Explain essential tasks and sharing limits concisely.
-- [ ] Show the records-only export scope before download, including that photos are excluded. Handle download failures in the app; the existing exclusion is only in a hover title.
+- [x] Add accessible Privacy and Terms links to the signed-out landing. The signed-in footer already links to the shared accounts policies.
+- [x] Verify the shared policies and provide Worth-specific privacy information covering records, photos, account identity, Cloudflare hosting/logs, public snapshots, local drafts, retention and deletion. Confirm operator/contact details and actual practices before publishing claims.
+- [x] Add a Worth settings/data page: export, clear account-scoped device drafts/photos/timers, and delete all Worth data with explicit confirmation. Clearly distinguish Worth data deletion from shared account deletion; account settings already link to the shared service.
+- [x] Add visible help/contact and a bug-report path, using a verified contact destination. Explain essential tasks and sharing limits concisely.
+- [x] Show the records-only export scope before download, including that photos are excluded. Handle download failures in the app; the existing exclusion is only in a hover title.
 
 ### Further gaps confirmed in source
 
-- [ ] Add a real unknown-page screen with a useful return action. Unknown signed-in routes currently open Archive; unknown signed-out routes show the landing.
-- [ ] Make batch capture safe to retry after an uncertain network response. Single-record item/log creation has idempotency keys; batch item creation does not.
-- [ ] Define and implement expired device-draft cleanup. Text drafts older than seven days are ignored but remain stored; photo drafts are removed only when that particular draft is opened. Coordinate this with the clear-device-data control and retention copy.
-- [ ] Provide a validated restore/import path for exported records, and decide how photo-inclusive portability should work. The current JSON export cannot restore an archive through the app and does not back up photos. This is a later data-ownership feature, not a claim that the current export is a complete backup.
+- [x] Add a real unknown-page screen with a useful return action. Unknown signed-in routes currently open Archive; unknown signed-out routes show the landing.
+- [x] Make batch capture safe to retry after an uncertain network response. Single-record item/log creation has idempotency keys; batch item creation does not.
+- [x] Define and implement expired device-draft cleanup. Text drafts older than seven days are ignored but remain stored; photo drafts are removed only when that particular draft is opened. Coordinate this with the clear-device-data control and retention copy.
+- [x] Provide a validated restore/import path for exported records, and decide how photo-inclusive portability should work. The current JSON export cannot restore an archive through the app and does not back up photos. This is a later data-ownership feature, not a claim that the current export is a complete backup.
 
 ### Readiness checks still unverified
 
@@ -48,7 +48,22 @@ remain open. Preserve the accepted cabinet design and keep policy/data copy fact
 - [ ] Review production recovery and abuse protection: confirm D1 recovery/retention, monitoring, deployed HTML security headers and hosting-level request limits. Repo-only inspection does not establish which protections are configured in Cloudflare.
 
 Audit scope: repository routes, footer wiring, export handling, creation retries and
-device-draft storage. The shared policy URLs could not be read during this audit,
-and Cloudflare/GitHub production settings were not accessible. This list distinguishes
+device-draft storage. The shared policies were read in the browser during implementation and omit Worth.
+Worth now has its own policy/terms/help pages with the user-provided contact address.
+Cloudflare/GitHub authenticated production settings remain inaccessible. This list distinguishes
 confirmed source gaps from checks that need external verification; it is not an
 exhaustive certification of product readiness.
+
+## Completion pass verification
+
+Implemented the five product-facing gaps and four further source gaps. Settings
+includes photo-inclusive backup and atomic restore in addition to records export,
+with a 32 MB / 5,000-record / 500-list / 200-photo limit. Source behavior, owner
+boundaries and desktop/mobile verification are documented in art/ui-qa/completion.
+Restore retry keys survive a reload on this device until completion or cleanup.
+
+Added static HTML security headers, account-scoped request limits and automatic
+post-deploy smoke checks. The existing live API responds healthily and rejects
+signed-out exports. The new code is local pending push; full production checks,
+shared-account deletion integration, recovery drills and dashboard alert/edge
+settings remain open. See RELEASE.md for evidence, recovery steps and limits.

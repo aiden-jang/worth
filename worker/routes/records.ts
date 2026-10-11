@@ -1,3 +1,4 @@
+import { operationId, fingerprint, previousOperation } from '../operations';
 import { validateWorkoutTarget } from '../data';
 import type { Hono } from 'hono';
 import { itemInput, itemPatch, itemsBatchInput, logInput, logPatch } from '../../src/shared/validation';
@@ -52,22 +53,53 @@ export function registerRecordRoutes(api: Hono<AppEnv>): void {
     if (list.kind !== 'collection')
       throw new ApiError(400, 'WRONG_LIST_KIND', 'This list holds activity logs');
     const input = await readJson(c.req.raw, itemsBatchInput);
+    const key = c.req.header('Idempotency-Key')
+      ? operationId(c.req.header('Idempotency-Key'))
+      : crypto.randomUUID();
+    const hash = await fingerprint({ listId: list.id, titles: input.titles });
+    const previous = await previousOperation(c.env.DB, key, c.get('ownerId'), 'batch', hash);
+    if (previous)
+      return c.json(
+        { items: await Promise.all(previous.ids.map((id) => requireItem(c.env.DB, c.get('ownerId'), id))) },
+        201,
+      );
     const now = Date.now();
     const items = input.titles.map((title) => ({ id: crypto.randomUUID(), title }));
-    await c.env.DB.batch([
-      ...items.map((item) =>
+    try {
+      await c.env.DB.batch([
         c.env.DB.prepare(
-          `INSERT INTO items
+          'INSERT INTO capture_operations (id, owner_id, list_id, kind, fingerprint, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ).bind(
+          key,
+          c.get('ownerId'),
+          list.id,
+          'batch',
+          hash,
+          JSON.stringify({ ids: items.map((i) => i.id) }),
+          now,
+        ),
+        ...items.map((item) =>
+          c.env.DB.prepare(
+            `INSERT INTO items
             (id, list_id, owner_id, title, type, note, decision, started_on, ended_on, created_at, updated_at)
             VALUES (?, ?, ?, ?, '', '', NULL, NULL, NULL, ?, ?)`,
-        ).bind(item.id, list.id, c.get('ownerId'), item.title, now, now),
-      ),
-      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
-        now,
-        list.id,
-        c.get('ownerId'),
-      ),
-    ]);
+          ).bind(item.id, list.id, c.get('ownerId'), item.title, now, now),
+        ),
+        c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
+          now,
+          list.id,
+          c.get('ownerId'),
+        ),
+      ]);
+    } catch (error) {
+      const saved = await previousOperation(c.env.DB, key, c.get('ownerId'), 'batch', hash);
+      if (saved)
+        return c.json(
+          { items: await Promise.all(saved.ids.map((id) => requireItem(c.env.DB, c.get('ownerId'), id))) },
+          201,
+        );
+      throw error;
+    }
     return c.json(
       { items: await Promise.all(items.map((item) => requireItem(c.env.DB, c.get('ownerId'), item.id))) },
       201,

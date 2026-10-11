@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "errors": [],
+  "checks": [
+    "export failure/retry",
+    "restore preview/validation/retry identity",
+    "owner-scoped expired text/photo cleanup",
+    "confirmed device/all-data deletion",
+    "public policies/contact links",
+    "404",
+    "auth outage/retry",
+    "320/390/430/768/1440 reflow"
+  ]
+}

@@ -19,6 +19,7 @@
     "db:migrate:local": "wrangler d1 migrations apply worth --local",
     "db:migrate:remote": "wrangler d1 migrations apply worth --remote",
     "deploy": "pnpm check && pnpm db:migrate:remote && wrangler deploy",
+    "verify:live": "node scripts/verify-live.mjs",
     "deploy:only": "pnpm build && pnpm db:migrate:remote && wrangler deploy"
   },
   "dependencies": {

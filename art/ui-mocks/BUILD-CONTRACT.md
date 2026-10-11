@@ -393,3 +393,12 @@ visit filters inside the existing disclosure. Mobile filters stack at <=360px; w
 phones use two columns. Continue 44px targets, native scrolling dialogs, account-only
 records and factual workout/draft/offline copy. Intentional integrations are recorded
 in [product pass QA](../ui-qa/product-pass/README.md).
+
+## Product completion — October 10
+
+Use [settings reference](taste-cabinet/completion/README.md) for the new data screen.
+Preserve the cabinet rail, 68px/50px heading scale, rules, dark surfaces and 44px
+controls. Backup scope/limits, restore preview and deletion consequences stay visible.
+Policies and Help use a public wordmark/back header and readable single column;
+functional, privacy and deletion copy is factual. Add policy/help links to both the
+landing and signed-in footer without moving the accepted hero or archive composition.
