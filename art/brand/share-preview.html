@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Worth link preview artwork</title>
+  <style>
+    @font-face {
+      font-family: 'DM Sans';
+      font-weight: 400;
+      src: url('../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      font-weight: 500;
+      src: url('../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      width: 1200px;
+      height: 630px;
+      background: #181915;
+      color: #f0ecdf;
+      font-family: 'DM Sans', sans-serif;
+      padding: 64px 72px;
+    }
+    header {
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -1.5px;
+    }
+    main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 72px;
+      gap: 48px;
+    }
+    h1 {
+      font-size: 76px;
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: -4px;
+      margin: 0 0 28px;
+    }
+    p {
+      color: #aaa99b;
+      font-size: 23px;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .slip {
+      width: 290px;
+      height: 304px;
+      flex-shrink: 0;
+      border-radius: 22px;
+      background: #eae5d5;
+      color: #292a23;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .slip img {
+      width: 198px;
+      height: 198px;
+    }
+    .slip strong {
+      font-weight: 500;
+      font-size: 28px;
+      letter-spacing: -1px;
+    }
+    .slip span {
+      margin-top: 8px;
+      font-size: 16px;
+      color: #636457;
+    }
+  </style>
+  <body>
+    <header>worth</header>
+    <main>
+      <div>
+        <h1>Good finds.<br />Mixed feelings.</h1>
+        <p>Keep what you try.<br />Find what’s worth repeating.</p>
+      </div>
+      <div class="slip">
+        <img src="meh.svg" alt="" />
+        <strong>Meh.</strong>
+        <span>A complete sentence.</span>
+      </div>
+    </main>
+  </body>
+</html>
