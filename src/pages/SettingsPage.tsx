@@ -236,7 +236,7 @@ export function SettingsPage() {
         </p>
         <p>
           Worth data deletion leaves your other apps and shared login intact. For shared account deletion,{' '}
-          <a href="mailto:aidenwsj@gmail.com?subject=Account%20and%20Worth%20data%20deletion">contact us</a>{' '}
+          <a href="mailto:support@aidenjang.com?subject=Account%20and%20Worth%20data%20deletion">contact us</a>{' '}
           and ask for Worth data to be removed too.
         </p>
       </section>

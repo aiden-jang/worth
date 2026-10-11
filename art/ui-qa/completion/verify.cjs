@@ -226,7 +226,7 @@ const fs = require('node:fs/promises'),
         await page.goto(base + '/' + screen);
         await page.getByRole('heading', { level: 1 }).waitFor();
         await page.screenshot({ path: path.join(dir, screen + '-' + name + '.png'), fullPage: true });
-        assert(await page.locator('a[href^="mailto:aidenwsj@gmail.com"]').count());
+        assert(await page.locator('a[href^="mailto:support@aidenjang.com"]').count());
       }
     }
     signedIn = false;

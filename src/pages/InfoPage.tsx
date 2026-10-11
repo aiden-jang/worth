@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { ProductLinks } from '../components/ProductLinks';
-const contact = 'aidenwsj@gmail.com';
+const contact = 'support@aidenjang.com';
 export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missing' }) {
   const title =
     kind === 'privacy'
