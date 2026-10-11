@@ -131,9 +131,9 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
           <em>A place to keep it.</em>
         </h1>
         <p>
-          Collect what you try. Rank what holds up.
+          Keep what you try. Rank what you like.
           <br />
-          Keep the meh, too.
+          The meh can stay.
         </p>
         <div className="landing-cabinet-actions">
           <a className="button button-accent" href={signupUrl(authOrigin, returnTo)}>
@@ -174,7 +174,7 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
       <LandingExample />
       <footer className="cabinet-landing-bottom">
         <strong>Meh is a complete sentence.</strong>
-        <span>Collections, rankings & a place to remember.</span>
+        <span>Lists for your taste. Logs for the rest.</span>
         <ProductLinks />
       </footer>
     </main>
@@ -299,7 +299,7 @@ function LandingExample() {
             Keep it <span aria-hidden="true">→</span>
           </button>
         </form>
-        <p className="demo-footnote">Just an example. Your actual opinions go in your archive.</p>
+        <p className="demo-footnote">Just an example. Nothing here is saved.</p>
       </div>
     </section>
   );

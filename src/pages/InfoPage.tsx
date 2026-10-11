@@ -158,7 +158,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
           </>
         ) : (
           <>
-            <p>Good finds. Occasional questions.</p>
+            <p>A few useful answers.</p>
             <section>
               <h2>Collections or activity?</h2>
               <p>

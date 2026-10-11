@@ -31,12 +31,12 @@ export function PatternsPage() {
       <header className="patterns-head">
         <p className="overline">YOUR ARCHIVE</p>
         <h1>Patterns</h1>
-        <p>A few patterns. No personality diagnosis.</p>
+        <p>Your taste has a paper trail.</p>
       </header>
       {data.totalRecords === 0 ? (
         <CabinetEmptyState
           title="Too soon to tell."
-          description="Keep a few items or activity logs. Patterns will appear here."
+          description="Add items or log activity to see your totals here."
         >
           <Link className="button button-accent" to="/lists?create=1&kind=collection">
             Start a collection <ArrowRight size={18} />
@@ -65,7 +65,7 @@ export function PatternsPage() {
                   <ArrowRight size={18} />
                 </Link>
               ) : (
-                <p>Log a return to an item and it will appear here.</p>
+                <p>No revisits logged yet.</p>
               )}
             </article>
             <article>
@@ -80,7 +80,7 @@ export function PatternsPage() {
                   <ArrowRight size={18} />
                 </Link>
               ) : (
-                <p>Create a collection when you want something to compare or revisit.</p>
+                <p>No collections yet.</p>
               )}
             </article>
             <article>
@@ -95,11 +95,11 @@ export function PatternsPage() {
                   <ArrowRight size={18} />
                 </Link>
               ) : (
-                <p>Make a collection when you have something worth keeping close.</p>
+                <p>No collections yet.</p>
               )}
             </article>
             <article>
-              <p className="overline">MOST KEPT IN</p>
+              <p className="overline">LARGEST COLLECTION</p>
               {data.mostKeptCollection ? (
                 <Link to={`/lists/${data.mostKeptCollection.id}`}>
                   <strong>{data.mostKeptCollection.name}</strong>
@@ -110,11 +110,11 @@ export function PatternsPage() {
                   <ArrowRight size={18} />
                 </Link>
               ) : (
-                <p>Keep a few things in a collection and it will appear here.</p>
+                <p>No collections yet.</p>
               )}
             </article>
             <article className="pattern-archive-scope">
-              <p className="overline">ARCHIVE SHAPE</p>
+              <p className="overline">LISTS</p>
               <strong>{data.totalCollections + data.totalActivities}</strong>
               <span>
                 {data.totalCollections} collections · {data.totalActivities} activities
@@ -166,9 +166,7 @@ function CallDistribution({ counts }: { counts: Record<ItemDecision, number> }) 
         ))}
       </div>
       <p className="call-distribution-footnote">
-        {total
-          ? 'Only items with a call. Rankings are a separate matter.'
-          : 'No calls yet. Having an opinion is optional.'}
+        {total ? 'Only items with a call. Rankings are a separate matter.' : 'No calls yet. No rush.'}
       </p>
     </section>
   );

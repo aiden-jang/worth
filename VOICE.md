@@ -157,3 +157,21 @@ Landing topics: `Drinks` / `Midnight snacks` / `Questionable purchases`.
 Their captions: `For research.` / `Several were necessary.` / `Seemed reasonable.`
 These are labeled examples of personal collection names, not descriptions silently saved
 onto accounts. Illustrative snack and purchase records stay in the local landing demo.
+
+## Plainspoken copy pass — October 10
+
+Keep the dry reactions and cut the brand filler. Worth sounds like someone with a
+small collection and a few opinions, not a life coach or a manifesto. Use concrete
+words: name, list, note, copy. Avoid stacking three abstract benefits, repeating
+“your taste” in every section, or adding an aside to every instruction.
+
+The landing now says `Keep what you try. Rank what you like.` / `The meh can stay.`
+The footer says `Lists for your taste. Logs for the rest.` The accepted headline,
+folder captions and call reactions stay. Search keeps `Somewhere in here.`;
+a missing result says `It’s being elusive.` with a useful spelling/search suggestion.
+Patterns says `Your taste has a paper trail.` and labels the largest collection plainly.
+Shortcuts say `Less clicking.` Existing first-use and collection jokes stay.
+
+One small joke per moment is enough. Factual labels and help do the work around it.
+Workout copy, account access, errors, legal notices and deletion remain direct.
+Never put brand copy into a saved name or note.

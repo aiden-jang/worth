@@ -193,7 +193,7 @@ function EmptyArchive() {
       <div className="cabinet-first-use-intro">
         <p className="overline">YOUR TASTE, ON RECORD</p>
         <h1>A clean slate. Suspicious.</h1>
-        <p>Keep the things you try in a collection. A name is enough to get started.</p>
+        <p>Start a collection for the things you try. Just give it a name.</p>
         <div className="empty-archive-actions">
           <Link className="button button-accent" to="/lists?create=1&kind=collection">
             Start a collection <ArrowRight size={18} />
@@ -210,7 +210,7 @@ function EmptyArchive() {
         <div className="cabinet-blank-rules" />
       </div>
       <div className="cabinet-first-use-footer">
-        <p>Make room for your taste.</p>
+        <p>Good, bad, oddly specific.</p>
         <span>Keep a name</span>
         <span>Make a call, if you want</span>
         <span>Find it again</span>

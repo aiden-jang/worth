@@ -314,7 +314,7 @@ export function ListsPage() {
                     value={description}
                     maxLength={280}
                     onChange={(event) => setDescription(event.target.value)}
-                    placeholder="A line to remind yourself what belongs here"
+                    placeholder="What belongs in this list?"
                   />
                 </label>
                 {kind === 'collection' && (

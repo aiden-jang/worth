@@ -402,3 +402,13 @@ controls. Backup scope/limits, restore preview and deletion consequences stay vi
 Policies and Help use a public wordmark/back header and readable single column;
 functional, privacy and deletion copy is factual. Add policy/help links to both the
 landing and signed-in footer without moving the accepted hero or archive composition.
+
+## Plainspoken copy revision — October 10
+
+The user's latest request authorizes removing generic, overly written product copy.
+The [voice revision](../../VOICE.md#plainspoken-copy-pass--october-10) supersedes
+copy only in the corresponding reference images. Preserve their composition, fonts,
+spacing, palette and faces. Landing supporting copy/footer, empty archive helper/footer,
+Search helper/no-result title, Patterns helper/empty summaries, creation description
+placeholder, Settings subtitle, Help intro and shortcut title have changed deliberately.
+No layouts or stored user content change. See [copy QA](../ui-qa/voice-pass/README.md).

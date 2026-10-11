@@ -54,7 +54,7 @@ export function SearchPage() {
   }
   return (
     <main className="light-page search-page page-width">
-      <p className="overline">YOUR ARCHIVE, ALL AT ONCE</p>
+      <p className="overline">SEARCH YOUR ARCHIVE</p>
       <h1>Find that thing.</h1>
       <label className="global-search">
         <MagnifyingGlass size={26} />
@@ -89,7 +89,7 @@ export function SearchPage() {
       {term.length < 2 ? (
         <CabinetEmptyState
           title="Somewhere in here."
-          description="Search names and notes across collections, drinks, exercises and logs. Use at least two characters."
+          description="Search names and notes. Two characters will do."
         />
       ) : results.isPending ? (
         <p className="search-hint" role="status">
@@ -134,12 +134,12 @@ export function SearchPage() {
               ) : null,
             )
           ) : (
-            <div className="search-filter-empty">Nothing in this part of your archive matches that name.</div>
+            <div className="search-filter-empty">No matches with this filter.</div>
           )}
         </section>
       ) : (
         <CabinetEmptyState
-          title="Nothing under that name."
+          title="It’s being elusive."
           description="Try a shorter search or a different spelling."
         />
       )}

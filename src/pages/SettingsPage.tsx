@@ -95,7 +95,7 @@ export function SettingsPage() {
       <header className="data-heading">
         <p className="overline">YOUR ACCOUNT / YOUR DATA</p>
         <h1>Settings.</h1>
-        <p>A little housekeeping. Everything here is yours.</p>
+        <p>Copies, drafts, and a little housekeeping.</p>
       </header>
       {error && (
         <p className="form-error" role="alert">

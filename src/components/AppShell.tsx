@@ -329,7 +329,7 @@ export function AppShell({
         <div className="dialog-head">
           <div>
             <p className="overline">KEYBOARD</p>
-            <h2>Keep the pace.</h2>
+            <h2>Less clicking.</h2>
           </div>
           <button
             className="icon-button"
