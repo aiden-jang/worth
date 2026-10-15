@@ -6,6 +6,7 @@ import type { Item, ListDetail } from '../shared/models';
 import { rankedItems } from '../shared/ranking';
 import { api } from '../api';
 import { ConfirmDialog } from './ConfirmDialog';
+import { RankingImageShare } from './RankingImageShare';
 
 function expiryLabel(expiresAt: number): string {
   const days = Math.max(0, Math.ceil((expiresAt - Date.now()) / 86_400_000));
@@ -30,6 +31,7 @@ export function ShareDialog({
   const [imageStatus, setImageStatus] = useState('');
   const [savingImage, setSavingImage] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const [shareToRevoke, setShareToRevoke] = useState<string | null>(null);
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
   const ranked = rankedItems(list, items);
@@ -60,11 +62,13 @@ export function ShareDialog({
   });
 
   async function copy() {
+    setCopyError('');
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
     } catch {
       setCopied(false);
+      setCopyError('Couldn’t copy the link. Select it above and copy it manually, or try again.');
     }
   }
 
@@ -104,6 +108,8 @@ export function ShareDialog({
               const value = event.target.value;
               setLimit(value === 'all' ? 'all' : value === '10' ? 10 : 5);
               setLink('');
+              setCopied(false);
+              setCopyError('');
             }}
           >
             <option value={5}>Top 5</option>
@@ -150,6 +156,12 @@ export function ShareDialog({
           Image: collection name and up to five ranked titles and types. Downloaded images cannot be revoked.
         </p>
         <p role="status">{imageStatus}</p>
+        <RankingImageShare
+          data={{
+            title: list.name,
+            entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
+          }}
+        />
         {link ? (
           <div className="created-link">
             <p>
@@ -163,10 +175,15 @@ export function ShareDialog({
                 onFocus={(event) => event.target.select()}
               />
               <button className="button button-dark" onClick={() => void copy()}>
-                <Copy size={17} /> {copied ? 'Copied' : 'Copy'}
+                <Copy size={17} /> {copied ? 'Link copied' : 'Copy link'}
               </button>
             </div>
             <small>This link only appears once. Make another if you lose it.</small>
+            {copyError && (
+              <p className="form-error" role="alert">
+                {copyError}
+              </p>
+            )}
           </div>
         ) : (
           <button

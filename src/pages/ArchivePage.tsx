@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { formatElapsedDays, formatRelativeTimestamp } from '../format';
+import { formatDate, formatElapsedDays, formatRelativeTimestamp } from '../format';
 import { starterCollectionCover } from '../shared/starter-covers';
 import { CollectionArtwork } from '../components/CollectionArtwork';
 
@@ -127,22 +127,34 @@ export function ArchivePage() {
           </header>
           {data.recent.length ? (
             <ol className="activity-rail">
-              {data.recent.slice(0, 4).map((entry) => (
-                <li key={entry.id}>
-                  <time dateTime={entry.happenedOn ?? new Date(entry.recordedAt).toISOString()}>
-                    {entry.happenedOn
-                      ? dateLabel(entry.happenedOn).toUpperCase()
-                      : formatRelativeTimestamp(entry.recordedAt)}
-                  </time>
-                  <Link
-                    to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
-                  >
-                    <strong>{entry.title}</strong>
-                    <span>{activityDetail(entry)}</span>
-                  </Link>
-                  {entry.recordKind === 'item' && entry.decision && <CallBadge value={entry.decision} />}
-                </li>
-              ))}
+              {data.recent.slice(0, 4).map((entry) => {
+                const exact = entry.happenedOn
+                  ? formatDate(entry.happenedOn)
+                  : new Date(entry.recordedAt).toLocaleString(undefined, {
+                      dateStyle: 'full',
+                      timeStyle: 'long',
+                    });
+                return (
+                  <li key={entry.id}>
+                    <time
+                      dateTime={entry.happenedOn ?? new Date(entry.recordedAt).toISOString()}
+                      title={exact}
+                      aria-label={exact}
+                    >
+                      {entry.happenedOn
+                        ? dateLabel(entry.happenedOn).toUpperCase()
+                        : formatRelativeTimestamp(entry.recordedAt)}
+                    </time>
+                    <Link
+                      to={`/lists/${entry.listId}?focus=${entry.itemId ? `item:${entry.itemId}` : `log:${entry.id}`}`}
+                    >
+                      <strong>{entry.title}</strong>
+                      <span>{activityDetail(entry)}</span>
+                    </Link>
+                    {entry.recordKind === 'item' && entry.decision && <CallBadge value={entry.decision} />}
+                  </li>
+                );
+              })}
             </ol>
           ) : (
             <p className="workspace-empty">Nothing filed yet. Add a name to get started.</p>

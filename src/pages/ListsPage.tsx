@@ -11,6 +11,7 @@ import { starterCollectionCover } from '../shared/starter-covers';
 import { preparePhoto } from '../shared/photos';
 import { formatRelativeTimestamp } from '../format';
 import { CollectionArtwork } from '../components/CollectionArtwork';
+import { useViewPreference } from '../hooks/useViewPreference';
 
 type CollectionOrder = 'recent' | 'name' | 'items' | 'ranked' | 'favorites';
 
@@ -80,7 +81,7 @@ export function ListsPage() {
   const nameInput = useRef<HTMLInputElement>(null);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
-  const [collectionQuery, setCollectionQuery] = useState('');
+  const [collectionQuery, setCollectionQuery] = useViewPreference('collection-directory:query', '');
   const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;

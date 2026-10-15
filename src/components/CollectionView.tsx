@@ -10,6 +10,7 @@ import {
   type ItemSort,
   type RankFilter,
 } from '../shared/ranking';
+import { useViewPreference } from '../hooks/useViewPreference';
 import { useDraft } from '../hooks/useDraft';
 import { useConnection } from '../hooks/useConnection';
 import { api, RequestError } from '../api';
@@ -77,35 +78,32 @@ export function CollectionView({
       batchMode: typeof next === 'function' ? next(current.batchMode) : next,
     }));
   const online = useConnection();
-  const [browse, setBrowse] = useState<BrowseMode>('all');
-  const [showSearch, setShowSearch] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [search, setSearch] = useState('');
-  const [addedSince, setAddedSince] = useState('');
-  const [addedBefore, setAddedBefore] = useState('');
-  const [visits, setVisits] = useState('all');
-  const [type, setType] = useState('all');
-  const [rankFilter, setRankFilter] = useState<RankFilter>('all');
-  const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>('all');
-  const [sort, setSort] = useState<ItemSort>('rank');
+  const [browse, setBrowse] = useViewPreference<BrowseMode>(`collection:${list.id}:browse`, 'all');
+  const [showSearch, setShowSearch] = useViewPreference(`collection:${list.id}:showSearch`, false);
+  const [showFilters, setShowFilters] = useViewPreference(`collection:${list.id}:showFilters`, false);
+  const [search, setSearch] = useViewPreference(`collection:${list.id}:search`, '');
+  const [addedSince, setAddedSince] = useViewPreference(`collection:${list.id}:addedSince`, '');
+  const [addedBefore, setAddedBefore] = useViewPreference(`collection:${list.id}:addedBefore`, '');
+  const [visits, setVisits] = useViewPreference(`collection:${list.id}:visits`, 'all');
+  const [type, setType] = useViewPreference(`collection:${list.id}:type`, 'all');
+  const [rankFilter, setRankFilter] = useViewPreference<RankFilter>(
+    `collection:${list.id}:rankFilter`,
+    'all',
+  );
+  const [decisionFilter, setDecisionFilter] = useViewPreference<DecisionFilter>(
+    `collection:${list.id}:decisionFilter`,
+    'all',
+  );
+  const [sort, setSort] = useViewPreference<ItemSort>(`collection:${list.id}:sort`, 'rank');
   const [status, setStatus] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useViewPreference<string | null>(
+    `collection:${list.id}:selectedId`,
+    null,
+  );
 
   useEffect(() => {
     restoreCaptureFocus.current = null;
-    setBrowse('all');
-    setShowSearch(false);
-    setShowFilters(false);
-    setSearch('');
-    setAddedSince('');
-    setAddedBefore('');
-    setVisits('all');
-    setType('all');
-    setRankFilter('all');
-    setDecisionFilter('all');
-    setSort('rank');
     setStatus('');
-    setSelectedId(null);
   }, [list.id]);
   useEffect(() => {
     if (!focusCapture) return;

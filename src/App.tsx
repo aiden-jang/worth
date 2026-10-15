@@ -2,13 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { ProductLinks } from './components/ProductLinks';
 import { InfoPage } from './pages/InfoPage';
-import { Route, Routes, useLocation } from 'react-router';
+import { Route, Routes, ScrollRestoration, useLocation } from 'react-router';
 import { api } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
 import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
 import { AppShell } from './components/AppShell';
+import { AppUpdate } from './AppUpdate';
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
@@ -32,9 +33,13 @@ const authOrigin =
   import.meta.env.VITE_AUTH_URL ??
   (import.meta.env.DEV ? 'http://localhost:34100' : 'https://accounts.aidenjang.com');
 
+const pageScrollKey = (location: { pathname: string }) => location.pathname;
+
 export function App() {
   return (
     <PageBoundary>
+      <ScrollRestoration getKey={pageScrollKey} storageKey="worth:scroll-positions" />
+      <AppUpdate />
       <Suspense
         fallback={
           <div className="boot-screen" role="status">

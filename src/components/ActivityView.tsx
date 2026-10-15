@@ -12,6 +12,7 @@ import { formatDate, formatElapsedDays, today } from '../format';
 import { ConfirmDialog } from './ConfirmDialog';
 import { useDraftPhoto } from '../hooks/useDraftPhoto';
 import { useConnection } from '../hooks/useConnection';
+import { useViewPreference } from '../hooks/useViewPreference';
 import { useDraft } from '../hooks/useDraft';
 import { isLogDraft } from '../shared/drafts';
 import { RestTimer } from './RestTimer';
@@ -53,9 +54,15 @@ export function ActivityView({
   const restoredExercise = initialExercise || routeParams.get('exercise') || '';
   const [selected, setSelected] = useState<Log | null>(null);
   const [repeatLog, setRepeatLog] = useState<Log | null>(null);
-  const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<'newest' | 'oldest' | 'name'>('newest');
-  const [period, setPeriod] = useState<'all' | '7d' | '30d' | 'year'>('all');
+  const [query, setQuery] = useViewPreference(`activity:${listId}:query`, '');
+  const [sort, setSort] = useViewPreference<'newest' | 'oldest' | 'name'>(
+    `activity:${listId}:sort`,
+    'newest',
+  );
+  const [period, setPeriod] = useViewPreference<'all' | '7d' | '30d' | 'year'>(
+    `activity:${listId}:period`,
+    'all',
+  );
   const periodStart = activityPeriodStart(period);
   const visible = logs
     .filter(
@@ -87,9 +94,6 @@ export function ActivityView({
     setRepeatLog(null);
     setInitialWorkout(null);
     setInitialExercise('');
-    setQuery('');
-    setSort('newest');
-    setPeriod('all');
   }, [listId]);
 
   function clearFilters() {
