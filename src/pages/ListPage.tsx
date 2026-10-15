@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
@@ -23,6 +24,7 @@ export function ListPage() {
     enabled: Boolean(listId),
   });
   const list = listQuery.data?.list;
+  usePageTitle(list?.name ?? 'Opening list');
   const itemsQuery = useQuery({
     queryKey: ['items', listId],
     queryFn: () => api.items(listId),

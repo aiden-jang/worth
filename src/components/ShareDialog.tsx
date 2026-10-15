@@ -1,3 +1,4 @@
+import { saveRankingImage } from '../shared/ranking-image';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, LinkSimple, X } from '@phosphor-icons/react';
@@ -26,6 +27,8 @@ export function ShareDialog({
   const client = useQueryClient();
   const [limit, setLimit] = useState<5 | 10 | 'all'>(5);
   const [link, setLink] = useState('');
+  const [imageStatus, setImageStatus] = useState('');
+  const [savingImage, setSavingImage] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareToRevoke, setShareToRevoke] = useState<string | null>(null);
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
@@ -122,6 +125,31 @@ export function ShareDialog({
           ))}
           {!preview.length && <p>Rank an item first, then it can appear here.</p>}
         </div>
+        <button
+          className="button button-outline"
+          disabled={!preview.length || savingImage}
+          onClick={async () => {
+            setSavingImage(true);
+            setImageStatus('');
+            try {
+              await saveRankingImage({
+                title: list.name,
+                entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
+              });
+              setImageStatus('Image downloaded.');
+            } catch {
+              setImageStatus('Couldn’t save the image. Try again.');
+            } finally {
+              setSavingImage(false);
+            }
+          }}
+        >
+          {savingImage ? 'Preparing image…' : 'Save ranking image'}
+        </button>
+        <p className="share-explainer">
+          Image: collection name and up to five ranked titles and types. Downloaded images cannot be revoked.
+        </p>
+        <p role="status">{imageStatus}</p>
         {link ? (
           <div className="created-link">
             <p>

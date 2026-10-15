@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowsOut, ArrowsIn } from '@phosphor-icons/react';
@@ -13,6 +14,7 @@ export function ShowPage() {
   const listQuery = useQuery({ queryKey: ['list', listId], queryFn: () => api.list(listId) });
   const itemsQuery = useQuery({ queryKey: ['items', listId], queryFn: () => api.items(listId) });
   const list = listQuery.data?.list;
+  usePageTitle(list?.name ? `${list.name} ranking` : 'Opening ranking');
   const ranked = list ? rankedItems(list, itemsQuery.data?.items ?? []) : [];
   const visible = limit === 'all' ? ranked : ranked.slice(0, limit);
   const primaryItem = ranked[0];

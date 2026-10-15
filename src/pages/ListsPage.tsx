@@ -109,8 +109,10 @@ export function ListsPage() {
   });
   const pageTitle =
     listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
-  const pageDescription =
-    listScope === 'collection'
+  const workoutShortcut = params.get('action') === 'workout';
+  const pageDescription = workoutShortcut
+    ? 'Choose an activity list to start a workout.'
+    : listScope === 'collection'
       ? 'The good, the meh, and the “not again.”'
       : listScope === 'activity'
         ? 'Record what happened and when.'
@@ -411,6 +413,7 @@ export function ListsPage() {
                 heading="Activity"
                 detail={listScope === 'activity' ? '' : 'Things you want to log over time.'}
                 lists={visibleActivityLists}
+                workoutShortcut={workoutShortcut}
               />
             )}
           </div>
@@ -470,6 +473,7 @@ function ListDirectory({
   detail,
   lists,
   isCollectionDirectory = false,
+  workoutShortcut = false,
   collectionOrder,
   onCollectionOrderChange,
   collectionQuery,
@@ -479,6 +483,7 @@ function ListDirectory({
   detail: string;
   lists: ListSummary[];
   isCollectionDirectory?: boolean;
+  workoutShortcut?: boolean;
   collectionOrder?: CollectionOrder;
   onCollectionOrderChange?: (order: CollectionOrder) => void;
   collectionQuery?: string;
@@ -590,7 +595,11 @@ function ListDirectory({
           {lists.map((list, index) => {
             const count = list.logCount;
             return (
-              <Link to={`/lists/${list.id}`} className="directory-row" key={list.id}>
+              <Link
+                to={`/lists/${list.id}${workoutShortcut && list.kind === 'activity' ? '?newWorkout=1' : ''}`}
+                className="directory-row"
+                key={list.id}
+              >
                 <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
                 <span className="directory-name">
                   <strong>{list.name}</strong>

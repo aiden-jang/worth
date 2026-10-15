@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import { api, RequestError } from '../api';
@@ -9,6 +10,7 @@ export function PublicSharePage() {
     queryFn: () => api.publicShare(token),
     retry: false,
   });
+  usePageTitle(query.data?.share.title ?? 'Shared ranking');
   if (query.isPending) return <main className="public-page public-message">Opening list…</main>;
   if (query.isError) {
     const unavailable = query.error instanceof RequestError && [404, 410].includes(query.error.status);

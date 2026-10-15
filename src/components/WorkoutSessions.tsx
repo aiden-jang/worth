@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
@@ -290,6 +291,7 @@ function WorkoutEditor({
   onCreated: (workout: WorkoutSession) => void;
   onClose: () => void;
 }) {
+  usePageTitle(workout?.title || 'New workout');
   const dialog = useRef<HTMLDialogElement>(null),
     client = useQueryClient();
   const initial = {

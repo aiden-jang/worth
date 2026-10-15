@@ -53,3 +53,15 @@ Photos and collection covers are capped at 900 KB after client-side compression.
 no-store caching and are never included in exports or public shares. This keeps storage simple on the free plan,
 but D1 is not a photo-library backend. If photo volume grows, move the same private photo route to a dedicated
 storage service after reviewing its billing model. Worth does not require R2 or a paid Cloudflare subscription today.
+
+Installed-app shortcuts open **Add something** or the activity list chooser for
+**Log a workout**. Choosing an activity list from that shortcut opens a new workout.
+Collection and workout editors identify their browser tabs.
+
+**Save ranking image** in Share downloads a cover with the collection name and up
+to five ranked titles and types from the preview. Calls, notes, photos and history
+are excluded. Saved images cannot be revoked; expiring links remain a separate action.
+The renderer lives in `src/shared/ranking-image.ts`.
+
+Current signed-out phone and desktop captures in `public/screenshots/` supply the
+manifest's install previews. Capture the actual landing again when its layout changes.

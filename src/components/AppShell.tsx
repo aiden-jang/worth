@@ -126,6 +126,14 @@ export function AppShell({
   ]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('add') !== '1' || lists.isPending) return;
+    params.delete('add');
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    openAdd();
+  }, [location.pathname, location.search, lists.isPending, navigate, openAdd]);
+
+  useEffect(() => {
     if (location.pathname.endsWith('/show')) return;
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;

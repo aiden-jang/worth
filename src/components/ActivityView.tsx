@@ -40,7 +40,7 @@ export function ActivityView({
   onCloseNew: () => void;
   onNew: (workoutId?: string, exercise?: string) => void;
 }) {
-  const [routeParams] = useSearchParams();
+  const [routeParams, setRouteParams] = useSearchParams();
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
@@ -80,7 +80,7 @@ export function ActivityView({
   const hasFilters = Boolean(query.trim()) || sort !== 'newest' || period !== 'all';
 
   useEffect(() => {
-    setCreatingWorkout(false);
+    setCreatingWorkout(routeParams.get('newWorkout') === '1');
     setRoutineSeed(null);
     setHistoryTitle(null);
     setSelected(null);
@@ -235,7 +235,14 @@ export function ActivityView({
         <WorkoutSessions
           listId={listId}
           creating={creatingWorkout}
-          onCloseCreate={() => setCreatingWorkout(false)}
+          onCloseCreate={() => {
+            setCreatingWorkout(false);
+            if (routeParams.has('newWorkout')) {
+              const next = new URLSearchParams(routeParams);
+              next.delete('newWorkout');
+              setRouteParams(next, { replace: true });
+            }
+          }}
           workouts={workouts}
           logs={logs}
           visibleLogs={visible}
