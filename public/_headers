@@ -28,3 +28,6 @@
 
 /code
   X-Robots-Tag: noindex, nofollow
+
+/patterns/look-back
+  X-Robots-Tag: noindex, nofollow

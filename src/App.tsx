@@ -11,6 +11,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const RetrospectivePage = lazy(() =>
+  import('./pages/RetrospectivePage').then((module) => ({ default: module.RetrospectivePage })),
+);
 const CodeCapturePage = lazy(() =>
   import('./pages/CodeCapturePage').then((module) => ({ default: module.CodeCapturePage })),
 );
@@ -127,6 +130,7 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/read" element={<PhotoTextPage />} />
         <Route path="/code" element={<CodeCapturePage />} />
@@ -139,9 +143,18 @@ function PrivateApp() {
     </AppShell>
   ) : location.pathname === '/capture' ? (
     <CaptureSignIn authOrigin={authOrigin} />
-  ) : ['/', '/read', '/code', '/inbox', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(
-      location.pathname,
-    ) || /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
+  ) : [
+      '/',
+      '/read',
+      '/code',
+      '/patterns/look-back',
+      '/inbox',
+      '/quick',
+      '/settings',
+      '/lists',
+      '/search',
+      '/patterns',
+    ].includes(location.pathname) || /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (
     <InfoPage kind="missing" />

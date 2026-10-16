@@ -2897,3 +2897,161 @@ test('all-data deletion clears Inbox records, Trash and Inbox retry receipts', a
     await platform.env.DB.prepare('SELECT id FROM inbox_operations WHERE owner_id = ?').bind(owner).first(),
   ).toBeNull();
 });
+
+test('retrospectives preserve local saved-day bounds, explicit log dates, scope and owner boundaries', async () => {
+  const owner = 'retroowner',
+    list = await archiveCollection(owner, 'Current pages'),
+    archived = await archiveCollection(owner, 'Earlier pages'),
+    foreign = await archiveCollection('retroforeign', 'Foreign pages');
+  const gym = (
+    (await (await call('/lists', owner, 'POST', { name: 'Movement', kind: 'activity' })).json()) as {
+      list: ListDetail;
+    }
+  ).list;
+  await platform.env.DB.prepare('UPDATE lists SET archived = 1 WHERE id = ?').bind(archived.id).run();
+  const ids = Array.from({ length: 7 }, () => crypto.randomUUID());
+  const add = (
+    id: string,
+    listId: string,
+    who: string,
+    title: string,
+    date: string,
+    trashed: number | null = null,
+  ) =>
+    platform.env.DB.prepare(
+      'INSERT INTO items (id, list_id, owner_id, title, note, created_at, updated_at, trashed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    ).bind(id, listId, who, title, 'PRIVATE retrospective note', Date.parse(date), Date.parse(date), trashed);
+  const log = (id: string, listId: string, who: string, itemId: string | null, day: string) =>
+    platform.env.DB.prepare(
+      'INSERT INTO logs (id, list_id, owner_id, item_id, title, happened_on, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    ).bind(
+      id,
+      listId,
+      who,
+      itemId,
+      'An actual log',
+      day,
+      'PRIVATE dated note',
+      Date.parse('2026-11-02T12:00:00Z'),
+      Date.parse('2026-11-02T12:00:00Z'),
+    );
+  const inboxId = crypto.randomUUID(),
+    payload = itemInput.parse({ title: 'An unfiled find' });
+  await platform.env.DB.batch([
+    add(ids[0], list.id, owner, 'First local day', '2026-10-01T04:00:00Z'),
+    add(ids[1], list.id, owner, 'Last local minute', '2026-11-01T03:59:59Z'),
+    add(ids[2], list.id, owner, 'Before local period', '2026-10-01T03:59:59Z'),
+    add(ids[3], list.id, owner, 'After local period', '2026-11-01T04:00:00Z'),
+    add(ids[4], archived.id, owner, 'Archived find', '2026-10-15T12:00:00Z'),
+    add(ids[5], list.id, owner, 'Trashed find', '2026-10-15T12:00:00Z', 1),
+    add(ids[6], foreign.id, 'retroforeign', 'Foreign find', '2026-10-15T12:00:00Z'),
+    log(crypto.randomUUID(), list.id, owner, ids[0], '2026-10-20'),
+    log(crypto.randomUUID(), gym.id, owner, null, '2026-10-10'),
+    log(crypto.randomUUID(), gym.id, owner, null, '2026-09-30'),
+    log(crypto.randomUUID(), archived.id, owner, ids[4], '2026-10-20'),
+    log(crypto.randomUUID(), list.id, owner, ids[5], '2026-10-20'),
+    log(crypto.randomUUID(), foreign.id, 'retroforeign', ids[6], '2026-10-20'),
+    platform.env.DB.prepare(
+      'INSERT INTO inbox_entries (id, owner_id, payload_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    ).bind(
+      inboxId,
+      owner,
+      JSON.stringify(payload),
+      Date.parse('2026-10-14T12:00:00Z'),
+      Date.parse('2026-10-14T12:00:00Z'),
+    ),
+  ]);
+  const query = '/retrospective?from=2026-10-01&to=2026-10-31&startOffset=240&endOffset=240&archived=0';
+  const reply = await call(query, owner);
+  expect(reply.status).toBe(200);
+  expect(reply.headers.get('cache-control')).toContain('no-store');
+  const data = (await reply.json()) as import('../src/shared/retrospective').Retrospective;
+  expect(data.counts).toEqual({ kept: 3, revisits: 1, activity: 1 });
+  expect(data.kept.map((record) => record.title)).toEqual([
+    'Last local minute',
+    'An unfiled find',
+    'First local day',
+  ]);
+  expect(JSON.stringify(data)).not.toMatch(
+    /Foreign find|Trashed find|Archived find|Before local period|After local period/,
+  );
+  expect(data.logs).toHaveLength(2);
+  expect(data.logs.find((record) => record.kind === 'visit')).toMatchObject({
+    title: 'First local day',
+    happenedOn: '2026-10-20',
+    note: 'PRIVATE dated note',
+  });
+  const all = (await (await call(query.replace('archived=0', 'archived=1'), owner)).json()) as typeof data;
+  expect(all.counts).toEqual({ kept: 4, revisits: 2, activity: 1 });
+  const scoped = (await (await call(query + `&list=${list.id}`, owner)).json()) as typeof data;
+  expect(scoped.counts).toEqual({ kept: 2, revisits: 1, activity: 0 });
+  expect((await call(query + `&list=${foreign.id}`, owner)).status).toBe(404);
+  expect((await call(query + `&list=${archived.id}`, owner)).status).toBe(400);
+  expect((await call(query, null)).status).toBe(401);
+  expect((await call(query.replace('2026-10-01', '2026-02-30'), owner)).status).toBe(400);
+  expect(
+    (
+      await app.request(
+        `https://worth.test/api${query}`,
+        { headers: { Cookie: `preview_user=${owner}`, 'X-Worth-Account': 'retroforeign' } },
+        platform.env,
+        platform.ctx,
+      )
+    ).status,
+  ).toBe(409);
+  const entry = ((await (await call(`/items/${ids[0]}`, owner)).json()) as { item: Item }).item;
+  expect(entry.decision).toBeNull();
+  expect(entry.note).toBe('PRIVATE retrospective note');
+  const filed = await app.request(
+    `https://worth.test/api/inbox/${inboxId}/file`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify({ targetListId: list.id, expectedRevision: 0 }),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(filed.status).toBe(201);
+  const afterFile = (await (await call(query, owner)).json()) as typeof data;
+  expect(afterFile.counts.kept).toBe(3);
+  expect(afterFile.kept.find((record) => record.title === 'An unfiled find')).toMatchObject({
+    kind: 'item',
+    listId: list.id,
+    createdAt: Date.parse('2026-10-14T12:00:00Z'),
+  });
+});
+
+test('retrospective counts remain complete while record groups have explicit display bounds', async () => {
+  const owner = 'retrolimit',
+    list = await archiveCollection(owner, 'Many pages');
+  await platform.env.DB.batch(
+    Array.from({ length: 55 }, (_, index) =>
+      platform.env.DB.prepare(
+        'INSERT INTO items (id, list_id, owner_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      ).bind(
+        crypto.randomUUID(),
+        list.id,
+        owner,
+        `Find ${index}`,
+        Date.parse('2026-10-15T12:00:00Z') + index,
+        Date.parse('2026-10-15T12:00:00Z') + index,
+      ),
+    ),
+  );
+  const reply = await call(
+    '/retrospective?from=2026-10-01&to=2026-10-31&startOffset=0&endOffset=0&archived=0',
+    owner,
+  );
+  expect(reply.status).toBe(200);
+  const data = (await reply.json()) as import('../src/shared/retrospective').Retrospective;
+  expect(data.counts).toEqual({ kept: 55, revisits: 0, activity: 0 });
+  expect(data.kept).toHaveLength(50);
+  expect(data.kept[0].title).toBe('Find 54');
+  expect(data.kept[49].title).toBe('Find 5');
+});

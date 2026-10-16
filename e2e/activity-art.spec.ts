@@ -26,6 +26,8 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   const log = page.getByRole('dialog', { name: 'What happened?', exact: true });
   await expect(log).toBeVisible();
   await log.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(log).toBeHidden();
+  await expect(page).toHaveURL(/\/lists\/activity$/);
   workouts = [
     {
       id: '77777777-7777-4777-8777-777777777777',
@@ -60,6 +62,8 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   const exercise = page.getByRole('dialog', { name: 'Log an exercise', exact: true });
   await expect(exercise.getByRole('spinbutton', { name: 'Set 1 reps', exact: true })).toHaveValue('');
   await exercise.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(exercise).toBeHidden();
+  await expect(page).toHaveURL(/\/lists\/activity$/);
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('link', { name: 'Inbox', exact: true }).click();

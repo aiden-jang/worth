@@ -1,3 +1,4 @@
+import '../retrospective.css';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from '@phosphor-icons/react';
 import { Link } from 'react-router';
@@ -32,6 +33,9 @@ export function PatternsPage() {
         <p className="overline">YOUR ARCHIVE</p>
         <h1>Patterns</h1>
         <p>Your taste has a paper trail.</p>
+        <Link className="retro-entry" to="/patterns/look-back">
+          Look back over a period →
+        </Link>
       </header>
       {data.totalRecords === 0 ? (
         <CabinetEmptyState

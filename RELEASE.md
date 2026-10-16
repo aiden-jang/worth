@@ -149,3 +149,11 @@ no remote cover is loaded. Exercise no match, provider rate/error/timeout, Stop,
 account changes, manual fallback, exact kept note/source, replacement confirmation,
 reload recovery and normal capture Save. Recheck a small live catalog lookup when
 changing the provider integration; deterministic CI must not depend on that service.
+
+Retrospective checks: open from Patterns with no automatic recap read, apply a
+local-date period spanning daylight-saving offsets, and compare saved finds with
+explicitly dated logs. Check all-lists/Inbox versus one owned list, archived opt-in,
+Trash/merge exclusions and count/display limits. File an Inbox find and confirm
+its saved date/count survive. Test changed-but-unapplied controls, refresh, retry,
+empty periods, offline state, note opt-in, account recovery and device drafts.
+Do not describe these current-record recaps as past opinion/ranking snapshots.

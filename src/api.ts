@@ -92,6 +92,11 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  retrospective: (filter: import('./shared/retrospective').RetrospectiveFilter, signal?: AbortSignal) =>
+    request<import('./shared/retrospective').Retrospective>(
+      `/retrospective?${new URLSearchParams({ from: filter.from, to: filter.to, list: filter.listId, archived: filter.includeArchived ? '1' : '0', startOffset: String(filter.startOffset), endOffset: String(filter.endOffset) })}`,
+      { signal },
+    ),
   inbox: () => request<{ entries: import('./shared/inbox').InboxEntry[] }>('/inbox'),
   inboxEntry: (id: string) => request<{ entry: import('./shared/inbox').InboxEntry }>(`/inbox/${id}`),
   createInbox: (item: import('./shared/inbox').InboxPayload, key: string) =>

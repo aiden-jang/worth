@@ -432,3 +432,18 @@ review/save; no new record schema or public projection is introduced. Device dra
 stay owner-bound, while worker/fetch cancellation and generation guards quarantine
 late results. [Code capture](CODE-CAPTURE.md) documents formats, data flow,
 CSP/metadata boundaries and recovery limits.
+
+## Explicit period retrospectives
+
+Patterns’ private look-back route reads current finds/Inbox and dated logs for a
+chosen period. Validated local-midnight endpoint offsets handle saved timestamps;
+entered log days remain literal calendar dates. Owner/list/archive guards apply
+to each source. Counts and both bounded record groups use one D1 batch snapshot,
+so an Inbox filing cannot create an omitted or double-counted find between reads.
+
+No recap query runs before an explicit period action. Controls recover in an
+owner-bound device draft, while results remain an ordinary cancelable private
+query. Notes require a visible projection choice and no sharing is introduced.
+This is not reconstructed opinion/ranking history and adds no persistent record
+schema. [Retrospectives](RETROSPECTIVES.md) records date semantics, scope, display
+bounds, recovery and current-data limitations.

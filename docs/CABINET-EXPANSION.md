@@ -21,7 +21,7 @@ framing and layout changes in the original checkout.
 - [ ] Ranking history and a taste time machine. Record future changes; do not fabricate old orders.
 - [ ] Dated opinion history, optional reasons and the visit that changed a call.
 - [ ] Optional review of older opinions, without reminders or pressure by default.
-- [ ] Quiet retrospectives based on real records and explicitly selected periods.
+- [x] Quiet retrospectives based on real records and explicitly selected periods.
 
 ## Capture and organization
 
@@ -434,3 +434,38 @@ audit found no known vulnerabilities. Ten inspected desktop/phone captures and
 recovery/accessibility/reflow checks are in [code capture QA](../art/ui-qa/code-capture/README.md).
 The remaining unchecked web scope is still unfinished. No native app, push,
 pull request, merge or deployment was performed.
+
+## Fifteenth implementation: quiet period retrospectives
+
+Patterns → Look back reads a chosen one-to-366-day period of currently kept finds,
+Inbox entries, collection visits and activity logs. Presets only fill controls;
+Show this period is explicit, including after draft recovery. Saved finds use
+actual local calendar boundaries and dated logs retain their entered days. One
+owned list excludes Inbox; archived collections require an explicit choice.
+Counts remain complete while each group shows the latest 50 with a narrowing
+message. Names/notes are current saved text; no earlier call, rank, trial or
+deleted history is fabricated. Private notes appear only after selection.
+
+Owner/list/active-parent guards and the shared account precondition protect each
+source. Counts and both record groups share one D1 snapshot, including Inbox
+filing. Query cancellation/account recovery removes old results. Control drafts
+recover for seven days without automatically querying or reopening a recap.
+Failures, blocked storage and offline state retain useful controls/retry. No
+persistent record table, backup format or public sharing projection changes.
+
+A reproduced device-zone change initially shifted displayed saved days without
+applying a new period. The applied calendar now governs rendering too, with a
+readable zone label. Native calendar checks also cover Santiago’s midnight gap,
+Apia’s skipped day, historical second-level boundaries and the final supported
+date. The broad run exposed an activity test reloading before close navigation
+finished; it now waits for the hidden dialog and clean route rather than sleeping
+or weakening checks.
+
+All 144 core tests across 36 files, formatting, lint, unused-code checks, TypeScript
+and the production build passed. All 14 focused retrospective/activity journeys
+then passed, followed by the complete 189-journey desktop/phone regression. Ten
+final captures were visually inspected against the Patterns/cabinet references;
+see [retrospective QA](../art/ui-qa/retrospective/README.md) for Axe, reflow, recovery
+and calendar cases. Ranking/opinion history and all other unchecked web scope
+remain unfinished. This work is committed locally on the separate branch, without
+native apps, push, pull request, merge, remote CI or deployment.

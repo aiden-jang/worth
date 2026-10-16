@@ -1,3 +1,4 @@
+import { registerRetrospectiveRoutes } from './routes/retrospective';
 import { registerInboxRoutes } from './routes/inbox';
 import { registerTemplateRoutes } from './routes/templates';
 import { resolveSession } from '@aidenjang/auth-client';
@@ -84,6 +85,7 @@ registerItemRoutes(privateApi);
 registerReviewedCaptureRoutes(privateApi);
 registerLogRoutes(privateApi);
 registerOverviewRoutes(privateApi);
+registerRetrospectiveRoutes(privateApi);
 registerSearchRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);

@@ -1,7 +1,7 @@
 # On-device photo text verification
 
 The reader deliberately extends the cabinet with a dark source panel and cream
-review slip. It retains the 192px rail, 68/50px titles, DM Sans/Mono, 22px panels,
+review slip. It retains the 192px rail, 68/44px titles, DM Sans/Mono, 22px panels,
 12px fields and 44px controls. At 960px and below the panels stack in reading
 order; optional notes stay collapsed until requested or already filled. This is
 a web page, with no native app or external processing provider.

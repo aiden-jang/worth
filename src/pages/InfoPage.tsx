@@ -376,6 +376,23 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Look back over a period</h2>
+              <p>
+                <Link to="/patterns/look-back">Look back</Link> in Patterns reads a period you choose, from
+                one to 366 days. Saved finds use this device’s calendar boundaries; logs use their entered
+                dates. All lists includes Inbox, while archived collections require an explicit choice. Counts
+                cover every match; each record group shows the latest 50, with a prompt to narrow the period
+                when needed.
+              </p>
+              <p>
+                This uses records you still keep, with their current names and notes. It does not reconstruct
+                deleted records or earlier opinions/rankings. Private notes appear only when selected, and
+                nothing is published or changed. Controls can recover on this account/device for seven days; a
+                recap does not reopen automatically after reload. Changing controls keeps the last applied
+                period visible until you choose Show this period.
+              </p>
+            </section>
+            <section>
               <h2>Barcodes and ISBNs</h2>
               <p>
                 <Link to="/code">Read a code</Link> reads EAN-8, EAN-13 and UPC-A barcodes from a photo on

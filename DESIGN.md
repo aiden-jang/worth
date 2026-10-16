@@ -285,7 +285,7 @@ See `art/ui-qa/activity-art/` for desktop/phone verification.
 ## Photo text review
 
 Read a photo extends the existing capture composition: a dark source panel and
-cream text-review panel share the 68/50px header, 22px corners and 44px controls.
+cream text-review panel share the 68/44px header, 22px corners and 44px controls.
 Below 960px the source precedes review. Read text is editable, a name is chosen
 explicitly, and a private note is folded until requested or already populated.
 Inputs/labels use DM Sans; structural overlines keep DM Mono. Cream labels and
@@ -297,9 +297,20 @@ section when the full phone flow exceeds one viewport.
 ## Barcode and book capture
 
 Read a code deliberately reuses the photo reader’s dark source/cream review
-composition, the existing cabinet rail, 68/50px title rhythm, 22px panels and
+composition, the existing cabinet rail, 68/44px title rhythm, 22px panels and
 44px controls. A small authored faceless barcode slip accompanies an empty source;
 it identifies the tool without inventing a product or opinion. Metadata uses
 readable ruled/proportional text and stacks at phone widths. Book lookup is an
 optional disclosure; ordinary manual naming remains visible. This is a web-only
 extension of the reader/capture references, not a native camera application.
+
+## Quiet retrospectives
+
+Patterns adds one secondary Look back link beneath its description; the existing
+totals and call composition are retained. The private period page uses the same
+192px rail, 68/44px secondary headings, ruled totals and faceless empty paper.
+A 22px dark form holds explicit dates/list scope. Two readable record groups sit
+side by side on desktop and stack on phone. These are chronological groups, not
+ranked lists or performance cards. No call face is shown because old opinions
+are not known. This deliberate Patterns extension keeps private notes absent
+until requested and leaves long names readable.
