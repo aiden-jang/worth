@@ -4,6 +4,7 @@ import type { AppEnv } from '../context';
 import { ApiError, listLogs, requireItem, requireList, requireLog, validateWorkoutTarget } from '../data';
 import { readJson } from '../http';
 import { creationId } from '../operations';
+import { hasVisitContext, emptyVisitContext } from '../../src/shared/visit-context';
 
 export function registerLogRoutes(api: Hono<AppEnv>): void {
   api.get('/lists/:listId/logs', async (c) => {
@@ -13,7 +14,9 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
 
   api.post('/lists/:listId/logs', async (c) => {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
-    const input = await readJson(c.req.raw, logInput);
+    const input = await readJson(c.req.raw, logInput, 32 * 1024);
+    if (list.kind !== 'collection' && hasVisitContext(input.context))
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'Visit details belong to collection revisits');
     await validateLogTarget(c.env.DB, c.get('ownerId'), list.id, list.kind, input.itemId, input.title);
     await validateWorkoutTarget(
       c.env.DB,
@@ -36,8 +39,8 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO logs
-      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, exercise_sets, weight_unit, workout_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, item_id, owner_id, title, happened_on, note, amount, unit, sets, reps, exercise_sets, weight_unit, workout_id, context_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -54,6 +57,7 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
         JSON.stringify(input.exerciseSets),
         input.weightUnit,
         input.workoutId,
+        JSON.stringify(input.context),
         now,
         now,
       )
@@ -67,8 +71,9 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
   api.patch('/logs/:logId', async (c) => {
     const log = await requireLog(c.env.DB, c.get('ownerId'), c.req.param('logId'));
     const list = await requireList(c.env.DB, c.get('ownerId'), log.listId);
-    const patch = await readJson(c.req.raw, logPatch);
+    const patch = await readJson(c.req.raw, logPatch, 32 * 1024);
     const merged = logInput.safeParse({
+      context: patch.context ?? log.context ?? emptyVisitContext,
       workoutId: patch.workoutId === undefined ? (log.workoutId ?? null) : patch.workoutId,
       exerciseSets: patch.exerciseSets ?? log.exerciseSets ?? [],
       weightUnit: patch.weightUnit ?? log.weightUnit ?? 'kg',
@@ -84,6 +89,8 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
     if (!merged.success)
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid log');
     const value = merged.data;
+    if (list.kind !== 'collection' && hasVisitContext(value.context))
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'Visit details belong to collection revisits');
     await validateWorkoutTarget(
       c.env.DB,
       c.get('ownerId'),
@@ -95,11 +102,15 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
     );
     await validateLogTarget(c.env.DB, c.get('ownerId'), list.id, list.kind, value.itemId, value.title);
     const now = Date.now();
-    await c.env.DB.batch([
-      c.env.DB.prepare(
-        `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
-          unit = ?, sets = ?, reps = ?, exercise_sets = ?, weight_unit = ?, workout_id = ?, updated_at = ? WHERE id = ? AND owner_id = ?`,
-      ).bind(
+    // The editor supplies its original revision; older clients still guard the read/write interval.
+    const revision = patch.expectedRevision ?? log.revision ?? 0;
+    const result = await c.env.DB.prepare(
+      `UPDATE logs SET item_id = ?, title = ?, happened_on = ?, note = ?, amount = ?,
+        unit = ?, sets = ?, reps = ?, exercise_sets = ?, weight_unit = ?, workout_id = ?, context_json = ?,
+        revision = revision + 1, updated_at = ? WHERE id = ? AND owner_id = ? AND list_id = ? AND revision = ?
+        AND id IN (SELECT id FROM active_logs WHERE owner_id = ?)`,
+    )
+      .bind(
         value.itemId,
         value.title,
         value.happenedOn,
@@ -111,16 +122,26 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
         JSON.stringify(value.exerciseSets),
         value.weightUnit,
         value.workoutId,
+        JSON.stringify(value.context),
         now,
         log.id,
         c.get('ownerId'),
-      ),
-      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
-        now,
         list.id,
+        revision,
         c.get('ownerId'),
-      ),
-    ]);
+      )
+      .run();
+    if (!result.meta.changes)
+      throw new ApiError(
+        409,
+        'LOG_CHANGED',
+        'This visit changed elsewhere. Reload the saved visit before trying again.',
+      );
+    await c.env.DB.prepare(
+      'UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ? AND trashed_at IS NULL',
+    )
+      .bind(now, list.id, c.get('ownerId'))
+      .run();
     return c.json({ log: await requireLog(c.env.DB, c.get('ownerId'), log.id) });
   });
 

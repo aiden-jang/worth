@@ -20,6 +20,7 @@ import { ItemContextReadout } from './ItemContextReadout';
 import { CollectionPublishing } from './CollectionPublishing';
 import { CollectionShelf } from './CollectionShelf';
 import { ReviewedCapture } from './ReviewedCapture';
+import { VisitContextReadout } from './VisitContext';
 import { DuplicateReview } from './DuplicateReview';
 import '../workbench.css';
 
@@ -511,6 +512,7 @@ function ComparisonTable({ items, logs }: { items: Item[]; logs: Log[] }) {
                   <div key={log.id}>
                     <p>{log.happenedOn}</p>
                     <p className="workbench-note">{log.note || 'No note'}</p>
+                    <VisitContextReadout value={log.context} />
                   </div>
                 ))}
             </details>

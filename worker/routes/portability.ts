@@ -258,6 +258,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         item_id: g.itemId ? id(g.itemId) : null,
         title: g.title,
         happened_on: g.happenedOn,
+        context_json: JSON.stringify(g.context),
         note: g.note,
         amount: g.amount,
         unit: g.unit,

@@ -72,6 +72,8 @@ export interface WorkoutSession {
 }
 
 export interface Log {
+  context?: import('./visit-context').VisitContext;
+  revision?: number;
   workoutId?: string | null;
   exerciseSets?: ExerciseSet[];
   weightUnit?: 'kg' | 'lb';

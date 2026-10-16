@@ -96,3 +96,5 @@ archive flag). Apply all pending migrations before deploying its Worker. Archivi
 keeps the existing non-Trash read views and does not revoke public links. The
 feature tracker records local verification; it does not assert that these branch
 changes have been merged, passed GitHub CI or been deployed.
+Migration `0015` adds private visit context and log revisions; older logs default
+to empty context and no earlier reactions are inferred.

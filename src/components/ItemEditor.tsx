@@ -16,6 +16,7 @@ import { MergedRecords } from './MergedRecords';
 import { OpinionSlip } from './OpinionSlip';
 import { PhotoControl } from './PhotoControl';
 import { ItemContextEditor } from './ItemContextEditor';
+import { VisitContextReadout } from './VisitContext';
 import { emptyItemContext } from '../shared/item-context';
 
 const emptyItem: ItemInput = {
@@ -463,7 +464,10 @@ export function ItemEditor({
               {history.map((log) => (
                 <div key={log.id} className="history-row">
                   <span>{formatDate(log.happenedOn)}</span>
-                  <p>{log.note || 'No note'}</p>
+                  <div className="history-note">
+                    <p>{log.note || 'No note'}</p>
+                    <VisitContextReadout value={log.context} />
+                  </div>
                   <div className="history-actions">
                     <button
                       type="button"

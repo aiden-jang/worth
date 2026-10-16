@@ -3,7 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import app from '../worker/index';
-import type { Item, ListDetail, ListSummary, WorkoutRoutine, WorkoutSession } from '../src/shared/models';
+import type {
+  Item,
+  ListDetail,
+  ListSummary,
+  Log,
+  WorkoutRoutine,
+  WorkoutSession,
+} from '../src/shared/models';
 import { archiveFile, type ArchiveFile } from '../src/shared/portability';
 import { itemContext } from '../src/shared/item-context';
 import { emptyCollectionShelf } from '../src/shared/workspace';
@@ -39,6 +46,7 @@ beforeAll(async () => {
     '0012_collection_workspace.sql',
     '0013_item_context.sql',
     '0014_collection_archiving.sql',
+    '0015_visit_context.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -2122,5 +2130,225 @@ test('archive-only updates do not overwrite settings changed after the initial r
       description: 'Kept description',
       artwork: { object: 'camera', tone: 'sage' },
     },
+  });
+});
+
+test('private visit context stays separate from overall calls, guards revisions and survives backup restore', async () => {
+  const owner = 'visitcontext';
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Cafes', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const { item } = (await (
+    await call(`/lists/${list.id}/items`, owner, 'POST', { title: 'The cafe', decision: 'favorite' })
+  ).json()) as { item: Item };
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', { itemIds: [item.id], expectedRevision: 0 });
+  const context = {
+    location: 'Brooklyn corner',
+    version: 'Winter menu',
+    order: 'Pistachio latte\nLess ice',
+    reaction: 'would_not_again',
+  };
+  const created = await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    itemId: item.id,
+    happenedOn: '2026-10-16',
+    context,
+  });
+  expect(created.status).toBe(201);
+  const { log } = (await created.json()) as { log: Log };
+  expect(log).toMatchObject({ context, revision: 0 });
+  expect(
+    (
+      await call(`/logs/${log.id}`, 'intruder', 'PATCH', {
+        context: { reaction: 'meh' },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(404);
+  const saved = await call(`/logs/${log.id}`, owner, 'PATCH', {
+    note: 'A quieter table',
+    expectedRevision: 0,
+  });
+  expect(await saved.json()).toMatchObject({ log: { context, note: 'A quieter table', revision: 1 } });
+  expect(
+    (
+      await call(`/logs/${log.id}`, owner, 'PATCH', {
+        context: { location: 'Stale location' },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+  expect(await (await call(`/lists/${list.id}/items`, owner)).json()).toMatchObject({
+    items: [{ decision: 'favorite' }],
+  });
+  expect(await (await call(`/lists/${list.id}`, owner)).json()).toMatchObject({
+    list: { rankedIds: [item.id], rankRevision: 1 },
+  });
+  const search = (await (await call('/search?q=Pistachio', owner)).json()) as {
+    results: { id: string; detail: string }[];
+  };
+  expect(search.results.find((r) => r.id === log.id)?.detail).toContain('Pistachio latte');
+  const shared = await (await call(`/lists/${list.id}/shares`, owner, 'POST', { limit: 'all' })).json();
+  expect(JSON.stringify(shared)).not.toContain('Brooklyn');
+  expect(JSON.stringify(shared)).not.toContain('Pistachio');
+  const file = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(file.logs[0].context).toEqual(context);
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=visitrestored',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(file),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const copy = archiveFile.parse(await (await call('/export/records', 'visitrestored')).json());
+  expect(copy.logs[0].context).toEqual(context);
+  expect(copy.logs[0].id).not.toBe(log.id);
+  expect(copy.logs[0].itemId).toBe(copy.items[0].id);
+  expect((await call(`/logs/${log.id}`, owner, 'PATCH', { context: {}, expectedRevision: 1 })).status).toBe(
+    200,
+  );
+  const cleared = (await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] };
+  expect(cleared.logs[0].context).toBeUndefined();
+  const { list: activity } = (await (
+    await call('/lists', owner, 'POST', { name: 'Walks', kind: 'activity' })
+  ).json()) as { list: ListDetail };
+  expect(
+    (
+      await call(`/lists/${activity.id}/logs`, owner, 'POST', {
+        title: 'Walk',
+        happenedOn: '2026-10-16',
+        context,
+      })
+    ).status,
+  ).toBe(400);
+  const legacy = {
+    ...file,
+    logs: file.logs.map((g) => Object.fromEntries(Object.entries(g).filter(([key]) => key !== 'context'))),
+  };
+  expect(archiveFile.parse(legacy).logs[0].context).toEqual({
+    location: '',
+    version: '',
+    order: '',
+    reaction: null,
+  });
+});
+
+test('visit context follows original records through merges, moves and Trash restoration', async () => {
+  const owner = 'visitmoves';
+  const createList = async (name: string) =>
+    (
+      (await (await call('/lists', owner, 'POST', { name, kind: 'collection' })).json()) as {
+        list: ListDetail;
+      }
+    ).list;
+  const source = await createList('Visits'),
+    destination = await createList('Other visits');
+  const createItem = async (title: string) =>
+    ((await (await call(`/lists/${source.id}/items`, owner, 'POST', { title })).json()) as { item: Item })
+      .item;
+  const main = await createItem('Main'),
+    original = await createItem('Original');
+  const { log } = (await (
+    await call(`/lists/${source.id}/logs`, owner, 'POST', {
+      itemId: original.id,
+      happenedOn: '2026-10-15',
+      context: { location: 'Original location', reaction: 'meh' },
+    })
+  ).json()) as { log: Log };
+  expect(
+    (
+      await archiveAction(source.id, owner, {
+        action: 'merge',
+        itemIds: [main.id, original.id],
+        targetId: main.id,
+      })
+    ).status,
+  ).toBe(200);
+  expect(await (await call(`/lists/${source.id}/logs`, owner)).json()).toMatchObject({
+    logs: [{ id: log.id, itemId: original.id, context: { location: 'Original location', reaction: 'meh' } }],
+  });
+  expect(
+    (
+      await archiveAction(source.id, owner, {
+        action: 'move',
+        itemIds: [main.id],
+        destinationId: destination.id,
+      })
+    ).status,
+  ).toBe(200);
+  expect(await (await call(`/lists/${destination.id}/logs`, owner)).json()).toMatchObject({
+    logs: [{ id: log.id, context: { location: 'Original location' } }],
+  });
+  await call(`/logs/${log.id}`, owner, 'DELETE');
+  expect(await (await call(`/lists/${destination.id}/logs`, owner)).json()).toMatchObject({ logs: [] });
+  await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'log', id: log.id }] });
+  expect(await (await call(`/lists/${destination.id}/logs`, owner)).json()).toMatchObject({
+    logs: [{ id: log.id, context: { reaction: 'meh' } }],
+  });
+});
+
+test('a visit update refuses a parent trashed between its read and write', async () => {
+  const owner = 'visitrace';
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Race', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const { item } = (await (
+    await call(`/lists/${list.id}/items`, owner, 'POST', { title: 'Record' })
+  ).json()) as { item: Item };
+  const { log } = (await (
+    await call(`/lists/${list.id}/logs`, owner, 'POST', { itemId: item.id, happenedOn: '2026-10-16' })
+  ).json()) as { log: Log };
+  const db = platform.env.DB;
+  let raced = false;
+  const wrapped = new Proxy(db, {
+    get(target, key) {
+      if (key === 'prepare')
+        return (sql: string) => {
+          if (!sql.startsWith('UPDATE logs SET item_id')) return target.prepare(sql);
+          const statement = target.prepare(sql);
+          return {
+            bind: (...values: (string | number | null)[]) => ({
+              run: async () => {
+                raced = true;
+                await target
+                  .prepare('UPDATE lists SET trashed_at = ? WHERE id = ?')
+                  .bind(Date.now(), list.id)
+                  .run();
+                return statement.bind(...values).run();
+              },
+            }),
+          };
+        };
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const response = await app.request(
+    `https://worth.test/api/logs/${log.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ note: 'Must not save', expectedRevision: 0 }),
+    },
+    { ...platform.env, DB: wrapped },
+    platform.ctx,
+  );
+  expect(raced).toBe(true);
+  expect(response.status).toBe(409);
+  expect(await db.prepare('SELECT note, revision FROM logs WHERE id = ?').bind(log.id).first()).toEqual({
+    note: '',
+    revision: 0,
   });
 });

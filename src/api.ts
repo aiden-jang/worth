@@ -188,7 +188,7 @@ export const api = {
         ...(operationId ? { 'Idempotency-Key': operationId } : {}),
       },
     }),
-  updateLog: (id: string, body: Partial<LogInput>) =>
+  updateLog: (id: string, body: Partial<LogInput> & { expectedRevision?: number }) =>
     request<{ log: Log }>(`/logs/${id}`, json('PATCH', body)),
   deleteLog: (id: string) => trashRecord('log', id, `/logs/${id}`),
   rank: (listId: string, itemIds: string[], expectedRevision: number) =>
@@ -234,6 +234,7 @@ export interface ItemInput {
 }
 
 export interface LogInput {
+  context?: import('./shared/visit-context').VisitContext;
   workoutId?: string | null;
   exerciseSets?: ExerciseSet[];
   weightUnit?: 'kg' | 'lb';

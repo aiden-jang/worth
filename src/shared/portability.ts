@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { itemInput, listInput, logInput, routineInput, workoutPatch } from './validation';
 import { collectionWorkspace } from './workspace';
+import { hasVisitContext } from './visit-context';
 const id = z.string().uuid();
 const time = z.number().int().nonnegative().max(8640000000000000);
 const text = (max: number) => z.string().max(max);
@@ -170,6 +171,8 @@ export const archiveFile = z
       if (lists.get(r.listId)?.kind !== 'activity') bad('A routine has an invalid activity');
     for (const g of file.logs) {
       const list = lists.get(g.listId);
+      if (list?.kind === 'activity' && hasVisitContext(g.context))
+        bad('An activity cannot contain collection visit details');
       if (
         !list ||
         (list.kind === 'activity'

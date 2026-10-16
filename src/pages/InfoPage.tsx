@@ -56,10 +56,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 rankings, saved duplicate reviews, private shelf choices, dedications and inscriptions,
                 private sources and recommendations, labels/stamps, custom details, purchase and loan
                 information (including names you enter), optional Favorite / Meh / Not again calls, Want to
-                try, merged originals, revisit queue, exercise measurements, routines, workout visits, and
-                uploaded photos or collection covers. Records are associated with your shared account ID.
-                Worth receives your account identity to check access and display your name; passwords are
-                handled by the account service.
+                try, merged originals, revisit queue, per-visit locations, editions, orders and reactions,
+                exercise measurements, routines, workout visits, and uploaded photos or collection covers.
+                Records are associated with your shared account ID. Worth receives your account identity to
+                check access and display your name; passwords are handled by the account service.
               </p>
             </section>
             <section>
@@ -220,6 +220,15 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Details for one visit</h2>
+              <p>
+                After Log again, or when editing an existing revisit, open This visit for an optional
+                location, version or edition, order/setup and reaction. These describe that visit and never
+                change the item’s overall call or ranking. Visit details appear in private history and Search,
+                and stay out of public ranking links, booklets and recommendation cards. Backups include them.
+                An unfinished visit draft can recover on this device for seven days; if the saved visit
+                changed elsewhere, review Reload saved visit before replacing your draft.
+              </p>
               <h2>Archived collections</h2>
               <p>
                 Open a collection’s settings and choose Archive collection to remove it from home, the sidebar

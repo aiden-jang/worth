@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test';
-import type { Item, ListDetail, TrashEntry } from '../src/shared/models';
+import type { Item, ListDetail, Log, TrashEntry } from '../src/shared/models';
 import type { WorkspaceResponse } from '../src/shared/workspace';
 import { emptyItemContext } from '../src/shared/item-context';
 
@@ -44,6 +44,7 @@ export type State = {
   extraLists: ListDetail[];
   trash: TrashEntry[];
   items: Item[];
+  logs: Log[];
   list: ListDetail;
   writes: { path: string; body: unknown }[];
 };
@@ -58,6 +59,7 @@ export async function mockArchive(page: Page): Promise<State> {
     failAction: false,
     extraLists: [],
     trash: [],
+    logs: [],
     items: [structuredClone(item), { ...item, id: 'tea', title: 'Tea', decision: null, note: '' }],
     list: structuredClone(list),
     writes: [],
@@ -194,7 +196,37 @@ export async function mockArchive(page: Page): Promise<State> {
             !state.trash.some((entry) => entry.kind === 'item' && entry.id === i.id),
         ),
       });
-    if (path === `/lists/${list.id}/logs`) return reply({ logs: [] });
+    if (path === `/lists/${list.id}/logs` && method === 'POST') {
+      const body = request.postDataJSON();
+      state.writes.push({ path, body });
+      const created = {
+        ...body,
+        id: crypto.randomUUID(),
+        listId: list.id,
+        revision: 0,
+        hasPhoto: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      } as Log;
+      state.logs.push(created);
+      return reply({ log: created }, 201);
+    }
+    if (path === `/lists/${list.id}/logs`) return reply({ logs: state.logs });
+    if (path.startsWith('/logs/') && method === 'PATCH') {
+      const body = request.postDataJSON();
+      state.writes.push({ path, body });
+      const entry = state.logs.find((log) => log.id === path.split('/')[2])!;
+      if (body.expectedRevision !== undefined && body.expectedRevision !== (entry.revision ?? 0))
+        return reply(
+          {
+            error: 'LOG_CHANGED',
+            message: 'This visit changed elsewhere. Reload the saved visit before trying again.',
+          },
+          409,
+        );
+      Object.assign(entry, body, { revision: (entry.revision ?? 0) + 1 });
+      return reply({ log: entry });
+    }
     if (path.startsWith('/items/') && method === 'PATCH') {
       const body = request.postDataJSON();
       state.writes.push({ path, body });

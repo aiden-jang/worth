@@ -1809,3 +1809,71 @@
   min-height: 44px;
   justify-self: start;
 }
+
+.history-note {
+  min-width: 0;
+  padding-block: 12px;
+}
+.history-note > p {
+  white-space: pre-wrap;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+.visit-context-readout {
+  margin-top: 12px;
+}
+.visit-context-readout summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.visit-context-readout dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 16px;
+  font-size: 13px;
+}
+.visit-context-readout dt {
+  color: var(--muted);
+}
+.visit-context-readout dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.visit-context-fields {
+  min-width: 0;
+}
+.visit-context-fields .date-pair {
+  margin: 16px 0;
+}
+.visit-context-fields select {
+  min-height: 44px;
+}
+@media (max-width: 680px) {
+  .history-row:has(.visit-context-readout) {
+    grid-template-columns: 1fr auto;
+  }
+  .history-row:has(.visit-context-readout) > span {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+  }
+  .visit-context-readout dl {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .visit-context-readout dd {
+    margin-bottom: 8px;
+  }
+}
+
+.collection-log-dialog .button {
+  min-height: 44px;
+}
+.visit-context-fields > label {
+  display: grid;
+  gap: 8px;
+}
+.visit-context-fields > label + label {
+  margin-top: 20px;
+}

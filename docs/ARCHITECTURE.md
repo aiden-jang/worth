@@ -275,3 +275,32 @@ retains the flag with new record IDs; old backups default to current, and an
 archived activity backup is rejected. Directory status is in the URL for Back
 navigation; current and archived queries use separate cache keys invalidated by
 changes to collection settings.
+
+## Private visit context
+
+Migration `0015_visit_context.sql` adds `logs.context_json` and a log revision.
+Collection revisits can store an optional location (120 characters), version/
+edition (120), order/setup (500) and visit reaction. These are distinct from an
+item's overall call, rank and item context. Older logs remain empty and no past
+reaction is inferred. Activity logs reject nonempty collection visit context.
+
+The existing date/note capture stays lightweight. Saving a revisit opens its
+existing detail editor, where the optional This visit disclosure can be filled.
+Private history and comparison tables show a readable context disclosure. Search
+matches actual saved visit strings. Public ranked snapshots, booklets and cards
+keep their existing projections and do not include this context.
+
+The revisit editor keeps an account/list/log-scoped seven-day device draft,
+including the revision at which it was opened. Saves use that revision; a conflict
+retains the draft and requires an explicit reviewed reload. Log updates guard
+owner, original list, revision and current active-log membership in one statement.
+Legacy clients without a revision still guard the interval between server read
+and write. Activity/workout editors retain their earlier client conflict behavior;
+this does not claim all activity drafts have gained conflict resolution.
+Successful writes increment the revision, then update collection recency.
+
+Context follows the original log through item merges/moves and Trash restore.
+Records and photo backups include it, restore remaps relationships and starts new
+revisions, and old files default to empty context. Create/patch bodies are bounded
+to 32 KiB. Detail-editor retries patch the same log. If a response was lost, reload
+the saved visit to review its current version.

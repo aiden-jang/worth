@@ -43,7 +43,7 @@ framing and layout changes in the original checkout.
 ## Memories and relationships
 
 - [x] Why saved, recommendation source and recommendation follow-through.
-- [ ] Per-visit location, version, order and reaction, separate from the overall call.
+- [x] Per-visit location, version, order and reaction, separate from the overall call.
 - [ ] Related records and an accessible personal constellation view.
 - [ ] Same thing across places and linked editions/versions.
 - [ ] Replacement chains with a reason for switching.
@@ -124,9 +124,9 @@ It stores source URLs, reasons, recommendation/follow-up text, location/version,
 personal labels/stamps, named custom fields, purchase details and loan details.
 Labels/stamps work in collection filters and saved views. Context is searchable,
 preserved with merged originals and included in backup/restore. It stays out of
-public snapshots. Source URLs can be entered manually; link identity suggestions
-and link-first capture remain pending. Per-visit context and linked editions are
-also still pending.
+public snapshots. Source URLs can be entered manually. Reviewed address-based link
+capture and per-visit context are completed separately below. Linked editions
+remain pending.
 
 Context saves use an independent revision so a stale draft cannot overwrite newer
 context. Incomplete URLs, prices and unnamed detail drafts can recover locally.
@@ -240,3 +240,27 @@ Final formatting/lint checks passed. Eight desktop/phone captures were reviewed
 alongside the cabinet references; see [archiving QA](../art/ui-qa/collection-archiving/README.md).
 This work remains local on the feature branch. The unchecked scope above,
 including actual widgets for both platforms and on-device recognition, is unfinished.
+
+## Eighth implementation: private visit details
+
+Each collection revisit can keep an optional location, edition/version, order/setup
+and reaction independently of the overall call and ranking. The existing date/note
+capture stays simple and opens its detail editor after saving. Private history and
+comparison readouts expose preserved text; Search can find it. Public snapshots,
+booklets and recommendation cards keep their prior projections.
+
+Migration 0015 adds visit context and log revisions. The detail editor recovers
+account/list/log-scoped device drafts for seven days and protects its original
+revision. Conflicts keep the draft, with an explicitly confirmed reload of current
+saved data. Updates guard owner, original list, revision and active membership.
+Older activity clients preserve their existing draft behavior and gain a server
+read/write-interval guard; this is not a claim of new activity sync conflict UI.
+
+Context follows original logs through merges, moves, Trash and backup ID remapping.
+Old logs/backups remain empty; no earlier reaction is fabricated. Activity entries
+reject nonempty collection visit context. All 104 tests and core checks passed
+locally. The full browser regression passed 95 journeys; all eight visit-detail
+cases passed again after the final spacing adjustment. The final build, formatting
+and lint passed, and all four desktop/phone captures were visually reviewed in
+[visit QA](../art/ui-qa/visit-context/README.md). The larger unchecked scope remains
+unfinished, including actual widgets and on-device recognition.

@@ -31,13 +31,14 @@ its verification. The following groups are committed and verified locally on
 - Reviewed CSV import and editable address-based link name suggestions.
 - Existing-record duplicate suggestions with reversible keep-separate reviews,
   Details and explicit revisit-composer actions.
-
 - Reversible collection archiving with retained Search, Patterns, links and backups.
+- Private visit-specific location, edition, order/setup and reaction, with draft
+  recovery and revision-aware detail editing.
 
-Remaining work includes history/time-machine views,
-templates, inbox, offline sync, richer visits
-and relationships, boards, revisit planning, routines/measurements, photo tools,
-field guides, blind two-person choices and private collaboration. See the tracker
+Remaining work includes history/time-machine views, templates, inbox, offline
+sync, linked records and relationships, boards, revisit planning, routines and
+measurements, photo tools, field guides, blind two-person choices and private
+collaboration. See the tracker
 for individual unchecked features; a related completed tool does not complete
 these automatically.
 

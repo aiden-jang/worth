@@ -43,17 +43,17 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
       }>();
     const { results: logs } = await c.env.DB.prepare(
       `SELECT g.id, g.list_id, COALESCE(i.id, g.item_id) AS item_id, l.name AS list_name, l.archived,
-      COALESCE(i.title, g.title) AS title, CASE WHEN g.note LIKE ? ESCAPE '\\' THEN g.happened_on || ' · ' || substr(g.note, 1, 180) ELSE g.happened_on END AS detail, json_array_length(g.exercise_sets) > 0 AS exercise
+      COALESCE(i.title, g.title) AS title, CASE WHEN g.note LIKE ? ESCAPE '\\' THEN g.happened_on || ' · ' || substr(g.note, 1, 180) ELSE COALESCE((SELECT g.happened_on || ' · ' || substr(atom, 1, 180) FROM json_tree(g.context_json) WHERE type = 'text' AND atom != '' AND atom LIKE ? ESCAPE '\\' LIMIT 1), g.happened_on) END AS detail, json_array_length(g.exercise_sets) > 0 AS exercise
       FROM active_logs g
       JOIN active_lists l ON l.id = g.list_id
       LEFT JOIN record_items original ON original.id = g.item_id
         LEFT JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) AND i.owner_id = g.owner_id
       WHERE g.owner_id = ? AND (
-        g.title LIKE ? ESCAPE '\\' OR g.note LIKE ? ESCAPE '\\'
+        g.title LIKE ? ESCAPE '\\' OR g.note LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM json_tree(g.context_json) WHERE type = 'text' AND atom != '' AND atom LIKE ? ESCAPE '\\')
       )
       ORDER BY g.happened_on DESC LIMIT 40`,
     )
-      .bind(pattern, ownerId, pattern, pattern)
+      .bind(pattern, pattern, ownerId, pattern, pattern, pattern)
       .all<{
         exercise: number;
         id: string;

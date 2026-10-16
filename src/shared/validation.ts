@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { visitContext } from './visit-context';
 import { collectionItemTitleLimit } from './collection-capture';
 import { itemContext, emptyItemContext } from './item-context';
 
@@ -99,6 +100,7 @@ export const workoutPatch = workoutInput
   .refine((value) => Object.keys(value).length > 0);
 
 export const logInput = z.object({
+  context: visitContext.default({}),
   workoutId: z.string().uuid().nullable().default(null),
   exerciseSets: z
     .array(
@@ -120,7 +122,10 @@ export const logInput = z.object({
   reps: z.number().int().positive().max(10000).nullable().default(null),
 });
 
-export const logPatch = logInput.partial().refine((value) => Object.keys(value).length > 0);
+export const logPatch = logInput
+  .extend({ expectedRevision: z.number().int().nonnegative().optional() })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0);
 
 export const rankInput = z.object({
   itemIds: z

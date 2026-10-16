@@ -21,6 +21,7 @@ labeled and never writes to a private archive.
   manual rank and the revisit queue remain independent.
 - Save a name to **Want to try** without changing its call, rank or revisit queue.
 - Select up to 100 items to move, queue, change type, or send to Trash. Merge up to 20 while keeping original notes, photos and visits; separate them again in Details.
+- Keep an optional location, edition, order/setup and reaction for each revisit, separately from the overall call.
 - Archive collections from their settings and find them under Collections → Archived. Records stay editable and searchable; unarchive whenever you want.
 - Undo deletions immediately, or restore lists, items and logs from Settings → Trash for 30 days.
 - Open a collection’s Workbench for draft rankings, blind head-to-head comparisons,

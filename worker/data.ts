@@ -1,3 +1,4 @@
+import { visitContext, hasVisitContext } from '../src/shared/visit-context';
 import type {
   Item,
   ItemDecision,
@@ -74,6 +75,8 @@ type ItemRow = {
 };
 
 type LogRow = {
+  context_json: string;
+  revision: number;
   workout_id: string | null;
   exercise_sets: string;
   weight_unit: 'kg' | 'lb';
@@ -233,7 +236,10 @@ export async function requireItem(
 }
 
 function mapLog(row: LogRow): Log {
+  const context = visitContext.parse(JSON.parse(row.context_json ?? '{}'));
   return {
+    context: hasVisitContext(context) ? context : undefined,
+    revision: row.revision ?? 0,
     id: row.id,
     listId: row.list_id,
     itemId: row.item_id,
