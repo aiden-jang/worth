@@ -1747,6 +1747,14 @@
   min-height: 44px;
   accent-color: #e8dc9d;
 }
+.cover-crop-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cover-crop-reset {
+  margin-right: auto;
+}
 @media (max-width: 680px) {
   .cover-crop-form {
     padding: 18px;

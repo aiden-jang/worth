@@ -89,7 +89,10 @@ export function CoverCrop({
         </div>
         {(['x', 'y', 'zoom'] as const).map((key) => (
           <label key={key} className="cover-crop-range">
-            <span>{key === 'x' ? 'Horizontal position' : key === 'y' ? 'Vertical position' : 'Zoom'}</span>
+            <span className="cover-crop-label">
+              {key === 'x' ? 'Horizontal position' : key === 'y' ? 'Vertical position' : 'Zoom'}
+              {key === 'zoom' && <span aria-hidden="true">{Math.round(position.zoom * 100)}%</span>}
+            </span>
             <input
               type="range"
               min={key === 'zoom' ? 1 : 0}
@@ -101,12 +104,21 @@ export function CoverCrop({
             />
           </label>
         ))}
+
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
         <div className="confirm-actions">
+          <button
+            type="button"
+            className="button button-outline cover-crop-reset"
+            disabled={pending || !ready}
+            onClick={() => setPosition({ x: 50, y: 50, zoom: 1 })}
+          >
+            Reset framing
+          </button>
           <button
             type="button"
             className="button button-outline"
