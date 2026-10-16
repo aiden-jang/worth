@@ -14,3 +14,5 @@
   X-Robots-Tag: noindex
 /patterns
   X-Robots-Tag: noindex
+/widgets/*
+  X-Robots-Tag: noindex, nofollow

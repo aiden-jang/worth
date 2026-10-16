@@ -94,6 +94,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     if (c.req.header('X-Worth-Confirmation') !== 'delete-all-worth-data')
       throw new ApiError(400, 'CONFIRM_REQUIRED', 'Confirm deletion of all Worth data');
     await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM widget_devices WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM widget_grants WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),

@@ -6,3 +6,9 @@ playwright-report/
 test-results/
 worker-configuration.d.ts
 pnpm-lock.yaml
+native/ios/.build/
+native/ios/Generated/
+native/ios/*.xcodeproj/
+native/ios/DerivedData/
+native/android/.gradle/
+native/android/**/build/

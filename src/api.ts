@@ -113,6 +113,17 @@ export const api = {
       method: 'DELETE',
       headers: { 'X-Worth-Confirmation': 'delete-all-worth-data' },
     }),
+  widgetDevices: () =>
+    request<{
+      devices: import('./shared/widgets').WidgetDevice[];
+      requests: import('./shared/widgets').WidgetDevice[];
+    }>('/widgets/devices'),
+  authorizeWidget: (body: import('./shared/widgets').WidgetAuthorization) =>
+    request<{ callback: string; requestId: string; expiresAt: number }>(
+      '/widgets/authorize',
+      json('POST', body),
+    ),
+  revokeWidget: (id: string) => request<void>(`/widgets/devices/${id}`, { method: 'DELETE' }),
   me: () => request<{ user: AuthUser | null }>('/me'),
   overview: () => request<Overview>('/overview'),
   patterns: () => request<ArchivePatterns>('/patterns'),

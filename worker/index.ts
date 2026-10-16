@@ -1,3 +1,4 @@
+import { registerPrivateWidgetRoutes, registerPublicWidgetRoutes } from './routes/widgets';
 import { resolveSession } from '@aidenjang/auth-client';
 import { Hono } from 'hono';
 import type { AppEnv } from './context';
@@ -40,6 +41,7 @@ publicApi.get('/me', async (c) => {
 });
 
 registerPublicShareRoute(publicApi);
+registerPublicWidgetRoutes(publicApi);
 
 privateApi.use('*', async (c, next) => {
   const session = await resolveSession(c.req.raw, c.env.AUTH_URL);
@@ -70,6 +72,7 @@ privateApi.use('*', async (c, next) => {
   await next();
 });
 
+registerPrivateWidgetRoutes(privateApi);
 registerArchiveTools(privateApi);
 registerWorkspaceRoutes(privateApi);
 registerListRoutes(privateApi);

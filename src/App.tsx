@@ -4,6 +4,7 @@ import { ProductLinks } from './components/ProductLinks';
 import { InfoPage } from './pages/InfoPage';
 import { Route, Routes, ScrollRestoration, useLocation } from 'react-router';
 import { api } from './api';
+import './widgets.css';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
 import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
@@ -11,6 +12,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const WidgetConnectPage = lazy(() =>
+  import('./pages/WidgetConnectPage').then((module) => ({ default: module.WidgetConnectPage })),
+);
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
@@ -98,10 +102,23 @@ function PrivateApp() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/widgets/connect" element={<WidgetConnectPage />} />
         <Route path="*" element={<InfoPage kind="missing" />} />
       </Routes>
       <TrashNotice />
     </AppShell>
+  ) : location.pathname === '/widgets/connect' ? (
+    <main className="widget-signin">
+      <span className="product-wordmark">worth</span>
+      <h1>Connect widgets.</h1>
+      <p>
+        Sign in to choose which collections the Worth companion can read. You’ll review access before
+        connecting.
+      </p>
+      <a className="button button-accent" href={loginUrl(authOrigin, window.location.href)}>
+        Sign in
+      </a>
+    </main>
   ) : ['/', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
     /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />

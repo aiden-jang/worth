@@ -264,3 +264,38 @@ cases passed again after the final spacing adjustment. The final build, formatti
 and lint passed, and all four desktop/phone captures were visually reviewed in
 [visit QA](../art/ui-qa/visit-context/README.md). The larger unchecked scope remains
 unfinished, including actual widgets and on-device recognition.
+
+## Ninth implementation: scoped widget connections and companion projects
+
+The website can approve one to five owned collections for a native companion,
+with no default selection. Settings lists active devices and short-lived pending
+requests, with revoke/cancel and recoverable failures. Browser sign-in preserves
+the complete approval path; callback scheme, path, state and code are checked.
+Read-only tokens expire after 30 days and expose only scoped names/types/order,
+plus a saved find from all items, Want to try, queue or Favorites. Notes, private
+context, visits and photos remain excluded. Public IP limits, owner boundaries,
+S256 proof, guarded D1 creation, retry recovery and deletion are covered in real
+API tests. Connections stay outside backups. Migration 0016 is additive.
+
+Native SwiftUI/WidgetKit and Android RemoteViews companion projects implement the
+three requested widget modes, protected credential storage, explicit collection/
+filter choices, saved timestamps, bounded cache use and revoke/local-forget flows.
+Both use the external browser, with no embedded login, external AI or recognition
+upload. **They have not been compiled with their platform SDKs or verified on a
+simulator/device.** The portable Swift contract checks (three), Java contract
+checks (two), Swift syntax parsing, Android XML parsing, checksum-pinned Gradle
+wrapper generation and Xcode project/plist/entitlement generation passed locally.
+Shared/widget Swift source also type-checks against the available macOS SDK;
+this does not verify the iOS build. The native CI workflow has been authored but
+has not run remotely.
+
+All 113 web unit/component/API tests passed, and the full web regression passed
+107 journeys. All 12 widget browser journeys also passed after fixing inherited
+checkbox layout. Six desktop/phone captures were visually reviewed; see
+[widget web QA](../art/ui-qa/widget-connections/README.md). A final core check and
+focused run cover the subsequent privacy/help/consent copy changes.
+
+[Native setup and remaining checks](../native/README.md) records the missing iOS
+SDK, pending Android SDK license/setup approval, device verification and distribution
+work. Actual widgets, phone/browser capture, on-device recognition and the larger
+unchecked feature list remain unfinished. No PR, push, merge or deployment was made.
