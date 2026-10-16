@@ -312,7 +312,7 @@
   min-height: 270px;
 }
 .cabinet-pick .overline {
-  color: #67695b;
+  color: #626456;
 }
 .cabinet-pick-rank {
   display: flex;
@@ -327,7 +327,7 @@
 }
 .cabinet-pick-rank > small {
   font-size: 12px;
-  color: #67695b;
+  color: #626456;
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -341,7 +341,7 @@
 }
 .cabinet-pick > p:last-child {
   font-size: 12px;
-  color: #67695b;
+  color: #626456;
   margin: 0;
 }
 .cabinet-last-done {
@@ -363,7 +363,7 @@
   border-radius: var(--radius-soft);
   padding: 26px;
   --face-outline: #272820;
-  --muted: #67695b;
+  --muted: #626456;
   --line: #cbc9b8;
   --face-fill: #f0ecdf;
 }
@@ -374,13 +374,13 @@
   gap: 12px;
 }
 .opinion-slip .overline {
-  color: #67695b;
+  color: #626456;
   font-size: 11px;
   letter-spacing: 0.06em;
 }
 .opinion-slip-top > span {
   font: 11px var(--mono);
-  color: #67695b;
+  color: #626456;
   border: 1px solid #cbc9b8;
   border-radius: 999px;
   padding: 5px 8px;
@@ -394,7 +394,7 @@
   overflow-wrap: anywhere;
 }
 .opinion-slip-type {
-  color: #67695b;
+  color: #626456;
   font-size: 12px;
   margin: 0;
 }
@@ -595,7 +595,7 @@
 }
 .opinion-slip-verdict > span {
   font-size: 13px;
-  color: #67695b;
+  color: #626456;
   margin-top: 9px;
 }
 /* A single moving selection keeps the control quiet and makes call changes legible. */
@@ -733,7 +733,7 @@
 }
 .opinion-slip-empty p {
   font-size: 13px;
-  color: #67695b;
+  color: #626456;
   margin: 8px 0;
 }
 /* Collection: a single working list and one selected item. */

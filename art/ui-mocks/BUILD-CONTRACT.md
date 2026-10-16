@@ -412,3 +412,12 @@ spacing, palette and faces. Landing supporting copy/footer, empty archive helper
 Search helper/no-result title, Patterns helper/empty summaries, creation description
 placeholder, Settings subtitle, Help intro and shortcut title have changed deliberately.
 No layouts or stored user content change. See [copy QA](../ui-qa/voice-pass/README.md).
+
+## Repository polish — October 15
+
+The cabinet composition, fonts and primary palette remain the accepted target.
+Small secondary text on cream cards uses `#626456` in place of `#67695b`: the previous
+pair measured 4.44:1 against `#eae5d5`, below the 4.5:1 AA threshold. This deliberate
+accessibility adjustment preserves the visual hierarchy. Failed active-link lookups
+and temporary ranking outages now offer factual retry messages. During link creation,
+the Include selector and close actions pause until the snapshot request finishes.

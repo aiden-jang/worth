@@ -1,12 +1,12 @@
 import type {
-  WorkoutSession,
-  WorkoutRoutine,
   Item,
   ItemDecision,
   ListDetail,
   ListSummary,
   Log,
   ShareSummary,
+  WorkoutRoutine,
+  WorkoutSession,
 } from '../src/shared/models';
 
 export type RecordExport = {
@@ -123,7 +123,7 @@ export async function listLists(db: D1Database, ownerId: string): Promise<ListSu
     .prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.updated_at DESC`)
     .bind(ownerId)
     .all<ListRow>();
-  return results.map(({ ranked_ids: _rankedIds, rank_revision: _rankRevision, ...row }) => ({
+  return results.map((row) => ({
     id: row.id,
     name: row.name,
     kind: row.kind,

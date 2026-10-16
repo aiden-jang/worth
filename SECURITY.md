@@ -1,0 +1,17 @@
+# Security
+
+Only the current `main` branch is maintained. Keep dependencies and the shared
+Accounts client current, and run `pnpm audit` when updating dependencies.
+
+Report suspected vulnerabilities through [GitHub private vulnerability reporting](https://github.com/aiden-jang/worth/security/advisories/new).
+Include the affected route, a minimal reproduction with synthetic records, and the
+expected access boundary. Do not post cookies, share tokens, photos, backups or
+someone else's records in public issues. Do not test against another person's archive.
+
+Private routes verify the shared Accounts session and scope database access by owner.
+Public share links expose fixed ranked titles/types for seven days; downloaded images
+cannot be revoked. Local drafts and exported files can contain private data. See
+[architecture](docs/ARCHITECTURE.md) and [release/recovery](RELEASE.md) for these boundaries.
+
+A passing scan does not establish that all vulnerabilities are absent. Review ownership,
+input limits, cache behavior and sharing scope when changing data routes.

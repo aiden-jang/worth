@@ -1,8 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
-import type { Item, ListDetail } from '../shared/models';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { api, RequestError } from '../api';
+import { useConnection } from '../hooks/useConnection';
+import { useDraft } from '../hooks/useDraft';
+import { useViewPreference } from '../hooks/useViewPreference';
+import {
+  batchCaptureLimit,
+  batchCaptureTitles,
+  collectionItemTitleLimit,
+} from '../shared/collection-capture';
 import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
+import { decisionLabel } from '../shared/decisions';
+import type { Item, ListDetail } from '../shared/models';
 import {
   moveRank,
   visibleItems,
@@ -10,19 +20,9 @@ import {
   type ItemSort,
   type RankFilter,
 } from '../shared/ranking';
-import { useViewPreference } from '../hooks/useViewPreference';
-import { useDraft } from '../hooks/useDraft';
-import { useConnection } from '../hooks/useConnection';
-import { api, RequestError } from '../api';
-import { CallBadge, CallFace } from './PersonalCall';
-import { OpinionSlip } from './OpinionSlip';
 import { BlankSlips } from './BlankSlips';
-import { decisionLabel } from '../shared/decisions';
-import {
-  batchCaptureLimit,
-  batchCaptureTitles,
-  collectionItemTitleLimit,
-} from '../shared/collection-capture';
+import { IndexRows, ItemActions } from './CollectionIndex';
+import { CallFace } from './PersonalCall';
 
 type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue';
 
@@ -141,7 +141,7 @@ export function CollectionView({
     };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [selectedId]);
+  }, [selectedId, setSelectedId]);
 
   const create = useMutation({
     mutationFn: (nextTitle: string) =>
@@ -399,7 +399,7 @@ export function CollectionView({
             </p>
           )}
           {(create.isError || batchCreate.isError) && (
-            <p className="form-error collection-capture-error">
+            <p className="form-error collection-capture-error" role="alert">
               {create.error?.message ?? batchCreate.error?.message}
             </p>
           )}
@@ -659,130 +659,5 @@ export function CollectionView({
         ) : null}
       </div>
     </section>
-  );
-}
-
-type IndexProps = {
-  onQueue: (item: Item) => void;
-  queuePending: boolean;
-  items: Item[];
-  ranks: Map<string, number>;
-  rankSlots: number;
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  onOpenDetails: (id: string) => void;
-  onAddNote: (id: string) => void;
-  onLogRevisit: (id: string) => void;
-  onDecide: (item: Item, decision: Item['decision']) => void;
-  decisionPending: boolean;
-  onRank: (item: Item, position: number | null) => void;
-  rankPending: boolean;
-};
-
-function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: IndexProps) {
-  return (
-    <ol className="collection-index-rows">
-      {items.map((item) => {
-        const rank = ranks.get(item.id);
-        const selected = selectedId === item.id;
-        return (
-          <li className={selected ? 'selected' : ''} key={item.id}>
-            <div className="collection-index-row">
-              <span className="collection-row-rank">{rank ? String(rank).padStart(2, '0') : '—'}</span>
-              <button
-                type="button"
-                aria-expanded={selected}
-                onClick={() => onSelect(selected ? null : item.id)}
-              >
-                <strong>{item.title}</strong>
-                {item.type && <span>{item.type}</span>}
-              </button>
-              {item.decision && <CallBadge value={item.decision} />}
-            </div>
-            {selected && (
-              <ItemActions className="collection-action-tray" item={item} rank={rank} {...actions} />
-            )}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-function ItemActions({
-  onQueue,
-  queuePending,
-  item,
-  rank,
-  rankSlots,
-  onOpenDetails,
-  onAddNote,
-  onLogRevisit,
-  onDecide,
-  decisionPending,
-  onRank,
-  rankPending,
-  className = '',
-}: Omit<IndexProps, 'items' | 'ranks' | 'selectedId' | 'onSelect'> & {
-  item: Item;
-  rank?: number;
-  className?: string;
-}) {
-  return (
-    <OpinionSlip
-      className={className}
-      title={item.title}
-      type={item.type}
-      rank={rank}
-      decision={item.decision}
-      disabled={decisionPending}
-      onChange={(value) => onDecide(item, value)}
-    >
-      <button
-        type="button"
-        aria-pressed={Boolean(item.revisitQueued)}
-        className="collection-queue-action"
-        disabled={queuePending}
-        onClick={() => onQueue(item)}
-      >
-        {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
-      </button>
-      <div className="collection-tray-actions">
-        <details className="collection-rank-disclosure">
-          <summary aria-label={`Rank ${item.title}`}>Rank</summary>
-          <label className="collection-rank-placement">
-            <span>Place</span>
-            <select
-              aria-label={`Place ${item.title} in your ranking`}
-              value={rank ?? 'none'}
-              disabled={rankPending}
-              onChange={(event) =>
-                onRank(item, event.target.value === 'none' ? null : Number(event.target.value))
-              }
-            >
-              <option value="none">Unranked</option>
-              {Array.from({ length: rankSlots }, (_, index) => (
-                <option key={index + 1} value={index + 1}>
-                  #{String(index + 1).padStart(2, '0')}
-                </option>
-              ))}
-            </select>
-          </label>
-        </details>
-        <button type="button" aria-label={`Add a note to ${item.title}`} onClick={() => onAddNote(item.id)}>
-          Note
-        </button>
-        <button
-          type="button"
-          aria-label={`Log a revisit to ${item.title}`}
-          onClick={() => onLogRevisit(item.id)}
-        >
-          Revisit
-        </button>
-        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
-          Details <ArrowRight size={15} />
-        </button>
-      </div>
-    </OpinionSlip>
   );
 }

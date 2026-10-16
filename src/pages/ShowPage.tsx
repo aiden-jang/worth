@@ -1,9 +1,9 @@
-import { usePageTitle } from '../hooks/usePageTitle';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowsIn, ArrowsOut } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowsOut, ArrowsIn } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { api } from '../api';
+import { api, RequestError } from '../api';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { rankedItems } from '../shared/ranking';
 
 export function ShowPage() {
@@ -47,7 +47,32 @@ export function ShowPage() {
         Opening…
       </main>
     );
-  if (listQuery.isError || itemsQuery.isError || !list || list.kind !== 'collection')
+  if (listQuery.isError || itemsQuery.isError) {
+    const error = listQuery.error ?? itemsQuery.error;
+    const missing = error instanceof RequestError && error.status === 404;
+    return (
+      <main className="show-page show-message">
+        <p role="alert">
+          {missing
+            ? "This list isn't available."
+            : 'Couldn’t open this ranking. Check your connection and try again.'}
+        </p>
+        {!missing && (
+          <button
+            className="button button-outline"
+            onClick={() => {
+              void listQuery.refetch();
+              void itemsQuery.refetch();
+            }}
+          >
+            Try again
+          </button>
+        )}
+        <Link to="/lists">Back to lists</Link>
+      </main>
+    );
+  }
+  if (!list || list.kind !== 'collection')
     return (
       <main className="show-page show-message">
         This list isn't available. <Link to="/lists">Back to lists</Link>

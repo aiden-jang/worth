@@ -1,4 +1,4 @@
-export const draftLifetime = 7 * 86400000;
+const draftLifetime = 7 * 86400000;
 export async function cleanDeviceData(owner: string, all = false): Promise<void> {
   const now = Date.now();
   const drafts = `worth:draft:v1:${owner}:`;
@@ -10,7 +10,9 @@ export async function cleanDeviceData(owner: string, all = false): Promise<void>
       try {
         const value = JSON.parse(localStorage.getItem(key) ?? 'null');
         expired = !Number.isFinite(value?.updatedAt) || value.updatedAt <= now - draftLifetime;
-      } catch {}
+      } catch {
+        /* Device storage may be unavailable or blocked. */
+      }
       if (all || expired) localStorage.removeItem(key);
     } else if (key.startsWith(timers) && (all || Number(localStorage.getItem(key)) <= now))
       localStorage.removeItem(key);

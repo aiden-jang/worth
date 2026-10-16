@@ -18,8 +18,10 @@ reworking the app. The reference HTML and running app share `src/cabinet.css`; c
 
 This intentionally replaces the October 9 personality layout: collections now lead the archive;
 a selected collection item has a cream opinion slip alongside the list on desktop and beneath
-its row on mobile. The landing places a large straight opinion card beside the headline, with an open example
-index beneath the introduction. Mobile presents the opinion before the index. The dark olive canvas, warm paper and butter accent form one consistent system.
+its row on mobile. The current signed-out landing uses a centered headline and three illustrated folders;
+its interactive example has an index and opinion slip below the hero. The latest
+illustrated-landing and plainspoken-copy sections of the build contract supersede
+earlier landing compositions. The dark olive canvas, warm paper and butter accent form one consistent system.
 There are no paper textures, fake analytics or mandatory opinions.
 
 Typography is existing DM Sans, mostly 400–500, with DM Mono for small structural labels.
@@ -30,8 +32,8 @@ responsive behavior are in the build contract. Earlier mock sets remain historic
 
 ## Personality and voice
 
-`For the good. And the meh.` states the landing's point. The product line is
-`Keep what you try. Find what’s worth repeating.`. The archive says `The archive.` and
+`Your taste. A place to keep it.` states the landing's point. The product line is
+`Keep what you try. Rank what you like.` / `The meh can stay.`. The archive says `The archive.` and
 `Good finds. Mixed feelings.`. A small deadpan face accompanies `Opinions may vary. Yours, mostly.`.
 
 The opinion slip expresses one actual call with a face and a short caption: `Yes, again.`,
@@ -78,13 +80,13 @@ Use "worth" as a question, not a claim: what was this worth to the person who lo
 
 ## Signed-out landing page
 
-Small wordmark and Sign in; no archive navigation. The open composition pairs a two-line
-headline and signup with a working example index and one cream opinion slip. Tabs switch
-Drinks, Movies and Places while preserving transient edits. The selected item controls the slip.
+Small wordmark and Sign in; no archive navigation. A centered two-line headline and
+signup lead into three illustrated folders. Below, tabs switch Drinks, Midnight snacks
+and Questionable purchases while preserving transient edits in the working example. The selected item controls the slip.
 Name-only capture adds an unranked item with no call. Demo state never writes to the API.
 `EXAMPLE` and the explanatory footnote remain visible; no testimonials or invented statistics.
 
-Mobile puts the headline and signup first, followed by the slip and example index. The slip
+Mobile puts the headline and signup first, then illustrated folders and the example index/slip. The slip
 has no rotation. Footer: `Meh is a complete sentence.` and one concise product scope line.
 
 ## Signed-in home

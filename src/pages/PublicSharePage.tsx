@@ -1,7 +1,7 @@
-import { usePageTitle } from '../hooks/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import { api, RequestError } from '../api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export function PublicSharePage() {
   const { token = '' } = useParams();
@@ -11,13 +11,20 @@ export function PublicSharePage() {
     retry: false,
   });
   usePageTitle(query.data?.share.title ?? 'Shared ranking');
-  if (query.isPending) return <main className="public-page public-message">Opening list…</main>;
+  if (query.isPending)
+    return (
+      <main className="public-page public-message" role="status">
+        Opening list…
+      </main>
+    );
   if (query.isError) {
     const unavailable = query.error instanceof RequestError && [404, 410].includes(query.error.status);
     return (
       <main className="public-page public-message">
         <span className="brand">worth</span>
-        <h1>{unavailable ? 'This link is no longer available.' : "Couldn't open this shared list."}</h1>
+        <h1 role="alert">
+          {unavailable ? 'This link is no longer available.' : "Couldn't open this shared list."}
+        </h1>
         <p>{unavailable ? 'It may have expired or been removed.' : 'Check your connection and try again.'}</p>
         {!unavailable && (
           <button className="button button-outline" onClick={() => void query.refetch()}>
