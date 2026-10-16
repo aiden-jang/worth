@@ -1,10 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useAccountId } from './useAccountId';
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 // Account and list scope prevent a shared device from restoring someone else's draft.
 export function useDraft<T>(name: string, initial: T, validate: (value: unknown) => value is T) {
-  const client = useQueryClient();
-  const owner = client.getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
+  const owner = useAccountId();
   const key = owner ? `worth:draft:v1:${owner}:${name}` : null;
   const read = () => {
     try {

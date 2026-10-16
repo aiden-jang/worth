@@ -465,6 +465,9 @@ export function CapturePage() {
           Clear capture draft
         </button>
       </section>
+      <p>
+        <Link to="/read">Read text from a photo on this device →</Link>
+      </p>
       <details className="browser-capture-help">
         <summary>Capture from your browser</summary>
         <p>

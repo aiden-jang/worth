@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { itemInput } from './validation';
 import { emptyItemContext } from './item-context';
 
-export const incomingCapture = z
+const incomingCapture = z
   .object({
     title: z.string().max(1000),
     text: z.string().max(16000),

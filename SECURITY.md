@@ -15,3 +15,10 @@ cannot be revoked. Local drafts and exported files can contain private data. See
 
 A passing scan does not establish that all vulnerabilities are absent. Review ownership,
 input limits, cache behavior and sharing scope when changing data routes.
+
+Photo text recognition runs in browser workers with self-hosted code/data and no
+photo-processing API. Image bytes/dimensions are bounded before decoding, and
+recognition output remains editable text. CSP permits same-origin workers and
+WebAssembly, without JavaScript string evaluation or third-party script/connect
+origins. See [photo text architecture](docs/PHOTO-TEXT.md) for cancellation,
+account isolation, storage and dependency notices.

@@ -43,6 +43,7 @@ labeled and never writes to a private archive.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
   a ranking image. Only the collection name and ranked titles/types leave the archive.
 - Keep private unfiled finds in Inbox, recover edits and filing retries, then file into a collection unranked.
+- Read English printed text from a photo on-device, edit it, then review a name and optional note before saving. No photo upload or external AI processing is used for recognition.
 - Review browser-shared text/links in web capture; bookmark private shortlist and saved-find shortcuts.
 - Save reusable collection detail names and private setup templates for new, empty collections.
 - Export records or a photo-inclusive backup; preview a validated restore as new lists.

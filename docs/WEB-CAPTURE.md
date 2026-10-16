@@ -77,3 +77,20 @@ for a full reload. A fresh document gets a fresh query cache and draft scope. Th
 old document keeps its original request binding even for delayed asynchronous
 continuations, preventing an old save/import/delete from running under the new
 session. Focus revalidates the account without forcing a reload for the same user.
+
+## Bound staging and private handoffs
+
+Incoming content received while signed in is bound to that account for its
+15-minute staging window. External content received before sign-in can follow
+normal sign-in once, then binds to the selected account without extending expiry.
+Signed-out pages withhold owned handoffs; another account discards the handoff
+without opening its contents. The original account’s saved/device drafts remain.
+
+Internal private transfers, including photo text, stage an explicit owner and
+navigate to a clean capture URL. They never put private handoff text in a URL or
+Accounts return link. A same-document memory fallback retains the account binding
+when storage is blocked. Dismissal and Settings cleanup clear that memory too.
+Draft/photo/staging hooks freeze their initial account and check the shared
+document binding; a metadata-cache update cannot retarget an open draft while
+account recovery unmounts the app. The owner tag is a consistency boundary, not
+an API credential or substitute for server-side session/ownership checks.

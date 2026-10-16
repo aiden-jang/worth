@@ -76,7 +76,7 @@ framing and layout changes in the original checkout.
 - [x] Individual recommendation card with a user-written reason and exact preview.
 - [ ] Private two-person this-or-that with separate choices and a deliberate reveal.
 - [ ] Private collaboration and explicit granular sharing controls.
-- [ ] On-device recognition/extraction assistance with reviewed output; no external AI provider.
+- [x] On-device recognition/extraction assistance with reviewed output; no external AI provider.
 
 Existing seven-day public snapshots keep their original fixed title/type-only
 scope. New sharing formats must have their own explicit preview and access rules.
@@ -384,3 +384,29 @@ phone interaction and Axe journeys passed, followed by all five broader layout
 regressions at 320, 390, 430, 768 and 1440px. Four captures were inspected in
 [activity artwork QA](../art/ui-qa/activity-art/README.md). Other unchecked
 features remain unfinished; this work remains local to the feature branch.
+
+## Thirteenth implementation: on-device photo text
+
+Read a photo recognizes English printed text from a bounded JPEG, PNG or WebP
+entirely in browser workers, using Worth-hosted engine/language assets. Reading
+starts only after an explicit action. Text stays editable; a literal line may
+be chosen as the name, and copying text into a private note is optional. A clean,
+account-bound handoff opens normal capture review. No record, date, price, call
+or rank is inferred or saved automatically; the photo is not uploaded or attached.
+The manual paste/name path remains usable when recognition or storage is unavailable.
+
+Source photos and text drafts recover on this account/device for seven days.
+Cancellation, failure, timeout, page exit and account changes terminate recognition
+workers. Owned handoffs are withheld while signed out and discarded for a different
+account, without placing private words in a URL. Draft owners remain fixed during
+metadata transitions. The build prepares local assets and supplied notices; its
+CSP allows self-hosted WebAssembly without JavaScript string evaluation.
+
+All 134 tests across 33 files, formatting, lint, unused-code checks, TypeScript
+and the production build passed. The full browser regression passed all 165
+journeys. Real-engine PNG/JPEG reading, WebP cancellation, failed assets, manual
+fallback, blocked storage, account boundaries, Axe and narrow reflow are covered.
+Reviewed desktop/phone captures are in [photo text QA](../art/ui-qa/photo-text/README.md).
+Receipt attachment/line-to-record mapping, full offline sync and all other
+unchecked web scope remain unfinished. This is local feature-branch work, with
+no native companion, push, pull request or deployment.

@@ -11,6 +11,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const PhotoTextPage = lazy(() =>
+  import('./pages/PhotoTextPage').then((module) => ({ default: module.PhotoTextPage })),
+);
 const InboxPage = lazy(() => import('./pages/InboxPage').then((module) => ({ default: module.InboxPage })));
 const CapturePage = lazy(() =>
   import('./pages/CapturePage').then((module) => ({ default: module.CapturePage })),
@@ -122,6 +125,7 @@ function PrivateApp() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/read" element={<PhotoTextPage />} />
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/capture" element={<CapturePage />} />
         <Route path="/quick" element={<QuickPage />} />
@@ -131,8 +135,9 @@ function PrivateApp() {
     </AppShell>
   ) : location.pathname === '/capture' ? (
     <CaptureSignIn authOrigin={authOrigin} />
-  ) : ['/', '/inbox', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
-    /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
+  ) : ['/', '/read', '/inbox', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(
+      location.pathname,
+    ) || /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (
     <InfoPage kind="missing" />

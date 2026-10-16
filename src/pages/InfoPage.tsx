@@ -96,8 +96,9 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 service. Server-side save/restore retry metadata prevents duplicate requests and is cleared
                 when you delete all Worth data. Request counters limit excessive saves; old counter windows
                 are cleaned up on subsequent saves. Worker logging is enabled; saved record contents are not
-                intentionally written to application error logs. Worth’s application code has no advertising,
-                tracking SDK or AI processing of your records. The shared account service uses its own
+                intentionally written to application error logs. Worth’s application code has no advertising
+                or tracking SDK. Optional photo text reading runs on your device; photos are not uploaded to
+                Worth or an external AI provider for recognition. The shared account service uses its own
                 providers, as described in its policy.
               </p>
             </section>
@@ -370,6 +371,28 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 lost, retry its fixed receipt, even after reloading. Deleted Inbox finds remain in Trash for
                 30 days and restore unfiled. Backups include active Inbox finds and give them fresh IDs when
                 restored. Choose a current collection when filing. Trash is excluded from backups.
+              </p>
+            </section>
+            <section>
+              <h2>Read a photo</h2>
+              <p>
+                <Link to="/read">Read a photo</Link> recognizes English printed text on your device. Choose a
+                JPEG, PNG or WebP, then explicitly start reading. The first use downloads reading files from
+                Worth. Stop reading cancels processing; unsupported browsers and failed downloads keep manual
+                text entry available.
+              </p>
+              <p>
+                Check the words, choose or type a name, and optionally keep text in a private note. Review
+                this capture opens a separate capture draft for another explicit review and save. Dates,
+                prices, calls and rankings are never inferred. The source photo is not attached or uploaded
+                with the text. Your account’s photo and text draft can recover on this device for seven days;
+                Clear photo and text draft or Settings’ device cleanup removes them. Recognition quality
+                varies, especially with handwriting, blur or other languages.
+              </p>
+              <p>
+                <a href="/ocr/v7/licenses/tesseract-js.txt" target="_blank" rel="noopener noreferrer">
+                  Recognition software license notices ↗
+                </a>
               </p>
             </section>
             <section>

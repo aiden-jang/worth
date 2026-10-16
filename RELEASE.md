@@ -132,3 +132,12 @@ metadata remain usable independently of that header.
 - Confirm private search links and account changes do not expose a previous account’s finds.
 - Check new version 2 exports, version 1/2 restore, and rejection of unsupported future backup formats.
 - Inspect drawer/full-page/editor/empty states at desktop and phone sizes, plus 320/430/768px reflow.
+
+### Photo text reading
+
+- Use `pnpm build` so generated recognition assets and supplied license files are included.
+- Verify English PNG/JPEG reading, WebP preparation, no early engine download, and no third-party recognition requests.
+- Check stop/error/account-change worker cleanup, seven-day source recovery and explicit draft cleanup.
+- Confirm only reviewed name/note text reaches capture; source photos, prices, dates, calls and ranks are not inferred/uploaded.
+- Keep manual paste usable when workers, WebAssembly or reading assets are unavailable.
+- Review desktop/phone contrast/reflow. Physical Safari/iOS and Android behavior needs separate device verification.

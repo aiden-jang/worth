@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAccountId } from './useAccountId';
 
 function storage(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -30,7 +30,7 @@ async function access(key: string, action: 'read' | 'write' | 'delete', file?: F
   }
 }
 export function useDraftPhoto(name: string) {
-  const owner = useQueryClient().getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
+  const owner = useAccountId();
   const key = owner ? `${owner}:${name}` : null;
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState('');

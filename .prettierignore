@@ -6,3 +6,5 @@ playwright-report/
 test-results/
 worker-configuration.d.ts
 pnpm-lock.yaml
+
+public/ocr/

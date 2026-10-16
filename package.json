@@ -8,8 +8,8 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "pnpm typecheck && vite build",
+    "dev": "node scripts/prepare-ocr.mjs && vite --host 127.0.0.1",
+    "build": "node scripts/prepare-ocr.mjs && pnpm typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "wrangler types && tsc --noEmit",
     "format": "prettier --write .",
@@ -37,6 +37,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^7.18.4",
+    "tesseract.js": "^7.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -44,6 +45,7 @@
     "@cloudflare/vite-plugin": "^1.64.0",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.64.1",
+    "@tesseract.js-data/eng": "1.0.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^22.20.5",

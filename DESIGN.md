@@ -281,3 +281,15 @@ routine/workout actions and record behavior remain intact. This deliberately
 extends the activity reference with the edition’s existing empty-state spacing;
 phone captures scroll to that section to show the complete illustration and CTA.
 See `art/ui-qa/activity-art/` for desktop/phone verification.
+
+## Photo text review
+
+Read a photo extends the existing capture composition: a dark source panel and
+cream text-review panel share the 68/50px header, 22px corners and 44px controls.
+Below 960px the source precedes review. Read text is editable, a name is chosen
+explicitly, and a private note is folded until requested or already populated.
+Inputs/labels use DM Sans; structural overlines keep DM Mono. Cream labels and
+focus rings use dark ink for contrast. There is no fake source preview, inferred
+opinion, automatic save or external processing. This is a deliberate extension
+of capture and the cabinet’s secondary tools. Captures focus the source/review
+section when the full phone flow exceeds one viewport.

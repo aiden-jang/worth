@@ -7,6 +7,7 @@ export default ts.config(
   {
     ignores: [
       'dist/**',
+      'public/ocr/**',
       'node_modules/**',
       '.wrangler/**',
       'art/**',

@@ -400,3 +400,20 @@ record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
 rolls back everything. New exports use schema version 2 so older readers reject them rather than silently omit Inbox finds. Restore still accepts version 1 files, which default to no Inbox. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
+
+## On-device photo text
+
+The private `/read` page prepares bounded image input on the device and lazily
+starts a parent browser worker running Tesseract.js with self-hosted core/language
+assets. Its nested worker can be stopped during initialization by terminating the
+parent. Generation checks quarantine late results after cancellation, timeout or
+unmount. Account recovery unmounts it and retains the existing full-document
+boundary. No OCR/photo processing endpoint or external AI provider is introduced.
+
+The owner-scoped source photo and editable text recover locally for seven days.
+Only an explicitly chosen name and optional note enter an account-bound local
+handoff and the existing capture review/save flow; no image, price, date, call or rank is inferred or sent
+with it. Manual entry remains available after unsupported capabilities or failed
+asset downloads. Limits, generated-asset/licensing rules, CSP and tested recovery
+boundaries are detailed in [photo text](PHOTO-TEXT.md). Receipt attachment and
+multi-line record mapping remain separate pending work.
