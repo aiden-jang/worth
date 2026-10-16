@@ -38,7 +38,7 @@ framing and layout changes in the original checkout.
 - [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
 - [ ] Reviewed receipt extraction with attachment and line-to-record mapping.
 - [ ] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
-- [ ] Home-screen access to capture, a chosen shortlist or a random saved find. Native widgets require a supported platform integration; a web shortcut is not a widget.
+- [ ] Web home-screen shortcuts for capture, a chosen shortlist and a random saved find. Keep these within the website/PWA; native companion apps are out of scope.
 
 ## Memories and relationships
 
@@ -80,14 +80,15 @@ framing and layout changes in the original checkout.
 
 Existing seven-day public snapshots keep their original fixed title/type-only
 scope. New sharing formats must have their own explicit preview and access rules.
-No private notes/photos may silently become part of existing links. Native device
+No private notes/photos may silently become part of existing links. Device
 capabilities, external lookups, notifications, AI and collaboration need working
 integration and validation; do not replace them with decorative controls.
 
-The user chose widgets for both iOS/iPadOS and Android on October 16. Recognition
-and extraction must stay on-device, with no paid external AI provider or uploads
-for processing. These integrations remain pending; they are not supplied by the
-address-only link suggestion or the existing web-app shortcuts.
+The user clarified on October 16 that Worth must remain a web app. Native iOS and
+Android companions, widget-specific approvals/APIs, migration and CI have been
+removed from this branch. Home-screen access will use web/PWA shortcuts instead.
+Recognition and extraction must stay on-device, without paid external AI or
+processing uploads.
 
 ## First implementation: collection workbench
 
@@ -196,7 +197,7 @@ in [capture QA](../art/ui-qa/reviewed-capture/README.md). General existing-recor
 duplicate review is completed separately below; import checks alone did not complete it.
 
 This work remains on the feature branch. Nothing in this tracker claims that the
-unchecked features, native widgets or on-device recognition are finished.
+unchecked web features or on-device recognition are finished.
 
 ## Sixth implementation: existing-record duplicate review
 
@@ -239,7 +240,7 @@ all 87 journeys; all eight archiving cases passed again against the final copy/b
 Final formatting/lint checks passed. Eight desktop/phone captures were reviewed
 alongside the cabinet references; see [archiving QA](../art/ui-qa/collection-archiving/README.md).
 This work remains local on the feature branch. The unchecked scope above,
-including actual widgets for both platforms and on-device recognition, is unfinished.
+including web capture integrations and on-device recognition, is unfinished.
 
 ## Eighth implementation: private visit details
 
@@ -263,39 +264,11 @@ locally. The full browser regression passed 95 journeys; all eight visit-detail
 cases passed again after the final spacing adjustment. The final build, formatting
 and lint passed, and all four desktop/phone captures were visually reviewed in
 [visit QA](../art/ui-qa/visit-context/README.md). The larger unchecked scope remains
-unfinished, including actual widgets and on-device recognition.
+unfinished, including web capture integrations and on-device recognition.
 
-## Ninth implementation: scoped widget connections and companion projects
+## Scope correction: website only
 
-The website can approve one to five owned collections for a native companion,
-with no default selection. Settings lists active devices and short-lived pending
-requests, with revoke/cancel and recoverable failures. Browser sign-in preserves
-the complete approval path; callback scheme, path, state and code are checked.
-Read-only tokens expire after 30 days and expose only scoped names/types/order,
-plus a saved find from all items, Want to try, queue or Favorites. Notes, private
-context, visits and photos remain excluded. Public IP limits, owner boundaries,
-S256 proof, guarded D1 creation, retry recovery and deletion are covered in real
-API tests. Connections stay outside backups. Migration 0016 is additive.
-
-Native SwiftUI/WidgetKit and Android RemoteViews companion projects implement the
-three requested widget modes, protected credential storage, explicit collection/
-filter choices, saved timestamps, bounded cache use and revoke/local-forget flows.
-Both use the external browser, with no embedded login, external AI or recognition
-upload. **They have not been compiled with their platform SDKs or verified on a
-simulator/device.** The portable Swift contract checks (three), Java contract
-checks (two), Swift syntax parsing, Android XML parsing, checksum-pinned Gradle
-wrapper generation and Xcode project/plist/entitlement generation passed locally.
-Shared/widget Swift source also type-checks against the available macOS SDK;
-this does not verify the iOS build. The native CI workflow has been authored but
-has not run remotely.
-
-All 113 web unit/component/API tests passed, and the full web regression passed
-107 journeys. All 12 widget browser journeys also passed after fixing inherited
-checkbox layout. Six desktop/phone captures were visually reviewed; see
-[widget web QA](../art/ui-qa/widget-connections/README.md). A final core check and
-focused run cover the subsequent privacy/help/consent copy changes.
-
-[Native setup and remaining checks](../native/README.md) records the missing iOS
-SDK, pending Android SDK license/setup approval, device verification and distribution
-work. Actual widgets, phone/browser capture, on-device recognition and the larger
-unchecked feature list remain unfinished. No PR, push, merge or deployment was made.
+The native companion experiment was removed at the user's request. No native
+source, SDK build workflow, widget access tokens, consent screen or related
+database migration remains in the repository. Nothing was pushed or deployed.
+The completed web features above remain; unchecked web features are still pending.

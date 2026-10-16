@@ -98,16 +98,3 @@ feature tracker records local verification; it does not assert that these branch
 changes have been merged, passed GitHub CI or been deployed.
 Migration `0015` adds private visit context and log revisions; older logs default
 to empty context and no earlier reactions are inferred.
-
-## Widget connection migration
-
-Migration `0016` adds owner-bound widget devices, explicit collection scopes and
-short-lived connection grants. Apply it before enabling the matching Worker/native
-companions. It is additive and does not change existing account sessions, public
-links or backups. Connections are not restored from backups and all-data deletion
-removes them. After database-wide recovery, revoke old widget devices/grants as
-well as reviewing shares: a restored database could otherwise reinstate access.
-See [widget protocol and retention](docs/WIDGET-CONNECTIONS.md).
-
-Native source has separate build/device checks; web CI alone does not verify an
-iOS or Android widget. Native apps are not published by the existing web deploy.

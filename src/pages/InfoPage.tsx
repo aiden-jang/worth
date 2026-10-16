@@ -78,23 +78,6 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
-              <h2>Widget connections</h2>
-              <p>
-                A companion connection can read only the collections you approve, including archived
-                collections: collection names, item names/types and saved order. Saved finds can select from
-                Want to try, the revisit queue or Favorites. Notes, photos, sources and visit details are
-                excluded. Device names, selected collections, expiry and hashed access credentials are stored
-                to manage access. Connections expire after 30 days and can be revoked in Settings; website
-                sign-out does not revoke them. Names may appear on a phone’s home screen.
-              </p>
-              <p>
-                Revocation stops future reads. A device may display its last saved copy until the operating
-                system redraws the widget. Moving a collection to Trash excludes it from future refreshes;
-                restoration makes it available again unless the connection was revoked. Backups exclude widget
-                connections. Deleting all Worth data removes them.
-              </p>
-            </section>
-            <section>
               <h2>On this device</h2>
               <p>
                 Worth uses browser storage for unfinished text and photo drafts, retry identifiers, rest
@@ -340,22 +323,6 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 A routine is an exercise lineup. Start it to create a visit with blank measurements. Resume a
                 visit to continue logging; swap, reorder or skip names for that visit without changing the
                 routine. Finish shows a recap of saved entries. Rest timers are optional.
-              </p>
-            </section>
-            <section>
-              <h2>Widget access</h2>
-              <p>
-                If you use an installed Worth companion, start its connection in the app. Sign in through your
-                browser, review access and choose up to five collections, then return to the companion within
-                five minutes. Settings → Widget connections shows active devices and pending requests. Cancel
-                a request or revoke a device there. Access expires after 30 days; reconnect to renew.
-              </p>
-              <p>
-                Widget reads include names, types and saved order, with saved-find groups for Want to try, the
-                revisit queue or Favorites. Notes, photos and visit details are excluded. Names may be visible
-                on your home screen. Website sign-out does not disconnect widgets. Revocation stops future
-                refreshes, but a saved copy may remain until the phone redraws the widget. Installing the
-                website alone does not add native widgets.
               </p>
             </section>
             <section>

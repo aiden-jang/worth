@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="capture_description">Capture: open a chosen collection’s name entry.</string>
-  <string name="shortlist_description">Shortlist: the chosen collection’s saved top five.</string>
-  <string name="find_description">Saved find: a random item from your chosen group.</string>
-  <string name="widget_wordmark">worth</string>
-  <string name="widget_choose">Choose a collection</string>
-  <string name="widget_open">Open the Worth companion to connect or refresh.</string>
-</resources>

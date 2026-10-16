@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { WidgetConnections } from '../components/WidgetConnections';
 import { TrashPanel } from '../components/TrashTools';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
@@ -199,7 +198,6 @@ export function SettingsPage() {
           </div>
         )}
       </section>
-      <WidgetConnections />
       <section className="data-section">
         <h2>This device.</h2>
         <p>

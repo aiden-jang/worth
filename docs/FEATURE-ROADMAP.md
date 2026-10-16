@@ -42,10 +42,10 @@ collaboration. See the tracker
 for individual unchecked features; a related completed tool does not complete
 these automatically.
 
-The user chose actual widgets for both iOS/iPadOS and Android. Recognition and
-extraction must stay on-device, with no paid external AI provider. These native
-and recognition integrations are pending. Web shortcuts and address parsing do
-not count as those integrations.
+Worth remains a web app. Native iOS/Android companions and their widget APIs were
+removed at the user's request. Home-screen integrations will use web/PWA
+shortcuts. Recognition and extraction must stay on-device, without paid external
+AI or processing uploads; these integrations remain pending.
 
 Existing exercise history/progress, routines, exports and share images should be
 extended only where the new behavior adds value. Public feeds, streaks and five-star

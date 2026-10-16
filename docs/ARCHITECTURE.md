@@ -304,19 +304,3 @@ Records and photo backups include it, restore remaps relationships and starts ne
 revisions, and old files default to empty context. Create/patch bodies are bounded
 to 32 KiB. Detail-editor retries patch the same log. If a response was lost, reload
 the saved visit to review its current version.
-
-## Native widget connection boundary
-
-The optional widget foundation has separate browser consent and native read routes.
-Migration 0016 stores hashed codes/tokens, owner-bound devices and explicit collection
-scopes. Tokens cannot access existing private APIs or obtain account sessions.
-`src/shared/widgets.ts` defines the exact data projection and bounded inputs;
-`worker/routes/widgets.ts` guards approval, exchange, reads and revocation. Settings
-lists connected devices and pending requests only when its disclosure is opened.
-
-The browser preserves consent through login, defaults to no collections selected,
-validates the fixed native callback and keeps choices when a request fails. Native
-companion source does not enter the web bundle. Both platform builds and home-screen
-behavior have their own verification requirements. See [widget connections](WIDGET-CONNECTIONS.md)
-for endpoints, retry/expiry semantics, limits and data retention, and
-[native setup](../native/README.md) for the remaining integration checks.

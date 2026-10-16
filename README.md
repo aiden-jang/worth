@@ -71,10 +71,6 @@ The D1 tests and browser preview use isolated local state. Browser API fixtures 
 in `e2e/`; they are not shipped. See [contributing](CONTRIBUTING.md) for individual checks.
 
 See [archive tools](docs/ARCHIVE-TOOLS.md) for move, merge, recovery and export behavior.
-The optional [widget connection foundation](docs/WIDGET-CONNECTIONS.md) approves
-collection-scoped reads and manages revocation. Companion source for both platforms
-is in [native setup](native/README.md); build/device verification is separate and
-widgets are not yet a published feature. Installing the website alone does not add them.
 
 ## Repository guide
 

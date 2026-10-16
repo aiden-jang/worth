@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:background="@drawable/widget_background">
-  <TextView android:id="@+id/widget_heading" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#e8dc9d" android:textSize="12sp" android:maxLines="1" android:text="@string/widget_wordmark" />
-  <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="#f0ecdf" android:textSize="18sp" android:maxLines="2" android:ellipsize="end" android:text="@string/widget_choose" />
-  <TextView android:id="@+id/widget_content" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="8dp" android:textColor="#f0ecdf" android:textSize="16sp" android:maxLines="6" android:ellipsize="end" android:text="@string/widget_open" />
-  <TextView android:id="@+id/widget_footer" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#aaa99b" android:textSize="12sp" android:maxLines="2" />
-</LinearLayout>
