@@ -47,6 +47,7 @@ beforeAll(async () => {
     '0013_item_context.sql',
     '0014_collection_archiving.sql',
     '0015_visit_context.sql',
+    '0016_collection_templates.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -2351,4 +2352,215 @@ test('a visit update refuses a parent trashed between its read and write', async
     note: '',
     revision: 0,
   });
+});
+
+function templateInput(name = 'Tasting setup') {
+  return {
+    id: crypto.randomUUID(),
+    name,
+    collectionName: 'Coffee',
+    description: 'Small cups',
+    artwork: { object: 'cup', tone: 'sage' },
+    detailFields: ['Roaster', 'Origin'],
+  };
+}
+async function restoreWithTemplates(owner: string, file: unknown, key = crypto.randomUUID()) {
+  return app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(file),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+
+test('templates are private, scoped to their owner and safe to retry without resurrecting removals', async () => {
+  const owner = 'templateowner',
+    template = templateInput();
+  expect((await call('/templates', null)).status).toBe(401);
+  expect((await call('/templates', owner, 'POST', template, 'https://foreign.test')).status).toBe(403);
+  expect((await call('/templates', owner, 'POST', { ...template, records: [] })).status).toBe(400);
+  const writes = await Promise.all([
+    call('/templates', owner, 'POST', template),
+    call('/templates', owner, 'POST', template),
+  ]);
+  expect(writes.map((response) => response.status).sort()).toEqual([200, 201]);
+  expect(await (await call('/templates', owner)).json()).toEqual({ templates: [template] });
+  expect(await (await call('/templates', 'othertemplateowner')).json()).toEqual({ templates: [] });
+  expect((await call('/templates', owner, 'POST', { ...template, name: 'Changed payload' })).status).toBe(
+    409,
+  );
+  await call(`/templates/${template.id}`, 'othertemplateowner', 'DELETE');
+  expect(
+    ((await (await call('/templates', owner)).json()) as { templates: unknown[] }).templates,
+  ).toHaveLength(1);
+  expect((await call('/templates', 'othertemplateowner', 'POST', template)).status).toBe(201);
+  await call(`/templates/${template.id}`, owner, 'DELETE');
+  expect((await call('/templates', owner, 'POST', template)).status).toBe(409);
+  expect(await (await call('/templates', owner)).json()).toEqual({ templates: [] });
+});
+
+test('collection fields stay optional, revision guarded and preserved in templates and backups', async () => {
+  const owner = 'fieldowner';
+  const response = await call('/lists', owner, 'POST', {
+    name: 'Coffee setup',
+    kind: 'collection',
+    detailFields: ['Roaster', 'Origin'],
+  });
+  expect(response.status).toBe(201);
+  const list = ((await response.json()) as { list: ListDetail }).list;
+  const item = await archiveItem(owner, list.id, 'Name only');
+  expect(item.context?.fields ?? []).toEqual([]);
+  const saved = (await (await call(`/lists/${list.id}/workspace`, owner)).json()) as {
+    workspace: { rankings: []; views: []; detailFields: string[] };
+    revision: number;
+  };
+  expect(saved.workspace.detailFields).toEqual(['Roaster', 'Origin']);
+  expect((await call(`/lists/${list.id}/workspace`, 'fieldstranger')).status).toBe(404);
+  expect(
+    (
+      await call(`/lists/${list.id}/workspace`, owner, 'PUT', {
+        workspace: { ...saved.workspace, detailFields: ['Origin', ' Ｏｒｉｇｉｎ '] },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await call(`/lists/${list.id}/workspace`, owner, 'PUT', {
+        workspace: { ...saved.workspace, detailFields: ['Origin'] },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await call(`/lists/${list.id}/workspace`, owner, 'PUT', {
+        workspace: saved.workspace,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+  expect(
+    (await call('/lists', owner, 'POST', { name: 'Activity', kind: 'activity', detailFields: ['Field'] }))
+      .status,
+  ).toBe(400);
+  const template = templateInput();
+  await call('/templates', owner, 'POST', template);
+  const backup = (await (await call('/export/records', owner)).json()) as ArchiveFile;
+  expect(backup.collectionTemplates).toEqual([template]);
+  expect(backup.lists[0].workspace.detailFields).toEqual(['Origin']);
+  const key = crypto.randomUUID();
+  expect((await restoreWithTemplates('fieldrestore', backup, key)).status).toBe(201);
+  expect((await restoreWithTemplates('fieldrestore', backup, key)).status).toBe(201);
+  const restored = (await (await call('/export/records', 'fieldrestore')).json()) as ArchiveFile;
+  expect(restored.collectionTemplates).toHaveLength(1);
+  expect(restored.collectionTemplates[0]).toEqual({ ...template, id: expect.any(String) });
+  expect(restored.collectionTemplates[0].id).not.toBe(template.id);
+  expect(restored.lists[0].workspace.detailFields).toEqual(['Origin']);
+  const invalid = structuredClone(backup);
+  invalid.lists[0].kind = 'activity';
+  invalid.items = [];
+  invalid.lists[0].rankedIds = [];
+  expect((await restoreWithTemplates('fieldbadrestore', invalid)).status).toBe(400);
+});
+
+test('template capacity is atomic under concurrent saves and rolls back the entire restore', async () => {
+  const owner = 'templatecapacity';
+  const seeded = Array.from({ length: 49 }, (_, index) => templateInput(`Setup ${index}`));
+  await platform.env.DB.prepare(
+    'INSERT INTO collection_template_sets (owner_id, templates_json) VALUES (?, ?)',
+  )
+    .bind(owner, JSON.stringify(seeded))
+    .run();
+  const a = templateInput('Last spot A'),
+    b = templateInput('Last spot B');
+  const responses = await Promise.all([
+    call('/templates', owner, 'POST', a),
+    call('/templates', owner, 'POST', b),
+  ]);
+  expect(responses.map((response) => response.status).sort()).toEqual([201, 409]);
+  const rejected = responses[0].status === 409 ? a : b;
+  expect(await (responses[0].status === 409 ? responses[0] : responses[1]).json()).toMatchObject({
+    error: 'TEMPLATE_LIMIT',
+  });
+  const source = await archiveCollection('templatebackupsource', 'Preserved source');
+  await call('/templates', 'templatebackupsource', 'POST', templateInput('From backup'));
+  const backup = await (await call('/export/records', 'templatebackupsource')).json();
+  const key = crypto.randomUUID();
+  const failed = await restoreWithTemplates(owner, backup, key);
+  expect(failed.status).toBe(409);
+  expect(await failed.json()).toMatchObject({ error: 'TEMPLATE_LIMIT' });
+  expect(
+    (
+      await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM lists WHERE owner_id = ?')
+        .bind(owner)
+        .first<{ n: number }>()
+    )?.n,
+  ).toBe(0);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM capture_operations WHERE id = ?').bind(key).first(),
+  ).toBeNull();
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM collection_template_receipts WHERE owner_id = ? AND id = ?')
+      .bind(owner, rejected.id)
+      .first(),
+  ).toBeNull();
+  const current = (await (await call('/templates', owner)).json()) as { templates: { id: string }[] };
+  expect(current.templates).toHaveLength(50);
+  await call(`/templates/${current.templates[0].id}`, owner, 'DELETE');
+  expect((await restoreWithTemplates(owner, backup, key)).status).toBe(201);
+  const restored = (await (await call('/export/records', owner)).json()) as ArchiveFile;
+  expect(restored.collectionTemplates).toHaveLength(50);
+  expect(restored.lists[0].name).toBe(source.name);
+});
+
+test('template-only restore works and all-data deletion clears templates and their retry receipts', async () => {
+  const owner = 'onlytemplates';
+  const template = templateInput();
+  const file = {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    photosExcluded: true,
+    lists: [],
+    items: [],
+    logs: [],
+    collectionTemplates: [template],
+  };
+  const restored = await restoreWithTemplates(owner, file);
+  expect(restored.status).toBe(201);
+  expect(await restored.json()).toEqual({ ids: [] });
+  await call('/templates', owner, 'POST', templateInput('Direct save'));
+  const removed = await app.request(
+    'https://worth.test/api/data',
+    {
+      method: 'DELETE',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'X-Worth-Confirmation': 'delete-all-worth-data',
+      },
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(removed.status).toBe(204);
+  expect(await (await call('/templates', owner)).json()).toEqual({ templates: [] });
+  expect(
+    (
+      await platform.env.DB.prepare(
+        'SELECT COUNT(*) AS n FROM collection_template_receipts WHERE owner_id = ?',
+      )
+        .bind(owner)
+        .first<{ n: number }>()
+    )?.n,
+  ).toBe(0);
 });

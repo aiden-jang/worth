@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectionFields } from './collection-fields';
 const name = z.string().trim().min(1).max(80);
 const key = z.string().uuid();
 export const collectionShelf = z
@@ -42,6 +43,7 @@ const distinct = <T extends { id: string }>(values: T[]) =>
   new Set(values.map((value) => value.id)).size === values.length;
 export const collectionWorkspace = z
   .object({
+    detailFields: collectionFields.optional(),
     shelf: collectionShelf.optional(),
     duplicateReviews: z
       .array(

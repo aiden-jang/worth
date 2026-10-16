@@ -1,3 +1,5 @@
+import { readTemplates } from './templates';
+import type { CollectionTemplate } from '../src/shared/templates';
 import { visitContext, hasVisitContext } from '../src/shared/visit-context';
 import type {
   Item,
@@ -14,6 +16,7 @@ import { emptyItemContext, type ItemContext } from '../src/shared/item-context';
 const emptyContextJson = JSON.stringify(emptyItemContext);
 
 export type RecordExport = {
+  collectionTemplates: CollectionTemplate[];
   schemaVersion: 1;
   exportedAt: string;
   photosExcluded: true;
@@ -320,6 +323,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       .bind(ownerId),
   ]);
   return {
+    collectionTemplates: await readTemplates(db, ownerId),
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     photosExcluded: true,

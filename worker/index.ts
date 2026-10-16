@@ -1,3 +1,4 @@
+import { registerTemplateRoutes } from './routes/templates';
 import { resolveSession } from '@aidenjang/auth-client';
 import { Hono } from 'hono';
 import type { AppEnv } from './context';
@@ -72,6 +73,7 @@ privateApi.use('*', async (c, next) => {
 
 registerArchiveTools(privateApi);
 registerWorkspaceRoutes(privateApi);
+registerTemplateRoutes(privateApi);
 registerListRoutes(privateApi);
 registerItemRoutes(privateApi);
 registerReviewedCaptureRoutes(privateApi);

@@ -32,10 +32,12 @@ its verification. The following groups are committed and verified locally on
 - Existing-record duplicate suggestions with reversible keep-separate reviews,
   Details and explicit revisit-composer actions.
 - Reversible collection archiving with retained Search, Patterns, links and backups.
+- Reusable collection detail names and private setup templates, including reviewed creation,
+  safe retries, removal and atomic backup restore.
 - Private visit-specific location, edition, order/setup and reaction, with draft
   recovery and revision-aware detail editing.
 
-Remaining work includes history/time-machine views, templates, inbox, offline
+Remaining work includes history/time-machine views, inbox, offline
 sync, linked records and relationships, boards, revisit planning, routines and
 measurements, photo tools, field guides, blind two-person choices and private
 collaboration. See the tracker

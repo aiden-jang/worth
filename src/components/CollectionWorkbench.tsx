@@ -23,8 +23,9 @@ import { ReviewedCapture } from './ReviewedCapture';
 import { VisitContextReadout } from './VisitContext';
 import { DuplicateReview } from './DuplicateReview';
 import '../workbench.css';
+import { CollectionSetup } from './CollectionSetup';
 
-type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture';
+type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture' | 'setup';
 type RankingDraft = { ids: string[]; revision: number };
 const validDraft = (value: unknown): value is RankingDraft => {
   if (!value || typeof value !== 'object') return false;
@@ -155,6 +156,7 @@ export function CollectionWorkbench({
               ['publish', 'Booklets & cards'],
               ['shelf', 'Your shelf'],
               ['capture', 'Import & capture'],
+              ['setup', 'Collection setup'],
             ] as const
           ).map(([id, label]) => (
             <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
@@ -162,6 +164,7 @@ export function CollectionWorkbench({
             </button>
           ))}
         </nav>
+        {mode === 'setup' && <CollectionSetup list={list} />}
         {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
         {mode === 'capture' && <ReviewedCapture list={list} items={items} />}
         {mode === 'shelf' && <CollectionShelf list={list} items={items} onOpen={openRecord} />}

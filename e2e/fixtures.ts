@@ -1,6 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import type { Item, ListDetail, Log, TrashEntry } from '../src/shared/models';
 import type { WorkspaceResponse } from '../src/shared/workspace';
+import type { CollectionTemplate } from '../src/shared/templates';
 import { emptyItemContext } from '../src/shared/item-context';
 
 export const list: ListDetail = {
@@ -34,6 +35,7 @@ export const item: Item = {
   lastLoggedOn: null,
 };
 export type State = {
+  templates: CollectionTemplate[];
   workspace: WorkspaceResponse;
   signedIn: boolean;
   authDown: boolean;
@@ -50,6 +52,7 @@ export type State = {
 };
 export async function mockArchive(page: Page): Promise<State> {
   const state: State = {
+    templates: [],
     workspace: { workspace: { rankings: [], views: [] }, revision: 0 },
     signedIn: true,
     authDown: false,
@@ -78,6 +81,20 @@ export async function mockArchive(page: Page): Promise<State> {
         state.workspace = { workspace: body.workspace, revision: state.workspace.revision + 1 };
       }
       return reply(state.workspace);
+    }
+    if (path === '/templates') {
+      if (method === 'POST') {
+        const template = request.postDataJSON();
+        state.writes.push({ path, body: template });
+        if (!state.templates.some((entry) => entry.id === template.id)) state.templates.push(template);
+        return reply({ template }, 201);
+      }
+      return reply({ templates: state.templates });
+    }
+    if (path.startsWith('/templates/') && method === 'DELETE') {
+      const id = path.split('/').pop();
+      state.templates = state.templates.filter((entry) => entry.id !== id);
+      return route.fulfill({ status: 204 });
     }
     if (path === '/me')
       return reply(
@@ -162,6 +179,26 @@ export async function mockArchive(page: Page): Promise<State> {
       return reply({ list: extraList });
     }
     if (path === '/search') return reply({ results: [] });
+    if (path === '/lists' && method === 'POST') {
+      const body = request.postDataJSON();
+      state.writes.push({ path, body });
+      state.list = {
+        ...state.list,
+        ...body,
+        rankedIds: [],
+        itemCount: 0,
+        rankedCount: 0,
+        favoriteCount: 0,
+        logCount: 0,
+      };
+      state.items = [];
+      state.logs = [];
+      state.workspace = {
+        workspace: { rankings: [], views: [], detailFields: body.detailFields ?? [] },
+        revision: 0,
+      };
+      return reply({ list: state.list }, 201);
+    }
     if (path === '/lists') {
       const archived = new URL(request.url()).searchParams.get('archived') === '1';
       return reply({

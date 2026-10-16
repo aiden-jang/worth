@@ -98,3 +98,12 @@ feature tracker records local verification; it does not assert that these branch
 changes have been merged, passed GitHub CI or been deployed.
 Migration `0015` adds private visit context and log revisions; older logs default
 to empty context and no earlier reactions are inferred.
+
+Collection templates use additive migration `0016_collection_templates.sql`.
+Verify name-only capture, explicit addition of blank collection detail names,
+revision conflicts, template creation/retry/removal and template-based creation.
+A template copies only the setup shown in its preview; it creates no records.
+Check records and photo backup round trips, including a template-only file and a
+restore that would exceed the owner's 50-template limit. The latter must leave
+both records and the import receipt unchanged. This migration replaces a removed,
+local-only native-widget experiment; that experiment was never deployed.

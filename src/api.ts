@@ -79,6 +79,10 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  templates: () => request<{ templates: import('./shared/templates').CollectionTemplate[] }>('/templates'),
+  createTemplate: (body: import('./shared/templates').CollectionTemplate) =>
+    request<{ template: import('./shared/templates').CollectionTemplate }>('/templates', json('POST', body)),
+  deleteTemplate: (id: string) => request<void>(`/templates/${id}`, { method: 'DELETE' }),
   workspace: (listId: string) =>
     request<import('./shared/workspace').WorkspaceResponse>(`/lists/${listId}/workspace`),
   updateWorkspace: (
@@ -124,6 +128,7 @@ export const api = {
     kind: 'collection' | 'activity';
     description: string;
     artwork?: CollectionArt | null;
+    detailFields?: string[];
   }) => request<{ list: ListDetail }>('/lists', json('POST', body)),
   updateList: (
     id: string,

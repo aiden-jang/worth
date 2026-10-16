@@ -42,6 +42,7 @@ labeled and never writes to a private archive.
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
   a ranking image. Only the collection name and ranked titles/types leave the archive.
+- Save reusable collection detail names and private setup templates for new, empty collections.
 - Export records or a photo-inclusive backup; preview a validated restore as new lists.
   Worth-only data deletion leaves the shared account and other apps alone.
 

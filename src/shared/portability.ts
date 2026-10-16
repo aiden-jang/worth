@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectionTemplates } from './templates';
 import { itemInput, listInput, logInput, routineInput, workoutPatch } from './validation';
 import { collectionWorkspace } from './workspace';
 import { hasVisitContext } from './visit-context';
@@ -10,6 +11,7 @@ const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
     schemaVersion: z.literal(1),
+    collectionTemplates: collectionTemplates.default([]),
     exportedAt: z.string().datetime(),
     photosExcluded: z.boolean(),
     lists: z
@@ -147,7 +149,8 @@ export const archiveFile = z
         (l.workspace.rankings.length ||
           l.workspace.views.length ||
           l.workspace.shelf ||
-          l.workspace.duplicateReviews?.length)
+          l.workspace.duplicateReviews?.length ||
+          l.workspace.detailFields?.length)
       )
         bad('An activity cannot contain collection tools');
       if (

@@ -304,3 +304,37 @@ Records and photo backups include it, restore remaps relationships and starts ne
 revisions, and old files default to empty context. Create/patch bodies are bounded
 to 32 KiB. Detail-editor retries patch the same log. If a response was lost, reload
 the saved visit to review its current version.
+
+## Collection setup and templates
+
+Collection workspace `detailFields` stores up to 12 optional names. Identity is
+compared after NFKC, whitespace normalization and case folding, while saved
+spelling remains intact. The existing workspace revision guards all writes;
+reloading a draft needs confirmation. New collection creation can seed these
+names in the same INSERT. Activity creation and activity backups reject them.
+Item editors fetch suggestions only when requested, add blank fields explicitly,
+and preserve existing names/values and the 12-field limit. No record is updated
+when a collection's definitions change.
+
+Migration `0016_collection_templates.sql` stores one private, bounded JSON array
+per owner. A template has its own label plus a collection name, description,
+authored artwork and detail names. It has no record references, uploaded cover,
+notes, calls, ranks, visits or shelf content. Applying it fills a reviewable
+creation draft; it never creates a collection on selection. Templates are
+independent snapshots, so removing one does not change existing drafts/collections.
+
+Creation uses a persistent client UUID and a fingerprint receipt in the same D1
+batch as appending the template. Exact retries recover the same saved template;
+changed payloads or a retry after removal return 409. Receipts remain as
+tombstones until all-data deletion. The database's named CHECK limits each owner
+to 50 templates, including concurrent appends. Removal finds the current JSON
+index within its UPDATE, avoiding stale positional deletes. No owner ID comes
+from request bodies.
+
+Records/photo backups include templates and collection field definitions; old
+files default to no templates. Restore gives templates fresh IDs and adds them in
+the same transaction as records and the import receipt. Capacity failure returns
+409 and rolls back the entire restore, including its receipt. Template-only
+backups can be restored. All-data deletion clears templates and creation receipts.
+Local field/template drafts use the existing account/list-specific seven-day
+storage; uncertain template requests retain an immutable retry preview.

@@ -32,7 +32,7 @@ framing and layout changes in the original checkout.
 - [x] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
 - [x] CSV import with column mapping, preview and duplicate review.
 - [x] Optional per-item custom detail fields; name-only capture remains.
-- [ ] Collection templates and reusable field definitions.
+- [x] Collection templates and reusable field definitions.
 - [ ] Inbox drawer for records awaiting a collection.
 - [ ] Phone/browser capture integrations with reviewed destinations.
 - [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
@@ -272,3 +272,30 @@ The native companion experiment was removed at the user's request. No native
 source, SDK build workflow, widget access tokens, consent screen or related
 database migration remains in the repository. Nothing was pushed or deployed.
 The completed web features above remain; unchecked web features are still pending.
+
+## Ninth implementation: reusable collection setup
+
+Workbench → Collection setup saves up to 12 unique, optional detail names with
+account/list-specific seven-day drafts and revision conflict recovery. Item
+editors add missing blank fields explicitly, preserving existing names/values.
+Changing definitions never edits records. Name-only capture remains available.
+
+Private setup templates copy a reviewed collection name, description, authored
+artwork and saved field names into a new creation draft. Existing creation drafts
+need replacement confirmation. Templates never copy records, notes, photos, calls,
+ranks or shelf keepsakes. Removal preserves existing collections and creation
+drafts. Up to 50 templates are stored per owner; stable creation receipts recover
+interrupted requests and prevent late retries from resurrecting removals.
+
+Additive migration 0016 enforces the capacity atomically, including concurrent
+saves and restore. Templates and field names round-trip through records and photo
+backups; template-only restore is supported. A capacity failure rolls back the
+entire restore, including records and its receipt. All-data deletion clears both
+templates and retry receipts. Older backups default to no templates.
+
+All 110 unit/component/API checks passed, including real D1 concurrency and
+rollback tests. The full 111-journey browser regression passed. Desktop/phone
+captures, narrow-width checks and Axe are recorded in
+[collection setup QA](../art/ui-qa/collection-templates/README.md). The larger
+unchecked web feature list remains unfinished. Work remains on the separate
+branch; no push, pull request, merge or deployment was made.

@@ -360,6 +360,7 @@ export function ItemEditor({
               </div>
             </details>
             <ItemContextEditor
+              listId={listId}
               value={form.context}
               onChange={(context) => setForm({ ...form, context })}
               title={form.title}

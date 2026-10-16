@@ -1,3 +1,4 @@
+import { SuggestedDetails } from './CollectionFields';
 import { useState } from 'react';
 import { calendarReminder, emptyItemContext, type ItemContext } from '../shared/item-context';
 
@@ -16,10 +17,12 @@ export function ItemContextEditor({
   value,
   onChange,
   title,
+  listId,
 }: {
   value: ItemContext | undefined;
   onChange: (context: ItemContext) => void;
   title: string;
+  listId: string;
 }) {
   const context = {
     ...emptyItemContext,
@@ -125,6 +128,11 @@ export function ItemContextEditor({
       </details>
       <details className="record-extras">
         <summary>Custom details</summary>
+        <SuggestedDetails
+          listId={listId}
+          fields={context.fields}
+          onChange={(fields) => onChange({ ...context, fields })}
+        />
         {context.fields.map((field, index) => (
           <div className="context-field" key={index}>
             <label>

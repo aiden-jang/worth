@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectionFields } from './collection-fields';
 import { visitContext } from './visit-context';
 import { collectionItemTitleLimit } from './collection-capture';
 import { itemContext, emptyItemContext } from './item-context';
@@ -27,6 +28,13 @@ export const listInput = z.object({
   description: z.string().trim().max(280).default(''),
   artwork: artwork.default(null),
 });
+
+export const listCreate = listInput
+  .extend({ detailFields: collectionFields.default([]) })
+  .refine(
+    (value) => value.kind === 'collection' || !value.detailFields.length,
+    'Reusable details belong to collections.',
+  );
 
 export const listPatch = listInput
   .pick({ name: true, description: true, artwork: true })

@@ -268,6 +268,18 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Reusable details and templates</h2>
+              <p>
+                Workbench → Collection setup saves optional detail names. In an item’s Custom details, choose
+                Detail names from this collection to add blank fields to that draft. Changing the collection
+                setup never changes existing records. Save setup as template keeps only the collection name,
+                description, authored artwork and detail names. Choose a saved template during collection
+                creation, review the draft, then create an empty collection. No records, notes, uploaded cover
+                photos, ranks or calls are copied. Templates are private and included in backups; removing one
+                leaves existing collections unchanged. Keep up to 50 templates.
+              </p>
+            </section>
+            <section>
               <h2>Your collection shelf</h2>
               <p>
                 Workbench → Your shelf offers paper pockets or book spines, optional bookends and a faceless

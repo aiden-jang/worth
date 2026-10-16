@@ -66,7 +66,8 @@ export function SettingsPage() {
         throw new Error(
           `Could not read this Worth file: ${parsed.error.issues[0]?.message ?? 'Invalid records'}`,
         );
-      if (!parsed.data.lists.length) throw new Error('This file has no lists to restore.');
+      if (!parsed.data.lists.length && !parsed.data.collectionTemplates.length)
+        throw new Error('This file has no lists or templates to restore.');
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -114,8 +115,8 @@ export function SettingsPage() {
         <p>Download your records, or a full backup with photos. Share links and Trash aren’t included.</p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists and 200 photos/covers. Keep downloaded files
-          somewhere private.
+          restore supports up to 5,000 records, 500 lists, 50 templates and 200 photos/covers. Keep downloaded
+          files somewhere private.
         </p>
         <div className="data-actions">
           <button
@@ -136,7 +137,10 @@ export function SettingsPage() {
       </section>
       <section className="data-section">
         <h2>Bring it back.</h2>
-        <p>Restore a Worth file as new lists. Review it first; your existing archive stays intact.</p>
+        <p>
+          Restore a Worth file as new lists and templates. Review it first; your existing archive stays
+          intact.
+        </p>
         <label className="button button-outline file-choice">
           Choose backup
           <input
@@ -153,15 +157,24 @@ export function SettingsPage() {
             <p>
               {file.lists.length} lists · {file.items.length} items · {file.logs.length} logs ·{' '}
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
-              {file.photos.length} photos
+              {file.photos.length} photos · {file.collectionTemplates.length} templates
             </p>
-            <ul>
-              {file.lists.map((l) => (
-                <li key={l.id}>
-                  {l.name} <span> / {l.kind}</span>
-                </li>
-              ))}
-            </ul>
+            {!!file.lists.length && (
+              <ul>
+                {file.lists.map((l) => (
+                  <li key={l.id}>
+                    {l.name} <span> / {l.kind}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!!file.collectionTemplates.length && (
+              <ul aria-label="Templates to restore">
+                {file.collectionTemplates.map((template) => (
+                  <li key={template.id}>{template.name} / template</li>
+                ))}
+              </ul>
+            )}
             {file.photosExcluded && <p>Photos are not in this file and will not be restored.</p>}
             <p>
               No public share links will be created. Restoring the same file again after a successful restore
@@ -184,12 +197,12 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} restored. Your existing lists were kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'} restored. Existing data was kept.`,
                     );
                   })
                 }
               >
-                {busy === 'restore' ? 'Restoring…' : 'Restore as new lists'}
+                {busy === 'restore' ? 'Restoring…' : 'Restore previewed data'}
               </button>
               <button className="button button-outline" disabled={!!busy} onClick={() => setFile(null)}>
                 Cancel restore

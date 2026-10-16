@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import { listInput, listPatch, rankInput } from '../../src/shared/validation';
+import { listCreate, listPatch, rankInput } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
 import { ApiError, listItems, listLists, requireList } from '../data';
 import { readJson } from '../http';
@@ -15,12 +15,12 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
   });
 
   api.post('/lists', async (c) => {
-    const input = await readJson(c.req.raw, listInput);
+    const input = await readJson(c.req.raw, listCreate);
     const id = crypto.randomUUID();
     const now = Date.now();
     await c.env.DB.prepare(
-      `INSERT INTO lists (id, owner_id, name, kind, description, artwork, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO lists (id, owner_id, name, kind, description, artwork, workspace_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -29,6 +29,11 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
         input.kind,
         input.description,
         input.artwork ? JSON.stringify(input.artwork) : null,
+        JSON.stringify({
+          rankings: [],
+          views: [],
+          ...(input.detailFields.length ? { detailFields: input.detailFields } : {}),
+        }),
         now,
         now,
       )

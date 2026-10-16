@@ -1,3 +1,8 @@
+import { TemplatePicker } from '../components/CollectionTemplates';
+import { FieldNamesInput } from '../components/CollectionFields';
+import { readFieldNames } from '../shared/collection-fields';
+import type { CollectionTemplate } from '../shared/templates';
+import '../templates.css';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -81,6 +86,9 @@ export function ListsPage() {
   const directory = showingArchived ? archivedLists : lists;
   const listScope: ListKind | null =
     requestedKind === 'collection' || requestedKind === 'activity' ? requestedKind : null;
+  const [detailText, setDetailText] = useState('');
+  const [templateToUse, setTemplateToUse] = useState<CollectionTemplate | null>(null);
+  const detailNames = readFieldNames(detailText);
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
@@ -137,6 +145,7 @@ export function ListsPage() {
       description: string;
       coverFile: File | null;
       artwork: CollectionArt | null;
+      detailFields: string[];
     }) => {
       const created = await api.createList(input);
       if (!input.coverFile || input.kind !== 'collection') return { ...created, coverError: '' };
@@ -193,24 +202,36 @@ export function ListsPage() {
     setParams({ create: '1', kind: suggestion.kind });
   }
 
+  function applyTemplate(template: CollectionTemplate) {
+    setName(template.collectionName);
+    setDescription(template.description);
+    setArtwork(template.artwork);
+    setDetailText(template.detailFields.join('\n'));
+    setCoverFile(null);
+    if (coverInput.current) coverInput.current.value = '';
+    setTemplateToUse(null);
+    nameInput.current?.focus();
+  }
+
   function openCreate() {
     setParams(listScope ? { create: '1', kind: listScope } : { create: '1' });
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || (kind === 'collection' && !detailNames.success)) return;
     create.mutate({
       name: name.trim(),
       kind,
       description: description.trim(),
       coverFile,
       artwork: kind === 'collection' ? artwork : null,
+      detailFields: kind === 'collection' && detailNames.success ? detailNames.data : [],
     });
   }
 
   function requestCloseCreate() {
-    if (name.trim() || description.trim() || coverFile || artwork) {
+    if (name.trim() || description.trim() || coverFile || artwork || detailText.trim()) {
       setConfirmingDiscard(true);
       return;
     }
@@ -219,6 +240,7 @@ export function ListsPage() {
 
   function discardDraft() {
     setName('');
+    setDetailText('');
     setArtwork(null);
     setDescription('');
     setCoverFile(null);
@@ -295,6 +317,16 @@ export function ListsPage() {
             }
           >
             <form onSubmit={submit} className="create-form">
+              {kind === 'collection' && (
+                <TemplatePicker
+                  disabled={create.isPending}
+                  onUse={(template) => {
+                    if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
+                      setTemplateToUse(template);
+                    else applyTemplate(template);
+                  }}
+                />
+              )}
               <label>
                 Name
                 <input
@@ -349,6 +381,14 @@ export function ListsPage() {
                   <CollectionArtworkPicker name={name} value={artwork} onChange={setArtwork} />
                 </details>
               )}
+              {kind === 'collection' && (
+                <details className="create-extras form-wide">
+                  <summary>
+                    Reusable details <span className="optional">optional</span>
+                  </summary>
+                  <FieldNamesInput value={detailText} onChange={setDetailText} disabled={create.isPending} />
+                </details>
+              )}
               <details className="create-extras form-wide">
                 <summary>
                   {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
@@ -399,7 +439,10 @@ export function ListsPage() {
                 )}
               </details>
               {create.isError && <p className="form-error">{create.error.message}</p>}
-              <button className="button button-accent" disabled={create.isPending}>
+              <button
+                className="button button-accent"
+                disabled={create.isPending || (kind === 'collection' && !detailNames.success)}
+              >
                 {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
               </button>
             </form>
@@ -415,6 +458,15 @@ export function ListsPage() {
               </aside>
             )}
           </div>
+          {templateToUse && (
+            <ConfirmDialog
+              title="Replace this collection draft?"
+              description="Copies the template’s name, description, artwork and detail names into this draft, replacing those values and the selected cover. No collection is created until you choose Create collection."
+              confirmLabel="Use template"
+              onClose={() => setTemplateToUse(null)}
+              onConfirm={() => applyTemplate(templateToUse)}
+            />
+          )}
           {confirmingDiscard && (
             <ConfirmDialog
               eyebrow="DISCARD DRAFT"

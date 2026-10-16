@@ -1,3 +1,4 @@
+import { appendTemplates, templateCapacityError } from '../templates';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
 import { archiveFile, archiveByteLimit } from '../../src/shared/portability';
@@ -94,6 +95,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     if (c.req.header('X-Worth-Confirmation') !== 'delete-all-worth-data')
       throw new ApiError(400, 'CONFIRM_REQUIRED', 'Confirm deletion of all Worth data');
     await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM collection_template_sets WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM collection_template_receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -133,6 +136,14 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         'INSERT INTO capture_operations (id, owner_id, kind, fingerprint, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?)',
       ).bind(key, owner, 'import', hash, JSON.stringify(result), Date.now()),
     ];
+    if (file.collectionTemplates.length)
+      statements.push(
+        appendTemplates(
+          c.env.DB,
+          owner,
+          file.collectionTemplates.map((template) => ({ ...template, id: crypto.randomUUID() })),
+        ),
+      );
     // JSON row batches keep restore below D1's per-request query/parameter limits.
     const rows = (table: string, values: Record<string, unknown>[]) => {
       if (!values.length) return;
@@ -310,6 +321,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     } catch (error) {
       const saved = await previousOperation(c.env.DB, key, owner, 'import', hash);
       if (saved) return c.json(saved, 201);
+      templateCapacityError(error);
       throw error;
     }
     return c.json(result, 201);
