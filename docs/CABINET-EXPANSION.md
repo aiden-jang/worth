@@ -67,7 +67,7 @@ framing and layout changes in the original checkout.
 - [ ] Multiple photos, captions, ordering and explicit cover selection.
 - [ ] Manually arranged photo collages for covers; original photos retained.
 - [ ] Before/after photo slider with a keyboard-accessible alternative.
-- [ ] Activity-specific neutral illustrations without scores or call faces.
+- [x] Activity-specific neutral illustrations without scores or call faces.
 
 ## Sharing and export
 
@@ -369,3 +369,18 @@ were visually reviewed, with Axe and 320/430/768px checks recorded in
 History, OCR, full offline sync, relationships, additional artwork/sharing
 features and all other unchecked scope remain unfinished. Nothing is pushed or
 deployed.
+
+## Twelfth implementation: neutral activity objects
+
+Empty activity logs use a notebook/pencil in the cabinet’s existing empty-state
+layout. Empty workout visits use a small bottle/towel beside their original
+first-exercise guidance. Both are authored SVG objects, static, decorative and
+faceless. No score, call or achievement is inferred, and no data model changes.
+The activity shortcut also respects open dialogs, preventing an underlying log
+editor from opening behind Inbox or another modal.
+
+Lint, unused-code checks, TypeScript and production build passed. Both desktop/
+phone interaction and Axe journeys passed, followed by all five broader layout
+regressions at 320, 390, 430, 768 and 1440px. Four captures were inspected in
+[activity artwork QA](../art/ui-qa/activity-art/README.md). Other unchecked
+features remain unfinished; this work remains local to the feature branch.

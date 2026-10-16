@@ -8,6 +8,8 @@ import { useViewPreference } from '../hooks/useViewPreference';
 import type { Log, WorkoutSession } from '../shared/models';
 import { formatActivityMetric } from '../shared/workouts';
 import { ActivityEditor } from './ActivityEditor';
+import { ActivityIllustration } from './ActivityIllustration';
+import { CabinetEmptyState } from './CabinetEmptyState';
 import { ExerciseDirectory, ExerciseHistory } from './ExerciseHistory';
 import { WorkoutRoutines, type RoutineDraft } from './WorkoutRoutines';
 import { WorkoutSessions } from './WorkoutSessions';
@@ -117,6 +119,7 @@ export function ActivityView({
         event.metaKey ||
         event.ctrlKey ||
         event.altKey ||
+        document.querySelector('dialog[open]') ||
         event.key.toLocaleLowerCase() !== 'a'
       )
         return;
@@ -274,13 +277,15 @@ export function ActivityView({
       )}
       {ungrouped.length > 0 && workouts.length > 0 && <p className="activity-month">OTHER LOGS</p>}
       {!visible.length && !workouts.length ? (
-        <div className="empty-list">
-          <h2>{logs.length ? 'Nothing matches.' : 'Nothing here yet.'}</h2>
-          <p>
-            {logs.length
+        <CabinetEmptyState
+          art={!logs.length ? <ActivityIllustration /> : undefined}
+          title={logs.length ? 'Nothing matches.' : 'Nothing here yet.'}
+          description={
+            logs.length
               ? 'Try another search.'
-              : 'Create a routine above to plan your exercises, or start with one log.'}
-          </p>
+              : 'Create a routine above to plan your exercises, or start with one log.'
+          }
+        >
           {!logs.length && (
             <button className="button button-dark" onClick={() => onNew()}>
               <Plus size={17} /> Add first log
@@ -291,7 +296,7 @@ export function ActivityView({
               Clear filters
             </button>
           )}
-        </div>
+        </CabinetEmptyState>
       ) : (
         <div className="activity-rows">
           {ungrouped.map((log, index) => {

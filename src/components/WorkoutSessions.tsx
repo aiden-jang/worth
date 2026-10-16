@@ -10,6 +10,8 @@ import { formatActivityMetric } from '../shared/workouts';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ExerciseLineup } from './ExerciseLineup';
 import { RestTimer } from './RestTimer';
+import { ActivityIllustration } from './ActivityIllustration';
+import '../activity-illustrations.css';
 
 export function WorkoutSessions({
   listId,
@@ -239,7 +241,10 @@ export function WorkoutSessions({
               </div>
             )}
             {!entries.length && !pending.length && (
-              <p className="workout-empty">Add the first exercise to this visit.</p>
+              <div className="workout-empty-state">
+                <ActivityIllustration kind="workout" />
+                <p className="workout-empty">Add the first exercise to this visit.</p>
+              </div>
             )}
             <div className="routine-actions">
               <button

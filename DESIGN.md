@@ -269,3 +269,15 @@ only the actual uncertain filing snapshot and destination. It never invents a ca
 or rank. Filing requires saved details and a deliberate keep-separate choice for
 an exact name/type match. Desktop/phone and narrow reflow verification are recorded
 in `art/ui-qa/inbox/`.
+
+## Neutral activity objects
+
+Empty activity logs now use an authored notebook and pencil in the shared cabinet
+empty-state composition. An empty workout visit uses a smaller bottle and folded
+towel beside its existing first-exercise guidance. These static, faceless objects
+keep the cabinet palette and remain hidden from assistive technology. Activity
+never receives a call, score or implied achievement. Existing headers, filters,
+routine/workout actions and record behavior remain intact. This deliberately
+extends the activity reference with the edition’s existing empty-state spacing;
+phone captures scroll to that section to show the complete illustration and CTA.
+See `art/ui-qa/activity-art/` for desktop/phone verification.

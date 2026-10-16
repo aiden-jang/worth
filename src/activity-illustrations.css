@@ -1,0 +1,23 @@
+.workout-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-block: 24px;
+}
+.workout-empty-state > svg {
+  width: 90px;
+  height: 78px;
+  flex: none;
+}
+.workout-empty-state .workout-empty {
+  margin: 0;
+}
+@media (max-width: 380px) {
+  .workout-empty-state {
+    gap: 12px;
+  }
+  .workout-empty-state > svg {
+    width: 72px;
+    height: 64px;
+  }
+}
