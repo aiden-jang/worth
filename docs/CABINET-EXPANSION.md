@@ -25,12 +25,12 @@ framing and layout changes in the original checkout.
 
 ## Capture and organization
 
-- [ ] Save a link with reviewed identity suggestions and retained source URL.
+- [x] Save a link with a reviewed address-based name suggestion and retained source URL.
 - [x] Saved filter/search views.
 - [x] Tags, personal care labels and custom stamps with useful filtering.
 - [ ] Archive/unarchive collections independently of Trash.
 - [ ] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
-- [ ] CSV import with column mapping, preview and duplicate review.
+- [x] CSV import with column mapping, preview and duplicate review.
 - [x] Optional per-item custom detail fields; name-only capture remains.
 - [ ] Collection templates and reusable field definitions.
 - [ ] Inbox drawer for records awaiting a collection.
@@ -76,13 +76,18 @@ framing and layout changes in the original checkout.
 - [x] Individual recommendation card with a user-written reason and exact preview.
 - [ ] Private two-person this-or-that with separate choices and a deliberate reveal.
 - [ ] Private collaboration and explicit granular sharing controls.
-- [ ] Optional reviewed AI extraction only after provider, data disclosure and costs are settled.
+- [ ] On-device recognition/extraction assistance with reviewed output; no external AI provider.
 
 Existing seven-day public snapshots keep their original fixed title/type-only
 scope. New sharing formats must have their own explicit preview and access rules.
 No private notes/photos may silently become part of existing links. Native device
 capabilities, external lookups, notifications, AI and collaboration need working
 integration and validation; do not replace them with decorative controls.
+
+The user chose widgets for both iOS/iPadOS and Android on October 16. Recognition
+and extraction must stay on-device, with no paid external AI provider or uploads
+for processing. These integrations remain pending; they are not supplied by the
+address-only link suggestion or the existing web-app shortcuts.
 
 ## First implementation: collection workbench
 
@@ -170,3 +175,25 @@ passed locally. The final full browser run passed all 61 journeys serially,
 including shelf Axe, draft/conflict recovery and narrow/long-name layouts. Eight reviewed desktop/phone
 captures are in [shelf QA](../art/ui-qa/shelf/README.md). The larger unchecked scope
 above remains unfinished. These features have not been deployed.
+
+## Fifth implementation: reviewed capture
+
+Import & capture accepts CSV with explicit column mapping, exact record previews
+and individually reviewed duplicate choices. It supports up to 100 records,
+quoted/multiline text, calls, dates and retained source URLs. Invalid rows are
+excluded; duplicates start unselected. Existing records and rankings are unchanged.
+Link capture suggests a name from the address only, keeps the source, and asks
+the user to review it. No destination is fetched and no page identity is claimed.
+
+The import transaction binds its result to the owner, active collection, exact
+payload and retry key. A frozen device draft is written before the request starts;
+an interrupted response can recover and retry without recreating saved records.
+Real D1 tests cover 100-record saves and a parent trashed before the transaction.
+All 95 tests, formatting, lint, unused-code and production build checks passed.
+The final full browser run passed all 69 journeys, including draft/retry recovery,
+Axe and narrow/long-content layouts. Reviewed desktop/phone captures and limitations are
+in [capture QA](../art/ui-qa/reviewed-capture/README.md). General duplicate review
+of existing records remains pending; import-time checks do not complete it.
+
+This work remains on the feature branch. Nothing in this tracker claims that the
+unchecked features, native widgets or on-device recognition are finished.

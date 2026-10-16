@@ -1802,3 +1802,136 @@ test('restore validates photos before commit and batches a large archive without
   expect(restored.items[0].note).toBe(file.items[0].note);
   expect(restored.lists).toHaveLength(1);
 });
+
+async function importReviewed(
+  listId: string,
+  owner: string,
+  body: unknown,
+  key = crypto.randomUUID(),
+  env = platform.env,
+) {
+  return app.request(
+    `https://worth.test/api/lists/${listId}/items/import`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    env,
+    platform.ctx,
+  );
+}
+test('reviewed captures preserve private fields and ranks and bind retries to the exact payload', async () => {
+  const owner = 'csvowner';
+  const list = await archiveCollection(owner, 'Imported finds');
+  const existing = await archiveItem(owner, list.id, 'Existing', { decision: 'favorite' });
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+    itemIds: [existing.id],
+    expectedRevision: list.rankRevision,
+  });
+  const key = crypto.randomUUID();
+  const body = {
+    items: [
+      {
+        title: 'A "quoted" find',
+        type: 'Drink',
+        note: 'First\nSecond',
+        decision: 'meh',
+        wantToTry: true,
+        context: { sourceUrl: 'https://example.test/a?private=keep' },
+        startedOn: '2026-10-01',
+      },
+      { title: 'The ordinary one', decision: 'would_not_again' },
+    ],
+  };
+  const response = await importReviewed(list.id, owner, body, key);
+  expect(response.status).toBe(201);
+  const saved = ((await response.json()) as { items: Item[] }).items;
+  expect(saved[0]).toMatchObject({
+    title: 'A "quoted" find',
+    note: 'First\nSecond',
+    decision: 'meh',
+    wantToTry: true,
+    context: { sourceUrl: 'https://example.test/a?private=keep' },
+    startedOn: '2026-10-01',
+  });
+  const retry = await importReviewed(list.id, owner, body, key);
+  expect(retry.status).toBe(201);
+  expect(((await retry.json()) as { items: Item[] }).items.map((item) => item.id)).toEqual(
+    saved.map((item) => item.id),
+  );
+  expect((await importReviewed(list.id, owner, { items: [{ title: 'Changed' }] }, key)).status).toBe(409);
+  expect((await importReviewed(list.id, 'csvother', body)).status).toBe(404);
+  expect(
+    (
+      await importReviewed(list.id, owner, {
+        items: [{ title: 'Invalid', context: { sourceUrl: 'javascript:alert(1)' } }],
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items,
+  ).toHaveLength(3);
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([existing.id]);
+  await call(`/items/${saved[0].id}`, owner, 'DELETE');
+  const changed = await importReviewed(list.id, owner, body, key);
+  expect(changed.status).toBe(409);
+  expect(await changed.json()).toMatchObject({ error: 'CAPTURE_RECORDS_CHANGED' });
+});
+test('one reviewed capture atomically supports 100 records and rejects a larger batch', async () => {
+  const owner = 'csvlarge';
+  const list = await archiveCollection(owner, 'Many finds');
+  const body = { items: Array.from({ length: 100 }, (_, index) => ({ title: `Find ${index}` })) };
+  const response = await importReviewed(list.id, owner, body);
+  expect(response.status).toBe(201);
+  const saved = ((await response.json()) as { items: Item[] }).items;
+  expect(saved.map((item) => item.title)).toEqual(body.items.map((item) => item.title));
+  expect(saved.every((item) => item.decision === null && !item.wantToTry && !item.revisitQueued)).toBe(true);
+  expect((await importReviewed(list.id, owner, { items: [...body.items, { title: 'Excess' }] })).status).toBe(
+    400,
+  );
+  const activity = await call('/lists', owner, 'POST', { name: 'Activity', kind: 'activity' });
+  const activityId = ((await activity.json()) as { list: ListDetail }).list.id;
+  expect((await importReviewed(activityId, owner, { items: [{ title: 'Wrong kind' }] })).status).toBe(400);
+});
+test('a collection trashed just before reviewed capture leaves no rows or retry receipt', async () => {
+  const owner = 'csvrace';
+  const list = await archiveCollection(owner, 'Concurrent deletion');
+  const key = crypto.randomUUID();
+  const db = platform.env.DB;
+  const racingDB = new Proxy(db, {
+    get(target, property) {
+      if (property === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          await db
+            .prepare('UPDATE lists SET trashed_at = ? WHERE id = ? AND owner_id = ?')
+            .bind(Date.now(), list.id, owner)
+            .run();
+          return db.batch(statements);
+        };
+      const value = Reflect.get(target, property);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  expect(
+    (
+      await importReviewed(list.id, owner, { items: [{ title: 'Never created' }] }, key, {
+        ...platform.env,
+        DB: racingDB,
+      })
+    ).status,
+  ).toBe(409);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM items WHERE list_id = ?').bind(list.id).first(),
+  ).toBeNull();
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM capture_operations WHERE id = ?').bind(key).first(),
+  ).toBeNull();
+});

@@ -85,6 +85,13 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
     savedId.current = id;
     persist();
   }
+  function checkpoint(next: T) {
+    // Persist a retry payload before starting a request whose response may be lost.
+    cleared.current = false;
+    latest.current = next;
+    setForm(next);
+    persist();
+  }
   return {
     form,
     setForm: setForm as Dispatch<SetStateAction<T>>,
@@ -93,5 +100,6 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
     savedId,
     operationId,
     rememberSaved,
+    checkpoint,
   };
 }

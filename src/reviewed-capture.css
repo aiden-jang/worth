@@ -1,0 +1,116 @@
+.capture-inputs {
+  border: 1px solid #737566;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+  margin: 24px 0;
+}
+.capture-inputs > label,
+.capture-mapping > label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 20px 0;
+  font:
+    400 14px/1.5 'DM Sans',
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.capture-inputs input,
+.capture-inputs select,
+.capture-inputs textarea {
+  width: 100%;
+  min-height: 44px;
+}
+.capture-inputs > p,
+.capture-record-preview,
+.capture-review > p {
+  color: #aaa99b;
+}
+.capture-inputs textarea {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+}
+.capture-mapping {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+}
+.capture-review {
+  margin: 24px 0;
+}
+.capture-review h3 {
+  font-size: 30px;
+  font-weight: 500;
+}
+.capture-review fieldset {
+  padding: 0;
+  margin: 24px 0;
+  min-width: 0;
+  border: 0;
+}
+.capture-review ul {
+  padding: 0;
+  margin: 16px 0;
+  list-style: none;
+}
+.capture-review li {
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #737566;
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+}
+.capture-review .workbench-check {
+  align-items: start;
+}
+.capture-review .workbench-check input {
+  margin-top: 2px;
+}
+.capture-duplicate {
+  color: #e8dc9d;
+  font-size: 14px;
+}
+.capture-source {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.capture-record-preview details > summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.capture-note {
+  white-space: pre-wrap;
+  color: #ccc8b9;
+}
+.capture-date-format {
+  white-space: nowrap;
+}
+@media (max-width: 680px) {
+  .capture-mapping {
+    grid-template-columns: 1fr;
+  }
+  .capture-inputs {
+    padding: 18px;
+  }
+  .capture-review li {
+    padding: 18px;
+  }
+}
+.capture-kind {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  border: 1px solid #737566;
+  border-radius: 12px;
+  padding: 18px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.capture-inputs .button,
+.reviewed-capture .data-actions .button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

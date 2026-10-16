@@ -14,20 +14,33 @@ See [behavior and limits](ARCHIVE-TOOLS.md) and [visual verification](../art/ui-
 - Bulk queue, Want to try, type, move, merge and Trash actions.
 - Immediate deletion Undo and 30-day Trash recovery for lists, items and logs.
 
-## Next candidates
+## Expansion in progress
 
 The user approved the expanded feature set on October 15. The detailed
-[cabinet expansion tracker](CABINET-EXPANSION.md) records the full scope and
-distinguishes pending work from verified features. The list below groups the
-earlier proposals; it is not a claim that they are implemented.
+[cabinet expansion tracker](CABINET-EXPANSION.md) records the complete scope and
+its verification. The following groups are committed and verified locally on
+`feat/worth-cabinet-tools`, without a push, pull request or deployment:
 
-1. Head-to-head ranking and capture from a link.
-2. Offline reading/saves with pending-write and conflict handling.
-3. Opinion/ranking history, saved filters, tags, archived collections and CSV import.
-4. Collection templates, optional detail fields, related records and multiple editable photos.
-5. Timeline, revisit dates/snooze, a queue picker, comparisons and factual recaps.
-6. Activity calendar, richer routine plans, aliases and additional measurements.
-7. Private collaboration, granular sharing, browser/phone capture integrations and optional reviewed AI extraction.
+- Ranking sandbox, blind head-to-head placement, saved views/context rankings,
+  private comparisons, decision draws and more authored collection artwork.
+- Private sources, recommendations, labels/stamps, custom fields, purchases,
+  loans and reviewed calendar-file return reminders.
+- Selected-record booklets and individual recommendation cards.
+- Private shelves, bookends, keepsakes, dedications, record inscriptions and a
+  faceless undecided paper creature.
+- Reviewed CSV import and editable address-based link name suggestions.
+
+Remaining work includes history/time-machine views, archived collections, general
+existing-record duplicate review, templates, inbox, offline sync, richer visits
+and relationships, boards, revisit planning, routines/measurements, photo tools,
+field guides, blind two-person choices and private collaboration. See the tracker
+for individual unchecked features; a related completed tool does not complete
+these automatically.
+
+The user chose actual widgets for both iOS/iPadOS and Android. Recognition and
+extraction must stay on-device, with no paid external AI provider. These native
+and recognition integrations are pending. Web shortcuts and address parsing do
+not count as those integrations.
 
 Existing exercise history/progress, routines, exports and share images should be
 extended only where the new behavior adds value. Public feeds, streaks and five-star

@@ -198,12 +198,13 @@ export async function listItems(
   ownerId: string,
   listId: string,
   includeMerged = false,
+  ids?: string[],
 ): Promise<Item[]> {
   const { results } = await db
     .prepare(
-      `${itemQuery} WHERE i.owner_id = ? AND i.list_id = ? ${includeMerged ? '' : 'AND i.merged_into_id IS NULL'} ORDER BY i.created_at DESC`,
+      `${itemQuery} WHERE i.owner_id = ? AND i.list_id = ? ${includeMerged ? '' : 'AND i.merged_into_id IS NULL'} ${ids ? 'AND i.id IN (SELECT value FROM json_each(?))' : ''} ORDER BY i.created_at DESC`,
     )
-    .bind(ownerId, listId)
+    .bind(ownerId, listId, ...(ids ? [JSON.stringify(ids)] : []))
     .all<ItemRow>();
   return results.map(mapItem);
 }

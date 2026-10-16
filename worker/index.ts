@@ -16,6 +16,7 @@ import { registerSearchRoutes } from './routes/search';
 import { registerPublicShareRoute, registerShareRoutes } from './routes/shares';
 import { registerWorkoutRoutes } from './routes/workouts';
 import { registerWorkspaceRoutes } from './routes/workspace';
+import { registerReviewedCaptureRoutes } from './routes/reviewed-capture';
 
 const app = new Hono<AppEnv>();
 const publicApi = new Hono<AppEnv>();
@@ -46,7 +47,9 @@ privateApi.use('*', async (c, next) => {
     throw new ApiError(503, 'AUTH_UNAVAILABLE', 'Accounts is temporarily unavailable');
   if (session.state === 'signed-out') throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to continue');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) || c.req.path.endsWith('/export/backup')) {
-    const heavy = /\/api\/(import|data|export\/backup)$/.test(c.req.path);
+    const heavy =
+      /\/api\/(import|data|export\/backup)$/.test(c.req.path) ||
+      /\/api\/lists\/[^/]+\/items\/import$/.test(c.req.path);
     const window = Math.floor(Date.now() / 60000);
     const category = heavy ? 'data' : 'write';
     const row = await c.env.DB.prepare(
@@ -71,6 +74,7 @@ registerArchiveTools(privateApi);
 registerWorkspaceRoutes(privateApi);
 registerListRoutes(privateApi);
 registerItemRoutes(privateApi);
+registerReviewedCaptureRoutes(privateApi);
 registerLogRoutes(privateApi);
 registerOverviewRoutes(privateApi);
 registerSearchRoutes(privateApi);

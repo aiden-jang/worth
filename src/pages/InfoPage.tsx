@@ -80,11 +80,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>On this device</h2>
               <p>
                 Worth uses browser storage for unfinished text and photo drafts, retry identifiers, rest
-                timers, export settings and your last capture choice. Drafts and saved restore retry
-                identifiers older than seven days are removed when you next open Worth while signed in. Saving
-                or discarding a draft removes it; Settings lets you clear this account’s device drafts and
-                timers. Clearing one device does not clear another. Shared login uses an essential session
-                cookie.
+                timers, CSV data and mappings, pending import requests, export settings and your last capture
+                choice. Drafts and saved restore retry identifiers older than seven days are removed when you
+                next open Worth while signed in. Saving or discarding a draft removes it; Settings lets you
+                clear this account’s device drafts and timers. Clearing one device does not clear another.
+                Shared login uses an essential session cookie.
               </p>
             </section>
             <section>
@@ -216,6 +216,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 recover on this device for seven days, but comparison rounds in progress are not saved. Saved
                 views and context rankings are included in records export and photo backups. They are never
                 included in public share links.
+              </p>
+            </section>
+            <section>
+              <h2>Importing CSV and saving links</h2>
+              <p>
+                In Workbench → Import &amp; capture, choose a CSV file or paste CSV data. Set the separator,
+                review which columns supply names, types, notes, calls, source URLs and dates, then preview up
+                to 100 records. Possible duplicates start unselected. Choose them explicitly to keep both;
+                invalid rows stay out of the save. Existing records and rankings stay unchanged.
+              </p>
+              <p>
+                Link capture can suggest an editable name from the address. It does not open the link or
+                verify a page’s identity. Review the name and retained source before saving. Only selected,
+                mapped fields are sent to your archive; CSV data and pending requests can recover on this
+                device for seven days. If a save is interrupted, retry the same selection. Check the
+                collection before starting over, since an unconfirmed save may already have completed.
               </p>
             </section>
             <section>

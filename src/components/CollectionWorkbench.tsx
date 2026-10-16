@@ -19,9 +19,10 @@ import { SavedRankings } from './SavedRankings';
 import { ItemContextReadout } from './ItemContextReadout';
 import { CollectionPublishing } from './CollectionPublishing';
 import { CollectionShelf } from './CollectionShelf';
+import { ReviewedCapture } from './ReviewedCapture';
 import '../workbench.css';
 
-type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf';
+type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture';
 type RankingDraft = { ids: string[]; revision: number };
 const validDraft = (value: unknown): value is RankingDraft => {
   if (!value || typeof value !== 'object') return false;
@@ -139,6 +140,7 @@ export function CollectionWorkbench({
               ['draw', 'Decision draw'],
               ['publish', 'Booklets & cards'],
               ['shelf', 'Your shelf'],
+              ['capture', 'Import & capture'],
             ] as const
           ).map(([id, label]) => (
             <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
@@ -147,6 +149,7 @@ export function CollectionWorkbench({
           ))}
         </nav>
         {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
+        {mode === 'capture' && <ReviewedCapture list={list} items={items} />}
         {mode === 'shelf' && (
           <CollectionShelf
             list={list}

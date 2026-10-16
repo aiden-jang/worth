@@ -196,3 +196,33 @@ references and the associated inscription text. Existing database references can
 reappear after restoration until a later workspace save replaces them. Restore
 remaps keepsake/inscription IDs, rejects foreign/merged references and prohibits
 shelf tools on activities. Public snapshots and booklet defaults stay unchanged.
+
+## Reviewed CSV and link capture
+
+`ReviewedCapture` is the sixth workbench tool. `src/shared/reviewed-capture.ts`
+parses bounded CSV (100 records, 30 columns, 256 KiB), including quoted separators,
+escaped quotes, multiline notes, BOM and explicit comma/semicolon/tab separators.
+Mapped names, types, notes, calls, source URLs and dates pass the existing item
+validation. Unmapped columns stay on-device. Normalized matching names/types flag
+possible duplicates within the file/current collection; these start unselected
+and require explicit approval. Existing records and rankings are never edited.
+
+Link suggestions derive an editable name from the URL path or hostname, retain
+the original URL, and never fetch the destination. They do not claim page metadata
+or AI recognition. Both input paths require the same exact preview before saving.
+
+`worker/routes/reviewed-capture.ts` accepts up to 100 validated records in a
+512 KiB request. The existing owner-bound, fingerprinted batch receipt contains
+the new IDs. Three transactional statements guard the active parent, create the
+receipt, insert JSON rows and update recency. Receipt reads resolve selected IDs
+in one owner/list-scoped query rather than one query per record. Changed payloads
+under a used key return 409. Missing/moved/merged/trashed saved results also return
+409 without creating replacements. Imports use the existing heavy-write limit.
+
+Before a request starts, `useDraft.checkpoint` synchronously persists its frozen
+payload and retry identity. Retries use that exact selection across closing and
+reopening, even if the archive changed after the first attempt. Input stays locked;
+starting over after an attempted save requires an explicit warning/confirmation.
+Success clears the draft and rotates the identity. Device storage remains best
+effort; an unavailable-storage message asks the user to keep the page open. CSV,
+mapping and pending payloads use the existing account/list seven-day draft scope.

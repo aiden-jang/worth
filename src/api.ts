@@ -144,6 +144,15 @@ export const api = {
         ...(operationId ? { 'Idempotency-Key': operationId } : {}),
       },
     }),
+  importItems: (
+    listId: string,
+    items: import('./shared/reviewed-capture').ReviewedItem[],
+    operationId: string,
+  ) =>
+    request<{ items: Item[] }>(`/lists/${listId}/items/import`, {
+      ...json('POST', { items }),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': operationId },
+    }),
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => trashRecord('item', id, `/items/${id}`),

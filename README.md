@@ -15,6 +15,8 @@ labeled and never writes to a private archive.
 ## Features
 
 - Capture one name or a batch; add context later. Drafts can recover on the same device.
+- Import up to 100 records from CSV with mapped columns, exact previews and explicit
+  duplicate choices. Keep a source link with an editable name suggested from its address.
 - Make a reversible call: **Favorite**, **Meh**, **Not again**, or no call. Calls,
   manual rank and the revisit queue remain independent.
 - Save a name to **Want to try** without changing its call, rank or revisit queue.
