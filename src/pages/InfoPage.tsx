@@ -31,7 +31,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             ? 'HELP & CONTACT'
             : kind === 'missing'
               ? '404'
-              : 'WORTH / UPDATED OCTOBER 15, 2026'}
+              : 'WORTH / UPDATED OCTOBER 16, 2026'}
         </p>
         <h1>{title}</h1>
         {kind === 'missing' ? (
@@ -69,15 +69,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 it expires after seven days or you revoke it. Notes, photos, dates and history aren’t in that
                 snapshot. Revocation cannot erase copies someone has already made.
               </p>
+              <p>
+                Booklets and recommendation cards are prepared on your device. Their preview shows the
+                selected content; private photos and booklet notes require an explicit choice. Downloaded
+                files, shared images and calendar reminders can be copied outside Worth and cannot be revoked.
+                These files do not change the scope of public ranking links.
+              </p>
             </section>
             <section>
               <h2>On this device</h2>
               <p>
                 Worth uses browser storage for unfinished text and photo drafts, retry identifiers, rest
-                timers and your last capture choice. Drafts and saved restore retry identifiers older than
-                seven days are removed when you next open Worth while signed in. Saving or discarding a draft
-                removes it; Settings lets you clear this account’s device drafts and timers. Clearing one
-                device does not clear another. Shared login uses an essential session cookie.
+                timers, export settings and your last capture choice. Drafts and saved restore retry
+                identifiers older than seven days are removed when you next open Worth while signed in. Saving
+                or discarding a draft removes it; Settings lets you clear this account’s device drafts and
+                timers. Clearing one device does not clear another. Shared login uses an essential session
+                cookie.
               </p>
             </section>
             <section>
@@ -209,6 +216,21 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 recover on this device for seven days, but comparison rounds in progress are not saved. Saved
                 views and context rankings are included in records export and photo backups. They are never
                 included in public share links.
+              </p>
+            </section>
+            <section>
+              <h2>Booklets and recommendation cards</h2>
+              <p>
+                In Workbench, open Booklets &amp; cards. Choose up to 12 records for a booklet, add a
+                dedication and captions, then prepare the file. Names and types are included; ranks, calls,
+                private notes and photos are separate choices. Download the self-contained HTML to read
+                offline, or print/save a PDF. Recommendation cards export one record as a PNG with your own
+                message. Review the prepared image before downloading or sharing it.
+              </p>
+              <p>
+                Changing the preview requires preparing a new file. Settings can recover on this device for
+                seven days. These exports exclude context and visit history. Copies you download or share
+                cannot be revoked; public ranking links keep their original names/types-only scope.
               </p>
             </section>
             <section>

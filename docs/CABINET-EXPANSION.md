@@ -71,9 +71,9 @@ framing and layout changes in the original checkout.
 
 ## Sharing and export
 
-- [ ] Collection booklet/mini zine with exact content preview and downloadable output.
+- [x] Collection booklet/mini zine with exact content preview and downloadable output.
 - [ ] Personal field guide with selected records, notes and explicit locations.
-- [ ] Individual recommendation card with a user-written reason and exact preview.
+- [x] Individual recommendation card with a user-written reason and exact preview.
 - [ ] Private two-person this-or-that with separate choices and a deliberate reveal.
 - [ ] Private collaboration and explicit granular sharing controls.
 - [ ] Optional reviewed AI extraction only after provider, data disclosure and costs are settled.
@@ -132,3 +132,21 @@ user imports them into a calendar. Worth does not send notifications.
 production build. Desktop/phone screenshots are reviewed in
 [private-context QA](../art/ui-qa/private-context/README.md). This group remains on
 the feature branch and has not been deployed.
+
+## Third implementation: booklets and recommendation cards
+
+Booklets & cards in Workbench prepares a self-contained HTML booklet from up to
+12 selected records, or an individual 1080px PNG card. Booklets support captions,
+a dedication and explicit opt-ins for ranks, calls, notes and photos. Cards use a
+chosen record and the user's own message, with optional recipient, collection name
+and photo. Preparation happens on the device. Edits invalidate old files and
+failed photos can be retried without losing choices. Export drafts recover on
+this device for seven days. Native share cancellation never triggers a download.
+
+85 tests, formatting, lint, unused-code checks and the production build passed
+locally. All eight new export browser journeys passed serially. The full browser
+run passed 53 of 55 cases; the two timed-out cases passed on subsequent runs.
+Further interrupted workbench/storage cases passed serially too. Six A5 PDF pages
+(in-app and standalone) were rendered and visually reviewed. Desktop/phone captures
+and scope limits are in [publishing QA](../art/ui-qa/publishing/README.md).
+This remains on the separate branch, without a pull request or deployment.

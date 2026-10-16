@@ -26,6 +26,9 @@ labeled and never writes to a private archive.
   ranking requires a preview and checks for newer edits.
 - Keep optional recommendation sources, reasons, personal labels/stamps, version/location
   details and custom fields. Track purchases and loans, and download a calendar return reminder.
+- Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo
+  options. Download an offline HTML copy or print/save a PDF. Prepare an individual recommendation
+  card as a PNG with your own message and a preview of exactly what leaves Worth.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.

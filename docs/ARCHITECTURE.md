@@ -146,3 +146,29 @@ an all-day event and a one-day-before display alarm. Serialization escapes text
 and folds by UTF-8 octets. Person/private-note fields are not put in these files.
 Worth does not request notification permission, schedule a server job or send a
 message. Importing the file into a calendar is a separate user action.
+
+## Booklets and recommendation cards
+
+`CollectionPublishing` is a fourth workbench tool. It explicitly projects selected
+records into bounded export models in `src/shared/booklet.ts`; context, history,
+source links, internal IDs and account details are excluded. Booklets include up
+to 12 names/types, a cover title, dedication and captions. Ranks, calls, private
+notes and photos require opt-in. Cards include one name/type and a user-written
+message/recipient; collection name and photo are optional. Existing public snapshot
+payloads are unchanged.
+
+`booklet-export.ts` embeds local WOFF2 fonts and selected owner-checked raster
+photos into self-contained HTML, or renders a 1080-pixel-wide PNG. Asset failures
+stop preparation and retain settings for retry. Unmount aborts preparation.
+HTML escapes all text, validates data URLs and contains a restrictive CSP with no
+scripts or network access. It opens offline and prints on A5 pages. In-app print
+uses a portal with only the selected prepared data; print CSS hides the rest of
+the app. Its page rule exists only while that prepared booklet is mounted.
+
+The current projection fingerprints the prepared file; edits disable download,
+print and sharing until a new file is prepared. Card previews show the actual PNG
+and provide its full text to assistive technology. Native sharing is offered only
+when the browser supports that file; cancelling never initiates a download.
+Export settings use account/list-scoped seven-day device drafts, not server
+persistence. No API writes or third-party processing occur during preparation.
+Downloaded/shared files cannot be revoked.

@@ -17,9 +17,10 @@ import {
 import { ConfirmDialog } from './ConfirmDialog';
 import { SavedRankings } from './SavedRankings';
 import { ItemContextReadout } from './ItemContextReadout';
+import { CollectionPublishing } from './CollectionPublishing';
 import '../workbench.css';
 
-type Mode = 'rank' | 'compare' | 'draw';
+type Mode = 'rank' | 'compare' | 'draw' | 'publish';
 type RankingDraft = { ids: string[]; revision: number };
 const validDraft = (value: unknown): value is RankingDraft => {
   if (!value || typeof value !== 'object') return false;
@@ -135,6 +136,7 @@ export function CollectionWorkbench({
               ['rank', 'Ranking sandbox'],
               ['compare', 'Comparison table'],
               ['draw', 'Decision draw'],
+              ['publish', 'Booklets & cards'],
             ] as const
           ).map(([id, label]) => (
             <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
@@ -142,6 +144,7 @@ export function CollectionWorkbench({
             </button>
           ))}
         </nav>
+        {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
         {mode === 'rank' && (
           <section aria-label="Ranking sandbox" className="workbench-section">
             <p>
