@@ -1,3 +1,6 @@
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+const charactersOf = (text: string) => Array.from(segmenter.segment(text), ({ segment }) => segment);
+
 export interface RankingImage {
   title: string;
   entries: { title: string; type: string }[];
@@ -85,14 +88,14 @@ function drawLines(
   lineHeight: number,
   maxLines: number,
 ) {
-  const characters = Array.from(text);
+  const characters = charactersOf(text);
   let line = '',
     row = 0;
   while (characters.length) {
     const character = characters.shift()!;
     if (ctx.measureText(line + character).width > width) {
       if (row === maxLines - 1) {
-        while (ctx.measureText(line + '…').width > width) line = Array.from(line).slice(0, -1).join('');
+        while (ctx.measureText(line + '…').width > width) line = charactersOf(line).slice(0, -1).join('');
         ctx.fillText(line + '…', x, y + row * lineHeight);
         return;
       }

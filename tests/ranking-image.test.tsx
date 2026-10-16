@@ -77,7 +77,7 @@ test('an image uses saved ranking order and only the previewed public fields', a
   expect(JSON.stringify(vi.mocked(saveRankingImage).mock.calls)).not.toMatch(
     /Private|decision|hasPhoto|startedOn|Drink 7/,
   );
-  expect(await screen.findByText('Image downloaded.')).toBeInTheDocument();
+  expect(await screen.findByText('Download started.')).toBeInTheDocument();
 });
 test('a failed image preserves the preview and offers a retry', async () => {
   vi.mocked(saveRankingImage).mockRejectedValueOnce(new Error('no canvas'));
@@ -86,7 +86,7 @@ test('a failed image preserves the preview and offers a retry', async () => {
   expect(await screen.findByText('Couldn’t save the image. Try again.')).toBeInTheDocument();
   expect(screen.getByText('Drink 6')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Save ranking image' }));
-  expect(await screen.findByText('Image downloaded.')).toBeInTheDocument();
+  expect(await screen.findByText('Download started.')).toBeInTheDocument();
 });
 
 test('native images are prepared with public fields before sharing, and cancelling does not download', async () => {

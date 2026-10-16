@@ -142,7 +142,7 @@ export function ShareDialog({
                 title: list.name,
                 entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
               });
-              setImageStatus('Image downloaded.');
+              setImageStatus('Download started.');
             } catch {
               setImageStatus('Couldn’t save the image. Try again.');
             } finally {
