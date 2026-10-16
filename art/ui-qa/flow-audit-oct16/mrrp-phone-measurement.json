@@ -1,0 +1,24 @@
+{
+  "readyMs": 2494,
+  "navigation": [
+    {
+      "responseStart": 57,
+      "domContentLoaded": 2172,
+      "transferSize": 2996
+    }
+  ],
+  "paint": [
+    {
+      "name": "first-contentful-paint",
+      "ms": 2300
+    }
+  ],
+  "lcp": 2300,
+  "overflow": false,
+  "inputs": [
+    {
+      "type": null,
+      "fontSize": "16px"
+    }
+  ]
+}

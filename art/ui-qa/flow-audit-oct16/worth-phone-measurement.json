@@ -1,0 +1,22 @@
+{
+  "readyMs": 2109,
+  "navigation": [
+    {
+      "responseStart": 58,
+      "domContentLoaded": 554
+    }
+  ],
+  "paint": [
+    {
+      "name": "first-contentful-paint",
+      "ms": 734
+    }
+  ],
+  "overflow": false,
+  "inputs": [
+    {
+      "type": null,
+      "fontSize": "16px"
+    }
+  ]
+}

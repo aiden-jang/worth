@@ -25,6 +25,9 @@ The current mocks in [`art/ui-mocks`](art/ui-mocks/README.md) guide the implemen
 and collection layouts. [Actual screenshots and verification](art/ui-qa/taste-cabinet/README.md) document the build
 and the October 10 taste cabinet redesign. Mock fixtures are not bundled into the app. Worth starts empty for a new account.
 
+The [October 16 flow review](art/ui-qa/flow-audit-oct16/README.md) records phone journeys,
+shared sign-in checks, loading measurements and physical-device limits across the apps.
+
 [`DESIGN.md`](DESIGN.md) is the current visual and product-direction source of truth. Use it before changing primary screens or generating new mocks.
 
 ## Run locally
