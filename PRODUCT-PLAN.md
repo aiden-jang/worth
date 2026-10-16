@@ -1,5 +1,9 @@
 # Worth product pass
 
+The original ten-step pass and completion notes below are historical. Current
+archive-tool behavior and the proposed next releases are tracked in the
+[feature roadmap](docs/FEATURE-ROADMAP.md).
+
 Approved: all ten steps, on main.
 
 - [x] Active/resumable workouts, rest timer, next exercise, finish recap

@@ -32,3 +32,5 @@ createRoot(document.getElementById('root')!).render(
 import './landing-cabinet.css';
 
 import './completion.css';
+
+import './archive-tools.css';

@@ -8,6 +8,7 @@ const itemDraft = z.object({
   decision: z.enum(['favorite', 'meh', 'would_not_again']).nullable(),
   startedOn: z.string().nullable(),
   endedOn: z.string().nullable(),
+  wantToTry: z.boolean().optional(),
   revisitQueued: z.boolean().optional(),
 });
 const logDraft = logInput.extend({

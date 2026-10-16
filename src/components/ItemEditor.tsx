@@ -12,10 +12,12 @@ import { preparePhoto } from '../shared/photos';
 import { CollectionLogEditor } from './CollectionLogEditor';
 import { ConfirmDialog } from './ConfirmDialog';
 import { DraftPhoto } from './DraftPhoto';
+import { MergedRecords } from './MergedRecords';
 import { OpinionSlip } from './OpinionSlip';
 import { PhotoControl } from './PhotoControl';
 
 const emptyItem: ItemInput = {
+  wantToTry: false,
   title: '',
   type: '',
   note: '',
@@ -71,7 +73,9 @@ export function ItemEditor({
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
-  const history = logs.filter((log) => log.itemId === item?.id);
+  const history = logs.filter(
+    (log) => log.itemId === item?.id || item?.mergedIds?.includes(log.itemId ?? ''),
+  );
   const typeSuggestions = Array.from(new Set(items.map((entry) => entry.type).filter(Boolean))).sort();
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
   const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim()) || Boolean(photo);
@@ -94,7 +98,10 @@ export function ItemEditor({
   }, [item?.id]);
   useEffect(() => {
     if (!focusLogId || focusLogId === handledFocusLogId || !item) return;
-    const focusedLog = logs.find((log) => log.id === focusLogId && log.itemId === item.id);
+    const focusedLog = logs.find(
+      (log) =>
+        log.id === focusLogId && (log.itemId === item.id || item.mergedIds?.includes(log.itemId ?? '')),
+    );
     if (focusedLog) {
       setEditingLog(focusedLog);
       setHandledFocusLogId(focusLogId);
@@ -297,6 +304,14 @@ export function ItemEditor({
             <p className="record-call-hint">Optional. Tap the selected call to clear it.</p>
           </OpinionSlip>
           <div className="record-notes">
+            <label className="capture-want">
+              <input
+                type="checkbox"
+                checked={Boolean(form.wantToTry)}
+                onChange={(e) => setForm({ ...form, wantToTry: e.target.checked })}
+              />
+              Want to try
+            </label>
             <label>
               Private note <span className="optional">never included in shares</span>
               <textarea
@@ -385,6 +400,7 @@ export function ItemEditor({
             />
           </details>
         )}
+        {item && <MergedRecords item={item} />}
         {item && (
           <section className="item-history">
             <div className="panel-title">
@@ -459,8 +475,8 @@ export function ItemEditor({
             title={`Delete ${deleteTarget.title}?`}
             description={
               deleteTarget.kind === 'item'
-                ? 'This permanently removes the item, every log attached to it, and all of their private photos.'
-                : 'This permanently removes this log and its private photo, if it has one.'
+                ? 'This moves the item, merged originals, attached logs and private photos to Trash for 30 days. Restored items return unranked.'
+                : 'This moves the log and its private photo to Trash for 30 days.'
             }
             confirmLabel={deleteTarget.kind === 'item' ? 'Delete item' : 'Delete log'}
             pending={deleteTarget.kind === 'item' ? remove.isPending : deleteLog.isPending}
@@ -506,6 +522,7 @@ export function ItemEditor({
 
 function fromItem(item: Item): ItemInput {
   return {
+    wantToTry: item.wantToTry ?? false,
     title: item.title,
     type: item.type,
     note: item.note,

@@ -40,7 +40,7 @@ selection form one save operation; split further when a section gains independen
 - A collection contains items and dated revisits. An activity contains dated logs,
   optional exercise sets, workout visits and reusable routines.
 - Calls are `favorite`, `meh`, `would_not_again` or `null`. Rank and revisit queue are
-  separate; sorting a screen never changes saved rank. Conflicting rank revisions
+  separate, as is Want to try; sorting a screen never changes saved rank. Conflicting rank revisions
   return 409 and require refreshed data rather than silently overwriting another edit.
 - Drafts expire after seven days and use the account and record/list identity. Collection browsing
   context stays in tab memory; global Search uses `q` and `scope` URL parameters. Blocked device
@@ -81,3 +81,20 @@ Unit/component tests use Vitest. API tests run against a temporary real D1 runti
 auth is mocked at the Accounts-client boundary. Browser tests use Chromium with
 synthetic intercepted API responses and test both 1440×900 and 390×780. These tests
 cover UI contracts, not the production Accounts service or a real phone's native share sheet.
+
+## Recoverable archive operations
+
+Migration 0011 adds `trashed_at`, `want_to_try`, `merged_into_id` and active read views.
+Ordinary reads use `active_lists`, `active_items` and `active_logs`; `record_items`
+also includes preserved merged originals for history, photos and export. Writes
+still target the original tables. Lookups cannot access records underneath a trashed
+parent. New queries must preserve these boundaries.
+
+Bulk operations use one guarded D1 transaction and an owner-bound, fingerprinted
+retry receipt. JSON selections bound query/parameter counts even for 100-item Undo.
+Rank removal edits the current database order and increments its revision. Moving a
+main item carries its merged originals and all attached logs, including trashed logs.
+Merges preserve original rows and photo/log ownership; separating changes membership,
+without overwriting either record. Export/import preserves the merge relationship.
+
+See [archive tools](ARCHIVE-TOOLS.md) for retention, privacy and UI contracts.

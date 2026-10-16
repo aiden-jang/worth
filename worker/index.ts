@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import type { AppEnv } from './context';
 import { ApiError } from './data';
 import { assertSameOrigin, securityHeaders } from './http';
+import { registerArchiveTools } from './routes/archive-tools';
 import { registerExportRoutes } from './routes/export';
 import { registerItemRoutes } from './routes/items';
 import { registerListRoutes } from './routes/lists';
@@ -65,6 +66,7 @@ privateApi.use('*', async (c, next) => {
   await next();
 });
 
+registerArchiveTools(privateApi);
 registerListRoutes(privateApi);
 registerItemRoutes(privateApi);
 registerLogRoutes(privateApi);

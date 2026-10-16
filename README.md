@@ -17,6 +17,9 @@ labeled and never writes to a private archive.
 - Capture one name or a batch; add context later. Drafts can recover on the same device.
 - Make a reversible call: **Favorite**, **Meh**, **Not again**, or no call. Calls,
   manual rank and the revisit queue remain independent.
+- Save a name to **Want to try** without changing its call, rank or revisit queue.
+- Select up to 100 items to move, queue, change type, or send to Trash. Merge up to 20 while keeping original notes, photos and visits; separate them again in Details.
+- Undo deletions immediately, or restore lists, items and logs from Settings → Trash for 30 days.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
@@ -48,6 +51,8 @@ pnpm check
 Worker/TypeScript checks, a production build, and desktop/phone browser journeys.
 The D1 tests and browser preview use isolated local state. Browser API fixtures stay
 in `e2e/`; they are not shipped. See [contributing](CONTRIBUTING.md) for individual checks.
+
+See [archive tools](docs/ARCHIVE-TOOLS.md) for move, merge, recovery and export behavior.
 
 ## Repository guide
 

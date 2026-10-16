@@ -8,20 +8,21 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
     const lists = await listLists(c.env.DB, ownerId);
     const { results: recent } = await c.env.DB.prepare(
       `WITH recent_records AS (
-        SELECT g.id, g.list_id, g.item_id, l.name AS list_name, l.kind, 'log' AS record_kind,
+        SELECT g.id, g.list_id, COALESCE(i.id, g.item_id) AS item_id, l.name AS list_name, l.kind, 'log' AS record_kind,
           COALESCE(i.title, g.title) AS title, g.happened_on,
           CAST(strftime('%s', g.happened_on) AS INTEGER) * 1000 AS recorded_at,
           g.amount, g.unit, g.sets, g.reps, NULL AS decision
-        FROM logs g
-        JOIN lists l ON l.id = g.list_id
-        LEFT JOIN items i ON i.id = g.item_id
+        FROM active_logs g
+        JOIN active_lists l ON l.id = g.list_id
+        LEFT JOIN record_items original ON original.id = g.item_id
+        LEFT JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id)
         WHERE g.owner_id = ?
         UNION ALL
         SELECT i.id, i.list_id, i.id AS item_id, l.name AS list_name, l.kind, 'item' AS record_kind,
           i.title, NULL AS happened_on, i.updated_at AS recorded_at,
           NULL AS amount, '' AS unit, NULL AS sets, NULL AS reps, i.decision
-        FROM items i
-        JOIN lists l ON l.id = i.list_id
+        FROM active_items i
+        JOIN active_lists l ON l.id = i.list_id
         WHERE i.owner_id = ?
       )
       SELECT * FROM recent_records
@@ -46,15 +47,15 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
         reps: number | null;
       }>();
     const decisionPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type, i.decision
-      FROM items i
-      JOIN lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
+      FROM active_items i
+      JOIN active_lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
       WHERE i.owner_id = ? AND i.decision = ?
       ORDER BY l.updated_at DESC, i.updated_at DESC LIMIT 5`;
     const rankedPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type,
         CAST(r.key AS INTEGER) + 1 AS rank
-      FROM lists l
+      FROM active_lists l
       JOIN json_each(l.ranked_ids) r
-      JOIN items i ON i.id = r.value AND i.owner_id = l.owner_id
+      JOIN active_items i ON i.id = r.value AND i.owner_id = l.owner_id
       WHERE l.owner_id = ? AND l.kind = 'collection'
       ORDER BY CAST(r.key AS INTEGER) ASC, l.updated_at DESC, i.updated_at DESC
       LIMIT 5`;
@@ -91,12 +92,12 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
           PARTITION BY g.list_id, g.title
           ORDER BY g.happened_on DESC, g.created_at DESC
         ) AS position
-        FROM logs g
+        FROM active_logs g
         WHERE g.owner_id = ? AND g.item_id IS NULL
       )
       SELECT a.id, a.list_id, l.name AS list_name, a.title, a.happened_on
       FROM latest_activity a
-      JOIN lists l ON l.id = a.list_id AND l.owner_id = ?
+      JOIN active_lists l ON l.id = a.list_id AND l.owner_id = ?
       WHERE a.position = 1
       ORDER BY a.happened_on DESC
       LIMIT 4`,
@@ -161,15 +162,15 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
       await Promise.all([
         c.env.DB.prepare(
           `SELECT
-          (SELECT COUNT(*) FROM items WHERE owner_id = ?) + (SELECT COUNT(*) FROM logs WHERE owner_id = ?) AS total_records,
-          (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'collection') AS total_collections,
-          (SELECT COUNT(*) FROM lists WHERE owner_id = ? AND kind = 'activity') AS total_activities,
-          (SELECT COALESCE(SUM(json_array_length(ranked_ids)), 0) FROM lists
+          (SELECT COUNT(*) FROM active_items WHERE owner_id = ?) + (SELECT COUNT(*) FROM active_logs WHERE owner_id = ?) AS total_records,
+          (SELECT COUNT(*) FROM active_lists WHERE owner_id = ? AND kind = 'collection') AS total_collections,
+          (SELECT COUNT(*) FROM active_lists WHERE owner_id = ? AND kind = 'activity') AS total_activities,
+          (SELECT COALESCE(SUM(json_array_length(ranked_ids)), 0) FROM active_lists
             WHERE owner_id = ? AND kind = 'collection') AS ranked_item_count,
-          (SELECT COUNT(*) FROM logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
-          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
-          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count,
-          (SELECT COUNT(*) FROM items WHERE owner_id = ? AND decision = 'meh') AS meh_count`,
+          (SELECT COUNT(*) FROM active_logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
+          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
+          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count,
+          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'meh') AS meh_count`,
         )
           .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
           .first<{
@@ -184,9 +185,10 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
           }>(),
         c.env.DB.prepare(
           `SELECT l.id AS list_id, i.id AS item_id, l.name AS list_name, i.title, COUNT(*) AS revisit_count
-        FROM logs g
-        JOIN items i ON i.id = g.item_id AND i.owner_id = g.owner_id
-        JOIN lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
+        FROM active_logs g
+        JOIN record_items original ON original.id = g.item_id AND original.owner_id = g.owner_id
+        JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) AND i.owner_id = g.owner_id
+        JOIN active_lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
         WHERE g.owner_id = ? AND g.item_id IS NOT NULL
         GROUP BY i.id
         ORDER BY revisit_count DESC, MAX(g.happened_on) DESC, i.title ASC
@@ -202,8 +204,8 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
           }>(),
         c.env.DB.prepare(
           `SELECT l.id, l.name, COUNT(i.id) AS item_count
-        FROM lists l
-        LEFT JOIN items i ON i.list_id = l.id AND i.owner_id = l.owner_id
+        FROM active_lists l
+        LEFT JOIN active_items i ON i.list_id = l.id AND i.owner_id = l.owner_id
         WHERE l.owner_id = ? AND l.kind = 'collection'
         GROUP BY l.id
         ORDER BY l.updated_at DESC
@@ -213,8 +215,8 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
           .first<{ id: string; name: string; item_count: number }>(),
         c.env.DB.prepare(
           `SELECT l.id, l.name, COUNT(i.id) AS item_count
-        FROM lists l
-        LEFT JOIN items i ON i.list_id = l.id
+        FROM active_lists l
+        LEFT JOIN active_items i ON i.list_id = l.id
         WHERE l.owner_id = ? AND l.kind = 'collection'
         GROUP BY l.id
         ORDER BY l.created_at DESC
@@ -224,8 +226,8 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
           .first<{ id: string; name: string; item_count: number }>(),
         c.env.DB.prepare(
           `SELECT l.id, l.name, COUNT(i.id) AS item_count
-        FROM lists l
-        JOIN items i ON i.list_id = l.id AND i.owner_id = l.owner_id
+        FROM active_lists l
+        JOIN active_items i ON i.list_id = l.id AND i.owner_id = l.owner_id
         WHERE l.owner_id = ? AND l.kind = 'collection'
         GROUP BY l.id
         ORDER BY item_count DESC, l.updated_at DESC, l.name ASC

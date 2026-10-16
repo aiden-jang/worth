@@ -4,6 +4,9 @@ import { OpinionSlip } from './OpinionSlip';
 import { CallBadge } from './PersonalCall';
 
 type IndexProps = {
+  selection?: { ids: Set<string>; toggle: (id: string) => void };
+  onWant: (item: Item) => void;
+  wantPending: boolean;
   onQueue: (item: Item) => void;
   queuePending: boolean;
   items: Item[];
@@ -20,7 +23,7 @@ type IndexProps = {
   rankPending: boolean;
 };
 
-export function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: IndexProps) {
+export function IndexRows({ items, ranks, selectedId, onSelect, selection, ...actions }: IndexProps) {
   return (
     <ol className="collection-index-rows">
       {items.map((item) => {
@@ -29,6 +32,16 @@ export function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: In
         return (
           <li className={selected ? 'selected' : ''} key={item.id}>
             <div className="collection-index-row">
+              {selection && (
+                <label className="collection-select">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${item.title}`}
+                    checked={selection.ids.has(item.id)}
+                    onChange={() => selection.toggle(item.id)}
+                  />
+                </label>
+              )}
               <span className="collection-row-rank">{rank ? String(rank).padStart(2, '0') : '—'}</span>
               <button
                 type="button"
@@ -37,6 +50,7 @@ export function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: In
               >
                 <strong>{item.title}</strong>
                 {item.type && <span>{item.type}</span>}
+                {item.wantToTry && <small className="want-label">Want to try</small>}
               </button>
               {item.decision && <CallBadge value={item.decision} />}
             </div>
@@ -51,6 +65,8 @@ export function IndexRows({ items, ranks, selectedId, onSelect, ...actions }: In
 }
 
 export function ItemActions({
+  onWant,
+  wantPending,
   onQueue,
   queuePending,
   item,
@@ -79,6 +95,15 @@ export function ItemActions({
       disabled={decisionPending}
       onChange={(value) => onDecide(item, value)}
     >
+      <button
+        type="button"
+        className="collection-queue-action"
+        aria-pressed={Boolean(item.wantToTry)}
+        disabled={wantPending}
+        onClick={() => onWant(item)}
+      >
+        {item.wantToTry ? 'Want to try ✓' : 'Save to Want to try'}
+      </button>
       <button
         type="button"
         aria-pressed={Boolean(item.revisitQueued)}

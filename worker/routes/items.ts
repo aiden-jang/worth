@@ -23,8 +23,8 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO items
-      (id, list_id, owner_id, title, type, note, decision, revisit_queued, started_on, ended_on, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, owner_id, title, type, note, decision, revisit_queued, want_to_try, started_on, ended_on, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -35,6 +35,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         input.note,
         input.decision,
         input.revisitQueued ? 1 : 0,
+        input.wantToTry ? 1 : 0,
         input.startedOn,
         input.endedOn,
         now,
@@ -55,7 +56,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const key = c.req.header('Idempotency-Key')
       ? operationId(c.req.header('Idempotency-Key'))
       : crypto.randomUUID();
-    const hash = await fingerprint({ listId: list.id, titles: input.titles });
+    const hash = await fingerprint({ listId: list.id, titles: input.titles, wantToTry: input.wantToTry });
     const previous = await previousOperation(c.env.DB, key, c.get('ownerId'), 'batch', hash);
     if (previous)
       return c.json(
@@ -80,9 +81,9 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         ...items.map((item) =>
           c.env.DB.prepare(
             `INSERT INTO items
-            (id, list_id, owner_id, title, type, note, decision, started_on, ended_on, created_at, updated_at)
-            VALUES (?, ?, ?, ?, '', '', NULL, NULL, NULL, ?, ?)`,
-          ).bind(item.id, list.id, c.get('ownerId'), item.title, now, now),
+            (id, list_id, owner_id, title, type, note, decision, want_to_try, started_on, ended_on, created_at, updated_at)
+            VALUES (?, ?, ?, ?, '', '', NULL, ?, NULL, NULL, ?, ?)`,
+          ).bind(item.id, list.id, c.get('ownerId'), item.title, input.wantToTry ? 1 : 0, now, now),
         ),
         c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
           now,
@@ -118,6 +119,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
       note: patch.note ?? item.note,
       decision: patch.decision === undefined ? item.decision : patch.decision,
       revisitQueued: patch.revisitQueued ?? item.revisitQueued ?? false,
+      wantToTry: patch.wantToTry ?? item.wantToTry ?? false,
       startedOn: patch.startedOn === undefined ? item.startedOn : patch.startedOn,
       endedOn: patch.endedOn === undefined ? item.endedOn : patch.endedOn,
     });
@@ -127,7 +129,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.batch([
       c.env.DB.prepare(
-        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, started_on = ?, ended_on = ?,
+        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, want_to_try = ?, started_on = ?, ended_on = ?,
           updated_at = ? WHERE id = ? AND owner_id = ?`,
       ).bind(
         value.title,
@@ -135,6 +137,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         value.note,
         value.decision,
         value.revisitQueued ? 1 : 0,
+        value.wantToTry ? 1 : 0,
         value.startedOn,
         value.endedOn,
         now,
@@ -154,7 +157,11 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const item = await requireItem(c.env.DB, c.get('ownerId'), c.req.param('itemId'));
     const now = Date.now();
     await c.env.DB.batch([
-      c.env.DB.prepare('DELETE FROM items WHERE id = ? AND owner_id = ?').bind(item.id, c.get('ownerId')),
+      c.env.DB.prepare('UPDATE items SET trashed_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        item.id,
+        c.get('ownerId'),
+      ),
       c.env.DB.prepare(
         `UPDATE lists SET ranked_ids = (
         SELECT COALESCE(json_group_array(value), '[]') FROM (

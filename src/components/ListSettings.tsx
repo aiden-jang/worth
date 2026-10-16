@@ -129,7 +129,7 @@ export function ListSettings({
         />
       )}
       <div className="settings-danger">
-        <span>This removes every item and log in this list.</span>
+        <span>Lists and their contents can be restored from Trash for 30 days.</span>
         <button className="text-danger" disabled={remove.isPending} onClick={() => setConfirmingDelete(true)}>
           Delete this list
         </button>
@@ -139,7 +139,7 @@ export function ListSettings({
         <ConfirmDialog
           eyebrow="DELETE LIST"
           title={`Delete ${name}?`}
-          description="This permanently removes every item, log, rank, note, and private photo in this list."
+          description="This moves the list, its items, logs, routines and private photos to Trash for 30 days. Public links are revoked and stay revoked after restoring."
           confirmLabel="Delete list"
           pending={remove.isPending}
           error={remove.isError ? remove.error.message : undefined}

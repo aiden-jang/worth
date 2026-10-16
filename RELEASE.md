@@ -75,3 +75,15 @@ Do not email anyone or delete their data merely as a verification exercise.
 - Real signed-in phone session, session expiration, photos, export and share revocation.
 - Authenticated Cloudflare plan, recovery availability, alerting and edge abuse controls.
 - Shared account deletion integration; product copy and contact flow explicitly avoid assuming it.
+
+## Archive tools migration
+
+Migration 0011 is additive and preserves existing records. Apply it before the new
+Worker. After this version has put records in Trash or merged them, do not roll back
+to an older Worker that reads the raw tables: it would display trashed records and
+merged originals as active items. Use a fix-forward release or a compatible build
+that retains the active-view read boundaries. Never drop the new columns to roll back.
+
+Smoke-check create/Want to try, merge/separate, move with a photo/history, Trash/Undo,
+list restoration with revoked public links, and a backup/restore of merged originals.
+Use disposable staging records for retention cleanup and permanent account-data deletion.

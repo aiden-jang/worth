@@ -23,9 +23,15 @@ export const archiveFile = z
       .max(500),
     items: z
       .array(
-        itemInput
-          .innerType()
-          .extend({ title: title(120), type: text(60), note: text(4000), id, listId: id, ...dated }),
+        itemInput.innerType().extend({
+          title: title(120),
+          type: text(60),
+          note: text(4000),
+          id,
+          listId: id,
+          ...dated,
+          mergedIntoId: id.nullable().default(null),
+        }),
       )
       .max(5000),
     logs: z
@@ -102,12 +108,19 @@ export const archiveFile = z
     const workouts = new Map(file.workoutSessions.map((w) => [w.id, w]));
     for (const i of file.items) {
       if (lists.get(i.listId)?.kind !== 'collection') bad('An item has an invalid collection');
+      if (
+        i.mergedIntoId &&
+        (i.mergedIntoId === i.id ||
+          items.get(i.mergedIntoId)?.listId !== i.listId ||
+          items.get(i.mergedIntoId)?.mergedIntoId)
+      )
+        bad('An item has an invalid merge');
       if (i.startedOn && i.endedOn && i.startedOn > i.endedOn) bad('An item has an invalid date range');
     }
     for (const l of file.lists) {
       if (
         new Set(l.rankedIds).size !== l.rankedIds.length ||
-        l.rankedIds.some((id) => items.get(id)?.listId !== l.id)
+        l.rankedIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId)
       )
         bad('A ranking contains an invalid item');
       if (l.kind === 'activity' && l.rankedIds.length) bad('An activity cannot contain item ranks');
