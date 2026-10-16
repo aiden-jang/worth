@@ -1,4 +1,49 @@
 /* Secondary screens use the same cabinet tokens and opinion slip as the primary layouts. */
+.item-context > label,
+.item-context > details {
+  margin: 18px 0;
+}
+.personal-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.personal-stamps span {
+  color: #e8dc9d;
+  border: 1px solid #737566;
+  border-radius: 8px;
+  padding: 6px 10px;
+  overflow-wrap: anywhere;
+}
+.context-field {
+  border: 1px solid #737566;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.context-field label {
+  margin-bottom: 12px;
+}
+.context-reminder {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #38392f;
+  border-radius: 12px;
+}
+.context-readout dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 16px;
+}
+.context-readout dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.context-readout dt {
+  overflow-wrap: anywhere;
+}
 .editor-dialog,
 .share-dialog {
   width: min(720px, calc(100% - 32px));
@@ -1716,4 +1761,11 @@
   padding: 0;
   flex: none;
   accent-color: #e8dc9d;
+}
+
+.item-context .record-extras > label {
+  margin: 16px 0;
+}
+.item-context .date-pair {
+  margin: 16px 0;
 }

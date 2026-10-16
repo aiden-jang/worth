@@ -4,13 +4,14 @@ import type { AppEnv } from '../context';
 import { ApiError, requireItem, requireList } from '../data';
 import { readJson } from '../http';
 import { creationId, fingerprint, operationId, previousOperation } from '../operations';
+import { emptyItemContext } from '../../src/shared/item-context';
 
 export function registerItemRoutes(api: Hono<AppEnv>): void {
   api.post('/lists/:listId/items', async (c) => {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
     if (list.kind !== 'collection')
       throw new ApiError(400, 'WRONG_LIST_KIND', 'This list holds activity logs');
-    const input = await readJson(c.req.raw, itemInput);
+    const input = await readJson(c.req.raw, itemInput, 32 * 1024);
     const id = creationId(c.req.header('Idempotency-Key'));
     const existing = await c.env.DB.prepare('SELECT owner_id, list_id FROM items WHERE id = ?')
       .bind(id)
@@ -23,8 +24,8 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const now = Date.now();
     await c.env.DB.prepare(
       `INSERT INTO items
-      (id, list_id, owner_id, title, type, note, decision, revisit_queued, want_to_try, started_on, ended_on, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, list_id, owner_id, title, type, note, decision, revisit_queued, want_to_try, context_json, started_on, ended_on, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -36,6 +37,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         input.decision,
         input.revisitQueued ? 1 : 0,
         input.wantToTry ? 1 : 0,
+        JSON.stringify(input.context),
         input.startedOn,
         input.endedOn,
         now,
@@ -112,8 +114,9 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
 
   api.patch('/items/:itemId', async (c) => {
     const item = await requireItem(c.env.DB, c.get('ownerId'), c.req.param('itemId'));
-    const patch = await readJson(c.req.raw, itemPatch);
+    const patch = await readJson(c.req.raw, itemPatch, 32 * 1024);
     const merged = itemInput.safeParse({
+      context: patch.context ?? item.context,
       title: patch.title ?? item.title,
       type: patch.type ?? item.type,
       note: patch.note ?? item.note,
@@ -126,11 +129,16 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     if (!merged.success)
       throw new ApiError(400, 'INVALID_INPUT', merged.error.issues[0]?.message ?? 'Invalid item');
     const value = merged.data;
-    const now = Date.now();
-    await c.env.DB.batch([
+    const now = Math.max(Date.now(), item.updatedAt + 1);
+    const contextChanged =
+      patch.context !== undefined &&
+      JSON.stringify(value.context) !== JSON.stringify(item.context ?? emptyItemContext);
+    if (contextChanged && patch.expectedContextRevision === undefined)
+      throw new ApiError(409, 'CONTEXT_CHANGED', 'Reload the saved context before editing it.');
+    const results = await c.env.DB.batch([
       c.env.DB.prepare(
-        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, want_to_try = ?, started_on = ?, ended_on = ?,
-          updated_at = ? WHERE id = ? AND owner_id = ?`,
+        `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, want_to_try = ?, context_json = CASE WHEN ? THEN ? ELSE context_json END, context_revision = context_revision + ?, started_on = ?, ended_on = ?,
+          updated_at = ? WHERE id = ? AND owner_id = ? AND list_id = ? AND trashed_at IS NULL AND merged_into_id IS NULL AND list_id IN (SELECT id FROM active_lists WHERE owner_id = ?) AND (? = 0 OR context_revision = ?)`,
       ).bind(
         value.title,
         value.type,
@@ -138,18 +146,29 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         value.decision,
         value.revisitQueued ? 1 : 0,
         value.wantToTry ? 1 : 0,
+        contextChanged ? 1 : 0,
+        JSON.stringify(value.context),
+        contextChanged ? 1 : 0,
         value.startedOn,
         value.endedOn,
         now,
         item.id,
         c.get('ownerId'),
-      ),
-      c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
-        now,
         item.listId,
         c.get('ownerId'),
+        contextChanged ? 1 : 0,
+        patch.expectedContextRevision ?? 0,
       ),
+      c.env.DB.prepare(
+        'UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ? AND EXISTS(SELECT 1 FROM items WHERE id = ? AND owner_id = ? AND updated_at = ?)',
+      ).bind(now, item.listId, c.get('ownerId'), item.id, c.get('ownerId'), now),
     ]);
+    if (!results[0].meta.changes)
+      throw new ApiError(
+        409,
+        'CONTEXT_CHANGED',
+        'The record or its context changed elsewhere. Keep your draft and reload the saved context before trying again.',
+      );
     return c.json({ item: await requireItem(c.env.DB, c.get('ownerId'), item.id) });
   });
 

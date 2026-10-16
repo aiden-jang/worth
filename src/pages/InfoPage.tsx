@@ -53,10 +53,12 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>What Worth stores</h2>
               <p>
                 Your collections, activity entries, notes, dates, rankings, saved filter views, context
-                rankings, optional Favorite / Meh / Not again calls, Want to try, merged originals, revisit
-                queue, exercise measurements, routines, workout visits, and uploaded photos or collection
-                covers. Records are associated with your shared account ID. Worth receives your account
-                identity to check access and display your name; passwords are handled by the account service.
+                rankings, private sources and recommendations, labels/stamps, custom details, purchase and
+                loan information (including names you enter), optional Favorite / Meh / Not again calls, Want
+                to try, merged originals, revisit queue, exercise measurements, routines, workout visits, and
+                uploaded photos or collection covers. Records are associated with your shared account ID.
+                Worth receives your account identity to check access and display your name; passwords are
+                handled by the account service.
               </p>
             </section>
             <section>
@@ -207,6 +209,26 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 recover on this device for seven days, but comparison rounds in progress are not saved. Saved
                 views and context rankings are included in records export and photo backups. They are never
                 included in public share links.
+              </p>
+            </section>
+            <section>
+              <h2>Private context and return reminders</h2>
+              <p>
+                In an item’s Details, open A little more context to keep a source link, why you saved it, who
+                recommended it, your follow-up, location/version, custom fields, labels or stamps. Personal
+                labels and stamps can filter a collection and be kept in saved views. These fields stay out of
+                public ranking snapshots and are included in your private backup.
+              </p>
+              <p>
+                Purchase and loan details can include a return date. Download calendar reminder previews the
+                title and date, then saves a calendar file. Import that file into your calendar to enable its
+                reminder one day before. Worth does not send notifications itself. The calendar file excludes
+                the Person field and private notes; copies outside Worth cannot be revoked.
+              </p>
+              <p>
+                Context changes check for newer edits. If a saved version changed elsewhere, your draft stays
+                in place. Reload saved context asks before replacing only those context edits, keeping your
+                other form changes.
               </p>
             </section>
             <section>

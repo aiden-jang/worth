@@ -20,13 +20,13 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
       .all<{ id: string; name: string; kind: 'collection' | 'activity'; description: string }>();
     const { results: items } = await c.env.DB.prepare(
       `SELECT i.id, i.list_id, l.name AS list_name,
-      i.title, CASE WHEN original.note LIKE ? ESCAPE '\\' THEN substr(original.note, 1, 180) ELSE original.type END AS detail FROM record_items original JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) JOIN active_lists l ON l.id = i.list_id
+      i.title, CASE WHEN original.note LIKE ? ESCAPE '\\' THEN substr(original.note, 1, 180) ELSE COALESCE((SELECT substr(atom, 1, 180) FROM json_tree(original.context_json) WHERE type = 'text' AND atom NOT IN ('', 'none', 'unspecified') AND atom LIKE ? ESCAPE '\\' LIMIT 1), original.type) END AS detail FROM record_items original JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) JOIN active_lists l ON l.id = i.list_id
       WHERE i.owner_id = ? AND (
-        original.title LIKE ? ESCAPE '\\' OR original.type LIKE ? ESCAPE '\\' OR original.note LIKE ? ESCAPE '\\'
+        original.title LIKE ? ESCAPE '\\' OR original.type LIKE ? ESCAPE '\\' OR original.note LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM json_tree(original.context_json) WHERE type = 'text' AND atom NOT IN ('', 'none', 'unspecified') AND atom LIKE ? ESCAPE '\\')
       )
       ORDER BY i.updated_at DESC LIMIT 40`,
     )
-      .bind(pattern, ownerId, pattern, pattern, pattern)
+      .bind(pattern, pattern, ownerId, pattern, pattern, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     const { results: logs } = await c.env.DB.prepare(
       `SELECT g.id, g.list_id, COALESCE(i.id, g.item_id) AS item_id, l.name AS list_name,

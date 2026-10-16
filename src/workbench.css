@@ -178,6 +178,14 @@
   color: #181915;
   border-color: #626456;
 }
+.workbench-record .personal-stamps span,
+.workbench-record .context-readout a:is(:link, :visited, :hover, :focus-visible) {
+  color: #34382d;
+  border-color: #626456;
+}
+.workbench-record .context-readout a {
+  text-decoration: underline;
+}
 .workbench-dialog .workbench-record .button-outline:is(:hover, :focus-visible, :active) {
   color: #181915;
   background: #dedaca;

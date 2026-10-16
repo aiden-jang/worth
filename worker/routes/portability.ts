@@ -193,6 +193,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         decision: i.decision,
         revisit_queued: i.revisitQueued ? 1 : 0,
         want_to_try: i.wantToTry ? 1 : 0,
+        context_json: JSON.stringify(i.context),
         merged_into_id: i.mergedIntoId ? id(i.mergedIntoId) : null,
         started_on: i.startedOn,
         ended_on: i.endedOn,

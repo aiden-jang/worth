@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import type { Item } from '../shared/models';
 import { decisionLabel } from '../shared/decisions';
+import { ItemContextReadout } from './ItemContextReadout';
 
 export function MergedRecords({ item }: { item: Item }) {
   const client = useQueryClient();
@@ -50,6 +51,7 @@ export function MergedRecords({ item }: { item: Item }) {
             </p>
           )}
           {source.note && <p className="preserved-note">{source.note}</p>}
+          <ItemContextReadout value={source.context} />
           {source.hasPhoto && (
             <img
               src={`/api/items/${source.id}/photo?v=${source.updatedAt}`}

@@ -97,6 +97,8 @@ export function CollectionView({
     'all',
   );
   const [type, setType] = useViewPreference(`collection:${list.id}:type`, 'all');
+  const [label, setLabel] = useViewPreference(`collection:${list.id}:label`, '');
+  const [stamp, setStamp] = useViewPreference(`collection:${list.id}:stamp`, '');
   const [rankFilter, setRankFilter] = useViewPreference<RankFilter>(
     `collection:${list.id}:rankFilter`,
     'all',
@@ -187,6 +189,8 @@ export function CollectionView({
       setAddedBefore('');
       setVisits('all');
       setType('all');
+      setLabel('');
+      setStamp('');
       setRankFilter('all');
       setDecisionFilter('all');
       setSort('rank');
@@ -219,6 +223,8 @@ export function CollectionView({
       setAddedBefore('');
       setVisits('all');
       setType('all');
+      setLabel('');
+      setStamp('');
       setRankFilter('all');
       setDecisionFilter('all');
       setSort('rank');
@@ -289,6 +295,7 @@ export function CollectionView({
   const rankedIds = new Set(list.rankedIds);
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
   const hasAdvancedFilters =
+    Boolean(label || stamp) ||
     Boolean(addedSince || addedBefore || visits !== 'all') ||
     type !== 'all' ||
     rankFilter !== 'all' ||
@@ -303,6 +310,8 @@ export function CollectionView({
     sort,
   });
   const visible = ordered.filter((item) => {
+    if (label && !item.context?.labels.includes(label)) return false;
+    if (stamp && !item.context?.stamps.includes(stamp)) return false;
     const added = new Date(item.createdAt).toLocaleDateString('en-CA');
     if ((addedSince && added < addedSince) || (addedBefore && added > addedBefore)) return false;
     if (
@@ -550,6 +559,30 @@ export function CollectionView({
                   <option value="would_not_again">Not again</option>
                 </select>
               </label>
+              {(['label', 'stamp'] as const).map((kind) => {
+                const choices = [
+                  ...new Set(
+                    items.flatMap((item) => item.context?.[kind === 'label' ? 'labels' : 'stamps'] ?? []),
+                  ),
+                ].sort();
+                const selected = kind === 'label' ? label : stamp;
+                if (!choices.length && !selected) return null;
+                return (
+                  <label key={kind}>
+                    <span>{kind === 'label' ? 'Personal label' : 'Personal stamp'}</span>
+                    <select
+                      value={selected}
+                      onChange={(event) => (kind === 'label' ? setLabel : setStamp)(event.target.value)}
+                    >
+                      <option value="">Any {kind}</option>
+                      {selected && !choices.includes(selected) && <option>{selected}</option>}
+                      {choices.map((choice) => (
+                        <option key={choice}>{choice}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              })}
               <label>
                 <span>Order</span>
                 <select value={sort} onChange={(event) => setSort(event.target.value as ItemSort)}>
@@ -598,6 +631,8 @@ export function CollectionView({
                     setAddedBefore('');
                     setVisits('all');
                     setType('all');
+                    setLabel('');
+                    setStamp('');
                     setRankFilter('all');
                     setDecisionFilter('all');
                     setSort('rank');
@@ -612,6 +647,8 @@ export function CollectionView({
           <SavedViews
             listId={list.id}
             current={{
+              label,
+              stamp,
               browse,
               search,
               type,
@@ -623,6 +660,8 @@ export function CollectionView({
               visits,
             }}
             onApply={(filters) => {
+              setLabel(filters.label);
+              setStamp(filters.stamp);
               setBrowse(filters.browse);
               setSearch(filters.search);
               setType(filters.type);

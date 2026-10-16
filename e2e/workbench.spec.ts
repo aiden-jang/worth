@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
+import { emptyItemContext } from '../src/shared/item-context';
 
 test('a stale sandbox refreshes the current ranking and never overwrites it', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
@@ -118,6 +119,12 @@ test('comparison notes stay private and the decision draw only uses eligible rec
   archive,
 }) => {
   archive.items[1].wantToTry = true;
+  archive.items[0].context = {
+    ...emptyItemContext,
+    sourceUrl: 'https://example.test/source',
+    whySaved: 'Quiet mornings',
+    stamps: ['worth the detour'],
+  };
   await page.goto(`/lists/${list.id}`);
   await page.getByRole('button', { name: 'Workbench', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
@@ -125,6 +132,7 @@ test('comparison notes stay private and the decision draw only uses eligible rec
   await page.getByRole('checkbox', { name: 'Tea', exact: true }).check();
   await expect(page.locator('.workbench-cards')).toContainText('PRIVATE NOTE');
   await expect(page.getByRole('dialog').locator('.workbench-record')).toHaveCount(2);
+  await page.getByText('Saved context', { exact: true }).click();
   if (process.env.WORTH_CAPTURE_QA)
     await page.screenshot({
       path: `${process.env.WORTH_CAPTURE_QA}/comparison-${test.info().project.name}.png`,

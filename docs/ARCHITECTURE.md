@@ -120,3 +120,29 @@ workspace state only for active lists and remaps context item IDs on restore; ol
 backups default to empty tools. Deleting all data cascades through the containing
 lists. Public snapshots retain their fixed title/type-only payload. See the
 [expansion tracker](CABINET-EXPANSION.md) for the larger unfinished scope.
+
+## Private item context
+
+Migration 0013 adds `items.context_json` and `context_revision`. Shared validation
+and calendar serialization live in `src/shared/item-context.ts`; the editor and
+read-only presentation are separate components. Context is optional and does not
+change calls, rankings, revisit status or the name-only capture path.
+
+Item create/patch requests allow 32 KiB; context arrays/text have explicit bounds.
+An actual context change requires its expected revision, checked in the same SQL
+update as the record fields. Identical retries preserve the revision. Patches that
+do not change context leave its JSON untouched. The editor persists the expected
+revision with its draft; newer server context cannot silently replace local edits.
+Reloading context requires confirmation and preserves unrelated form edits.
+
+Exports/imports include context and older files default to empty context. Merge,
+move and Trash retain the original item row. Read-only context remains accessible
+on merged originals and the comparison table. Collection search includes context;
+global search matches meaningful JSON scalar values rather than field names or
+default state markers. Saved filter views include optional label/stamp filters.
+
+Calendar reminders are local `.ics` downloads with an explicit title/date preview,
+an all-day event and a one-day-before display alarm. Serialization escapes text
+and folds by UTF-8 octets. Person/private-note fields are not put in these files.
+Worth does not request notification permission, schedule a server job or send a
+message. Importing the file into a calendar is a separate user action.

@@ -9,6 +9,8 @@ import type {
   WorkoutSession,
 } from '../src/shared/models';
 import { collectionWorkspace, filterWorkspace } from '../src/shared/workspace';
+import { emptyItemContext, type ItemContext } from '../src/shared/item-context';
+const emptyContextJson = JSON.stringify(emptyItemContext);
 
 export type RecordExport = {
   schemaVersion: 1;
@@ -49,6 +51,8 @@ type ListRow = {
 };
 
 type ItemRow = {
+  context_json: string;
+  context_revision: number;
   revisit_queued: number;
   want_to_try: number;
   merged_into_id: string | null;
@@ -154,6 +158,12 @@ export async function requireList(db: D1Database, ownerId: string, id: string): 
 
 function mapItem(row: ItemRow): Item {
   return {
+    // Writes validate context; empty records need neither another parse nor a large default payload.
+    context:
+      row.context_json && row.context_json !== '{}' && row.context_json !== emptyContextJson
+        ? (JSON.parse(row.context_json) as ItemContext)
+        : undefined,
+    contextRevision: row.context_revision ?? 0,
     id: row.id,
     listId: row.list_id,
     title: row.title,
@@ -175,7 +185,7 @@ function mapItem(row: ItemRow): Item {
 }
 
 const itemQuery = `
-  SELECT i.want_to_try, i.merged_into_id, (SELECT json_group_array(m.id) FROM record_items m WHERE m.merged_into_id = i.id) AS merged_ids, i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
+  SELECT i.context_revision, i.context_json, i.want_to_try, i.merged_into_id, (SELECT json_group_array(m.id) FROM record_items m WHERE m.merged_into_id = i.id) AS merged_ids, i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
     i.created_at, i.updated_at,
     EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id = i.id) AS has_photo,
     (SELECT COUNT(*) FROM active_logs g WHERE g.item_id IN (SELECT m.id FROM record_items m WHERE m.id = i.id OR m.merged_into_id = i.id)) AS log_count,

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { collectionItemTitleLimit } from './collection-capture';
+import { itemContext, emptyItemContext } from './item-context';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
@@ -33,6 +34,7 @@ export const listPatch = listInput
 
 export const itemInput = z
   .object({
+    context: itemContext.default(emptyItemContext),
     title: shortText(collectionItemTitleLimit),
     type: z.string().trim().max(60).default(''),
     note: note.default(''),
@@ -49,6 +51,8 @@ export const itemInput = z
 
 export const itemPatch = z
   .object({
+    context: itemContext.optional(),
+    expectedContextRevision: z.number().int().nonnegative().optional(),
     title: shortText(collectionItemTitleLimit).optional(),
     type: z.string().trim().max(60).optional(),
     note: note.optional(),

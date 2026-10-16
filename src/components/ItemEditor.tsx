@@ -15,8 +15,12 @@ import { DraftPhoto } from './DraftPhoto';
 import { MergedRecords } from './MergedRecords';
 import { OpinionSlip } from './OpinionSlip';
 import { PhotoControl } from './PhotoControl';
+import { ItemContextEditor } from './ItemContextEditor';
+import { emptyItemContext } from '../shared/item-context';
 
 const emptyItem: ItemInput = {
+  context: emptyItemContext,
+  expectedContextRevision: 0,
   wantToTry: false,
   title: '',
   type: '',
@@ -68,6 +72,7 @@ export function ItemEditor({
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [confirmingContextReload, setConfirmingContextReload] = useState(false);
   const [editingLog, setEditingLog] = useState<Log | null>(null);
   const [handledFocusLogId, setHandledFocusLogId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
@@ -125,6 +130,10 @@ export function ItemEditor({
   const save = useMutation({
     mutationFn: async () => {
       const input = cleanItemInput(form);
+      if (item && JSON.stringify(form.context) === JSON.stringify(savedForm.context)) {
+        delete input.context;
+        delete input.expectedContextRevision;
+      }
       const blob = photo ? await preparePhoto(photo) : null;
       const id = item?.id ?? draft.savedId.current;
       let result = id
@@ -156,6 +165,9 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
+    },
+    onError: () => {
+      void client.invalidateQueries({ queryKey: ['items', listId] });
     },
   });
   const remove = useMutation({
@@ -346,6 +358,23 @@ export function ItemEditor({
                 </label>
               </div>
             </details>
+            <ItemContextEditor
+              value={form.context}
+              onChange={(context) => setForm({ ...form, context })}
+              title={form.title}
+            />
+            {item && (form.expectedContextRevision ?? 0) !== (item.contextRevision ?? 0) && (
+              <div role="alert">
+                <p>Saved context changed elsewhere. Your context draft is still here.</p>
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => setConfirmingContextReload(true)}
+                >
+                  Reload saved context
+                </button>
+              </div>
+            )}
           </div>
           {!item && (
             <div className="record-notes">
@@ -512,6 +541,22 @@ export function ItemEditor({
             onClose={() => setConfirmingDiscard(false)}
           />
         )}
+        {confirmingContextReload && item && (
+          <ConfirmDialog
+            title="Replace this context draft?"
+            description="This loads the latest saved context and replaces your local context edits. Your name, note, dates and call edits stay in place."
+            confirmLabel="Reload saved context"
+            onConfirm={() => {
+              setForm({
+                ...form,
+                context: item.context ?? emptyItemContext,
+                expectedContextRevision: item.contextRevision ?? 0,
+              });
+              setConfirmingContextReload(false);
+            }}
+            onClose={() => setConfirmingContextReload(false)}
+          />
+        )}
         {editingLog && (
           <CollectionLogEditor log={editingLog} listId={listId} onClose={() => setEditingLog(null)} />
         )}
@@ -522,6 +567,8 @@ export function ItemEditor({
 
 function fromItem(item: Item): ItemInput {
   return {
+    context: item.context ?? emptyItemContext,
+    expectedContextRevision: item.contextRevision ?? 0,
     wantToTry: item.wantToTry ?? false,
     title: item.title,
     type: item.type,

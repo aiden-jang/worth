@@ -1,4 +1,5 @@
 import type { Item, ItemDecision, ListDetail } from './models';
+import { contextSearchText } from './item-context';
 
 export function rankedItems(list: ListDetail, items: Item[]): Item[] {
   const byId = new Map(items.map((item) => [item.id, item]));
@@ -36,7 +37,12 @@ export function visibleItems(
   const filtered = items.filter((item) => {
     const position = positions.get(item.id);
     if (options.type !== 'all' && item.type !== options.type) return false;
-    if (search && !`${item.title} ${item.type} ${item.note}`.toLocaleLowerCase().includes(search))
+    if (
+      search &&
+      !`${item.title} ${item.type} ${item.note} ${contextSearchText(item.context)}`
+        .toLocaleLowerCase()
+        .includes(search)
+    )
       return false;
     if (options.rankFilter === 'unranked' && position !== undefined) return false;
     if (options.rankFilter === 'top5' && (position === undefined || position >= 5)) return false;

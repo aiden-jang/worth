@@ -16,6 +16,7 @@ import {
 } from '../shared/workbench';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SavedRankings } from './SavedRankings';
+import { ItemContextReadout } from './ItemContextReadout';
 import '../workbench.css';
 
 type Mode = 'rank' | 'compare' | 'draw';
@@ -482,6 +483,7 @@ function ComparisonTable({ items, logs }: { items: Item[]; logs: Log[] }) {
               <dd>{item.lastLoggedOn ?? 'Not logged'}</dd>
             </dl>
             {item.note && <p className="workbench-note">{item.note}</p>}
+            <ItemContextReadout value={item.context} />
             <details>
               <summary>Visit notes</summary>
               {logs

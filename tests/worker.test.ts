@@ -5,6 +5,7 @@ import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import app from '../worker/index';
 import type { Item, ListDetail, ListSummary, WorkoutRoutine, WorkoutSession } from '../src/shared/models';
 import { archiveFile, type ArchiveFile } from '../src/shared/portability';
+import { itemContext } from '../src/shared/item-context';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -35,6 +36,7 @@ beforeAll(async () => {
     '0010_completion.sql',
     '0011_archive_tools.sql',
     '0012_collection_workspace.sql',
+    '0013_item_context.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -111,6 +113,121 @@ async function archiveItem(owner: string, listId: string, title: string, extra =
   return ((await response.json()) as { item: Item }).item;
 }
 
+test('private context is owner scoped, safe to retry and preserved by merges, search and restore', async () => {
+  const owner = 'contextowner';
+  const list = await archiveCollection(owner, 'Keepsakes');
+  const context = itemContext.parse({
+    sourceUrl: 'https://example.test/edition',
+    recommendedBy: 'Mina',
+    whySaved: 'Pistachio expedition',
+    followUp: 'Tell them about it',
+    labels: ['small luxury'],
+    stamps: ['worth the detour'],
+    fields: [{ name: 'Edition', value: 'Second' }],
+    purchase: { boughtOn: '2026-10-01', price: 0, currency: 'USD', returnBy: '2026-11-01', status: 'using' },
+    loan: { direction: 'lent', person: 'Sam', returnBy: '2026-12-01' },
+  });
+  const item = await archiveItem(owner, list.id, 'A small find', {
+    context,
+    decision: 'meh',
+    wantToTry: true,
+  });
+  expect(item.context).toEqual(context);
+  expect(item.contextRevision).toBe(0);
+  const next = { ...context, followUp: 'Told them. Worth it.' };
+  const changed = await call(`/items/${item.id}`, owner, 'PATCH', {
+    context: next,
+    expectedContextRevision: 0,
+  });
+  expect(changed.status).toBe(200);
+  expect(((await changed.json()) as { item: Item }).item.contextRevision).toBe(1);
+  expect(
+    (await call(`/items/${item.id}`, owner, 'PATCH', { context: next, expectedContextRevision: 0 })).status,
+  ).toBe(200);
+  expect(
+    (
+      await call(`/items/${item.id}`, owner, 'PATCH', {
+        context: { ...context, whySaved: 'Stale edit' },
+        expectedContextRevision: 0,
+        note: 'Must not overwrite',
+      })
+    ).status,
+  ).toBe(409);
+  const same = ((await (await call(`/items/${item.id}`, owner)).json()) as { item: Item }).item;
+  expect(same.context).toEqual(next);
+  expect(same.note).toBe('');
+  expect(
+    (await call(`/items/${item.id}`, owner, 'PATCH', { context: {}, expectedContextRevision: 1 })).status,
+  ).toBe(200);
+  expect(
+    (await call(`/items/${item.id}`, owner, 'PATCH', { context: {}, expectedContextRevision: 1 })).status,
+  ).toBe(200);
+  expect(
+    (await call(`/items/${item.id}`, owner, 'PATCH', { context: next, expectedContextRevision: 2 })).status,
+  ).toBe(200);
+  expect((await call(`/items/${item.id}`, 'foreigncontext')).status).toBe(404);
+  expect(
+    (
+      await call(`/items/${item.id}`, owner, 'PATCH', {
+        context: { sourceUrl: 'javascript:alert(1)' },
+        expectedContextRevision: 1,
+      })
+    ).status,
+  ).toBe(400);
+  const search = (await (await call('/search?q=Pistachio', owner)).json()) as {
+    results: { id: string; detail: string }[];
+  };
+  expect(search.results).toContainEqual(
+    expect.objectContaining({ id: item.id, detail: 'Pistachio expedition' }),
+  );
+  expect(
+    (
+      await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+        itemIds: [item.id],
+        expectedRevision: list.rankRevision,
+      })
+    ).status,
+  ).toBe(200);
+  const shared = await call(`/lists/${list.id}/shares`, owner, 'POST', { limit: 'all' });
+  expect(shared.status).toBe(201);
+  const token = ((await shared.json()) as { token: string }).token;
+  const publicText = await (await call(`/public/${token}`, null)).text();
+  for (const privateValue of ['Mina', 'Sam', 'Pistachio', 'worth the detour', 'context'])
+    expect(publicText).not.toContain(privateValue);
+  const root = await archiveItem(owner, list.id, 'Main find');
+  expect(
+    (await archiveAction(list.id, owner, { action: 'merge', itemIds: [root.id, item.id], targetId: root.id }))
+      .status,
+  ).toBe(200);
+  const merged = ((await (await call(`/items/${root.id}/merged`, owner)).json()) as { items: Item[] }).items;
+  expect(merged.find((record) => record.id === item.id)?.context).toEqual(next);
+  const file = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(file.items.find((record) => record.id === item.id)?.context).toEqual(next);
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=contextrestored',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(file),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const imported = archiveFile.parse(await (await call('/export/records', 'contextrestored')).json());
+  expect(imported.items.find((record) => record.title === item.title)?.context).toEqual(next);
+  await call(`/items/${root.id}`, owner, 'DELETE');
+  expect(archiveFile.parse(await (await call('/export/records', owner)).json()).items).toHaveLength(0);
+  expect(
+    ((await (await call('/search?q=Pistachio', owner)).json()) as { results: unknown[] }).results,
+  ).toHaveLength(0);
+});
+
 test('saved views and context rankings enforce owners and revisions and survive backup restore', async () => {
   const owner = 'workspaceowner';
   const list = await archiveCollection(owner, 'Context orders');
@@ -125,6 +242,8 @@ test('saved views and context rankings enforce owners and revisions and survive 
         id: crypto.randomUUID(),
         name: 'New things',
         filters: {
+          label: '',
+          stamp: '',
           browse: 'want',
           search: '',
           type: 'all',

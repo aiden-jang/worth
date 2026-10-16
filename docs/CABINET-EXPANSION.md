@@ -27,11 +27,12 @@ framing and layout changes in the original checkout.
 
 - [ ] Save a link with reviewed identity suggestions and retained source URL.
 - [x] Saved filter/search views.
-- [ ] Tags, personal care labels and custom stamps with useful filtering.
+- [x] Tags, personal care labels and custom stamps with useful filtering.
 - [ ] Archive/unarchive collections independently of Trash.
 - [ ] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
 - [ ] CSV import with column mapping, preview and duplicate review.
-- [ ] Optional collection templates and custom detail fields; name-only capture remains.
+- [x] Optional per-item custom detail fields; name-only capture remains.
+- [ ] Collection templates and reusable field definitions.
 - [ ] Inbox drawer for records awaiting a collection.
 - [ ] Phone/browser capture integrations with reviewed destinations.
 - [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
@@ -41,15 +42,15 @@ framing and layout changes in the original checkout.
 
 ## Memories and relationships
 
-- [ ] Why saved, recommendation source and recommendation follow-through.
+- [x] Why saved, recommendation source and recommendation follow-through.
 - [ ] Per-visit location, version, order and reaction, separate from the overall call.
 - [ ] Related records and an accessible personal constellation view.
 - [ ] Same thing across places and linked editions/versions.
 - [ ] Replacement chains with a reason for switching.
 - [ ] Cross-collection moments, temporary shortlists, evening boards and trip boards.
 - [ ] Trip replay from explicit dates/locations, with a readable stop list.
-- [ ] Purchase date, price/currency, return deadline and ownership status.
-- [ ] Borrowed/lent records and optional return reminders.
+- [x] Purchase date, price/currency, return deadline and ownership status.
+- [x] Borrowed/lent records and optional calendar-file return reminders, imported by the user into their calendar.
 - [ ] Revisit dates, snooze and an activity calendar.
 - [ ] Richer routine plans, exercise aliases and additional explicit measurements.
 - [ ] Time capsules with a chosen opening date and a current-vs-snapshot comparison.
@@ -110,3 +111,24 @@ and adding context-load confirmation. Captures and deliberate layout additions a
 [workbench QA](../art/ui-qa/cabinet-tools/README.md). These changes are on the
 separate feature branch and have not been deployed. All unchecked entries above
 remain unfinished.
+
+## Second implementation: private context
+
+The item editor adds an optional context disclosure after the existing note/dates.
+It stores source URLs, reasons, recommendation/follow-up text, location/version,
+personal labels/stamps, named custom fields, purchase details and loan details.
+Labels/stamps work in collection filters and saved views. Context is searchable,
+preserved with merged originals and included in backup/restore. It stays out of
+public snapshots. Source URLs can be entered manually; link identity suggestions
+and link-first capture remain pending. Per-visit context and linked editions are
+also still pending.
+
+Context saves use an independent revision so a stale draft cannot overwrite newer
+context. Incomplete URLs, prices and unnamed detail drafts can recover locally.
+Calendar downloads contain a reviewed title/date and a one-day-before alarm; the
+user imports them into a calendar. Worth does not send notifications.
+
+82 tests and all 47 browser checks passed locally, with a successful typecheck and
+production build. Desktop/phone screenshots are reviewed in
+[private-context QA](../art/ui-qa/private-context/README.md). This group remains on
+the feature branch and has not been deployed.

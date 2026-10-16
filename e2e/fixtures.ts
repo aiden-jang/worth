@@ -1,6 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import type { Item, ListDetail, TrashEntry } from '../src/shared/models';
 import type { WorkspaceResponse } from '../src/shared/workspace';
+import { emptyItemContext } from '../src/shared/item-context';
 
 export const list: ListDetail = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -187,6 +188,20 @@ export async function mockArchive(page: Page): Promise<State> {
       const body = request.postDataJSON();
       state.writes.push({ path, body });
       const entry = state.items.find((i) => i.id === path.split('/')[2])!;
+      if (
+        body.context &&
+        JSON.stringify(body.context) !== JSON.stringify(entry.context ?? emptyItemContext)
+      ) {
+        if (body.expectedContextRevision !== (entry.contextRevision ?? 0))
+          return reply(
+            {
+              error: 'CONTEXT_CHANGED',
+              message: 'The context changed elsewhere. Reload saved context before trying again.',
+            },
+            409,
+          );
+        entry.contextRevision = (entry.contextRevision ?? 0) + 1;
+      }
       Object.assign(entry, body);
       return reply({ item: entry });
     }

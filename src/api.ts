@@ -209,6 +209,8 @@ export const api = {
 };
 
 export interface ItemInput {
+  context?: import('./shared/item-context').ItemContext;
+  expectedContextRevision?: number;
   wantToTry?: boolean;
   revisitQueued?: boolean;
   title: string;

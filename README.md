@@ -24,6 +24,8 @@ labeled and never writes to a private archive.
   a private comparison table, or a draw from Want to try, the revisit queue or Favorites.
 - Save filter views and named context rankings across devices. Applying a sandbox
   ranking requires a preview and checks for newer edits.
+- Keep optional recommendation sources, reasons, personal labels/stamps, version/location
+  details and custom fields. Track purchases and loans, and download a calendar return reminder.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.

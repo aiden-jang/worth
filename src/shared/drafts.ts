@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import type { ItemInput, LogInput } from '../api';
 import { logInput } from './validation';
+import { itemContextDraft } from './item-context';
 const itemDraft = z.object({
+  context: itemContextDraft.optional(),
+  expectedContextRevision: z.number().int().nonnegative().optional(),
   title: z.string().max(120),
   type: z.string().max(60),
   note: z.string().max(4000),

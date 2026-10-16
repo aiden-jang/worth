@@ -28,6 +28,8 @@ export interface ListDetail extends ListSummary {
 }
 
 export interface Item {
+  context?: import('./item-context').ItemContext;
+  contextRevision?: number;
   wantToTry?: boolean;
   mergedIntoId?: string | null;
   mergedIds?: string[];

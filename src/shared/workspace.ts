@@ -3,6 +3,8 @@ const name = z.string().trim().min(1).max(80);
 const key = z.string().uuid();
 const savedViewFilters = z
   .object({
+    label: z.string().max(32).default(''),
+    stamp: z.string().max(48).default(''),
     browse: z.enum(['all', 'kept', 'want', 'queue', 'revisited', 'not-opened-lately']),
     search: z.string().max(200),
     type: z.string().max(60),
