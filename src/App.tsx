@@ -11,6 +11,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const CodeCapturePage = lazy(() =>
+  import('./pages/CodeCapturePage').then((module) => ({ default: module.CodeCapturePage })),
+);
 const PhotoTextPage = lazy(() =>
   import('./pages/PhotoTextPage').then((module) => ({ default: module.PhotoTextPage })),
 );
@@ -126,6 +129,7 @@ function PrivateApp() {
         <Route path="/patterns" element={<PatternsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/read" element={<PhotoTextPage />} />
+        <Route path="/code" element={<CodeCapturePage />} />
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/capture" element={<CapturePage />} />
         <Route path="/quick" element={<QuickPage />} />
@@ -135,7 +139,7 @@ function PrivateApp() {
     </AppShell>
   ) : location.pathname === '/capture' ? (
     <CaptureSignIn authOrigin={authOrigin} />
-  ) : ['/', '/read', '/inbox', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(
+  ) : ['/', '/read', '/code', '/inbox', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(
       location.pathname,
     ) || /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />

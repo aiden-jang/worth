@@ -293,3 +293,13 @@ focus rings use dark ink for contrast. There is no fake source preview, inferred
 opinion, automatic save or external processing. This is a deliberate extension
 of capture and the cabinet’s secondary tools. Captures focus the source/review
 section when the full phone flow exceeds one viewport.
+
+## Barcode and book capture
+
+Read a code deliberately reuses the photo reader’s dark source/cream review
+composition, the existing cabinet rail, 68/50px title rhythm, 22px panels and
+44px controls. A small authored faceless barcode slip accompanies an empty source;
+it identifies the tool without inventing a product or opinion. Metadata uses
+readable ruled/proportional text and stacks at phone widths. Book lookup is an
+optional disclosure; ordinary manual naming remains visible. This is a web-only
+extension of the reader/capture references, not a native camera application.

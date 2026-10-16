@@ -231,9 +231,9 @@ export function SettingsPage() {
       <section className="settings-section">
         <h2>Within reach.</h2>
         <p>
-          <Link to="/read">Read text from a photo</Link> on this device. <Link to="/inbox">Inbox</Link> keeps
-          unfiled finds until you choose a collection. <Link to="/capture">Web capture</Link> reviews a name,
-          source link or shared text before saving.
+          <Link to="/read">Read text from a photo</Link> or <Link to="/code">capture a barcode or ISBN</Link>{' '}
+          on this device. <Link to="/inbox">Inbox</Link> keeps unfiled finds until you choose a collection.{' '}
+          <Link to="/capture">Web capture</Link> reviews a name, source link or shared text before saving.
           <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
           or home-screen link.
         </p>

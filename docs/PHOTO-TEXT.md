@@ -57,9 +57,11 @@ prefix and runtime options together when updating recognition dependencies.
 
 The reader code is lazy; opening it does not request OCR engine/data assets.
 Processing fetches only Worth-hosted static files after Read text on this device.
-The library’s blob-worker fallback is disabled. CSP keeps script/connect/worker
+The library’s blob-worker fallback is disabled. CSP keeps script/worker
 origins at self and permits WebAssembly with `wasm-unsafe-eval`; JavaScript string
-evaluation and remote script hosts are not enabled. There is no new OCR API,
+evaluation and remote script hosts are not enabled. The app separately allows
+Open Library connections for explicit ISBN metadata lookup; photo text reading
+does not use that host. There is no new OCR API,
 server image processing, service worker cache or native companion.
 
 See [third-party notices](../THIRD_PARTY_NOTICES.md),

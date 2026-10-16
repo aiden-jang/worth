@@ -98,8 +98,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 are cleaned up on subsequent saves. Worker logging is enabled; saved record contents are not
                 intentionally written to application error logs. Worth’s application code has no advertising
                 or tracking SDK. Optional photo text reading runs on your device; photos are not uploaded to
-                Worth or an external AI provider for recognition. The shared account service uses its own
-                providers, as described in its policy.
+                Worth or an external AI provider for recognition. Optional book lookup sends only a checked
+                ISBN from your browser to Open Library, which also receives your IP address. It sends no
+                photos, notes or account credentials. You choose whether to keep the suggested title, details
+                or source link. The shared account service uses its own providers, as described in its policy.
               </p>
             </section>
             <section>
@@ -371,6 +373,23 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 lost, retry its fixed receipt, even after reloading. Deleted Inbox finds remain in Trash for
                 30 days and restore unfiled. Backups include active Inbox finds and give them fresh IDs when
                 restored. Choose a current collection when filing. Trash is excluded from backups.
+              </p>
+            </section>
+            <section>
+              <h2>Barcodes and ISBNs</h2>
+              <p>
+                <Link to="/code">Read a code</Link> reads EAN-8, EAN-13 and UPC-A barcodes from a photo on
+                your device. You can type or paste an ISBN-10 or ISBN-13 instead. Check the printed digits; a
+                matching check digit does not confirm the product or edition. Photos stay in this page and are
+                discarded when you leave. No photo is uploaded for barcode reading.
+              </p>
+              <p>
+                Book lookup is optional and contacts Open Library only when you choose it. It sends the ISBN
+                and your IP address, without photos, notes or account credentials. Check the edition, then
+                explicitly copy a title or book details. Other products can be named manually; there is no
+                general product lookup. The code and source link are separate choices, shown in the exact
+                capture preview. Nothing is saved until normal capture review and Save. Your account’s text
+                draft can recover on this device for seven days.
               </p>
             </section>
             <section>

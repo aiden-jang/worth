@@ -468,6 +468,9 @@ export function CapturePage() {
       <p>
         <Link to="/read">Read text from a photo on this device →</Link>
       </p>
+      <p>
+        <Link to="/code">Read a barcode or look up an ISBN →</Link>
+      </p>
       <details className="browser-capture-help">
         <summary>Capture from your browser</summary>
         <p>

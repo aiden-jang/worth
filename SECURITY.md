@@ -19,6 +19,8 @@ input limits, cache behavior and sharing scope when changing data routes.
 Photo text recognition runs in browser workers with self-hosted code/data and no
 photo-processing API. Image bytes/dimensions are bounded before decoding, and
 recognition output remains editable text. CSP permits same-origin workers and
-WebAssembly, without JavaScript string evaluation or third-party script/connect
-origins. See [photo text architecture](docs/PHOTO-TEXT.md) for cancellation,
+WebAssembly, without JavaScript string evaluation or third-party script origins. Optional
+ISBN lookup permits a JSON connection to Open Library only after an explicit
+action, with a fixed host/path, a checked numeric ISBN, omitted credentials and
+referrer, response bounds and no remote script/image loading. See [photo text architecture](docs/PHOTO-TEXT.md) for cancellation,
 account isolation, storage and dependency notices.

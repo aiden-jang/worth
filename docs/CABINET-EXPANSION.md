@@ -35,7 +35,7 @@ framing and layout changes in the original checkout.
 - [x] Collection templates and reusable field definitions.
 - [x] Inbox drawer for records awaiting a collection.
 - [x] Reviewed web capture, desktop bookmark code and optional installed-browser text/link Share target, with manual paste fallback.
-- [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
+- [x] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
 - [ ] Reviewed receipt extraction with attachment and line-to-record mapping.
 - [ ] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
 - [x] Private web/PWA shortcut entry points for capture, a chosen shortlist and a random saved find, with account-specific remembered choices. Browser/OS menu availability varies.
@@ -410,3 +410,27 @@ Reviewed desktop/phone captures are in [photo text QA](../art/ui-qa/photo-text/R
 Receipt attachment/line-to-record mapping, full offline sync and all other
 unchecked web scope remain unfinished. This is local feature-branch work, with
 no native companion, push, pull request or deployment.
+
+## Fourteenth implementation: barcode and ISBN capture
+
+Read a code decodes EAN-8/EAN-13/UPC-A photos in a bounded on-device browser worker,
+with typed ISBN-10/ISBN-13 and manual naming available. Source photos stay in the
+page and are discarded on exit. An optional, explicit Open Library JSON lookup
+sends a checked ISBN, without photos, notes, credentials or referrer. Returned
+images/URLs are ignored; bounded plain metadata stays an unapplied suggestion.
+Users check the edition before copying a title or details, with confirmation
+before replacing filled fields. This is free catalog metadata, not an AI provider.
+
+The review shows exactly which code, note and optional source will enter the
+existing account-bound capture flow. No record/call/rank is inferred or saved
+here. Owner-scoped text drafts recover for seven days; photos do not. Failed or
+unsupported reading, no match, provider errors, offline lookup and cancellation
+retain the manual path. Account recovery aborts both lookup and decoding.
+
+All 139 tests across 35 files, core/build checks and the full 177-journey browser
+regression passed. A separate live browser lookup confirmed the real provider,
+CSP and omitted private headers without auto-applying a title. The dependency
+audit found no known vulnerabilities. Ten inspected desktop/phone captures and
+recovery/accessibility/reflow checks are in [code capture QA](../art/ui-qa/code-capture/README.md).
+The remaining unchecked web scope is still unfinished. No native app, push,
+pull request, merge or deployment was performed.

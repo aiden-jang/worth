@@ -141,3 +141,11 @@ metadata remain usable independently of that header.
 - Confirm only reviewed name/note text reaches capture; source photos, prices, dates, calls and ranks are not inferred/uploaded.
 - Keep manual paste usable when workers, WebAssembly or reading assets are unavailable.
 - Review desktop/phone contrast/reflow. Physical Safari/iOS and Android behavior needs separate device verification.
+
+Barcode/ISBN capture checks: verify local upright/vertical EAN decoding, a typed
+ISBN-10 with X, a bad check digit and a non-ISBN product. Confirm no metadata/image
+request precedes explicit book lookup, no credentials/referrer leave with it, and
+no remote cover is loaded. Exercise no match, provider rate/error/timeout, Stop,
+account changes, manual fallback, exact kept note/source, replacement confirmation,
+reload recovery and normal capture Save. Recheck a small live catalog lookup when
+changing the provider integration; deterministic CI must not depend on that service.

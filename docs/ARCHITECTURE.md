@@ -417,3 +417,18 @@ with it. Manual entry remains available after unsupported capabilities or failed
 asset downloads. Limits, generated-asset/licensing rules, CSP and tested recovery
 boundaries are detailed in [photo text](PHOTO-TEXT.md). Receipt attachment and
 multi-line record mapping remain separate pending work.
+
+## Barcode and ISBN web capture
+
+`/code` shares the reader composition but uses a separate lazy ZXing worker for
+EAN-8/EAN-13/UPC-A photos and checked manual ISBN entry. Photos remain ephemeral
+page memory. Explicit Open Library lookup is a fixed-host JSON browser request,
+with omitted credentials/referrer, byte/time/rate bounds and bounded plain metadata.
+It never uses the authenticated API client or uploads a recognition image.
+
+Title/details copying, retained code and source are separate reviewed choices.
+The exact name/note/source enter an owner-bound local handoff and normal capture
+review/save; no new record schema or public projection is introduced. Device drafts
+stay owner-bound, while worker/fetch cancellation and generation guards quarantine
+late results. [Code capture](CODE-CAPTURE.md) documents formats, data flow,
+CSP/metadata boundaries and recovery limits.
