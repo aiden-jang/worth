@@ -20,6 +20,7 @@ import { ItemContextReadout } from './ItemContextReadout';
 import { CollectionPublishing } from './CollectionPublishing';
 import { CollectionShelf } from './CollectionShelf';
 import { ReviewedCapture } from './ReviewedCapture';
+import { DuplicateReview } from './DuplicateReview';
 import '../workbench.css';
 
 type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture';
@@ -41,12 +42,14 @@ export function CollectionWorkbench({
   logs,
   onClose,
   onOpenItem,
+  onRevisit,
 }: {
   list: ListDetail;
   items: Item[];
   logs: Log[];
   onClose: () => void;
   onOpenItem: (id: string) => void;
+  onRevisit: (id: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<Mode>('rank');
@@ -108,6 +111,16 @@ export function CollectionWorkbench({
     setHistory((previous) => [...previous, comparison]);
     setComparison(answerComparison(comparison, choice));
   };
+  const openRecord = (id: string, revisit = false) => {
+    if (changed || comparison) {
+      setStatus('Keep or discard your ranking draft, and end comparisons, before opening a record.');
+      setMode('rank');
+      return;
+    }
+    onClose();
+    if (revisit) onRevisit(id);
+    else onOpenItem(id);
+  };
   return (
     <>
       <dialog
@@ -150,21 +163,7 @@ export function CollectionWorkbench({
         </nav>
         {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
         {mode === 'capture' && <ReviewedCapture list={list} items={items} />}
-        {mode === 'shelf' && (
-          <CollectionShelf
-            list={list}
-            items={items}
-            onOpen={(id) => {
-              if (changed) {
-                setStatus('Keep or discard your ranking draft before opening a record.');
-                setMode('rank');
-              } else {
-                onClose();
-                onOpenItem(id);
-              }
-            }}
-          />
-        )}
+        {mode === 'shelf' && <CollectionShelf list={list} items={items} onOpen={openRecord} />}
         {mode === 'rank' && (
           <section aria-label="Ranking sandbox" className="workbench-section">
             <p>
@@ -402,21 +401,18 @@ export function CollectionWorkbench({
             )}
           </section>
         )}
-        {mode === 'compare' && <ComparisonTable items={items} logs={logs} />}
-        {mode === 'draw' && (
-          <DecisionDraw
-            items={items}
-            onOpen={(id) => {
-              if (changed) {
-                setStatus('Keep or discard your ranking draft before opening a record.');
-                setMode('rank');
-              } else {
-                onClose();
-                onOpenItem(id);
-              }
-            }}
-          />
+        {mode === 'compare' && (
+          <>
+            <DuplicateReview
+              listId={list.id}
+              items={items}
+              onOpen={openRecord}
+              onRevisit={(id) => openRecord(id, true)}
+            />
+            <ComparisonTable items={items} logs={logs} />
+          </>
         )}
+        {mode === 'draw' && <DecisionDraw items={items} onOpen={openRecord} />}
       </dialog>
       {confirmApply && (
         <ConfirmDialog

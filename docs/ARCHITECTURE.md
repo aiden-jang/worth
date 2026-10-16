@@ -226,3 +226,27 @@ starting over after an attempted save requires an explicit warning/confirmation.
 Success clears the draft and rotates the identity. Device storage remains best
 effort; an unavailable-storage message asks the user to keep the page open. CSV,
 mapping and pending payloads use the existing account/list seven-day draft scope.
+
+## Existing-record duplicate review
+
+`DuplicateReview` is a collapsed addition above the comparison table. Shared
+identity normalization uses Unicode NFKC, whitespace/case folding and a JSON tuple
+of name/type; it does not infer shared identity across different types. Groups
+have no automatic mutation. Open uses the item editor; Revisit focuses its empty
+visit composer and creates nothing until explicitly saved. These actions first
+protect unfinished ranking drafts and in-memory head-to-head rounds.
+
+Optional workspace `duplicateReviews` retain exact sets of active item IDs, up to
+100 groups, 500 members in one group and 2,000 total memberships. A new matching
+member needs a fresh review. The UI can reopen current groups and remove other
+saved reviews whose membership no longer matches. All record fields, calls,
+rankings and queue state are independent. Group lists and members expand in
+bounded steps; text stays readable without line clamping.
+
+`workspaceItemReferences` deduplicates IDs from context rankings, shelf choices
+and duplicate reviews. One conditional SQL update checks every referenced active
+owner/list relationship and the workspace revision. Reads filter unavailable
+members; groups with fewer than two disappear without mutating stored originals.
+Backup remaps review/group IDs and item references; validation rejects foreign or
+merged references and nonempty activity review tools. Older workspaces remain
+unchanged. No review state is exposed in public snapshots.

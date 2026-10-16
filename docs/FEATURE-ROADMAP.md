@@ -29,9 +29,11 @@ its verification. The following groups are committed and verified locally on
 - Private shelves, bookends, keepsakes, dedications, record inscriptions and a
   faceless undecided paper creature.
 - Reviewed CSV import and editable address-based link name suggestions.
+- Existing-record duplicate suggestions with reversible keep-separate reviews,
+  Details and explicit revisit-composer actions.
 
-Remaining work includes history/time-machine views, archived collections, general
-existing-record duplicate review, templates, inbox, offline sync, richer visits
+Remaining work includes history/time-machine views, archived collections,
+templates, inbox, offline sync, richer visits
 and relationships, boards, revisit planning, routines/measurements, photo tools,
 field guides, blind two-person choices and private collaboration. See the tracker
 for individual unchecked features; a related completed tool does not complete

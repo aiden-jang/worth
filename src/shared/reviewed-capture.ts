@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { itemInput } from './validation';
 import { emptyItemContext, itemContext } from './item-context';
 import type { Item } from './models';
+import { duplicateIdentity } from './record-identity';
 
 export const reviewedItemsInput = z.object({ items: z.array(itemInput).min(1).max(100) }).strict();
 export type ReviewedItem = z.infer<typeof itemInput>;
@@ -109,11 +110,6 @@ export function suggestCsvMapping(headers: string[]): CsvMapping {
     startedOn: find('startedon', 'startdate'),
     endedOn: find('endedon', 'enddate'),
   };
-}
-export function duplicateIdentity(item: Pick<Item, 'title' | 'type'>): string {
-  return [item.title, item.type]
-    .map((value) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase())
-    .join('\u0000');
 }
 export function reviewCsv(
   table: CsvTable,

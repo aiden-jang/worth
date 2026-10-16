@@ -29,7 +29,7 @@ framing and layout changes in the original checkout.
 - [x] Saved filter/search views.
 - [x] Tags, personal care labels and custom stamps with useful filtering.
 - [ ] Archive/unarchive collections independently of Trash.
-- [ ] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
+- [x] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
 - [x] CSV import with column mapping, preview and duplicate review.
 - [x] Optional per-item custom detail fields; name-only capture remains.
 - [ ] Collection templates and reusable field definitions.
@@ -192,8 +192,28 @@ Real D1 tests cover 100-record saves and a parent trashed before the transaction
 All 95 tests, formatting, lint, unused-code and production build checks passed.
 The final full browser run passed all 69 journeys, including draft/retry recovery,
 Axe and narrow/long-content layouts. Reviewed desktop/phone captures and limitations are
-in [capture QA](../art/ui-qa/reviewed-capture/README.md). General duplicate review
-of existing records remains pending; import-time checks do not complete it.
+in [capture QA](../art/ui-qa/reviewed-capture/README.md). General existing-record
+duplicate review is completed separately below; import checks alone did not complete it.
 
 This work remains on the feature branch. Nothing in this tracker claims that the
 unchecked features, native widgets or on-device recognition are finished.
+
+## Sixth implementation: existing-record duplicate review
+
+Possible duplicates in the comparison tool groups matching normalized names and
+types. Open and Revisit use existing editors; Revisit does not save automatically.
+Keep separate saves an exact, reversible group review across devices. Adding a
+matching member requires a new review. Current and obsolete saved reviews can be
+reopened or removed. No records are merged, deleted or reassigned by these tools.
+
+Reviews share workspace ownership/revision checks, active-reference filtering and
+backup ID remapping. One deduplicated reference guard now covers rankings, shelf
+choices and reviews. Record-opening actions protect unfinished sandbox changes
+and comparison rounds. The item note label now correctly distinguishes public
+ranking links from opt-in booklet exports.
+
+All 98 tests and core checks passed locally. The final full browser run passed
+all 79 journeys, including ten duplicate-review cases covering Axe, conflicts,
+revisit focus, new-member review and long/narrow layouts. Reviewed captures and limits are in
+[duplicate QA](../art/ui-qa/duplicates/README.md). The larger unfinished scope
+remains tracked above.

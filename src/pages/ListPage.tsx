@@ -180,6 +180,10 @@ export function ListPage() {
           logs={logs}
           onClose={() => setShowWorkbench(false)}
           onOpenItem={setSelectedId}
+          onRevisit={(id) => {
+            setSelectedId(id);
+            setParams({ focus: `item:${id}`, log: '1' });
+          }}
         />
       )}
 

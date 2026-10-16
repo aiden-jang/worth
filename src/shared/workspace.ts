@@ -43,6 +43,30 @@ const distinct = <T extends { id: string }>(values: T[]) =>
 export const collectionWorkspace = z
   .object({
     shelf: collectionShelf.optional(),
+    duplicateReviews: z
+      .array(
+        z
+          .object({
+            id: key,
+            itemIds: z
+              .array(key)
+              .min(2)
+              .max(500)
+              .refine((ids) => new Set(ids).size === ids.length),
+          })
+          .strict(),
+      )
+      .max(100)
+      .refine(distinct)
+      .refine(
+        (values) => values.reduce((count, value) => count + value.itemIds.length, 0) <= 2000,
+        'Keep up to 2,000 records in saved duplicate reviews.',
+      )
+      .refine(
+        (values) =>
+          new Set(values.map((value) => [...value.itemIds].sort().join(','))).size === values.length,
+      )
+      .optional(),
     rankings: z
       .array(
         z
@@ -75,6 +99,13 @@ export const workspaceUpdate = z
 export function filterWorkspace(workspace: CollectionWorkspace, itemIds: Set<string>): CollectionWorkspace {
   return {
     ...workspace,
+    ...(workspace.duplicateReviews
+      ? {
+          duplicateReviews: workspace.duplicateReviews
+            .map((review) => ({ ...review, itemIds: review.itemIds.filter((id) => itemIds.has(id)) }))
+            .filter((review) => review.itemIds.length > 1),
+        }
+      : {}),
     ...(workspace.shelf
       ? {
           shelf: {
@@ -95,4 +126,14 @@ export function filterWorkspace(workspace: CollectionWorkspace, itemIds: Set<str
       itemIds: ranking.itemIds.filter((id) => itemIds.has(id)),
     })),
   };
+}
+export function workspaceItemReferences(workspace: CollectionWorkspace): string[] {
+  return [
+    ...new Set([
+      ...workspace.rankings.flatMap((ranking) => ranking.itemIds),
+      ...(workspace.shelf?.keepsakeId ? [workspace.shelf.keepsakeId] : []),
+      ...(workspace.shelf?.inscription ? [workspace.shelf.inscription.itemId] : []),
+      ...(workspace.duplicateReviews ?? []).flatMap((review) => review.itemIds),
+    ]),
+  ];
 }

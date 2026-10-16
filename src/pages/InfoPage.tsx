@@ -53,12 +53,13 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>What Worth stores</h2>
               <p>
                 Your collections, activity entries, notes, dates, rankings, saved filter views, context
-                rankings, private shelf choices, dedications and inscriptions, private sources and
-                recommendations, labels/stamps, custom details, purchase and loan information (including names
-                you enter), optional Favorite / Meh / Not again calls, Want to try, merged originals, revisit
-                queue, exercise measurements, routines, workout visits, and uploaded photos or collection
-                covers. Records are associated with your shared account ID. Worth receives your account
-                identity to check access and display your name; passwords are handled by the account service.
+                rankings, saved duplicate reviews, private shelf choices, dedications and inscriptions,
+                private sources and recommendations, labels/stamps, custom details, purchase and loan
+                information (including names you enter), optional Favorite / Meh / Not again calls, Want to
+                try, merged originals, revisit queue, exercise measurements, routines, workout visits, and
+                uploaded photos or collection covers. Records are associated with your shared account ID.
+                Worth receives your account identity to check access and display your name; passwords are
+                handled by the account service.
               </p>
             </section>
             <section>
@@ -216,6 +217,21 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 recover on this device for seven days, but comparison rounds in progress are not saved. Saved
                 views and context rankings are included in records export and photo backups. They are never
                 included in public share links.
+              </p>
+            </section>
+            <section>
+              <h2>Possible duplicates</h2>
+              <p>
+                Open Workbench → Comparison table → Possible duplicates to review matching names and types.
+                Open shows a record’s Details; Revisit opens its visit form without saving a visit. Keep
+                separate saves a review across devices and leaves all records, calls and rankings unchanged.
+                No merge happens automatically.
+              </p>
+              <p>
+                Show groups kept separate lets you reopen a review. A new matching record needs review again;
+                other saved reviews can be removed when their membership changed. Reviews are included in
+                private backups. Unfinished ranking changes and comparison rounds are protected before opening
+                a record from the workbench.
               </p>
             </section>
             <section>

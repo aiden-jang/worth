@@ -12,13 +12,13 @@ import {
   reviewCsv,
   suggestCsvMapping,
   suggestLink,
-  duplicateIdentity,
   captureIssueText,
   type CsvMapping,
   type CaptureReview,
   type ReviewedItem,
 } from '../shared/reviewed-capture';
 import type { Item, ListDetail } from '../shared/models';
+import { duplicateIdentity } from '../shared/record-identity';
 import { ConfirmDialog } from './ConfirmDialog';
 import '../reviewed-capture.css';
 

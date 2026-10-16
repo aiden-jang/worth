@@ -121,6 +121,12 @@ export const archiveFile = z
     }
     for (const l of file.lists) {
       if (
+        l.workspace.duplicateReviews?.some((review) =>
+          review.itemIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId),
+        )
+      )
+        bad('A duplicate review contains an invalid item');
+      if (
         l.workspace.rankings.some((ranking) =>
           ranking.itemIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId),
         )
@@ -135,7 +141,10 @@ export const archiveFile = z
       }
       if (
         l.kind === 'activity' &&
-        (l.workspace.rankings.length || l.workspace.views.length || l.workspace.shelf)
+        (l.workspace.rankings.length ||
+          l.workspace.views.length ||
+          l.workspace.shelf ||
+          l.workspace.duplicateReviews?.length)
       )
         bad('An activity cannot contain collection tools');
       if (

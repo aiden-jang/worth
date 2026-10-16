@@ -237,6 +237,7 @@ test('saved views and context rankings enforce owners and revisions and survive 
   const foreign = await archiveCollection('foreignworkspace', 'Other collection');
   const foreignItem = await archiveItem('foreignworkspace', foreign.id, 'Foreign');
   const workspace = {
+    duplicateReviews: [{ id: crypto.randomUUID(), itemIds: [first.id, second.id] }],
     shelf: {
       ...emptyCollectionShelf,
       bookend: 'plant' as const,
@@ -290,6 +291,17 @@ test('saved views and context rankings enforce owners and revisions and survive 
         })
       ).status,
     ).toBe(409);
+  expect(
+    (
+      await call(`/lists/${list.id}/workspace`, owner, 'PUT', {
+        workspace: {
+          ...workspace,
+          duplicateReviews: [{ id: crypto.randomUUID(), itemIds: [first.id, foreignItem.id] }],
+        },
+        expectedRevision: 1,
+      })
+    ).status,
+  ).toBe(409);
   const saved = await (await call(`/lists/${list.id}/workspace`, owner)).json();
   expect(saved).toEqual({ workspace, revision: 1 });
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
@@ -323,6 +335,10 @@ test('saved views and context rankings enforce owners and revisions and survive 
     ['B', 'A'].map((title) => importedItems.find((item) => item.title === title)!.id),
   );
   expect(imported.views[0].filters).toEqual(workspace.views[0].filters);
+  expect(imported.duplicateReviews[0].id).not.toBe(workspace.duplicateReviews[0].id);
+  expect(imported.duplicateReviews[0].itemIds).toEqual(
+    ['A', 'B'].map((title) => importedItems.find((item) => item.title === title)!.id),
+  );
   expect(imported.shelf).toEqual({
     ...workspace.shelf,
     keepsakeId: importedItems.find((item) => item.title === 'A')!.id,
@@ -339,6 +355,7 @@ test('saved views and context rankings enforce owners and revisions and survive 
   expect(hidden.rankings[0].itemIds).toEqual([first.id]);
   expect(hidden.shelf.keepsakeId).toBe(first.id);
   expect(hidden.shelf.inscription).toBeNull();
+  expect(hidden.duplicateReviews).toEqual([]);
   expect(
     archiveFile.parse(await (await call('/export/records', owner)).json()).lists[0].workspace.rankings[0]
       .itemIds,

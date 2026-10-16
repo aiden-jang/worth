@@ -170,6 +170,15 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ranked_ids: JSON.stringify(l.rankedIds.map(id)),
         workspace_json: JSON.stringify({
           ...l.workspace,
+          ...(l.workspace.duplicateReviews
+            ? {
+                duplicateReviews: l.workspace.duplicateReviews.map((review) => ({
+                  ...review,
+                  id: crypto.randomUUID(),
+                  itemIds: review.itemIds.map(id),
+                })),
+              }
+            : {}),
           ...(l.workspace.shelf
             ? {
                 shelf: {

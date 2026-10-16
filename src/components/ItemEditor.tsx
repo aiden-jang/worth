@@ -325,7 +325,7 @@ export function ItemEditor({
               Want to try
             </label>
             <label>
-              Private note <span className="optional">never included in shares</span>
+              Private note <span className="optional">not in public ranking links</span>
               <textarea
                 ref={itemNoteInput}
                 rows={3}

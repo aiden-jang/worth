@@ -26,6 +26,8 @@ labeled and never writes to a private archive.
   a private comparison table, or a draw from Want to try, the revisit queue or Favorites.
 - Save filter views and named context rankings across devices. Applying a sandbox
   ranking requires a preview and checks for newer edits.
+- Review matching names/types in Workbench → Comparison table. Open or revisit
+  a record, or save a reversible keep-separate review without merging anything.
 - Browse paper pockets or book spines in Workbench → Your shelf. Choose a private
   keepsake, dedication, record inscription and optional arch/plant bookend.
 - Keep optional recommendation sources, reasons, personal labels/stamps, version/location
