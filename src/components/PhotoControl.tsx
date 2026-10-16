@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, Trash } from '@phosphor-icons/react';
 import { api } from '../api';
 import { ConfirmDialog } from './ConfirmDialog';
+import { CoverCrop } from './CoverCrop';
 import { preparePhoto } from '../shared/photos';
 import type { CollectionArt } from '../shared/models';
 import { starterCollectionCover } from '../shared/starter-covers';
@@ -115,6 +116,7 @@ export function CollectionCoverControl({
 }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const upload = useMutation({
     mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
@@ -170,7 +172,7 @@ export function CollectionCoverControl({
               disabled={upload.isPending}
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                if (file) upload.mutate(file);
+                if (file) setCropFile(file);
                 event.target.value = '';
               }}
             />
@@ -197,6 +199,13 @@ export function CollectionCoverControl({
           {error}
         </p>
       )}
+      {cropFile && (
+        <CoverCrop
+          file={cropFile}
+          onSave={(file) => upload.mutateAsync(file)}
+          onClose={() => setCropFile(null)}
+        />
+      )}
       {confirmingRemoval && (
         <ConfirmDialog
           eyebrow="REMOVE COVER"
@@ -216,6 +225,7 @@ export function CollectionCoverControl({
 export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: string; hasCoverPhoto: boolean }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const upload = useMutation({
     mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
@@ -252,7 +262,7 @@ export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: strin
             disabled={upload.isPending}
             onChange={(event) => {
               const file = event.target.files?.[0];
-              if (file) upload.mutate(file);
+              if (file) setCropFile(file);
               event.target.value = '';
             }}
           />
@@ -273,6 +283,13 @@ export function CollectionCoverButton({ listId, hasCoverPhoto }: { listId: strin
         <span className="collection-cover-header-error" role="alert">
           {error}
         </span>
+      )}
+      {cropFile && (
+        <CoverCrop
+          file={cropFile}
+          onSave={(file) => upload.mutateAsync(file)}
+          onClose={() => setCropFile(null)}
+        />
       )}
       {confirmingRemoval && (
         <ConfirmDialog

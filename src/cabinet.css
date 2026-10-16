@@ -1771,3 +1771,15 @@
     transition: none;
   }
 }
+
+input:is(:autofill, :-webkit-autofill),
+textarea:is(:autofill, :-webkit-autofill) {
+  -webkit-text-fill-color: var(--paper);
+  caret-color: var(--paper);
+  box-shadow: 0 0 0 1000px var(--raised) inset;
+}
+
+input::selection,
+textarea::selection {
+  -webkit-text-fill-color: var(--ink);
+}

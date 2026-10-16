@@ -1,3 +1,4 @@
+import { CoverCrop } from '../components/CoverCrop';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, ImageSquare, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
@@ -76,6 +77,7 @@ export function ListsPage() {
   const [description, setDescription] = useState('');
   const [artwork, setArtwork] = useState<CollectionArt | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const coverInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
@@ -330,7 +332,10 @@ export function ListsPage() {
                       ref={coverInput}
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
-                      onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                      onChange={(event) => {
+                        setCropFile(event.target.files?.[0] ?? null);
+                        event.target.value = '';
+                      }}
                     />
                     {coverPreview && (
                       <div className="collection-cover-preview">
@@ -372,6 +377,13 @@ export function ListsPage() {
               </aside>
             )}
           </div>
+          {cropFile && (
+            <CoverCrop
+              file={cropFile}
+              onSave={async (file) => setCoverFile(file)}
+              onClose={() => setCropFile(null)}
+            />
+          )}
           {confirmingDiscard && (
             <ConfirmDialog
               eyebrow="DISCARD DRAFT"
@@ -626,6 +638,7 @@ function ListDirectory({
 
 function CollectionCoverAction({ list }: { list: ListSummary }) {
   const client = useQueryClient();
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const upload = useMutation({
     mutationFn: async (file: File) => api.uploadListCover(list.id, await preparePhoto(file)),
@@ -648,7 +661,7 @@ function CollectionCoverAction({ list }: { list: ListSummary }) {
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = '';
-          if (file) upload.mutate(file);
+          if (file) setCropFile(file);
         }}
       />
       <button
@@ -660,6 +673,13 @@ function CollectionCoverAction({ list }: { list: ListSummary }) {
         <ImageSquare size={15} />
         {upload.isPending ? 'Adding…' : 'Add cover'}
       </button>
+      {cropFile && (
+        <CoverCrop
+          file={cropFile}
+          onSave={(file) => upload.mutateAsync(file)}
+          onClose={() => setCropFile(null)}
+        />
+      )}
       {upload.isError && <span role="alert">{upload.error.message}</span>}
     </div>
   );

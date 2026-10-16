@@ -1717,3 +1717,38 @@
   flex: none;
   accent-color: #e8dc9d;
 }
+
+.cover-crop-dialog {
+  max-width: 620px;
+}
+.cover-crop-form {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+.cover-crop-preview {
+  aspect-ratio: 1.6;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #20211c;
+}
+.cover-crop-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cover-crop-range {
+  display: grid;
+  gap: 4px;
+}
+.cover-crop-range input {
+  width: 100%;
+  min-height: 44px;
+  accent-color: #e8dc9d;
+}
+@media (max-width: 680px) {
+  .cover-crop-form {
+    padding: 18px;
+  }
+}
