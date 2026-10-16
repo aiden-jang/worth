@@ -27,13 +27,24 @@ export class RequestError extends Error {
   }
 }
 
+// A document stays bound to its first account. Switching accounts requires a reload,
+// so cached records and unfinished asynchronous saves cannot cross that boundary.
+let pageAccount: string | null = null;
+export function bindPageAccount(owner: string): boolean {
+  if (pageAccount === null) pageAccount = owner;
+  return pageAccount === owner;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const timeout = AbortSignal.timeout(30_000);
   const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
   let response: Response;
   let data: unknown;
+  const headers = new Headers(init.headers);
+  if (pageAccount && path !== '/me' && !path.startsWith('/public/'))
+    headers.set('X-Worth-Account', pageAccount);
   try {
-    response = await fetch(`/api${path}`, { credentials: 'include', ...init, signal });
+    response = await fetch(`/api${path}`, { credentials: 'include', ...init, headers, signal });
     if (response.status === 204) return undefined as T;
     data = await response.json().catch((error: unknown) => {
       if (signal.aborted) throw error;
@@ -53,6 +64,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const envelope = data && typeof data === 'object' && !Array.isArray(data) ? data : null;
   if (!response.ok) {
     const failure = envelope as { error?: unknown; message?: unknown } | null;
+    if (failure?.error === 'ACCOUNT_CHANGED' && typeof window !== 'undefined')
+      window.dispatchEvent(new Event('worth:account-changed'));
     throw new RequestError(
       response.status,
       typeof failure?.error === 'string' ? failure.error : 'REQUEST_FAILED',

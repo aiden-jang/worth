@@ -34,11 +34,11 @@ framing and layout changes in the original checkout.
 - [x] Optional per-item custom detail fields; name-only capture remains.
 - [x] Collection templates and reusable field definitions.
 - [ ] Inbox drawer for records awaiting a collection.
-- [ ] Phone/browser capture integrations with reviewed destinations.
+- [x] Reviewed web capture, desktop bookmark code and optional installed-browser text/link Share target, with manual paste fallback.
 - [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
 - [ ] Reviewed receipt extraction with attachment and line-to-record mapping.
 - [ ] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
-- [ ] Web home-screen shortcuts for capture, a chosen shortlist and a random saved find. Keep these within the website/PWA; native companion apps are out of scope.
+- [x] Private web/PWA shortcut entry points for capture, a chosen shortlist and a random saved find, with account-specific remembered choices. Browser/OS menu availability varies.
 
 ## Memories and relationships
 
@@ -299,3 +299,36 @@ captures, narrow-width checks and Axe are recorded in
 [collection setup QA](../art/ui-qa/collection-templates/README.md). The larger
 unchecked web feature list remains unfinished. Work remains on the separate
 branch; no push, pull request, merge or deployment was made.
+
+## Tenth implementation: reviewed web capture and private shortcuts
+
+`/capture` receives a reviewed name, source and optional note, including incoming
+text/link shares. Applying a share, replacing a draft, choosing a collection,
+reviewing duplicates and saving are separate explicit choices. A GET never saves
+a record. Incoming content uses short-lived tab staging, stays out of Accounts
+return URLs, and becomes an account-scoped recoverable draft only when applied.
+A frozen destination/payload and retry identity survive lost responses. The
+existing reviewed-import transaction supplies ownership and parent-race guards.
+No source page is fetched and no external AI is used.
+
+`/quick` opens a real top-five shortlist or draws once through eligible saved
+items, Want to try, revisit queue or Favorites. Archive inclusion is explicit.
+Private bookmark URLs expose no public token; optional remembered choices contain
+only a collection ID/group and remain scoped to the account on this device. The
+manifest provides capture/shortlist/find/workout entries and an optional text/link
+Share target. Actual installation and OS menu registration have not been tested;
+support varies, so normal web navigation and manual paste remain available. This
+is a website feature, with no native companion source or distribution.
+
+A shared account-bound request precondition now rejects stale private reads and
+writes if Accounts changes user in another tab. The old app shell is hidden and
+a document reload opens a fresh cache; delayed requests retain the old account
+binding. Metadata/public snapshots remain independent. This protects drafts and
+uncertain saves without claiming to complete full offline reading or queued sync.
+
+All 117 core tests passed, including real D1 account-mismatch checks. The full
+129-journey browser regression passed after correcting cream-button hover contrast.
+Desktop/phone captures, keyboard review focus, Axe and 320/430/768px reflow checks
+are recorded in [web capture QA](../art/ui-qa/web-capture/README.md). The Inbox,
+history, OCR, offline sync and other unchecked web features remain unfinished.
+No push, pull request, merge, installation or deployment was performed.

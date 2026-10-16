@@ -14,3 +14,8 @@
   X-Robots-Tag: noindex
 /patterns
   X-Robots-Tag: noindex
+
+/capture
+  X-Robots-Tag: noindex, nofollow
+/quick
+  X-Robots-Tag: noindex, nofollow

@@ -31,10 +31,36 @@
   ],
   "shortcuts": [
     {
-      "name": "Add something",
-      "short_name": "Add something",
-      "description": "Capture something in your archive.",
-      "url": "/?add=1",
+      "name": "Capture a find",
+      "short_name": "Capture",
+      "description": "Review a name or link before saving.",
+      "url": "/capture",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Chosen shortlist",
+      "short_name": "Shortlist",
+      "description": "Open a private collection shortlist.",
+      "url": "/quick?mode=shortlist",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Random saved find",
+      "short_name": "Saved find",
+      "description": "Draw from your own saved records.",
+      "url": "/quick?mode=find",
       "icons": [
         {
           "src": "/icons/icon-192.png",
@@ -72,5 +98,14 @@
       "form_factor": "narrow",
       "label": "worth on a phone."
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/capture",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

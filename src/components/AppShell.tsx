@@ -331,6 +331,9 @@ export function AppShell({
             <p className="add-list-empty">No lists match “{pickerQuery.trim()}”.</p>
           )}
         </div>
+        <Link className="dialog-create" to="/capture" onClick={() => dialog.current?.close()}>
+          Capture from a browser or link <ArrowRight size={16} />
+        </Link>
         <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
           Create a new list <ArrowRight size={16} />
         </Link>

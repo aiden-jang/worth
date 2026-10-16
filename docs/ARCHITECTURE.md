@@ -52,6 +52,15 @@ selection form one save operation; split further when a section gains independen
   Cross-origin writes are rejected. The browser never receives Accounts credentials
   beyond the existing shared session cookie.
 
+The document's API transport binds once to its first signed-in account. Private
+requests carry `X-Worth-Account`, checked against the resolved session before
+reads or writes. This is a consistency precondition, never authentication. Focus
+and account-mismatch responses revalidate `/me`; a changed account removes the
+old app shell and requires a document reload, clearing its query cache. Delayed
+old operations keep their original binding and cannot run under the new session.
+Drafts remain keyed to the original account. Public snapshots and `/me` do not
+use this precondition.
+
 ## Sharing, files and caching
 
 Public tokens are hashed in storage and expire after seven days. Snapshots contain
@@ -64,8 +73,9 @@ Records-only export excludes them; photo-inclusive backup includes them. Restore
 and atomically creates fresh private records, preserves relationships and never restores
 public shares. See [release/recovery](../RELEASE.md) for import limits and deletion scope.
 
-The service worker handles the app shell/static assets; it must not cache private API
-responses or invent offline write success. Private and shared routes have no-index headers.
+No browser service worker is registered in this revision. Full offline reading
+and queued saves remain pending; future cache work must not cache private API
+responses without account isolation or invent offline write success. Private and shared routes have no-index headers.
 Fonts are bundled locally. Static CSP/security headers live in `public/_headers`; API
 headers are applied by the Worker. No mock archive is bundled into production.
 
@@ -338,3 +348,21 @@ the same transaction as records and the import receipt. Capacity failure returns
 backups can be restored. All-data deletion clears templates and creation receipts.
 Local field/template drafts use the existing account/list-specific seven-day
 storage; uncertain template requests retain an immutable retry preview.
+
+## Browser capture and shortcut entry points
+
+[Web capture](WEB-CAPTURE.md) receives bounded, plain title/text/URL values through
+`/capture`, clears incoming parameters after staging, and requires an explicit
+review/destination/save. A short-lived tab staging area survives sign-in without
+putting shared content into Accounts return URLs. Applying the share creates an
+account-scoped recoverable draft. The existing guarded reviewed-import transaction
+provides frozen-payload retry safety, parent/owner checks and duplicate prevention.
+The browser does not fetch submitted source URLs or extract remote page contents.
+
+Manifest shortcuts and the optional text/link GET share target route into normal
+authenticated pages; they create no API credentials or public share tokens. Quick
+picks checks collection membership before requesting records, optionally includes
+archived collections, and separates saved rank from personal calls. Account-scoped
+local preferences contain collection IDs/group choices only; explicit clearing and
+all-data deletion include those preferences and the current tab's incoming share.
+No service worker caches private API responses in this increment.

@@ -107,3 +107,18 @@ Check records and photo backup round trips, including a template-only file and a
 restore that would exceed the owner's 50-template limit. The latter must leave
 both records and the import receipt unchanged. This migration replaces a removed,
 local-only native-widget experiment; that experiment was never deployed.
+
+Web capture adds `/capture`, `/quick`, text/link manifest share-target metadata and
+private PWA shortcuts; it needs no extra migration beyond the template migration
+above. Verify incoming content is not saved by opening a link, sign-in returns
+without forwarding it to Accounts, a duplicate needs explicit keep-both review,
+and an interrupted POST retries the same payload/key. Verify private shortcut
+choices stay with their account and clearing device data removes them. Share
+menu registration/installation varies by browser and OS; manual capture and
+bookmark URLs remain the fallback. No native app is built or distributed.
+
+Private browser requests now include an expected account. Check a live account
+switch in another tab: old reads/writes must return ACCOUNT_CHANGED before any
+mutation, the old shell must be hidden, and Reload Worth must open a fresh cache
+without restoring the previous account's draft. Public shares and account
+metadata remain usable independently of that header.

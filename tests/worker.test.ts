@@ -2564,3 +2564,40 @@ test('template-only restore works and all-data deletion clears templates and the
     )?.n,
   ).toBe(0);
 });
+
+test('an account-bound stale tab cannot read or write into a newly signed-in account', async () => {
+  const stale = (method: string, path: string, body?: unknown) =>
+    app.request(
+      `https://worth.test/api${path}`,
+      {
+        method,
+        headers: {
+          Cookie: 'preview_user=newaccount',
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'X-Worth-Account': 'previousaccount',
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  for (const response of [
+    await stale('GET', '/lists'),
+    await stale('POST', '/lists', { name: 'Must not save', kind: 'collection' }),
+    await stale('DELETE', '/data'),
+  ]) {
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: 'ACCOUNT_CHANGED' });
+  }
+  expect(
+    (
+      await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM lists WHERE owner_id = ?')
+        .bind('newaccount')
+        .first<{ n: number }>()
+    )?.n,
+  ).toBe(0);
+  const metadata = await stale('GET', '/me');
+  expect(metadata.status).toBe(200);
+  expect(await metadata.json()).toMatchObject({ user: { id: 'newaccount' } });
+});

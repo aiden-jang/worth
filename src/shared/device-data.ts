@@ -1,6 +1,10 @@
 const draftLifetime = 7 * 86400000;
 export async function cleanDeviceData(owner: string, all = false): Promise<void> {
   const now = Date.now();
+  if (all) {
+    localStorage.removeItem(`worth:quick-picks:${owner}`);
+    sessionStorage.removeItem('worth:incoming-web-share');
+  }
   const drafts = `worth:draft:v1:${owner}:`;
   const restore = `worth:restore:${owner}:`;
   const timers = `worth:rest:${owner}:`;

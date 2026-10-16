@@ -47,6 +47,9 @@ privateApi.use('*', async (c, next) => {
   if (session.state === 'unavailable')
     throw new ApiError(503, 'AUTH_UNAVAILABLE', 'Accounts is temporarily unavailable');
   if (session.state === 'signed-out') throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to continue');
+  const expectedAccount = c.req.header('X-Worth-Account');
+  if (expectedAccount && expectedAccount !== session.user.id)
+    throw new ApiError(409, 'ACCOUNT_CHANGED', 'Accounts changed. Reload Worth before continuing.');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) || c.req.path.endsWith('/export/backup')) {
     const heavy =
       /\/api\/(import|data|export\/backup)$/.test(c.req.path) ||

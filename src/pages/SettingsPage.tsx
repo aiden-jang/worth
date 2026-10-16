@@ -211,6 +211,14 @@ export function SettingsPage() {
           </div>
         )}
       </section>
+      <section className="settings-section">
+        <h2>Within reach.</h2>
+        <p>
+          <Link to="/capture">Web capture</Link> reviews a name, source link or shared text before saving.
+          <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
+          or home-screen link.
+        </p>
+      </section>
       <section className="data-section">
         <h2>This device.</h2>
         <p>

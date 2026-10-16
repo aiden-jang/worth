@@ -32,6 +32,8 @@ its verification. The following groups are committed and verified locally on
 - Existing-record duplicate suggestions with reversible keep-separate reviews,
   Details and explicit revisit-composer actions.
 - Reversible collection archiving with retained Search, Patterns, links and backups.
+- Reviewed web capture, recoverable text/link shares, browser bookmark code and private
+  shortlist/saved-find shortcuts with account-scoped remembered choices.
 - Reusable collection detail names and private setup templates, including reviewed creation,
   safe retries, removal and atomic backup restore.
 - Private visit-specific location, edition, order/setup and reaction, with draft

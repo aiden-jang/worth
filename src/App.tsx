@@ -1,16 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { ProductLinks } from './components/ProductLinks';
 import { InfoPage } from './pages/InfoPage';
 import { Route, Routes, ScrollRestoration, useLocation } from 'react-router';
-import { api } from './api';
+import { api, bindPageAccount } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
-import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
+import { Component, Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const CapturePage = lazy(() =>
+  import('./pages/CapturePage').then((module) => ({ default: module.CapturePage })),
+);
+const CaptureSignIn = lazy(() =>
+  import('./pages/CapturePage').then((module) => ({ default: module.CaptureSignIn })),
+);
+const QuickPage = lazy(() => import('./pages/QuickPage').then((module) => ({ default: module.QuickPage })));
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
@@ -82,12 +89,28 @@ class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean 
 
 function PrivateApp() {
   const location = useLocation();
-  const session = useQuery({ queryKey: ['me'], queryFn: api.me, retry: false });
+  const client = useQueryClient();
+  const session = useQuery({
+    queryKey: ['me'],
+    queryFn: api.me,
+    retry: false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+  useEffect(() => {
+    const refresh = () => {
+      void client.invalidateQueries({ queryKey: ['me'] });
+    };
+    window.addEventListener('worth:account-changed', refresh);
+    return () => window.removeEventListener('worth:account-changed', refresh);
+  }, [client]);
 
   return session.isPending ? (
     <div className="boot-screen">worth</div>
   ) : session.isError ? (
     <AuthProblem onRetry={() => void session.refetch()} />
+  ) : session.data?.user && !bindPageAccount(session.data.user.id) ? (
+    <AccountChanged email={session.data.user.email} />
   ) : session.data?.user ? (
     <AppShell user={session.data.user} authOrigin={authOrigin}>
       <Routes>
@@ -98,15 +121,42 @@ function PrivateApp() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/capture" element={<CapturePage />} />
+        <Route path="/quick" element={<QuickPage />} />
         <Route path="*" element={<InfoPage kind="missing" />} />
       </Routes>
       <TrashNotice />
     </AppShell>
-  ) : ['/', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
+  ) : location.pathname === '/capture' ? (
+    <CaptureSignIn authOrigin={authOrigin} />
+  ) : ['/', '/quick', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
     /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (
     <InfoPage kind="missing" />
+  );
+}
+
+function AccountChanged({ email }: { email: string }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), []);
+  return (
+    <main className="light-page page-width" aria-label="Account changed">
+      <h1 ref={heading} tabIndex={-1}>
+        Accounts changed.
+      </h1>
+      <p>
+        You’re now signed in as {email}. Reload Worth to open that account. Unfinished drafts stay with their
+        original account.
+      </p>
+      <button
+        className="button button-accent"
+        style={{ minHeight: 44 }}
+        onClick={() => window.location.reload()}
+      >
+        Reload Worth
+      </button>
+    </main>
   );
 }
 

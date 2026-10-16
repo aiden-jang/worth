@@ -338,6 +338,24 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Browser capture and quick picks</h2>
+              <p>
+                <Link to="/capture">Web capture</Link> reviews a name, source and optional note before saving
+                to a collection you choose. Incoming shares never save automatically. If Worth appears in your
+                installed browser’s Share menu, send text or a link there; otherwise paste into Web capture.
+                Desktop bookmark instructions are on that page. Incoming content stays in this tab for review
+                and is excluded from the Accounts sign-in return link. Unused shares expire after 15 minutes;
+                applied drafts use the usual account-specific seven-day recovery.
+              </p>
+              <p>
+                <Link to="/quick">Quick picks</Link> opens a chosen top-five shortlist or draws from your
+                saved items, Want to try, revisit queue or Favorites. Copy a private shortcut to bookmark the
+                exact collection/group. Remember for app shortcuts saves only those choices for this account
+                on this device. These shortcuts create no public link and change no calls or ranks.
+                Installation and Share menu support vary by browser; manual web capture remains available.
+              </p>
+            </section>
+            <section>
               <h2>Drafts and interruptions</h2>
               <p>
                 Unfinished records and photo drafts can recover on the same device for seven days. Browser
