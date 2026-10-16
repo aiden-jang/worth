@@ -2,10 +2,10 @@
 
 `/capture` accepts a name directly, or incoming title/text/link content for review.
 It never saves on a GET request or on opening a shared URL. Choose Use incoming
-share, review/edit the fields, choose a current collection, then Review capture
+share, review/edit the fields, keep the default Inbox destination or choose a current collection, then Review capture
 and Save reviewed capture. Exact normalized name/type duplicates need a separate
 keep-both choice. Calls remain unset and new records remain unranked; Want to try
-is explicit. Missing collections and failed duplicate checks block saving.
+is explicit. Inbox needs no collection. An unavailable selected collection or failed destination duplicate check blocks saving.
 
 Incoming content can arrive in a fragment (the desktop bookmark code) or the
 manifest's text/link GET share target. Fragment values stay outside the receiving
@@ -23,7 +23,7 @@ fallback before sign-in. Applying a share to an existing draft needs confirmatio
 After application, the existing account-specific seven-day draft mechanism keeps
 it; changing accounts does not restore another account's draft.
 
-Saving uses the existing reviewed-import API for one item. Before the first save,
+Saving to a collection uses the reviewed-import API for one item; saving to Inbox uses its own guarded creation transaction. Before the first save,
 the client persists an immutable destination/payload and retry key. A lost reply
 can be retried after reload without another record. That endpoint enforces owner,
 parent availability, payload fingerprint and one atomic creation receipt. A later
@@ -33,7 +33,7 @@ or offline archive reading is implied. Those larger offline features are pending
 
 ## Getting to capture
 
-Settings and the Add list picker link to Web capture. The manifest offers Capture,
+Settings, Inbox and the Add list picker link to Web capture. New accounts can save a name to Inbox before creating any collection. The manifest offers Capture,
 Shortlist, Saved find and Log a workout shortcuts. The optional text/link
 `share_target` appears only when an installed browser supports that API; there is
 no claim of universal Share menu support. Files are not accepted in this flow.

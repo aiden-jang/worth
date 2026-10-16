@@ -12,6 +12,8 @@ import type {
   WorkoutSession,
 } from '../src/shared/models';
 import { archiveFile, type ArchiveFile } from '../src/shared/portability';
+import { itemInput } from '../src/shared/validation';
+import type { InboxEntry } from '../src/shared/inbox';
 import { itemContext } from '../src/shared/item-context';
 import { emptyCollectionShelf } from '../src/shared/workspace';
 
@@ -48,6 +50,7 @@ beforeAll(async () => {
     '0014_collection_archiving.sql',
     '0015_visit_context.sql',
     '0016_collection_templates.sql',
+    '0017_capture_inbox.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -963,7 +966,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(1);
+  expect(exported.schemaVersion).toBe(2);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -2600,4 +2603,297 @@ test('an account-bound stale tab cannot read or write into a newly signed-in acc
   const metadata = await stale('GET', '/me');
   expect(metadata.status).toBe(200);
   expect(await metadata.json()).toMatchObject({ user: { id: 'newaccount' } });
+});
+
+async function inboxRequest(
+  owner: string,
+  path: string,
+  body: unknown,
+  key = crypto.randomUUID(),
+  env = platform.env,
+) {
+  return app.request(
+    `https://worth.test/api${path}`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    env,
+    platform.ctx,
+  );
+}
+async function inboxFind(owner: string, title: string, extra = {}) {
+  const response = await inboxRequest(owner, '/inbox', { item: { title, ...extra } });
+  expect(response.status).toBe(201);
+  return ((await response.json()) as { entry: InboxEntry }).entry;
+}
+
+test('Inbox capture is private, idempotent and revision guarded, with searchable context', async () => {
+  const owner = 'inboxowner',
+    key = crypto.randomUUID();
+  const input = {
+    item: {
+      title: 'Pistachio Inbox',
+      note: 'Private unfiled note',
+      context: { sourceUrl: 'https://example.test/find', recommendedBy: 'Mina' },
+      wantToTry: true,
+    },
+  };
+  expect((await call('/inbox', null)).status).toBe(401);
+  expect((await call('/inbox', owner, 'POST', input, 'https://foreign.test')).status).toBe(403);
+  const responses = await Promise.all([
+    inboxRequest(owner, '/inbox', input, key),
+    inboxRequest(owner, '/inbox', input, key),
+  ]);
+  expect(responses.map((response) => response.status)).toEqual([201, 201]);
+  const entry = ((await responses[0].json()) as { entry: InboxEntry }).entry;
+  expect(((await (await call('/inbox', owner)).json()) as { entries: InboxEntry[] }).entries).toHaveLength(1);
+  expect(entry.decision).toBeNull();
+  expect(entry.wantToTry).toBe(true);
+  expect((await call(`/inbox/${entry.id}`, 'inboxstranger')).status).toBe(404);
+  expect(await (await call('/inbox', 'inboxstranger')).json()).toEqual({ entries: [] });
+  expect((await inboxRequest(owner, '/inbox', { item: { title: 'Different body' } }, key)).status).toBe(409);
+  const search = (await (await call('/search?q=Mina', owner)).json()) as {
+    results: { id: string; kind: string }[];
+  };
+  expect(search.results).toContainEqual(expect.objectContaining({ id: entry.id, kind: 'inbox' }));
+  const item = { ...itemInput.parse(entry), note: 'Saved new note' };
+  expect((await call(`/inbox/${entry.id}`, owner, 'PUT', { item, expectedRevision: 0 })).status).toBe(200);
+  expect((await call(`/inbox/${entry.id}`, owner, 'PUT', { item, expectedRevision: 0 })).status).toBe(200);
+  expect(
+    (
+      await call(`/inbox/${entry.id}`, owner, 'PUT', {
+        item: { ...item, note: 'Stale note' },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+});
+
+test('Inbox filing preserves saved context and calls, stays unranked and recovers the same receipt', async () => {
+  const owner = 'inboxfiler';
+  const target = await archiveCollection(owner, 'Filed drinks');
+  const foreign = await archiveCollection('inboxforeign', 'Other collection');
+  const entry = await inboxFind(owner, 'A found book', {
+    decision: 'meh',
+    wantToTry: true,
+    note: 'PRIVATE',
+    context: { sourceUrl: 'https://example.test/book', fields: [{ name: 'Edition', value: 'Second' }] },
+  });
+  const body = { targetListId: target.id, expectedRevision: entry.revision },
+    key = crypto.randomUUID();
+  expect(
+    (await inboxRequest(owner, `/inbox/${entry.id}/file`, { ...body, targetListId: foreign.id })).status,
+  ).toBe(404);
+  expect(
+    (await inboxRequest(owner, `/inbox/${entry.id}/file`, { ...body, expectedRevision: 42 })).status,
+  ).toBe(409);
+  const responses = await Promise.all([
+    inboxRequest(owner, `/inbox/${entry.id}/file`, body, key),
+    inboxRequest(owner, `/inbox/${entry.id}/file`, body, key),
+  ]);
+  expect(responses.map((response) => response.status)).toEqual([201, 201]);
+  const item = ((await responses[0].json()) as { item: Item }).item;
+  expect(item).toMatchObject({
+    title: entry.title,
+    decision: 'meh',
+    wantToTry: true,
+    note: 'PRIVATE',
+    context: entry.context,
+    createdAt: entry.createdAt,
+  });
+  expect(
+    ((await (await call(`/lists/${target.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([]);
+  expect(
+    ((await (await call(`/lists/${target.id}/items`, owner)).json()) as { items: Item[] }).items,
+  ).toHaveLength(1);
+  expect((await call(`/inbox/${entry.id}`, owner)).status).toBe(404);
+  expect(
+    (await inboxRequest(owner, `/inbox/${entry.id}/file`, { ...body, expectedRevision: 2 }, key)).status,
+  ).toBe(409);
+  await call(`/items/${item.id}`, owner, 'DELETE');
+  expect((await inboxRequest(owner, `/inbox/${entry.id}/file`, body, key)).status).toBe(409);
+  expect((await call('/inbox', owner)).status).toBe(200);
+});
+
+test('a trashed filing destination rolls back the Inbox source, item and receipt together', async () => {
+  const owner = 'inboxrace',
+    target = await archiveCollection(owner, 'Changing destination');
+  const entry = await inboxFind(owner, 'Never lose this');
+  const db = platform.env.DB,
+    key = crypto.randomUUID();
+  const wrapped = new Proxy(db, {
+    get(original, property) {
+      if (property === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          await db
+            .prepare('UPDATE lists SET trashed_at = ? WHERE id = ? AND owner_id = ?')
+            .bind(Date.now(), target.id, owner)
+            .run();
+          return db.batch(statements);
+        };
+      const value = Reflect.get(original, property);
+      return typeof value === 'function' ? value.bind(original) : value;
+    },
+  });
+  const response = await inboxRequest(
+    owner,
+    `/inbox/${entry.id}/file`,
+    { targetListId: target.id, expectedRevision: entry.revision },
+    key,
+    { ...platform.env, DB: wrapped },
+  );
+  expect(response.status).toBe(409);
+  expect((await call(`/inbox/${entry.id}`, owner)).status).toBe(200);
+  expect(await db.prepare('SELECT id FROM items WHERE list_id = ?').bind(target.id).first()).toBeNull();
+  expect(await db.prepare('SELECT id FROM inbox_operations WHERE id = ?').bind(key).first()).toBeNull();
+});
+
+test('Inbox Trash restores unfiled finds, expires after thirty days and never replays a removed creation', async () => {
+  const owner = 'inboxtrash',
+    key = crypto.randomUUID(),
+    input = { item: { title: 'Keep recoverable' } };
+  const response = await inboxRequest(owner, '/inbox', input, key);
+  const entry = ((await response.json()) as { entry: InboxEntry }).entry;
+  expect((await call(`/inbox/${entry.id}`, owner, 'DELETE')).status).toBe(204);
+  expect(await (await call('/inbox', owner)).json()).toEqual({ entries: [] });
+  const trash = (await (await call('/trash', owner)).json()) as {
+    entries: { id: string; kind: string; listName: string }[];
+  };
+  expect(trash.entries).toContainEqual(
+    expect.objectContaining({ id: entry.id, kind: 'inbox', listName: 'Inbox' }),
+  );
+  expect((await inboxRequest(owner, '/inbox', input, key)).status).toBe(409);
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'inbox', id: entry.id }] })).status,
+  ).toBe(200);
+  expect((await call(`/inbox/${entry.id}`, owner)).status).toBe(200);
+  await call(`/inbox/${entry.id}`, owner, 'DELETE');
+  await platform.env.DB.prepare('UPDATE inbox_entries SET trashed_at = ? WHERE id = ?')
+    .bind(Date.now() - 31 * 86400000, entry.id)
+    .run();
+  await call('/trash', owner);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM inbox_entries WHERE id = ?').bind(entry.id).first(),
+  ).toBeNull();
+  expect((await inboxRequest(owner, '/inbox', input, key)).status).toBe(409);
+});
+
+test('Inbox backups restore new private entries and exports never lose a find during filing', async () => {
+  const owner = 'inboxbackup',
+    entry = await inboxFind(owner, 'Atomic souvenir', {
+      context: { recommendedBy: 'Mina', location: 'Brooklyn' },
+    });
+  const target = await archiveCollection(owner, 'Collection');
+  const [filed, exporting] = await Promise.all([
+    inboxRequest(owner, `/inbox/${entry.id}/file`, {
+      targetListId: target.id,
+      expectedRevision: entry.revision,
+    }),
+    call('/export/records', owner),
+  ]);
+  expect(filed.status).toBe(201);
+  const snapshot = (await exporting.json()) as ArchiveFile;
+  expect(
+    snapshot.inbox.filter((find) => find.title === entry.title).length +
+      snapshot.items.filter((item) => item.title === entry.title).length,
+  ).toBe(1);
+  const unfiled = await inboxFind(owner, 'Still unfiled', { note: 'Private text', wantToTry: true });
+  const backup = (await (await call('/export/backup', owner)).json()) as ArchiveFile;
+  expect(backup.inbox).toContainEqual(unfiled);
+  const key = crypto.randomUUID();
+  expect((await restoreWithTemplates('inboxrestored', backup, key)).status).toBe(201);
+  expect((await restoreWithTemplates('inboxrestored', backup, key)).status).toBe(201);
+  const restored = (await (await call('/inbox', 'inboxrestored')).json()) as { entries: InboxEntry[] };
+  expect(restored.entries).toHaveLength(1);
+  expect(restored.entries[0].id).not.toBe(unfiled.id);
+  expect(restored.entries[0]).toMatchObject({
+    title: unfiled.title,
+    note: 'Private text',
+    wantToTry: true,
+    revision: 0,
+  });
+  const sourceOnly = {
+    ...backup,
+    lists: [],
+    items: [],
+    logs: [],
+    workoutSessions: [],
+    workoutRoutines: [],
+    photos: [],
+  };
+  expect((await restoreWithTemplates('inboxonlyrestore', sourceOnly)).status).toBe(201);
+  expect(
+    ((await (await call('/inbox', 'inboxonlyrestore')).json()) as { entries: InboxEntry[] }).entries,
+  ).toHaveLength(1);
+});
+
+test('Inbox capacity is atomic and a full destination rolls back every restored record and receipt', async () => {
+  const owner = 'inboxcapacity',
+    db = platform.env.DB;
+  const item = itemInput.parse({ title: 'Seeded find' });
+  const ids = Array.from({ length: 499 }, () => crypto.randomUUID());
+  await db
+    .prepare(
+      'INSERT INTO inbox_entries (id, owner_id, payload_json, created_at, updated_at) SELECT value, ?, ?, 1, 1 FROM json_each(?)',
+    )
+    .bind(owner, JSON.stringify(item), JSON.stringify(ids))
+    .run();
+  const a = crypto.randomUUID(),
+    b = crypto.randomUUID();
+  const results = await Promise.all([
+    inboxRequest(owner, '/inbox', { item: { title: 'Last spot A' } }, a),
+    inboxRequest(owner, '/inbox', { item: { title: 'Last spot B' } }, b),
+  ]);
+  expect(results.map((result) => result.status).sort()).toEqual([201, 409]);
+  const rejected = results[0].status === 409 ? a : b;
+  expect(await db.prepare('SELECT id FROM inbox_operations WHERE id = ?').bind(rejected).first()).toBeNull();
+  const source = await archiveCollection('inboxquotasource', 'Do not partially restore');
+  await inboxFind('inboxquotasource', 'Extra Inbox record');
+  const backup = await (await call('/export/records', 'inboxquotasource')).json();
+  const key = crypto.randomUUID();
+  expect((await restoreWithTemplates(owner, backup, key)).status).toBe(409);
+  expect(await db.prepare('SELECT id FROM lists WHERE owner_id = ?').bind(owner).first()).toBeNull();
+  expect(await db.prepare('SELECT id FROM capture_operations WHERE id = ?').bind(key).first()).toBeNull();
+  await call(`/inbox/${ids[0]}`, owner, 'DELETE');
+  expect((await restoreWithTemplates(owner, backup, key)).status).toBe(201);
+  expect(((await (await call('/lists', owner)).json()) as { lists: ListDetail[] }).lists[0].name).toBe(
+    source.name,
+  );
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'inbox', id: ids[0] }] })).status,
+  ).toBe(409);
+});
+
+test('all-data deletion clears Inbox records, Trash and Inbox retry receipts', async () => {
+  const owner = 'inboxdelete';
+  const entry = await inboxFind(owner, 'Remove this too');
+  await call(`/inbox/${entry.id}`, owner, 'DELETE');
+  const response = await app.request(
+    'https://worth.test/api/data',
+    {
+      method: 'DELETE',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'X-Worth-Confirmation': 'delete-all-worth-data',
+      },
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(response.status).toBe(204);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM inbox_entries WHERE owner_id = ?').bind(owner).first(),
+  ).toBeNull();
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM inbox_operations WHERE owner_id = ?').bind(owner).first(),
+  ).toBeNull();
 });

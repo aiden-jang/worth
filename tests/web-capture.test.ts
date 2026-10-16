@@ -70,3 +70,15 @@ test('the bookmark code transfers only reviewed fields to a fragment in a separa
   });
   expect(opened[0].slice(1)).toEqual(['_blank', 'noopener,noreferrer']);
 });
+
+test('saved capture retry drafts accept older collection requests and new Inbox requests without hybrid destinations', () => {
+  const item = captureItem({ ...emptyWebCapture, title: 'A name' });
+  const listId = '11111111-1111-4111-8111-111111111111';
+  expect(webCaptureDraft.safeParse({ ...emptyWebCapture, listId, frozen: { listId, item } }).success).toBe(
+    true,
+  );
+  expect(webCaptureDraft.safeParse({ ...emptyWebCapture, frozen: { inbox: true, item } }).success).toBe(true);
+  expect(
+    webCaptureDraft.safeParse({ ...emptyWebCapture, frozen: { inbox: true, listId, item } }).success,
+  ).toBe(false);
+});

@@ -2,6 +2,8 @@ import { test as base, expect, type Page } from '@playwright/test';
 import type { Item, ListDetail, Log, TrashEntry } from '../src/shared/models';
 import type { WorkspaceResponse } from '../src/shared/workspace';
 import type { CollectionTemplate } from '../src/shared/templates';
+import { itemInput } from '../src/shared/validation';
+import type { InboxEntry } from '../src/shared/inbox';
 import { emptyItemContext } from '../src/shared/item-context';
 
 export const list: ListDetail = {
@@ -35,6 +37,10 @@ export const item: Item = {
   lastLoggedOn: null,
 };
 export type State = {
+  failInboxCreateReply: boolean;
+  failInboxFileReply: boolean;
+  inbox: InboxEntry[];
+  trashedInbox: InboxEntry[];
   templates: CollectionTemplate[];
   workspace: WorkspaceResponse;
   signedIn: boolean;
@@ -52,6 +58,10 @@ export type State = {
 };
 export async function mockArchive(page: Page): Promise<State> {
   const state: State = {
+    failInboxCreateReply: false,
+    failInboxFileReply: false,
+    inbox: [],
+    trashedInbox: [],
     templates: [],
     workspace: { workspace: { rankings: [], views: [] }, revision: 0 },
     signedIn: true,
@@ -67,11 +77,93 @@ export async function mockArchive(page: Page): Promise<State> {
     list: structuredClone(list),
     writes: [],
   };
+  const inboxReceipts = new Map<string, unknown>();
   await page.route('**/api/**', async (route) => {
     const request = route.request(),
       path = new URL(request.url()).pathname.replace('/api', '');
     const method = request.method();
     const reply = (json: unknown, status = 200) => route.fulfill({ status, json });
+    if (path === '/inbox') {
+      if (method === 'GET') return reply({ entries: state.inbox });
+      const body = request.postDataJSON(),
+        key = request.headers()['idempotency-key'];
+      state.writes.push({ path, body: { ...body, key } });
+      if (inboxReceipts.has(key)) return reply(inboxReceipts.get(key), 201);
+      const entry = {
+        ...itemInput.parse(body.item),
+        id: crypto.randomUUID(),
+        revision: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      state.inbox.unshift(entry);
+      inboxReceipts.set(key, { entry });
+      if (state.failInboxCreateReply) {
+        state.failInboxCreateReply = false;
+        return route.abort('failed');
+      }
+      return reply({ entry }, 201);
+    }
+    if (path.startsWith('/inbox/')) {
+      const id = path.split('/')[2],
+        entry = state.inbox.find((find) => find.id === id);
+      if (path.endsWith('/file')) {
+        const body = request.postDataJSON(),
+          key = request.headers()['idempotency-key'];
+        state.writes.push({ path, body: { ...body, key } });
+        if (inboxReceipts.has(key)) return reply(inboxReceipts.get(key), 201);
+        if (!entry || entry.revision !== body.expectedRevision)
+          return reply({ message: 'This Inbox find changed elsewhere. Reload before filing.' }, 409);
+        const filed = {
+          ...itemInput.parse(entry),
+          id: crypto.randomUUID(),
+          listId: body.targetListId,
+          hasPhoto: false,
+          logCount: 0,
+          lastLoggedOn: null,
+          createdAt: entry.createdAt,
+          updatedAt: Date.now(),
+        };
+        state.items.push(filed);
+        state.inbox = state.inbox.filter((find) => find.id !== id);
+        inboxReceipts.set(key, { item: filed });
+        if (state.failInboxFileReply) {
+          state.failInboxFileReply = false;
+          return route.abort('failed');
+        }
+        return reply({ item: filed }, 201);
+      }
+      if (!entry) return reply({ message: 'This find was filed or moved to Trash.' }, 404);
+      if (method === 'PUT') {
+        const body = request.postDataJSON();
+        state.writes.push({ path, body });
+        if (entry.revision !== body.expectedRevision)
+          return reply(
+            { message: 'This Inbox find changed elsewhere. Your draft is still here. Reload before saving.' },
+            409,
+          );
+        Object.assign(entry, itemInput.parse(body.item), {
+          revision: entry.revision + 1,
+          updatedAt: Date.now(),
+        });
+      }
+      if (method === 'DELETE') {
+        state.writes.push({ path, body: null });
+        state.trashedInbox.push(entry);
+        state.inbox = state.inbox.filter((find) => find.id !== id);
+        state.trash.push({
+          id,
+          kind: 'inbox',
+          title: entry.title,
+          listId: '',
+          listName: 'Inbox',
+          trashedAt: Date.now(),
+          expiresAt: Date.now() + 30 * 86400000,
+        });
+        return route.fulfill({ status: 204 });
+      }
+      return reply({ entry });
+    }
     if (path === `/lists/${list.id}/workspace`) {
       if (method === 'PUT') {
         const body = request.postDataJSON();
@@ -126,6 +218,12 @@ export async function mockArchive(page: Page): Promise<State> {
     if (path === '/trash') return reply({ entries: state.trash });
     if (path === '/trash/restore') {
       const body = request.postDataJSON() as { entries: { kind: string; id: string }[] };
+      for (const ref of body.entries)
+        if (ref.kind === 'inbox') {
+          const entry = state.trashedInbox.find((find) => find.id === ref.id);
+          if (entry) state.inbox.unshift(entry);
+          state.trashedInbox = state.trashedInbox.filter((find) => find.id !== ref.id);
+        }
       state.trash = state.trash.filter((entry) => !body.entries.some((ref) => ref.id === entry.id));
       return reply({ restored: body.entries.length });
     }

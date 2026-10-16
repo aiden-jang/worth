@@ -1,3 +1,4 @@
+import { inboxLimit } from '../../src/shared/inbox';
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import { archiveActionInput } from '../../src/shared/validation';
@@ -9,11 +10,11 @@ import { fingerprint, operationId } from '../operations';
 const retention = 30 * 86400000;
 const restoreInput = z.object({
   entries: z
-    .array(z.object({ kind: z.enum(['list', 'item', 'log']), id: z.string().uuid() }))
+    .array(z.object({ kind: z.enum(['list', 'item', 'log', 'inbox']), id: z.string().uuid() }))
     .min(1)
     .max(100),
 });
-const tableFor = { list: 'lists', item: 'items', log: 'logs' } as const;
+const tableFor = { list: 'lists', item: 'items', log: 'logs', inbox: 'inbox_entries' } as const;
 
 // A batch is one D1 transaction. A failed guard aborts every write, including the
 // receipt, so a stale selection cannot silently move or merge only some records.
@@ -28,7 +29,7 @@ export function registerArchiveTools(api: Hono<AppEnv>) {
     const owner = c.get('ownerId');
     const cutoff = Date.now() - retention;
     await c.env.DB.batch([
-      ...['logs', 'items', 'lists'].map((table) =>
+      ...['logs', 'items', 'lists', 'inbox_entries'].map((table) =>
         c.env.DB.prepare(`DELETE FROM ${table} WHERE owner_id = ? AND trashed_at <= ?`).bind(owner, cutoff),
       ),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ? AND created_at <= ?').bind(
@@ -43,10 +44,11 @@ export function registerArchiveTools(api: Hono<AppEnv>) {
       SELECT i.id, 'item', i.title, l.id, l.name, i.trashed_at FROM items i JOIN active_lists l ON l.id = i.list_id AND l.owner_id = i.owner_id WHERE i.owner_id = ? AND i.trashed_at IS NOT NULL AND i.merged_into_id IS NULL
       UNION ALL
       SELECT g.id, 'log', COALESCE(i.title, NULLIF(g.title, ''), 'Log'), l.id, l.name, g.trashed_at FROM logs g JOIN active_lists l ON l.id = g.list_id AND l.owner_id = g.owner_id LEFT JOIN record_items i ON i.id = g.item_id WHERE g.owner_id = ? AND g.trashed_at IS NOT NULL AND (g.item_id IS NULL OR i.id IS NOT NULL)
+      UNION ALL SELECT id, 'inbox', json_extract(payload_json, '$.title'), '', 'Inbox', trashed_at FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NOT NULL
       ORDER BY trashed_at DESC, id
     `,
     )
-      .bind(owner, owner, owner)
+      .bind(owner, owner, owner, owner)
       .all<{
         id: string;
         kind: string;
@@ -78,8 +80,9 @@ export function registerArchiveTools(api: Hono<AppEnv>) {
       `SELECT json_extract(value, '$.id') FROM json_each(?) WHERE json_extract(value, '$.kind') = '${kind}'`;
     const read = `SELECT id, trashed_at, 1 AS parent_ok FROM lists WHERE owner_id = ? AND id IN (${selected('list')})
       UNION ALL SELECT id, trashed_at, EXISTS(SELECT 1 FROM active_lists l WHERE l.id = items.list_id AND l.owner_id = items.owner_id) FROM items WHERE owner_id = ? AND id IN (${selected('item')}) AND merged_into_id IS NULL
-      UNION ALL SELECT id, trashed_at, EXISTS(SELECT 1 FROM active_lists l WHERE l.id = logs.list_id AND l.owner_id = logs.owner_id) AND (item_id IS NULL OR EXISTS(SELECT 1 FROM record_items i WHERE i.id = logs.item_id AND i.owner_id = logs.owner_id)) FROM logs WHERE owner_id = ? AND id IN (${selected('log')})`;
-    const bindings = [owner, selection, owner, selection, owner, selection];
+      UNION ALL SELECT id, trashed_at, EXISTS(SELECT 1 FROM active_lists l WHERE l.id = logs.list_id AND l.owner_id = logs.owner_id) AND (item_id IS NULL OR EXISTS(SELECT 1 FROM record_items i WHERE i.id = logs.item_id AND i.owner_id = logs.owner_id)) FROM logs WHERE owner_id = ? AND id IN (${selected('log')})
+      UNION ALL SELECT id, trashed_at, 1 FROM inbox_entries WHERE owner_id = ? AND id IN (${selected('inbox')})`;
+    const bindings = [owner, selection, owner, selection, owner, selection, owner, selection];
     const rows = await c.env.DB.prepare(read)
       .bind(...bindings)
       .all<{ id: string; trashed_at: number | null; parent_ok: number }>();
@@ -96,8 +99,16 @@ export function registerArchiveTools(api: Hono<AppEnv>) {
         [unique.length, ...bindings, now - retention],
       ),
     ];
+    if (unique.some((entry) => entry.kind === 'inbox'))
+      statements.push(
+        guard(
+          c.env.DB,
+          `SELECT (SELECT COUNT(*) FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL) + (SELECT COUNT(*) FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NOT NULL AND id IN (${selected('inbox')})) <= ?`,
+          [owner, owner, selection, inboxLimit],
+        ),
+      );
     // JSON selections keep 100-record Undo within D1 query and parameter limits.
-    for (const kind of ['list', 'item', 'log'] as const) {
+    for (const kind of ['list', 'item', 'log', 'inbox'] as const) {
       statements.push(
         c.env.DB.prepare(
           `UPDATE ${tableFor[kind]} SET trashed_at = NULL, updated_at = ? WHERE owner_id = ? AND trashed_at IS NOT NULL AND id IN (${selected(kind)})`,

@@ -122,3 +122,13 @@ switch in another tab: old reads/writes must return ACCOUNT_CHANGED before any
 mutation, the old shell must be hidden, and Reload Worth must open a fresh cache
 without restoring the previous account's draft. Public shares and account
 metadata remain usable independently of that header.
+
+### Inbox
+
+- Apply migration `0017_capture_inbox.sql` after earlier migrations before deploying this feature.
+- Verify name-only capture into Inbox with no collections, explicit review, source/note retention and duplicate choice.
+- Exercise Inbox draft reopen, stale revision/reload, unranked filing, and lost-reply retry after reload.
+- Check Trash/Undo, 30-day purge, Inbox-only restore with fresh IDs, and full-capacity rollback.
+- Confirm private search links and account changes do not expose a previous account’s finds.
+- Check new version 2 exports, version 1/2 restore, and rejection of unsupported future backup formats.
+- Inspect drawer/full-page/editor/empty states at desktop and phone sizes, plus 320/430/768px reflow.

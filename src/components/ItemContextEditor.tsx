@@ -22,7 +22,7 @@ export function ItemContextEditor({
   value: ItemContext | undefined;
   onChange: (context: ItemContext) => void;
   title: string;
-  listId: string;
+  listId?: string;
 }) {
   const context = {
     ...emptyItemContext,
@@ -128,11 +128,13 @@ export function ItemContextEditor({
       </details>
       <details className="record-extras">
         <summary>Custom details</summary>
-        <SuggestedDetails
-          listId={listId}
-          fields={context.fields}
-          onChange={(fields) => onChange({ ...context, fields })}
-        />
+        {listId && (
+          <SuggestedDetails
+            listId={listId}
+            fields={context.fields}
+            onChange={(fields) => onChange({ ...context, fields })}
+          />
+        )}
         {context.fields.map((field, index) => (
           <div className="context-field" key={index}>
             <label>

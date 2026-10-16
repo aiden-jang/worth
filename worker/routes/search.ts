@@ -64,8 +64,26 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
         title: string;
         detail: string;
       }>();
+    const { results: inbox } = await c.env.DB.prepare(
+      `SELECT id, json_extract(payload_json,'$.title') AS title,
+      CASE WHEN json_extract(payload_json,'$.note') LIKE ? ESCAPE '\\' THEN substr(json_extract(payload_json,'$.note'),1,180)
+      ELSE COALESCE((SELECT substr(atom,1,180) FROM json_tree(json_extract(payload_json,'$.context')) WHERE type = 'text' AND atom NOT IN ('','none','unspecified') AND atom LIKE ? ESCAPE '\\' LIMIT 1), json_extract(payload_json,'$.type')) END AS detail
+      FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL AND (
+        json_extract(payload_json,'$.title') LIKE ? ESCAPE '\\' OR json_extract(payload_json,'$.type') LIKE ? ESCAPE '\\' OR json_extract(payload_json,'$.note') LIKE ? ESCAPE '\\'
+        OR EXISTS(SELECT 1 FROM json_tree(json_extract(payload_json,'$.context')) WHERE type = 'text' AND atom NOT IN ('','none','unspecified') AND atom LIKE ? ESCAPE '\\'))
+      ORDER BY updated_at DESC LIMIT 40`,
+    )
+      .bind(pattern, pattern, ownerId, pattern, pattern, pattern, pattern)
+      .all<{ id: string; title: string; detail: string }>();
     return c.json({
       results: [
+        ...inbox.map((entry) => ({
+          ...entry,
+          listId: '',
+          listName: 'Inbox',
+          kind: 'inbox' as const,
+          itemId: null,
+        })),
         ...lists.map((row) => ({
           id: row.id,
           listId: row.id,

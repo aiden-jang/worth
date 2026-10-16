@@ -196,7 +196,7 @@ export interface SearchResult {
   id: string;
   listId: string;
   listName: string;
-  kind: 'list' | 'item' | 'log';
+  kind: 'list' | 'item' | 'log' | 'inbox';
   exercise?: boolean;
   itemId: string | null;
   title: string;
@@ -205,7 +205,7 @@ export interface SearchResult {
 
 export interface TrashEntry {
   id: string;
-  kind: 'list' | 'item' | 'log';
+  kind: 'list' | 'item' | 'log' | 'inbox';
   title: string;
   listId: string;
   listName: string;

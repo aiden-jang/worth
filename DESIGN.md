@@ -253,3 +253,19 @@ Privacy, Terms and Help are public, use the simple landing wordmark header, and
 keep factual readable copy. Footer links make them available before account creation.
 Existing cabinet screens retain their accepted compositions. The contact destination
 was supplied by the user; shared-account deletion remains clearly separate.
+
+## Unfiled Inbox
+
+Inbox extends the cabinet with a private unfiled directory. It retains the 192px
+rail, 68/50px page title, shared faceless paper empty art, ruled rows and optional
+name-only capture. Navigation opens a native scrolling drawer over the current
+page; a normal `/inbox` link also supports full-page and modified-click navigation.
+The drawer uses 50/42px headings and 22px corners like the existing secondary tools.
+This is a deliberate extension of the current edition references, not a native app.
+
+The editor uses one full-width column for identity, optional call/context and
+explicit filing, preserving a clear phone flow. A cream recovery panel contains
+only the actual uncertain filing snapshot and destination. It never invents a call
+or rank. Filing requires saved details and a deliberate keep-separate choice for
+an exact name/type match. Desktop/phone and narrow reflow verification are recorded
+in `art/ui-qa/inbox/`.

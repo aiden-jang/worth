@@ -10,7 +10,9 @@ export function TrashPanel() {
   const restore = useMutation({
     mutationFn: (entry: TrashReference) => api.restoreTrash([entry]),
     onSuccess: () => {
-      setStatus('Restored. Items return unranked; list rankings are preserved.');
+      setStatus(
+        'Restored. Items return unranked and Inbox finds return unfiled; list rankings are preserved.',
+      );
       void client.invalidateQueries();
     },
   });
@@ -18,8 +20,8 @@ export function TrashPanel() {
     <section className="data-section" id="trash" aria-labelledby="trash-title">
       <h2 id="trash-title">Trash.</h2>
       <p>
-        Restore deleted lists, items and logs for 30 days. Notes, history and photos stay with them. Restore a
-        deleted list or item first to see any records deleted separately inside it.
+        Restore deleted lists, items, logs and Inbox finds for 30 days. Notes, history and photos stay with
+        them. Restore a deleted list or item first to see any records deleted separately inside it.
       </p>
       <p className="data-hint">
         Expired records are permanently removed when Trash is opened. Downloads exclude Trash. Deleting all
@@ -82,8 +84,18 @@ export function TrashNotice() {
       setEntries((event as CustomEvent<TrashReference[]>).detail);
       void client.invalidateQueries({ queryKey: ['trash'] });
     };
+    const restored = (event: Event) => {
+      const refs = (event as CustomEvent<TrashReference[]>).detail;
+      setEntries((current) =>
+        current.filter((entry) => !refs.some((ref) => ref.kind === entry.kind && ref.id === entry.id)),
+      );
+    };
     window.addEventListener('worth:trashed', listener);
-    return () => window.removeEventListener('worth:trashed', listener);
+    window.addEventListener('worth:restored', restored);
+    return () => {
+      window.removeEventListener('worth:trashed', listener);
+      window.removeEventListener('worth:restored', restored);
+    };
   }, [client, resetUndo]);
   if (!entries.length) return null;
   return (

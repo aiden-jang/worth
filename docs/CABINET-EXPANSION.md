@@ -33,7 +33,7 @@ framing and layout changes in the original checkout.
 - [x] CSV import with column mapping, preview and duplicate review.
 - [x] Optional per-item custom detail fields; name-only capture remains.
 - [x] Collection templates and reusable field definitions.
-- [ ] Inbox drawer for records awaiting a collection.
+- [x] Inbox drawer for records awaiting a collection.
 - [x] Reviewed web capture, desktop bookmark code and optional installed-browser text/link Share target, with manual paste fallback.
 - [ ] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
 - [ ] Reviewed receipt extraction with attachment and line-to-record mapping.
@@ -332,3 +332,40 @@ Desktop/phone captures, keyboard review focus, Axe and 320/430/768px reflow chec
 are recorded in [web capture QA](../art/ui-qa/web-capture/README.md). The Inbox,
 history, OCR, offline sync and other unchecked web features remain unfinished.
 No push, pull request, merge, installation or deployment was performed.
+
+## Eleventh implementation: web Inbox
+
+Inbox keeps up to 500 private, unfiled finds without requiring a collection. Web
+capture defaults here; applying shared content and saving still require review.
+Navigation opens a scrolling overlay over the current page, with a full-page
+route for ordinary/private links. The editor preserves notes, context, optional
+calls, plans and dates; photos and visits can be added after filing. Explicit
+filing moves one saved find into an owned current collection, unranked. Exact
+name/type matches require keeping a separate record; no merging is inferred.
+
+Creation and filing use immutable retry payloads and atomic owner/capacity/source/
+destination guards. A filing receipt survives independently of the removed source,
+so a lost reply can recover after reload. Editing uses a revision and explicit
+conflict reload. Unavailable device storage requires confirmation before closing
+unfinished changes. A draft for a find filed or removed elsewhere can reopen for
+copying, while saving and filing stay disabled. Account changes retain the shared
+request precondition and full-document cache boundary.
+
+Inbox context is privately searchable. Trash/Undo recovers finds unfiled for
+30 days; restore capacity is guarded atomically. Records/photo backups read Inbox
+and collection records in one transaction, avoiding gaps during filing. Restore
+supports old version 1 files and new version 2 Inbox-only files, remaps IDs and rolls back all records and the import
+receipt on capacity failure. Purge cannot resurrect a late creation/filing retry;
+all-data deletion clears both Inbox and its operation receipts.
+
+All 126 tests across 30 files, formatting, lint, unused-code checks, TypeScript
+and the production build passed. The full 149-journey browser regression passed;
+subsequent isolated recovery fixes passed 40 capture/Inbox journeys and all 22
+final Inbox journeys. The versioned backup change then passed six affected
+legacy/new-format restore and reflow journeys. Twelve desktop/phone captures
+were visually reviewed, with Axe and 320/430/768px checks recorded in
+[Inbox QA](../art/ui-qa/inbox/README.md).
+
+History, OCR, full offline sync, relationships, additional artwork/sharing
+features and all other unchecked scope remain unfinished. Nothing is pushed or
+deployed.

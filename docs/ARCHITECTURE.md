@@ -366,3 +366,37 @@ archived collections, and separates saved rank from personal calls. Account-scop
 local preferences contain collection IDs/group choices only; explicit clearing and
 all-data deletion include those preferences and the current tab's incoming share.
 No service worker caches private API responses in this increment.
+
+## Unfiled Inbox
+
+Migration `0017_capture_inbox.sql` adds owner-bound Inbox entries with an item-shaped
+JSON payload, revision, timestamps and soft deletion. The website supports at most
+500 active finds. A native scrolling drawer opens over the current page; `/inbox`
+is also a private full-page route. No native companion is involved. Name-only web
+capture defaults here, without needing a collection. Optional context, calls,
+plans and dates remain independent of rank. Photos and visits are added after filing.
+
+Creation stores a fingerprinted retry receipt and checks capacity in one D1 batch.
+Edits compare the saved revision; an exact lost-response retry returns the saved
+payload. Filing atomically guards the source revision and owned active destination,
+creates a fresh unranked item, removes the Inbox source and stores its result receipt.
+It preserves original creation time and all payload fields. Source and target
+ownership are resolved from the current session. Retrying after a later move or
+Trash action reports changed state instead of recreating the record. Receipts are
+retained until all-data deletion, preventing resurrection after purge.
+
+The browser checkpoints a fixed filing snapshot, target and retry key before
+sending. This account-scoped seven-day device draft is rendered independently
+of the source query, so a lost response remains recoverable after the source has
+left Inbox. Unsaved edits must be saved or explicitly reloaded before filing.
+Conflicts retain drafts; reload is explicit. If the source was filed or removed elsewhere, an owner-scoped device draft can still reopen for copying, with saving and filing disabled. Destination name/type duplicates
+require keep-separate confirmation and never merge automatically. Shared API
+account preconditions apply to Inbox reads/writes too.
+
+Search matches saved Inbox names, notes and context. Trash and Undo retain finds
+for 30 days, restore them unfiled and atomically enforce active capacity. Backups
+read Inbox and collection records in the same D1 read batch, avoiding a missing
+record during concurrent filing. Restore remaps Inbox IDs and checks capacity
+inside the same transaction as all records and the import receipt; capacity failure
+rolls back everything. New exports use schema version 2 so older readers reject them rather than silently omit Inbox finds. Restore still accepts version 1 files, which default to no Inbox. All-data deletion clears
+Inbox, Trash and operation receipts. Public snapshots never include Inbox content.

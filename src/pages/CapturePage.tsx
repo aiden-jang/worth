@@ -27,7 +27,8 @@ export function CaptureSignIn({ authOrigin }: { authOrigin: string }) {
       <p className="product-wordmark">worth</p>
       <h1>Keep this find.</h1>
       <p>
-        Sign in to choose a collection and review the name, source and note. Nothing is added automatically.
+        Sign in to review the name, source and note, then keep it in Inbox or a collection. Nothing is added
+        automatically.
       </p>
       {share.incoming && (
         <section className="incoming-capture">
@@ -93,7 +94,10 @@ export function CapturePage() {
   }, [form.review]);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   const collections = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const toInbox = form.listId === 'inbox';
   const chosen = collections.find((list) => list.id === form.listId);
+  const destinationReady = toInbox || !!chosen;
+  const inbox = useQuery({ queryKey: ['inbox'], queryFn: api.inbox, enabled: toInbox });
   const items = useQuery({
     queryKey: ['items', form.listId],
     queryFn: () => api.items(form.listId),
@@ -103,7 +107,7 @@ export function CapturePage() {
     [status, setStatus] = useState('');
   const [replace, setReplace] = useState(false),
     [reset, setReset] = useState(false);
-  const [saved, setSaved] = useState<{ id: string; listId: string } | null>(null);
+  const [saved, setSaved] = useState<{ id: string; listId: string | null } | null>(null);
   const [bookmarkCopied, setBookmarkCopied] = useState(false);
   const parsed = (() => {
     try {
@@ -121,21 +125,31 @@ export function CapturePage() {
   const reviewedItem = frozen?.item ?? parsed.item;
   const duplicate =
     !!parsed.item &&
-    !!items.data?.items.some((item) => duplicateIdentity(item) === duplicateIdentity(parsed.item!));
+    !!(toInbox ? inbox.data?.entries : items.data?.items)?.some(
+      (item) => duplicateIdentity(item) === duplicateIdentity(parsed.item!),
+    );
   const save = useMutation({
-    mutationFn: (pending: NonNullable<WebCaptureDraft['frozen']>) =>
-      api.importItems(pending.listId, [pending.item], draft.operationId.current),
-    onSuccess: ({ items: savedItems }, pending) => {
-      const next = { ...emptyWebCapture, listId: pending.listId };
+    mutationFn: async (pending: NonNullable<WebCaptureDraft['frozen']>) => {
+      if ('inbox' in pending) {
+        const { entry } = await api.createInbox(pending.item, draft.operationId.current);
+        return { id: entry.id, listId: null };
+      }
+      const { items } = await api.importItems(pending.listId, [pending.item], draft.operationId.current);
+      return { id: items[0].id, listId: pending.listId };
+    },
+    onSuccess: (result, pending) => {
+      const next = { ...emptyWebCapture, listId: result.listId ?? 'inbox' };
       draft.clear(next);
       draft.setForm(next);
       draft.operationId.current = crypto.randomUUID();
-      setSaved({ id: savedItems[0].id, listId: pending.listId });
+      setSaved(result);
       setStatus(`“${pending.item.title}” saved.`);
       setError('');
       for (const key of [
-        ['items', pending.listId],
-        ['list', pending.listId],
+        ['inbox'],
+        ['search'],
+        ['items', result.listId],
+        ['list', result.listId],
         ['lists'],
         ['overview'],
         ['patterns'],
@@ -157,11 +171,15 @@ export function CapturePage() {
     share.dismiss();
     setReplace(false);
     setError('');
-    setStatus('Incoming share copied into this draft. Review it and choose a collection.');
+    setStatus(
+      'Incoming share copied into this draft. Review it, then keep it in Inbox or choose a collection.',
+    );
   }
   function confirmSave() {
-    if (!frozen && (!chosen || !parsed.item || (duplicate && !form.approvedDuplicate))) return;
-    const pending = frozen ?? { listId: form.listId, item: parsed.item! };
+    if (!frozen && (!destinationReady || !parsed.item || (duplicate && !form.approvedDuplicate))) return;
+    const pending =
+      frozen ??
+      (toInbox ? { inbox: true as const, item: parsed.item! } : { listId: form.listId, item: parsed.item! });
     draft.checkpoint({ ...form, frozen: pending, review: true });
     save.mutate(pending);
   }
@@ -172,7 +190,7 @@ export function CapturePage() {
         <div>
           <p className="overline">CAPTURE</p>
           <h1>Keep a name.</h1>
-          <p>A name is enough. Choose where it belongs, then review before saving.</p>
+          <p>A name is enough. Keep it in Inbox now, or choose a collection before saving.</p>
         </div>
       </header>
       <p>Saving as {owner?.email || owner?.displayName || 'your signed-in account'}.</p>
@@ -201,7 +219,8 @@ export function CapturePage() {
               className="button button-outline"
               disabled={locked}
               onClick={() => {
-                if (form.title || form.sourceUrl || form.note || form.type || form.listId) setReplace(true);
+                if (form.title || form.sourceUrl || form.note || form.type || (form.listId && !toInbox))
+                  setReplace(true);
                 else applyIncoming();
               }}
             >
@@ -224,8 +243,8 @@ export function CapturePage() {
       {lists.isPending && <p role="status">Loading collections…</p>}
       {lists.data && !collections.length && (
         <p>
-          <Link to="/lists?kind=collection&create=1">Create a collection</Link> to save this draft. It stays
-          here until you return.
+          <Link to="/lists?kind=collection&create=1">Create a collection</Link> when you’re ready to file. You
+          can save to Inbox first.
         </p>
       )}
       <section className={`capture-panel${form.review ? ' has-review' : ''}`} aria-label="Web capture draft">
@@ -233,7 +252,7 @@ export function CapturePage() {
           className="settings-form"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!chosen || !parsed.item) {
+            if (!destinationReady || !parsed.item) {
               setError(parsed.error || 'Choose a collection.');
               return;
             }
@@ -242,13 +261,14 @@ export function CapturePage() {
           }}
         >
           <label>
-            Destination collection
+            Destination
             <select
               value={form.listId}
-              disabled={locked || lists.isPending || lists.isError}
+              disabled={locked}
               onChange={(event) => edit({ listId: event.target.value })}
             >
-              <option value="">Choose a collection</option>
+              <option value="">Choose a destination</option>
+              <option value="inbox">Inbox — file later</option>
               {collections.map((list) => (
                 <option key={list.id} value={list.id}>
                   {list.name}
@@ -256,7 +276,7 @@ export function CapturePage() {
               ))}
             </select>
           </label>
-          {form.listId && lists.data && !chosen && (
+          {form.listId && lists.data && !destinationReady && (
             <p role="alert">This destination is unavailable. Choose a current collection before saving.</p>
           )}
           <label>
@@ -334,12 +354,24 @@ export function CapturePage() {
             Want to try
           </label>
           {!frozen && !form.review && (
-            <button className="button button-accent" disabled={!chosen || !form.title.trim()} type="submit">
+            <button
+              className="button button-accent"
+              disabled={!destinationReady || !form.title.trim()}
+              type="submit"
+            >
               Review capture
             </button>
           )}
         </form>
-        {items.isError && (
+        {toInbox && inbox.isError && (
+          <p role="alert">
+            {inbox.error.message}{' '}
+            <button className="button button-outline" onClick={() => void inbox.refetch()}>
+              Retry Inbox duplicate check
+            </button>
+          </p>
+        )}
+        {!toInbox && items.isError && (
           <p role="alert">
             {items.error.message}{' '}
             <button className="button button-outline" onClick={() => void items.refetch()}>
@@ -351,7 +383,10 @@ export function CapturePage() {
           <section className="capture-review" aria-label="Capture review" ref={reviewRef} tabIndex={-1}>
             <p className="overline">REVIEW BEFORE SAVING</p>
             <h2>{reviewedItem.title}</h2>
-            <p>Destination: {chosen?.name || 'Unavailable collection'} · Unranked · No call</p>
+            <p>
+              Destination: {toInbox ? 'Inbox / unfiled' : chosen?.name || 'Unavailable collection'} · Unranked
+              · No call
+            </p>
             <dl className="incoming-preview">
               <dt>Type</dt>
               <dd>{reviewedItem.type || 'None'}</dd>
@@ -384,9 +419,8 @@ export function CapturePage() {
                 disabled={
                   save.isPending ||
                   !online ||
-                  !chosen ||
-                  items.isPending ||
-                  items.isError ||
+                  !destinationReady ||
+                  (toInbox ? inbox.isPending || inbox.isError : items.isPending || items.isError) ||
                   (!frozen && duplicate && !form.approvedDuplicate)
                 }
                 onClick={confirmSave}
@@ -420,7 +454,11 @@ export function CapturePage() {
         {status && <p role="status">{status}</p>}
         {saved && (
           <p>
-            <Link to={`/lists/${saved.listId}?focus=item:${saved.id}`}>Open saved record →</Link>
+            <Link
+              to={saved.listId ? `/lists/${saved.listId}?focus=item:${saved.id}` : `/inbox?focus=${saved.id}`}
+            >
+              {saved.listId ? 'Open saved record →' : 'Open Inbox find →'}
+            </Link>
           </p>
         )}
         <button className="button button-outline" disabled={save.isPending} onClick={() => setReset(true)}>
@@ -469,7 +507,7 @@ export function CapturePage() {
       {replace && (
         <ConfirmDialog
           title="Replace this capture draft?"
-          description="Copies the incoming name, source and text into this draft. Choose the destination again. Nothing is saved yet."
+          description="Copies the incoming name, source and text into this draft. The destination resets to Inbox. Nothing is saved yet."
           confirmLabel="Use incoming share"
           onConfirm={applyIncoming}
           onClose={() => setReplace(false)}
@@ -478,7 +516,7 @@ export function CapturePage() {
       {reset && (
         <ConfirmDialog
           title="Clear this capture draft?"
-          description="Removes this device’s draft. An unconfirmed request may already have saved; check the collection before starting again."
+          description="Removes this device’s draft. An unconfirmed request may already have saved; check Inbox and your collections before starting again."
           confirmLabel="Clear draft"
           onClose={() => setReset(false)}
           onConfirm={() => {

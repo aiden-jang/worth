@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { inboxEntry, inboxLimit } from './inbox';
 import { collectionTemplates } from './templates';
 import { itemInput, listInput, logInput, routineInput, workoutPatch } from './validation';
 import { collectionWorkspace } from './workspace';
@@ -10,7 +11,8 @@ const title = (max: number) => text(max).refine((value) => value.trim().length >
 const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.union([z.literal(1), z.literal(2)]),
+    inbox: z.array(inboxEntry).max(inboxLimit).default([]),
     collectionTemplates: collectionTemplates.default([]),
     exportedAt: z.string().datetime(),
     photosExcluded: z.boolean(),
@@ -105,6 +107,7 @@ export const archiveFile = z
       ...file.logs,
       ...file.workoutSessions,
       ...file.workoutRoutines,
+      ...file.inbox,
     ];
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
     if (new Set(records.map((r) => r.id)).size !== records.length)

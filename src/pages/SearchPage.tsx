@@ -6,10 +6,16 @@ import { api } from '../api';
 import { CabinetEmptyState } from '../components/CabinetEmptyState';
 import type { SearchResult } from '../shared/models';
 
-type SearchScope = 'all' | 'lists' | 'items' | 'logs' | 'exercises';
+type SearchScope = 'all' | 'lists' | 'items' | 'logs' | 'exercises' | 'inbox';
 
 function searchScope(value: string | null): SearchScope {
-  return value === 'lists' || value === 'items' || value === 'logs' || value === 'exercises' ? value : 'all';
+  return value === 'lists' ||
+    value === 'items' ||
+    value === 'logs' ||
+    value === 'exercises' ||
+    value === 'inbox'
+    ? value
+    : 'all';
 }
 
 export function SearchPage() {
@@ -31,8 +37,10 @@ export function SearchPage() {
   });
   const listResults = results.data?.results.filter((result) => result.kind === 'list') ?? [];
   const itemResults = results.data?.results.filter((result) => result.kind === 'item') ?? [];
+  const inboxResults = results.data?.results.filter((result) => result.kind === 'inbox') ?? [];
   const logResults = results.data?.results.filter((result) => result.kind === 'log') ?? [];
   const groups: { scope: Exclude<SearchScope, 'all'>; label: string; results: SearchResult[] }[] = [
+    { scope: 'inbox', label: 'Inbox', results: inboxResults },
     { scope: 'lists', label: 'Lists', results: listResults },
     { scope: 'items', label: 'Items', results: itemResults },
     { scope: 'logs', label: 'Logs', results: logResults },
@@ -110,6 +118,7 @@ export function SearchPage() {
                 [
                   ['all', 'All', results.data.results.length],
                   ['lists', 'Lists', listResults.length],
+                  ['inbox', 'Inbox', inboxResults.length],
                   ['items', 'Items', itemResults.length],
                   ['logs', 'Logs', logResults.length],
                   ['exercises', 'Exercises', exercises.length],
@@ -155,16 +164,20 @@ function SearchGroup({ label, results }: { label: string; results: SearchResult[
         <Link
           key={`${result.kind}-${result.id}`}
           to={
-            result.kind === 'list'
-              ? `/lists/${result.listId}`
-              : `/lists/${result.listId}?focus=${result.kind}:${result.id}`
+            result.kind === 'inbox'
+              ? `/inbox?focus=${result.id}`
+              : result.kind === 'list'
+                ? `/lists/${result.listId}`
+                : `/lists/${result.listId}?focus=${result.kind}:${result.id}`
           }
         >
           <span>
             <small>
               {result.kind === 'list'
                 ? `LIST / ${result.detail || 'ARCHIVE'}`
-                : `${result.listName} / ${result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}`}
+                : result.kind === 'inbox'
+                  ? 'INBOX / UNFILED'
+                  : `${result.listName} / ${result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}`}
               {result.listArchived && ' · ARCHIVED'}
             </small>
             <strong>{result.title}</strong>

@@ -11,7 +11,7 @@ export const incomingCapture = z
   .strict();
 export type IncomingCapture = z.infer<typeof incomingCapture>;
 export const emptyWebCapture = {
-  listId: '',
+  listId: 'inbox',
   title: '',
   type: '',
   note: '',
@@ -31,7 +31,12 @@ export const webCaptureDraft = z
     wantToTry: z.boolean(),
     approvedDuplicate: z.boolean(),
     review: z.boolean(),
-    frozen: z.object({ listId: z.string().uuid(), item: itemInput }).strict().nullable(),
+    frozen: z
+      .union([
+        z.object({ listId: z.string().uuid(), item: itemInput }).strict(),
+        z.object({ inbox: z.literal(true), item: itemInput }).strict(),
+      ])
+      .nullable(),
   })
   .strict();
 export type WebCaptureDraft = z.infer<typeof webCaptureDraft>;

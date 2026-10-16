@@ -1,4 +1,6 @@
-import { readTemplates } from './templates';
+import { mapInbox, type InboxRow } from './inbox';
+import { collectionTemplates } from '../src/shared/templates';
+import type { InboxEntry } from '../src/shared/inbox';
 import type { CollectionTemplate } from '../src/shared/templates';
 import { visitContext, hasVisitContext } from '../src/shared/visit-context';
 import type {
@@ -16,8 +18,9 @@ import { emptyItemContext, type ItemContext } from '../src/shared/item-context';
 const emptyContextJson = JSON.stringify(emptyItemContext);
 
 export type RecordExport = {
+  inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 1;
+  schemaVersion: 2;
   exportedAt: string;
   photosExcluded: true;
   lists: ListDetail[];
@@ -302,29 +305,42 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
 }
 
 export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
-  const [listResult, itemResult, logResult, workoutResult, routineResult] = await db.batch([
-    db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
-    db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
-    db
-      .prepare(
-        `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
+  const [listResult, itemResult, logResult, workoutResult, routineResult, inboxResult, templateResult] =
+    await db.batch([
+      db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
+      db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
+      db
+        .prepare(
+          `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
         FROM active_logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
-      )
-      .bind(ownerId),
-    db
-      .prepare(
-        'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY happened_on ASC, created_at ASC',
-      )
-      .bind(ownerId),
-    db
-      .prepare(
-        'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY created_at ASC',
-      )
-      .bind(ownerId),
-  ]);
+        )
+        .bind(ownerId),
+      db
+        .prepare(
+          'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY happened_on ASC, created_at ASC',
+        )
+        .bind(ownerId),
+      db
+        .prepare(
+          'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY created_at ASC',
+        )
+        .bind(ownerId),
+      db
+        .prepare(
+          'SELECT * FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL ORDER BY created_at DESC, id DESC',
+        )
+        .bind(ownerId),
+      db.prepare('SELECT templates_json FROM collection_template_sets WHERE owner_id = ?').bind(ownerId),
+    ]);
   return {
-    collectionTemplates: await readTemplates(db, ownerId),
-    schemaVersion: 1,
+    collectionTemplates: collectionTemplates.parse(
+      JSON.parse(
+        (templateResult.results[0] as { templates_json: string } | undefined)?.templates_json ?? '[]',
+      ),
+    ),
+    inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
+    // Older readers must reject Inbox backups instead of silently omitting a new record kind.
+    schemaVersion: 2,
     exportedAt: new Date().toISOString(),
     photosExcluded: true,
     lists: (listResult.results as ListRow[]).map((row) => ({

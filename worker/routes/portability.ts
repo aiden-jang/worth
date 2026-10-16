@@ -1,3 +1,6 @@
+import { inboxChanged, inboxGuard } from '../inbox';
+import { inboxLimit } from '../../src/shared/inbox';
+import { itemInput } from '../../src/shared/validation';
 import { appendTemplates, templateCapacityError } from '../templates';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
@@ -16,7 +19,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.items.length +
         records.logs.length +
         records.workoutSessions.length +
-        records.workoutRoutines.length >
+        records.workoutRoutines.length +
+        records.inbox.length >
         5000
     )
       throw new ApiError(
@@ -95,6 +99,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     if (c.req.header('X-Worth-Confirmation') !== 'delete-all-worth-data')
       throw new ApiError(400, 'CONFIRM_REQUIRED', 'Confirm deletion of all Worth data');
     await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM inbox_entries WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM inbox_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_sets WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -125,9 +131,14 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     const previous = await previousOperation(c.env.DB, key, owner, 'import', hash);
     if (previous) return c.json(previous, 201);
     const map = new Map(
-      [...file.lists, ...file.items, ...file.logs, ...file.workoutSessions, ...file.workoutRoutines].map(
-        (r) => [r.id, crypto.randomUUID()],
-      ),
+      [
+        ...file.lists,
+        ...file.items,
+        ...file.logs,
+        ...file.workoutSessions,
+        ...file.workoutRoutines,
+        ...file.inbox,
+      ].map((r) => [r.id, crypto.randomUUID()]),
     );
     const id = (source: string) => map.get(source)!;
     const result = { ids: file.lists.map((l) => id(l.id)) };
@@ -142,6 +153,14 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
           c.env.DB,
           owner,
           file.collectionTemplates.map((template) => ({ ...template, id: crypto.randomUUID() })),
+        ),
+      );
+    if (file.inbox.length)
+      statements.push(
+        inboxGuard(
+          c.env.DB,
+          'SELECT COUNT(*) + ? <= ? FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL',
+          [file.inbox.length, inboxLimit, owner],
         ),
       );
     // JSON row batches keep restore below D1's per-request query/parameter limits.
@@ -211,6 +230,17 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         }),
         created_at: l.updatedAt,
         updated_at: l.updatedAt,
+      })),
+    );
+    rows(
+      'inbox_entries',
+      file.inbox.map((entry) => ({
+        id: id(entry.id),
+        owner_id: owner,
+        payload_json: JSON.stringify(itemInput.parse(entry)),
+        revision: 0,
+        created_at: entry.createdAt,
+        updated_at: entry.updatedAt,
       })),
     );
     rows(
@@ -322,7 +352,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       const saved = await previousOperation(c.env.DB, key, owner, 'import', hash);
       if (saved) return c.json(saved, 201);
       templateCapacityError(error);
-      throw error;
+      inboxChanged(error);
     }
     return c.json(result, 201);
   });

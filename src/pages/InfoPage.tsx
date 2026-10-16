@@ -341,11 +341,12 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>Browser capture and quick picks</h2>
               <p>
                 <Link to="/capture">Web capture</Link> reviews a name, source and optional note before saving
-                to a collection you choose. Incoming shares never save automatically. If Worth appears in your
-                installed browser’s Share menu, send text or a link there; otherwise paste into Web capture.
-                Desktop bookmark instructions are on that page. Incoming content stays in this tab for review
-                and is excluded from the Accounts sign-in return link. Unused shares expire after 15 minutes;
-                applied drafts use the usual account-specific seven-day recovery.
+                to Inbox or a collection you choose. Inbox needs no collection and keeps finds unranked until
+                you file them. Incoming shares never save automatically. If Worth appears in your installed
+                browser’s Share menu, send text or a link there; otherwise paste into Web capture. Desktop
+                bookmark instructions are on that page. Incoming content stays in this tab for review and is
+                excluded from the Accounts sign-in return link. Unused shares expire after 15 minutes; applied
+                drafts use the usual account-specific seven-day recovery.
               </p>
               <p>
                 <Link to="/quick">Quick picks</Link> opens a chosen top-five shortlist or draws from your
@@ -353,6 +354,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 exact collection/group. Remember for app shortcuts saves only those choices for this account
                 on this device. These shortcuts create no public link and change no calls or ranks.
                 Installation and Share menu support vary by browser; manual web capture remains available.
+              </p>
+            </section>
+            <section>
+              <h2>Inbox</h2>
+              <p>
+                <Link to="/inbox">Inbox</Link> keeps up to 500 private, unfiled finds. Open it from navigation
+                without leaving your collection. Edit details, then choose a collection and File in
+                collection. Notes, context, dates and calls stay with the find; filing does not add a rank.
+                Exact name/type matches need a keep-separate choice. Photos and visits can be added after
+                filing.
+              </p>
+              <p>
+                Unfinished edits stay with this account on this device for seven days. If a filing reply is
+                lost, retry its fixed receipt, even after reloading. Deleted Inbox finds remain in Trash for
+                30 days and restore unfiled. Backups include active Inbox finds and give them fresh IDs when
+                restored. Choose a current collection when filing. Trash is excluded from backups.
               </p>
             </section>
             <section>

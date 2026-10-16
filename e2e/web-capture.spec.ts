@@ -60,8 +60,8 @@ test('an incoming browser share needs explicit use, destination review and save'
   expect(archive.writes).toHaveLength(0);
   await page.getByRole('button', { name: 'Use incoming share', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(incoming.title);
-  await expect(page.getByRole('button', { name: 'Review capture', exact: true })).toBeDisabled();
-  await page.getByRole('combobox', { name: 'Destination collection', exact: true }).selectOption(list.id);
+  await expect(page.getByRole('combobox', { name: 'Destination', exact: true })).toHaveValue('inbox');
+  await page.getByRole('combobox', { name: 'Destination', exact: true }).selectOption(list.id);
   await capture(page, 'draft', info.project.name);
   await page.getByRole('button', { name: 'Review capture', exact: true }).click();
   const review = page.getByRole('region', { name: 'Capture review', exact: true });
@@ -95,7 +95,7 @@ test('lost capture responses preserve the exact request and identity across relo
 }) => {
   await routeCapture(page, archive, true);
   await page.goto('/capture');
-  await page.getByRole('combobox', { name: 'Destination collection', exact: true }).selectOption(list.id);
+  await page.getByRole('combobox', { name: 'Destination', exact: true }).selectOption(list.id);
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Retry this once');
   await page.getByRole('button', { name: 'Review capture', exact: true }).click();
   await page.getByRole('button', { name: 'Save reviewed capture', exact: true }).click();
@@ -138,7 +138,7 @@ test('duplicate review, incoming replacement and offline drafts never save autom
 }) => {
   await routeCapture(page, archive);
   await page.goto('/capture');
-  await page.getByRole('combobox', { name: 'Destination collection', exact: true }).selectOption(list.id);
+  await page.getByRole('combobox', { name: 'Destination', exact: true }).selectOption(list.id);
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Coffee');
   await page.getByText('Source, note and type', { exact: false }).click();
   await page.getByRole('textbox', { name: 'Type', exact: true }).fill('Drink');
@@ -248,7 +248,7 @@ test('expired incoming shares are discarded and blocked storage leaves manual ca
   });
   await page.goto('/capture');
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Only a name');
-  await page.getByRole('combobox', { name: 'Destination collection', exact: true }).selectOption(list.id);
+  await page.getByRole('combobox', { name: 'Destination', exact: true }).selectOption(list.id);
   await expect(page.getByRole('button', { name: 'Review capture', exact: true })).toBeEnabled();
   expect(archive.writes).toHaveLength(0);
 });

@@ -19,3 +19,6 @@
   X-Robots-Tag: noindex, nofollow
 /quick
   X-Robots-Tag: noindex, nofollow
+
+/inbox
+  X-Robots-Tag: noindex, nofollow

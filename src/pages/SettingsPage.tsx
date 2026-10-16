@@ -66,8 +66,8 @@ export function SettingsPage() {
         throw new Error(
           `Could not read this Worth file: ${parsed.error.issues[0]?.message ?? 'Invalid records'}`,
         );
-      if (!parsed.data.lists.length && !parsed.data.collectionTemplates.length)
-        throw new Error('This file has no lists or templates to restore.');
+      if (!parsed.data.lists.length && !parsed.data.collectionTemplates.length && !parsed.data.inbox.length)
+        throw new Error('This file has no lists, Inbox finds or templates to restore.');
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -115,8 +115,8 @@ export function SettingsPage() {
         <p>Download your records, or a full backup with photos. Share links and Trash aren’t included.</p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists, 50 templates and 200 photos/covers. Keep downloaded
-          files somewhere private.
+          restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates and 200
+          photos/covers. Keep downloaded files somewhere private.
         </p>
         <div className="data-actions">
           <button
@@ -138,8 +138,8 @@ export function SettingsPage() {
       <section className="data-section">
         <h2>Bring it back.</h2>
         <p>
-          Restore a Worth file as new lists and templates. Review it first; your existing archive stays
-          intact.
+          Restore a Worth file as new lists, templates and unfiled Inbox finds. Review it first; your existing
+          archive stays intact.
         </p>
         <label className="button button-outline file-choice">
           Choose backup
@@ -157,7 +157,8 @@ export function SettingsPage() {
             <p>
               {file.lists.length} lists · {file.items.length} items · {file.logs.length} logs ·{' '}
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
-              {file.photos.length} photos · {file.collectionTemplates.length} templates
+              {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
+              Inbox finds
             </p>
             {!!file.lists.length && (
               <ul>
@@ -174,6 +175,22 @@ export function SettingsPage() {
                   <li key={template.id}>{template.name} / template</li>
                 ))}
               </ul>
+            )}
+            {!!file.inbox.length && (
+              <div>
+                <p>{file.inbox.length} unfiled Inbox finds will be restored with new private IDs.</p>
+                <details>
+                  <summary>Preview Inbox finds</summary>
+                  <ul aria-label="Inbox finds to restore">
+                    {file.inbox.map((entry) => (
+                      <li key={entry.id}>
+                        {entry.title}
+                        {entry.type ? ` / ${entry.type}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
             )}
             {file.photosExcluded && <p>Photos are not in this file and will not be restored.</p>}
             <p>
@@ -197,7 +214,7 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'} restored. Existing data was kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }
@@ -214,6 +231,7 @@ export function SettingsPage() {
       <section className="settings-section">
         <h2>Within reach.</h2>
         <p>
+          <Link to="/inbox">Inbox</Link> keeps unfiled finds until you choose a collection.{' '}
           <Link to="/capture">Web capture</Link> reviews a name, source link or shared text before saving.
           <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
           or home-screen link.
@@ -237,7 +255,10 @@ export function SettingsPage() {
       </section>
       <section className="data-section">
         <h2>Delete Worth data.</h2>
-        <p>Remove your lists, records, photos, routines and shared snapshots. Your shared login remains.</p>
+        <p>
+          Remove your lists, Inbox finds, records, photos, routines and shared snapshots. Your shared login
+          remains.
+        </p>
         <p className="data-hint">
           Download a copy first. This removes live Worth data; provider recovery copies and logs may remain
           under their retention practices.

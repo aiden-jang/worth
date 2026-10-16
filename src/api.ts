@@ -81,7 +81,7 @@ function json(method: string, body: unknown): RequestInit {
   return { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
 }
 
-export type TrashReference = { kind: 'list' | 'item' | 'log'; id: string };
+export type TrashReference = { kind: 'list' | 'item' | 'log' | 'inbox'; id: string };
 export type ArchiveAction = import('zod').infer<typeof import('./shared/validation').archiveActionInput>;
 export function announceTrash(entries: TrashReference[]) {
   if (typeof window !== 'undefined')
@@ -92,6 +92,24 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  inbox: () => request<{ entries: import('./shared/inbox').InboxEntry[] }>('/inbox'),
+  inboxEntry: (id: string) => request<{ entry: import('./shared/inbox').InboxEntry }>(`/inbox/${id}`),
+  createInbox: (item: import('./shared/inbox').InboxPayload, key: string) =>
+    request<{ entry: import('./shared/inbox').InboxEntry }>('/inbox', {
+      ...json('POST', { item }),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  updateInbox: (id: string, item: import('./shared/inbox').InboxPayload, expectedRevision: number) =>
+    request<{ entry: import('./shared/inbox').InboxEntry }>(
+      `/inbox/${id}`,
+      json('PUT', { item, expectedRevision }),
+    ),
+  deleteInbox: (id: string) => trashRecord('inbox', id, `/inbox/${id}`),
+  fileInbox: (id: string, targetListId: string, expectedRevision: number, key: string) =>
+    request<{ item: Item }>(`/inbox/${id}/file`, {
+      ...json('POST', { targetListId, expectedRevision }),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
   templates: () => request<{ templates: import('./shared/templates').CollectionTemplate[] }>('/templates'),
   createTemplate: (body: import('./shared/templates').CollectionTemplate) =>
     request<{ template: import('./shared/templates').CollectionTemplate }>('/templates', json('POST', body)),
@@ -108,8 +126,12 @@ export const api = {
       json('PUT', { workspace, expectedRevision }),
     ),
   trash: () => request<{ entries: TrashEntry[] }>('/trash'),
-  restoreTrash: (entries: TrashReference[]) =>
-    request<{ restored: number }>('/trash/restore', json('POST', { entries })),
+  restoreTrash: async (entries: TrashReference[]) => {
+    const result = await request<{ restored: number }>('/trash/restore', json('POST', { entries }));
+    if (typeof window !== 'undefined')
+      window.dispatchEvent(new CustomEvent('worth:restored', { detail: entries }));
+    return result;
+  },
   mergedItems: (id: string) => request<{ items: Item[] }>(`/items/${id}/merged`),
   separateItem: (id: string, sourceId: string) =>
     request<{ item: Item }>(`/items/${id}/separate/${sourceId}`, json('POST', {})),
