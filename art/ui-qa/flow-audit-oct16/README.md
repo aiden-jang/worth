@@ -26,7 +26,7 @@ Wherever’s join dialog, Mrrp’s entry, iguess’s information pages, Accounts
 
 **Live issue:** iguess’s `/play-status` answered `{"vision":"unavailable"}`, matching the page’s retry result. Check the game server’s `AI_WORKER_URL` and the AI Worker’s health, provider configuration and shared secret before treating live guessing as ready. No production secrets or deployment settings were changed, and no paid vision call was made.
 
-Verification and password-reset links were followed through Accounts’ local dev-mail log. A fresh live verification/reset email was not sent, so current delivery to a real mailbox is unverified. The existing domain-mail setup was not changed.
+Verification and password-reset links were followed through Accounts’ local dev-mail log. A live follow-up requested one approved password-reset email, confirmed its arrival in the intended Gmail inbox, and opened the reset form through its link. No password was entered or changed, and no reset was submitted. Live verification-email delivery remains untested. The existing domain-mail setup was not changed.
 
 ## Measurements
 
@@ -69,7 +69,7 @@ These are isolated local data and browser emulation, inspected at a 390px phone 
 1. Enter a long message, expense description and exercise set with the real keyboard. Rotate with it open; check that Save, Send and the chat composer stay reachable and that focus does not zoom the page unexpectedly.
 2. Open and cancel native sharing for a garden, room link and exported image. Return to the app and confirm the content remains, cancellation does not claim delivery, and the fallback link can be selected.
 3. Background Safari during a round, rest timer and scheduled garden; return and confirm the displayed time and connection state recover.
-4. Open a shared invite and an account email link from another app. Confirm the destination survives sign-in. Verify a newly requested email arrives in the intended inbox.
+4. Open a shared invite and an account email link from another app on the iPhone. Confirm the destination survives sign-in. Recovery-email delivery to Gmail and its desktop-browser link were verified separately; the native phone handoff still needs this check.
 5. Check Safari’s password manager and, if desired, real passkey enrollment. Automated tests use synthetic accounts and do not establish native credential UI behavior.
 
 No physical phone was available to this review. These checks remain unverified rather than being inferred from browser emulation.
