@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 // Account and list scope prevent a shared device from restoring someone else's draft.
 export function useDraft<T>(name: string, initial: T, validate: (value: unknown) => value is T) {
@@ -24,10 +24,11 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
   const savedId = useRef<string | null>(typeof loaded?.savedId === 'string' ? loaded.savedId : null);
   const cleared = useRef(false);
   const baseline = useRef(initial);
+  const initialForm = useRef(initial);
   const [status, setStatus] = useState(loaded ? 'Draft restored from this device.' : '');
   const latest = useRef(form);
   latest.current = form;
-  function persist() {
+  const persist = useCallback(() => {
     if (!key || cleared.current) return;
     try {
       localStorage.setItem(
@@ -43,17 +44,17 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
     } catch {
       setStatus('Draft could not be saved on this device. Keep this page open.');
     }
-  }
+  }, [key]);
   useEffect(() => {
     if (loaded && JSON.stringify(form) === JSON.stringify(loaded.form) && !savedId.current) return;
     if (cleared.current && JSON.stringify(form) === JSON.stringify(baseline.current)) return;
-    if (JSON.stringify(form) === JSON.stringify(initial) && !loaded) return;
+    if (JSON.stringify(form) === JSON.stringify(initialForm.current) && !loaded) return;
     cleared.current = false;
     persist();
-  }, [form]);
+  }, [form, loaded, persist]);
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
-      if (!cleared.current && JSON.stringify(latest.current) !== JSON.stringify(initial)) {
+      if (!cleared.current && JSON.stringify(latest.current) !== JSON.stringify(initialForm.current)) {
         persist();
         event.preventDefault();
       }
@@ -67,14 +68,16 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
       window.removeEventListener('beforeunload', leave);
       document.removeEventListener('visibilitychange', hide);
     };
-  }, [key]);
+  }, [key, persist]);
   function clear(next: T = latest.current) {
     baseline.current = next;
     cleared.current = true;
     if (key) {
       try {
         localStorage.removeItem(key);
-      } catch {}
+      } catch {
+        /* Device storage may be unavailable or blocked. */
+      }
     }
     setStatus('');
   }

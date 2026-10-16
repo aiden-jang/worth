@@ -1,6 +1,6 @@
+import { X } from '@phosphor-icons/react';
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from '@phosphor-icons/react';
 
 export function ConfirmDialog({
   eyebrow = 'CONFIRM',
@@ -69,7 +69,11 @@ export function ConfirmDialog({
           </button>
         </header>
         <p id={descriptionId}>{description}</p>
-        {error && <p className="form-error">{error}</p>}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="confirm-actions">
           <button
             className="button button-outline"

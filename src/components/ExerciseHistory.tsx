@@ -1,14 +1,14 @@
-import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowRight, X } from '@phosphor-icons/react';
-import type { Log, WorkoutSession } from '../shared/models';
+import { useEffect, useId, useRef, useState } from 'react';
+import { formatDate } from '../format';
 import {
   exerciseDirectory,
   exerciseHistory,
   exerciseValue,
   type ExerciseMetric,
 } from '../shared/exercise-history';
+import type { Log, WorkoutSession } from '../shared/models';
 import { formatActivityMetric } from '../shared/workouts';
-import { formatDate } from '../format';
 
 export function ExerciseDirectory({
   logs,
@@ -95,8 +95,9 @@ export function ExerciseHistory({
   });
   if (current.length) paths.push(current.join(' '));
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => dialog.current?.close();
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   function select(log: Log) {
     setSelectedId(log.id);

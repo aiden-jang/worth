@@ -1,15 +1,15 @@
-import { usePageTitle } from '../hooks/usePageTitle';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
-import type { Log, WorkoutSession } from '../shared/models';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { formatDate, today } from '../format';
-import { formatActivityMetric } from '../shared/workouts';
-import { RestTimer } from './RestTimer';
-import { ExerciseLineup } from './ExerciseLineup';
 import { useDraft } from '../hooks/useDraft';
+import { usePageTitle } from '../hooks/usePageTitle';
+import type { Log, WorkoutSession } from '../shared/models';
+import { formatActivityMetric } from '../shared/workouts';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ExerciseLineup } from './ExerciseLineup';
+import { RestTimer } from './RestTimer';
 
 export function WorkoutSessions({
   listId,
@@ -319,8 +319,9 @@ function WorkoutEditor({
     [confirmRemove, setConfirmRemove] = useState(false);
   const changed = JSON.stringify(form) !== JSON.stringify(initial);
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => dialog.current?.close();
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   function refresh() {
     for (const key of [

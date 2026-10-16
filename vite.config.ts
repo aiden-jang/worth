@@ -20,7 +20,9 @@ export default defineConfig(({ mode, command }) => ({
   server: { port: 34300 },
   test: {
     environment: 'jsdom',
+    maxWorkers: 2,
+    hookTimeout: 30_000,
     setupFiles: ['./tests/setup.ts'],
-    exclude: ['node_modules/**', 'dist/**'],
+    exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
   },
 }));

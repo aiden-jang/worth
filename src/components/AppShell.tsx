@@ -44,9 +44,13 @@ export function AppShell({
   const dialog = useRef<HTMLDialogElement>(null);
   const shortcutsDialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
-  const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : window.localStorage.getItem(quickCaptureStorageKey),
-  );
+  const [rememberedListId, setRememberedListId] = useState<string | null>(() => {
+    try {
+      return window.localStorage.getItem(quickCaptureStorageKey);
+    } catch {
+      return null;
+    }
+  });
   const [pickerQuery, setPickerQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
@@ -82,7 +86,11 @@ export function AppShell({
   const listScope = new URLSearchParams(location.search).get('kind');
 
   const rememberList = useCallback((listId: string) => {
-    window.localStorage.setItem(quickCaptureStorageKey, listId);
+    try {
+      window.localStorage.setItem(quickCaptureStorageKey, listId);
+    } catch {
+      /* Quick capture still works without device storage. */
+    }
     setRememberedListId(listId);
   }, []);
 

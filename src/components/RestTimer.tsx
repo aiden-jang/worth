@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 export function RestTimer({ workoutId }: { workoutId: string }) {
   const owner = useQueryClient().getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
   const key = `worth:rest:${owner}:${workoutId}`;
@@ -14,7 +14,9 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     const sync = () => {
       try {
         setEnd(Number(localStorage.getItem(key)) || 0);
-      } catch {}
+      } catch {
+        /* Device storage may be unavailable or blocked. */
+      }
     };
     window.addEventListener('storage', sync);
     window.addEventListener('worth:rest-changed', sync);
@@ -37,7 +39,9 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     try {
       if (value) localStorage.setItem(key, String(value));
       else localStorage.removeItem(key);
-    } catch {}
+    } catch {
+      /* Device storage may be unavailable or blocked. */
+    }
     window.dispatchEvent(new Event('worth:rest-changed'));
   }
   return (

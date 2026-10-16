@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import app from '../worker/index';
+import type { Item, ListDetail, ListSummary, WorkoutRoutine, WorkoutSession } from '../src/shared/models';
+import type { ArchiveFile } from '../src/shared/portability';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -12,6 +14,9 @@ vi.mock('@aidenjang/auth-client', () => ({
       : { state: 'signed-out' };
   },
 }));
+
+// Real D1 operations need more headroom than the default 5s component-test budget.
+vi.setConfig({ testTimeout: 30_000 });
 
 let platform: PlatformProxy<Env>;
 
@@ -1018,7 +1023,9 @@ test('product migration preserves earlier visits without marking all history act
 test('backup restores relationships and photos privately, and all-data deletion is owner scoped', async () => {
   const owner = 'portable';
   const collection = (
-    (await (await call('/lists', owner, 'POST', { name: 'Archive cup', kind: 'collection' })).json()) as any
+    (await (await call('/lists', owner, 'POST', { name: 'Archive cup', kind: 'collection' })).json()) as {
+      list: ListDetail;
+    }
   ).list;
   const item = (
     (await (
@@ -1028,7 +1035,7 @@ test('backup restores relationships and photos privately, and all-data deletion 
         revisitQueued: true,
         note: 'Keep this note',
       })
-    ).json()) as any
+    ).json()) as { item: Item }
   ).item;
   await call(`/lists/${collection.id}/rank`, owner, 'PUT', { itemIds: [item.id], expectedRevision: 0 });
   await call(`/lists/${collection.id}/logs`, owner, 'POST', {
@@ -1037,12 +1044,14 @@ test('backup restores relationships and photos privately, and all-data deletion 
     note: 'Second cup',
   });
   const activity = (
-    (await (await call('/lists', owner, 'POST', { name: 'Gym', kind: 'activity' })).json()) as any
+    (await (await call('/lists', owner, 'POST', { name: 'Gym', kind: 'activity' })).json()) as {
+      list: ListDetail;
+    }
   ).list;
   const routine = (
     (await (
       await call(`/lists/${activity.id}/routines`, owner, 'POST', { title: 'A', exercises: ['Row'] })
-    ).json()) as any
+    ).json()) as { routine: WorkoutRoutine }
   ).routine;
   const workout = (
     (await (
@@ -1051,7 +1060,7 @@ test('backup restores relationships and photos privately, and all-data deletion 
         happenedOn: '2026-10-10',
         routineId: routine.id,
       })
-    ).json()) as any
+    ).json()) as { workout: WorkoutSession }
   ).workout;
   await call(`/lists/${activity.id}/logs`, owner, 'POST', {
     title: 'Row',
@@ -1071,7 +1080,7 @@ test('backup restores relationships and photos privately, and all-data deletion 
     .run();
   const backupResponse = await call('/export/backup', owner);
   expect(backupResponse.status).toBe(200);
-  const backup = (await backupResponse.json()) as any;
+  const backup = (await backupResponse.json()) as ArchiveFile;
   expect(backup.photosExcluded).toBe(false);
   expect(backup.photos[0].data).toBe(photo.toString('base64'));
   const key = crypto.randomUUID();
@@ -1093,18 +1102,18 @@ test('backup restores relationships and photos privately, and all-data deletion 
     );
   const first = await restore();
   expect(first.status).toBe(201);
-  const result = (await first.json()) as any;
+  const result = (await first.json()) as { ids: string[] };
   expect(result.ids).toHaveLength(2);
   expect((await restore()).status).toBe(201);
-  const restored = (await (await call('/export/records', 'recipient')).json()) as any;
+  const restored = (await (await call('/export/records', 'recipient')).json()) as ArchiveFile;
   expect(restored.lists).toHaveLength(2);
   expect(restored.items[0].decision).toBe('meh');
   expect(restored.items[0].revisitQueued).toBe(true);
   expect(restored.items[0].note).toBe('Keep this note');
-  expect(restored.lists.find((l: any) => l.kind === 'collection').rankedIds).toEqual([restored.items[0].id]);
-  expect(restored.logs.find((g: any) => g.title === 'Row').workoutId).toBe(restored.workoutSessions[0].id);
-  expect(restored.logs.find((g: any) => g.title === 'Row').exerciseSets).toEqual([{ reps: 8, weight: 40 }]);
-  expect(restored.items[0].hasPhoto).toBe(true);
+  expect(restored.lists.find((l) => l.kind === 'collection')?.rankedIds).toEqual([restored.items[0].id]);
+  expect(restored.logs.find((g) => g.title === 'Row')?.workoutId).toBe(restored.workoutSessions[0].id);
+  expect(restored.logs.find((g) => g.title === 'Row')?.exerciseSets).toEqual([{ reps: 8, weight: 40 }]);
+  expect((restored.items[0] as (typeof restored.items)[number] & { hasPhoto: boolean }).hasPhoto).toBe(true);
   expect(
     (await restore({ ...backup, items: [{ ...backup.items[0], listId: crypto.randomUUID() }] }, 'invalid'))
       .status,
@@ -1125,8 +1134,10 @@ test('backup restores relationships and photos privately, and all-data deletion 
     platform.ctx,
   );
   expect(deleted.status).toBe(204);
-  expect(((await (await call('/lists', 'recipient')).json()) as any).lists).toHaveLength(0);
-  expect(((await (await call('/lists', owner)).json()) as any).lists).toHaveLength(2);
+  expect(((await (await call('/lists', 'recipient')).json()) as { lists: ListSummary[] }).lists).toHaveLength(
+    0,
+  );
+  expect(((await (await call('/lists', owner)).json()) as { lists: ListSummary[] }).lists).toHaveLength(2);
   expect(
     await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM item_photos WHERE owner_id = ?')
       .bind('recipient')
@@ -1142,7 +1153,9 @@ test('backup restores relationships and photos privately, and all-data deletion 
 test('batch retry keys are atomic and reject changed payloads', async () => {
   const owner = 'batches';
   const list = (
-    (await (await call('/lists', owner, 'POST', { name: 'Batch', kind: 'collection' })).json()) as any
+    (await (await call('/lists', owner, 'POST', { name: 'Batch', kind: 'collection' })).json()) as {
+      list: ListDetail;
+    }
   ).list;
   const key = crypto.randomUUID();
   const create = (titles = ['One', 'Two']) =>
@@ -1164,11 +1177,13 @@ test('batch retry keys are atomic and reject changed payloads', async () => {
   const [a, b] = await Promise.all([create(), create()]);
   expect(a.status).toBe(201);
   expect(b.status).toBe(201);
-  expect(((await a.json()) as any).items.map((i: any) => i.id)).toEqual(
-    ((await b.json()) as any).items.map((i: any) => i.id),
+  expect(((await a.json()) as { items: Item[] }).items.map((i) => i.id)).toEqual(
+    ((await b.json()) as { items: Item[] }).items.map((i) => i.id),
   );
   expect((await create(['Changed'])).status).toBe(409);
-  expect(((await (await call(`/lists/${list.id}/items`, owner)).json()) as any).items).toHaveLength(2);
+  expect(
+    ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items,
+  ).toHaveLength(2);
 });
 
 test('authenticated write limits return retry information', async () => {
@@ -1234,10 +1249,12 @@ test('restore validates photos before commit and batches a large archive without
     'invalidphoto',
   );
   expect(invalid.status).toBe(415);
-  expect(((await (await call('/lists', 'invalidphoto')).json()) as any).lists).toHaveLength(0);
+  expect(
+    ((await (await call('/lists', 'invalidphoto')).json()) as { lists: ListSummary[] }).lists,
+  ).toHaveLength(0);
   const response = await send(file, 'largerestore');
   expect(response.status).toBe(201);
-  const restored = (await (await call('/export/records', 'largerestore')).json()) as any;
+  const restored = (await (await call('/export/records', 'largerestore')).json()) as ArchiveFile;
   expect(restored.items).toHaveLength(400);
   expect(restored.items[0].note).toBe(file.items[0].note);
   expect(restored.lists).toHaveLength(1);

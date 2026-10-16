@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
-import { cleanDeviceData } from '../shared/device-data';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
+import { cleanDeviceData } from '../shared/device-data';
+import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
 export function SettingsPage() {
   const client = useQueryClient();
   const owner = client.getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
@@ -176,7 +176,9 @@ export function SettingsPage() {
                     if (retryStorage.current) {
                       try {
                         localStorage.removeItem(retryStorage.current);
-                      } catch {}
+                      } catch {
+                        /* Device storage may be unavailable or blocked. */
+                      }
                     }
                     setFile(null);
                     setStatus(

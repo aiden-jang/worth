@@ -28,3 +28,10 @@ export async function previousOperation(
     );
   return JSON.parse(row.result_json) as { ids: string[] };
 }
+
+export function creationId(key?: string): string {
+  if (!key) return crypto.randomUUID();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(key))
+    throw new ApiError(400, 'INVALID_CAPTURE_KEY', 'Invalid capture key');
+  return key;
+}

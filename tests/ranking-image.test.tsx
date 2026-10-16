@@ -7,11 +7,18 @@ import { renderRankingImage, saveRankingImage } from '../src/shared/ranking-imag
 
 vi.mock('../src/shared/ranking-image', () => ({ saveRankingImage: vi.fn(), renderRankingImage: vi.fn() }));
 const showModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+const close = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
 beforeEach(() => {
   vi.mocked(saveRankingImage).mockReset().mockResolvedValue(undefined);
   vi.mocked(renderRankingImage)
     .mockReset()
     .mockResolvedValue(new Blob(['image'], { type: 'image/png' }));
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
     configurable: true,
     value: function (this: HTMLDialogElement) {
@@ -23,6 +30,8 @@ afterEach(() => {
   cleanup();
   Reflect.deleteProperty(navigator, 'share');
   Reflect.deleteProperty(navigator, 'canShare');
+  if (close) Object.defineProperty(HTMLDialogElement.prototype, 'close', close);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
   if (showModal) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', showModal);
   else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
 });
@@ -120,14 +129,15 @@ test('native images are prepared with public fields before sharing, and cancelli
 test('a denied clipboard write offers recovery and retry without losing the link', async () => {
   vi.stubGlobal(
     'fetch',
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({ id: 'share', token: 'local-token', share: {}, expiresAt: Date.now() + 1000 }),
-          { headers: { 'content-type': 'application/json' } },
+    vi.fn((_path, init) =>
+      Promise.resolve(
+        Response.json(
+          init?.method === 'POST'
+            ? { id: 'share', token: 'local-token', share: {}, expiresAt: Date.now() + 1000 }
+            : { shares: [] },
         ),
       ),
+    ),
   );
   const copy = vi
     .fn()

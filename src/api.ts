@@ -1,8 +1,7 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
-  WorkoutSession,
-  WorkoutRoutine,
   CollectionArt,
+  ArchivePatterns,
   ExerciseSet,
   Item,
   ItemDecision,
@@ -13,6 +12,8 @@ import type {
   PublicShare,
   SearchResult,
   ShareSummary,
+  WorkoutRoutine,
+  WorkoutSession,
 } from './shared/models';
 
 export class RequestError extends Error {
@@ -26,16 +27,40 @@ export class RequestError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`/api${path}`, { credentials: 'include', ...init });
-  if (response.status === 204) return undefined as T;
-  const data = (await response.json().catch(() => null)) as { error?: string; message?: string } | null;
-  if (!response.ok)
+  const timeout = AbortSignal.timeout(30_000);
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+  let response: Response;
+  let data: unknown;
+  try {
+    response = await fetch(`/api${path}`, { credentials: 'include', ...init, signal });
+    if (response.status === 204) return undefined as T;
+    data = await response.json().catch((error: unknown) => {
+      if (signal.aborted) throw error;
+      return null;
+    });
+  } catch (error) {
+    // Search cancellation belongs to the caller, so React Query can discard it quietly.
+    if (init.signal?.aborted) throw error;
+    throw new RequestError(
+      0,
+      timeout.aborted ? 'TIMEOUT' : 'NETWORK_ERROR',
+      timeout.aborted
+        ? 'This is taking too long. Check whether your change was saved before trying again.'
+        : 'Couldn’t connect to Worth. Check your connection and try again.',
+    );
+  }
+  const envelope = data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+  if (!response.ok) {
+    const failure = envelope as { error?: unknown; message?: unknown } | null;
     throw new RequestError(
       response.status,
-      data?.error ?? 'REQUEST_FAILED',
-      data?.message ?? `Request failed (${response.status})`,
+      typeof failure?.error === 'string' ? failure.error : 'REQUEST_FAILED',
+      typeof failure?.message === 'string' ? failure.message : `Request failed (${response.status})`,
     );
-  return data as T;
+  }
+  if (!envelope)
+    throw new RequestError(502, 'INVALID_RESPONSE', 'Worth returned an unreadable response. Try again.');
+  return envelope as T;
 }
 
 function json(method: string, body: unknown): RequestInit {
@@ -57,7 +82,7 @@ export const api = {
     }),
   me: () => request<{ user: AuthUser | null }>('/me'),
   overview: () => request<Overview>('/overview'),
-  patterns: () => request<import('./shared/models').ArchivePatterns>('/patterns'),
+  patterns: () => request<ArchivePatterns>('/patterns'),
   lists: () => request<{ lists: ListSummary[] }>('/lists'),
   list: (id: string) => request<{ list: ListDetail }>(`/lists/${id}`),
   createList: (body: {

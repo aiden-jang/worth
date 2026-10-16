@@ -2,15 +2,16 @@
 
 ## Automatic release
 
-Pushes to main run formatting, tests, type checks and a production build, apply D1
-migrations, and deploy. The user confirmed the GitHub repository's Cloudflare token
+Pushes to main run formatting, ESLint/hooks, unused-code detection, unit/component/API
+tests, type checks, a production build and desktop/phone browser tests. Both check jobs
+must pass before CI applies D1 migrations and deploys the verified build artifact. The user confirmed the GitHub repository's Cloudflare token
 is configured. `scripts/verify-live.mjs` then checks health, signed-out account state,
 private-export access, browser assets, policy route availability, static HTML
 security headers, and no-index headers on public share URLs. A failed smoke check
 fails the deployment job; it does not roll back an already-applied migration.
 
 The smoke script does not sign in or create production records. Browser interaction
-checks use isolated local state or intercepted APIs in `art/ui-qa/completion`.
+checks use intercepted synthetic APIs in `e2e/`; historical captures remain in `art/ui-qa/`.
 A real signed-in phone test is still required after release.
 
 ## Operational protection
@@ -29,9 +30,8 @@ A real signed-in phone test is still required after release.
 
 ## Recovery procedure
 
-Cloudflare documents D1 Time Travel history of seven days on Workers Free and
-30 days on Workers Paid. Verify the actual account plan and available bookmarks
-before relying on it: [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
+Verify the actual Cloudflare account plan, D1 Time Travel retention and available
+bookmarks before relying on recovery: [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
 This repository does not prove that a production recovery drill has succeeded.
 
 For an incident:
@@ -64,14 +64,14 @@ The records-only export remains available for larger archives; it excludes photo
 
 Worth deletion is implemented inside Worth and leaves the shared account and other
 apps alone. The published shared accounts policy offers account deletion by contact;
-its source/deletion integration was not available in this workspace. Do not claim
+Worth has no automatic shared-account deletion cascade. Do not claim
 that shared account deletion automatically cascades to Worth. For a request to
 remove both, arrange Worth data removal and shared-account removal, and verify both.
 Do not email anyone or delete their data merely as a verification exercise.
 
 ## Remaining external verification
 
-- Latest GitHub run, deployment and migrations for this commit (not pushed by this task).
+- Confirm the exact merged commit has passing core/browser/security checks, deployment and live smoke checks.
 - Real signed-in phone session, session expiration, photos, export and share revocation.
 - Authenticated Cloudflare plan, recovery availability, alerting and edge abuse controls.
 - Shared account deletion integration; product copy and contact flow explicitly avoid assuming it.

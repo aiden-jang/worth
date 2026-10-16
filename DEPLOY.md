@@ -16,7 +16,16 @@ The auth service already allows HTTPS return URLs under `*.aidenjang.com` and sh
 
 ## Routine deploys
 
-`pnpm run deploy` runs the full check, applies remote D1 migrations, then deploys the built Worker. It changes production data, so use it only when you mean to ship. The GitHub workflow checks in one job and then runs `pnpm run deploy:only` on every successful push to `main`.
+Merging a checked PR to `main` is the normal release path. CI runs core checks,
+builds once, browser-tests that artifact, then applies pending migrations and deploys
+the same complete `dist/` output. The deploy job is serialized and runs a read-only
+live smoke check afterward. A failed check blocks deployment.
+
+For an intentional operator release, `pnpm run deploy` runs the full local check,
+applies remote D1 migrations, then deploys. `pnpm run deploy:only` builds and releases
+without the full checks. `pnpm run release:built` requires an already verified complete
+build and runs migrations plus Wrangler with `dist/worth/wrangler.json`; it is used by CI.
+Use `pnpm run deploy`, not pnpm's unrelated built-in `pnpm deploy` command.
 
 Before the first automated deployment, add these repository secrets in GitHub Actions:
 

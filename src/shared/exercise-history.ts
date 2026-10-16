@@ -1,7 +1,7 @@
 import type { Log, WorkoutSession } from './models';
 
-export const exerciseNameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-export const isExerciseEntry = (log: Log): boolean =>
+const exerciseNameKey = (name: string): string => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+const isExerciseEntry = (log: Log): boolean =>
   !log.itemId && Boolean(log.exerciseSets?.length || log.sets || log.reps);
 
 export function exerciseHistory(

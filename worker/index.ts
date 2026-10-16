@@ -3,14 +3,17 @@ import { Hono } from 'hono';
 import type { AppEnv } from './context';
 import { ApiError } from './data';
 import { assertSameOrigin, securityHeaders } from './http';
-import { registerListRoutes } from './routes/lists';
-import { registerRecordRoutes } from './routes/records';
-import { registerShareRoutes, registerPublicShareRoute } from './routes/shares';
-import { registerPhotoRoutes } from './routes/photos';
-import { registerRoutineRoutes } from './routes/routines';
-import { registerWorkoutRoutes } from './routes/workouts';
-import { registerPortabilityRoutes } from './routes/portability';
 import { registerExportRoutes } from './routes/export';
+import { registerItemRoutes } from './routes/items';
+import { registerListRoutes } from './routes/lists';
+import { registerLogRoutes } from './routes/logs';
+import { registerOverviewRoutes } from './routes/overview';
+import { registerPhotoRoutes } from './routes/photos';
+import { registerPortabilityRoutes } from './routes/portability';
+import { registerRoutineRoutes } from './routes/routines';
+import { registerSearchRoutes } from './routes/search';
+import { registerPublicShareRoute, registerShareRoutes } from './routes/shares';
+import { registerWorkoutRoutes } from './routes/workouts';
 
 const app = new Hono<AppEnv>();
 const publicApi = new Hono<AppEnv>();
@@ -63,7 +66,10 @@ privateApi.use('*', async (c, next) => {
 });
 
 registerListRoutes(privateApi);
-registerRecordRoutes(privateApi);
+registerItemRoutes(privateApi);
+registerLogRoutes(privateApi);
+registerOverviewRoutes(privateApi);
+registerSearchRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
 registerExportRoutes(privateApi);

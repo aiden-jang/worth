@@ -8,45 +8,84 @@ on:
 permissions:
   contents: read
 
+# Keep releases serialized, while superseded pull-request checks stop promptly.
+concurrency:
+  group: worth-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
-        with:
-          version: 9.15.0
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run check
+      - run: pnpm run check:core
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worth-build
+          path: dist/
+          retention-days: 3
+          if-no-files-found: error
+
+  browser-check:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: worth-build
+          path: dist/
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: worth-browser-failure
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
   deploy:
-    needs: check
+    needs: [check, browser-check]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     concurrency:
       group: deploy-worth
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
-        with:
-          version: 9.15.0
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: worth-build
+          path: dist/
       - name: Verify Cloudflare deployment credentials
-        run: |
-          test -n "$CLOUDFLARE_API_TOKEN"
+        run: test -n "$CLOUDFLARE_API_TOKEN"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      - run: pnpm run deploy:only
+      - run: pnpm run release:built
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       - name: Verify live release
-        run: node scripts/verify-live.mjs
+        run: pnpm run verify:live

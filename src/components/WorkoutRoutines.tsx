@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
-import type { WorkoutRoutine, WorkoutSession } from '../shared/models';
 import { today } from '../format';
-import { ExerciseLineup } from './ExerciseLineup';
 import { useDraft } from '../hooks/useDraft';
+import type { WorkoutRoutine, WorkoutSession } from '../shared/models';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ExerciseLineup } from './ExerciseLineup';
 
 export type RoutineDraft = { title: string; exercises: string[] };
 export function WorkoutRoutines({
@@ -136,8 +136,9 @@ function RoutineEditor({
     [confirmRemove, setConfirmRemove] = useState(false);
   const changed = JSON.stringify(form) !== JSON.stringify(initial);
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => dialog.current?.close();
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   function refresh() {
     for (const key of [['routines', listId], ['workouts', listId], ['list', listId], ['lists'], ['overview']])
