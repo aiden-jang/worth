@@ -1,5 +1,5 @@
 import { X } from '@phosphor-icons/react';
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export function ConfirmDialog({
@@ -12,6 +12,7 @@ export function ConfirmDialog({
   error,
   onConfirm,
   onClose,
+  children,
 }: {
   eyebrow?: string;
   title: string;
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   error?: string;
   onConfirm: () => void;
   onClose: () => void;
+  children?: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -69,6 +71,7 @@ export function ConfirmDialog({
           </button>
         </header>
         <p id={descriptionId}>{description}</p>
+        {children}
         {error && (
           <p className="form-error" role="alert">
             {error}

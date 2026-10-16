@@ -79,6 +79,17 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  workspace: (listId: string) =>
+    request<import('./shared/workspace').WorkspaceResponse>(`/lists/${listId}/workspace`),
+  updateWorkspace: (
+    listId: string,
+    workspace: import('./shared/workspace').CollectionWorkspace,
+    expectedRevision: number,
+  ) =>
+    request<import('./shared/workspace').WorkspaceResponse>(
+      `/lists/${listId}/workspace`,
+      json('PUT', { workspace, expectedRevision }),
+    ),
   trash: () => request<{ entries: TrashEntry[] }>('/trash'),
   restoreTrash: (entries: TrashReference[]) =>
     request<{ restored: number }>('/trash/restore', json('POST', { entries })),

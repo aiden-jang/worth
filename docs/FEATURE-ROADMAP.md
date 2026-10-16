@@ -5,7 +5,7 @@ rankings and revisit plans. New features should remain optional.
 
 ## First release: archive tools
 
-Implemented in this feature branch; GitHub PR and release checks establish shipping status.
+Shipped in commit `4a1e9e8` on main. CI, CodeQL, migration, deployment and live checks passed.
 See [behavior and limits](ARCHIVE-TOOLS.md) and [visual verification](../art/ui-qa/archive-tools/README.md).
 
 - Want to try in capture, details, selection actions and browsing, with local draft recovery.
@@ -16,7 +16,10 @@ See [behavior and limits](ARCHIVE-TOOLS.md) and [visual verification](../art/ui-
 
 ## Next candidates
 
-These are proposals, not implemented features or commitments to build every item.
+The user approved the expanded feature set on October 15. The detailed
+[cabinet expansion tracker](CABINET-EXPANSION.md) records the full scope and
+distinguishes pending work from verified features. The list below groups the
+earlier proposals; it is not a claim that they are implemented.
 
 1. Head-to-head ranking and capture from a link.
 2. Offline reading/saves with pending-write and conflict handling.

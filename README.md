@@ -20,8 +20,13 @@ labeled and never writes to a private archive.
 - Save a name to **Want to try** without changing its call, rank or revisit queue.
 - Select up to 100 items to move, queue, change type, or send to Trash. Merge up to 20 while keeping original notes, photos and visits; separate them again in Details.
 - Undo deletions immediately, or restore lists, items and logs from Settings → Trash for 30 days.
+- Open a collection’s Workbench for draft rankings, blind head-to-head comparisons,
+  a private comparison table, or a draw from Want to try, the revisit queue or Favorites.
+- Save filter views and named context rankings across devices. Applying a sandbox
+  ranking requires a preview and checks for newer edits.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
+  Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
   a ranking image. Only the collection name and ranked titles/types leave the archive.
 - Export records or a photo-inclusive backup; preview a validated restore as new lists.

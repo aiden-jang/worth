@@ -9,6 +9,10 @@ const objects = [
   ['car', 'Car'],
   ['snack', 'Snack'],
   ['bag', 'Bag'],
+  ['ramen', 'Ramen'],
+  ['sneaker', 'Sneaker'],
+  ['plant', 'Plant'],
+  ['camera', 'Camera'],
 ] as const;
 const tones = ['sage', 'clay', 'butter'] as const;
 export function CollectionArtworkPicker({

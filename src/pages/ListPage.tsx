@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { api, RequestError } from '../api';
 import { ActivityView } from '../components/ActivityView';
 import { CollectionView } from '../components/CollectionView';
+import { CollectionWorkbench } from '../components/CollectionWorkbench';
 import { ItemEditor } from '../components/ItemEditor';
 import { ListSettings } from '../components/ListSettings';
 import { ShareDialog } from '../components/ShareDialog';
@@ -35,6 +36,7 @@ export function ListPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showWorkbench, setShowWorkbench] = useState(false);
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
   const focusLogComposer = params.get('log') === '1';
@@ -46,6 +48,7 @@ export function ListPage() {
     setSelectedId(focus?.startsWith('item:') ? focus.slice('item:'.length) : null);
     setShowSettings(false);
     setShowShare(false);
+    setShowWorkbench(false);
   }, [focus, listId]);
 
   function closeEditor() {
@@ -116,6 +119,17 @@ export function ListPage() {
         </div>
         <div className="list-head-actions">
           {list.kind === 'collection' && (
+            <button
+              className="button button-outline"
+              disabled={
+                itemsQuery.isPending || itemsQuery.isError || logsQuery.isPending || logsQuery.isError
+              }
+              onClick={() => setShowWorkbench(true)}
+            >
+              Workbench
+            </button>
+          )}
+          {list.kind === 'collection' && (
             <Link className="button button-outline" to={`/lists/${list.id}/show`}>
               <PresentationChart size={18} /> Show list
             </Link>
@@ -156,6 +170,16 @@ export function ListPage() {
           updatedAt={list.updatedAt}
           onClose={() => setShowSettings(false)}
           onDeleted={() => navigate('/lists')}
+        />
+      )}
+      {showWorkbench && (
+        <CollectionWorkbench
+          key={list.id}
+          list={list}
+          items={items}
+          logs={logs}
+          onClose={() => setShowWorkbench(false)}
+          onOpenItem={setSelectedId}
         />
       )}
 

@@ -98,3 +98,25 @@ Merges preserve original rows and photo/log ownership; separating changes member
 without overwriting either record. Export/import preserves the merge relationship.
 
 See [archive tools](ARCHIVE-TOOLS.md) for retention, privacy and UI contracts.
+
+## Collection workbench
+
+`CollectionWorkbench` owns a local ranking sandbox, binary-insertion head-to-head
+comparisons, a private comparison table and filtered shuffled draws. Pure ordering
+rules live in `src/shared/workbench.ts`. Drafts use the existing account/list-scoped
+seven-day draft storage; comparisons are intentionally in memory. Applying an order
+uses the existing rank revision boundary and an explicit old/new confirmation.
+
+Migration 0012 adds `lists.workspace_json` and an independent workspace revision.
+`worker/routes/workspace.ts` validates and persists bounded named views and context
+rankings. A single conditional update checks the owner, active parent, revision and
+all selected active item relationships. Requests are limited to 512 KiB, with at most
+20 rankings of 500 unique items and 30 filter views. Other JSON routes keep 16 KiB.
+Concurrent tabs receive 409 instead of overwriting newer tools. These changes do
+not touch the main ranking, calls or list recency.
+
+Reads omit absent/trashed/merged/moved items from context orders. Export includes
+workspace state only for active lists and remaps context item IDs on restore; old
+backups default to empty tools. Deleting all data cascades through the containing
+lists. Public snapshots retain their fixed title/type-only payload. See the
+[expansion tracker](CABINET-EXPANSION.md) for the larger unfinished scope.

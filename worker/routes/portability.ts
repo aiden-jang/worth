@@ -168,6 +168,15 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         description: l.description,
         artwork: l.artwork ? JSON.stringify(l.artwork) : null,
         ranked_ids: JSON.stringify(l.rankedIds.map(id)),
+        workspace_json: JSON.stringify({
+          ...l.workspace,
+          rankings: l.workspace.rankings.map((ranking) => ({
+            ...ranking,
+            id: crypto.randomUUID(),
+            itemIds: ranking.itemIds.map(id),
+          })),
+          views: l.workspace.views.map((view) => ({ ...view, id: crypto.randomUUID() })),
+        }),
         created_at: l.updatedAt,
         updated_at: l.updatedAt,
       })),

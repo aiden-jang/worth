@@ -35,11 +35,15 @@ export async function readBytes(request: Request, maxBytes: number): Promise<Uin
   return output;
 }
 
-export async function readJson<T extends ZodTypeAny>(request: Request, schema: T): Promise<z.infer<T>> {
+export async function readJson<T extends ZodTypeAny>(
+  request: Request,
+  schema: T,
+  byteLimit = 16 * 1024,
+): Promise<z.infer<T>> {
   if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) {
     throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send JSON');
   }
-  const bytes = await readBytes(request, 16 * 1024);
+  const bytes = await readBytes(request, byteLimit);
   let value: unknown;
   try {
     value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));

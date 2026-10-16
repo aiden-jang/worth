@@ -52,11 +52,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>What Worth stores</h2>
               <p>
-                Your collections, activity entries, notes, dates, rankings, optional Favorite / Meh / Not
-                again calls, Want to try, merged originals, revisit queue, exercise measurements, routines,
-                workout visits, and uploaded photos or collection covers. Records are associated with your
-                shared account ID. Worth receives your account identity to check access and display your name;
-                passwords are handled by the account service.
+                Your collections, activity entries, notes, dates, rankings, saved filter views, context
+                rankings, optional Favorite / Meh / Not again calls, Want to try, merged originals, revisit
+                queue, exercise measurements, routines, workout visits, and uploaded photos or collection
+                covers. Records are associated with your shared account ID. Worth receives your account
+                identity to check access and display your name; passwords are handled by the account service.
               </p>
             </section>
             <section>
@@ -191,6 +191,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 days. Restored items return unranked. Restore a containing list or item first to recover
                 records deleted separately inside it. Deleting a list revokes its public links permanently;
                 restoring does not publish them again.
+              </p>
+            </section>
+            <section>
+              <h2>The collection workbench</h2>
+              <p>
+                Open Workbench from a collection to try a draft ranking, compare records privately, or draw a
+                record from Want to try, the revisit queue or Favorites. Head-to-head comparisons can hide
+                saved ranks and calls; Skip and Undo are available. Reveal the result before using it in the
+                sandbox. Your main ranking changes only after Preview ranking change and Apply ranking.
+              </p>
+              <p>
+                Saved views keep named filters across devices. Context rankings keep alternative orders such
+                as best value; loading one replaces only the sandbox draft after confirmation. A draft can
+                recover on this device for seven days, but comparison rounds in progress are not saved. Saved
+                views and context rankings are included in records export and photo backups. They are never
+                included in public share links.
               </p>
             </section>
             <section>

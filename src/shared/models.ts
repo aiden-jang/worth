@@ -1,5 +1,5 @@
 export type CollectionArt = {
-  object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag';
+  object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag' | 'ramen' | 'sneaker' | 'plant' | 'camera';
   tone: 'sage' | 'clay' | 'butter';
 };
 export type ExerciseSet = { reps: number | null; weight: number | null };
@@ -22,6 +22,7 @@ export interface ListSummary {
 }
 
 export interface ListDetail extends ListSummary {
+  workspace?: import('./workspace').CollectionWorkspace;
   rankedIds: string[];
   rankRevision: number;
 }

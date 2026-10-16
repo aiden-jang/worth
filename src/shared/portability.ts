@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { itemInput, listInput, logInput, routineInput, workoutPatch } from './validation';
+import { collectionWorkspace } from './workspace';
 const id = z.string().uuid();
 const time = z.number().int().nonnegative().max(8640000000000000);
 const text = (max: number) => z.string().max(max);
@@ -16,6 +17,7 @@ export const archiveFile = z
           name: title(80),
           description: text(280),
           id,
+          workspace: collectionWorkspace.default({ rankings: [], views: [] }),
           rankedIds: z.array(id).max(500),
           updatedAt: time,
         }),
@@ -118,6 +120,14 @@ export const archiveFile = z
       if (i.startedOn && i.endedOn && i.startedOn > i.endedOn) bad('An item has an invalid date range');
     }
     for (const l of file.lists) {
+      if (
+        l.workspace.rankings.some((ranking) =>
+          ranking.itemIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId),
+        )
+      )
+        bad('A saved ranking contains an invalid item');
+      if (l.kind === 'activity' && (l.workspace.rankings.length || l.workspace.views.length))
+        bad('An activity cannot contain collection tools');
       if (
         new Set(l.rankedIds).size !== l.rankedIds.length ||
         l.rankedIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId)

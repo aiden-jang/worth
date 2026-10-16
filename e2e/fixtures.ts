@@ -1,5 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import type { Item, ListDetail, TrashEntry } from '../src/shared/models';
+import type { WorkspaceResponse } from '../src/shared/workspace';
 
 export const list: ListDetail = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -32,6 +33,7 @@ export const item: Item = {
   lastLoggedOn: null,
 };
 export type State = {
+  workspace: WorkspaceResponse;
   signedIn: boolean;
   authDown: boolean;
   failShares: boolean;
@@ -46,6 +48,7 @@ export type State = {
 };
 export async function mockArchive(page: Page): Promise<State> {
   const state: State = {
+    workspace: { workspace: { rankings: [], views: [] }, revision: 0 },
     signedIn: true,
     authDown: false,
     failShares: false,
@@ -63,6 +66,16 @@ export async function mockArchive(page: Page): Promise<State> {
       path = new URL(request.url()).pathname.replace('/api', '');
     const method = request.method();
     const reply = (json: unknown, status = 200) => route.fulfill({ status, json });
+    if (path === `/lists/${list.id}/workspace`) {
+      if (method === 'PUT') {
+        const body = request.postDataJSON();
+        state.writes.push({ path, body });
+        if (body.expectedRevision !== state.workspace.revision)
+          return reply({ message: 'Saved tools changed elsewhere.' }, 409);
+        state.workspace = { workspace: body.workspace, revision: state.workspace.revision + 1 };
+      }
+      return reply(state.workspace);
+    }
     if (path === '/me')
       return reply(
         state.authDown
@@ -180,6 +193,11 @@ export async function mockArchive(page: Page): Promise<State> {
     if (path === `/lists/${list.id}/rank`) {
       const body = request.postDataJSON();
       state.writes.push({ path, body });
+      if (body.expectedRevision !== state.list.rankRevision)
+        return reply(
+          { error: 'RANK_CHANGED', message: 'This ranking changed elsewhere. Refresh and try again.' },
+          409,
+        );
       state.list.rankedIds = body.itemIds;
       state.list.rankRevision++;
       return reply({ list: state.list });

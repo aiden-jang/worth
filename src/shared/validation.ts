@@ -14,7 +14,7 @@ const date = z
 
 const artwork = z
   .object({
-    object: z.enum(['cup', 'ticket', 'place', 'car', 'snack', 'bag']),
+    object: z.enum(['cup', 'ticket', 'place', 'car', 'snack', 'bag', 'ramen', 'sneaker', 'plant', 'camera']),
     tone: z.enum(['sage', 'clay', 'butter']),
   })
   .nullable();

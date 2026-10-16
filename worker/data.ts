@@ -8,6 +8,7 @@ import type {
   WorkoutRoutine,
   WorkoutSession,
 } from '../src/shared/models';
+import { collectionWorkspace, filterWorkspace } from '../src/shared/workspace';
 
 export type RecordExport = {
   schemaVersion: 1;
@@ -31,6 +32,7 @@ export class ApiError extends Error {
 }
 
 type ListRow = {
+  workspace_json: string;
   id: string;
   name: string;
   kind: 'collection' | 'activity';
@@ -94,7 +96,7 @@ type ShareRow = {
 };
 
 const listQuery = `
-  SELECT l.id, l.name, l.kind, l.description, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at,
+  SELECT l.id, l.name, l.kind, l.description, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json,
     (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.merged_into_id IS NULL) AS item_count,
     (SELECT COUNT(*) FROM active_logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
@@ -297,7 +299,17 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     photosExcluded: true,
-    lists: (listResult.results as ListRow[]).map(mapList),
+    lists: (listResult.results as ListRow[]).map((row) => ({
+      ...mapList(row),
+      workspace: filterWorkspace(
+        collectionWorkspace.parse(JSON.parse(row.workspace_json)),
+        new Set(
+          (itemResult.results as ItemRow[])
+            .filter((item) => item.list_id === row.id && !item.merged_into_id)
+            .map((item) => item.id),
+        ),
+      ),
+    })),
     items: (itemResult.results as ItemRow[]).map(mapItem),
     logs: (logResult.results as LogRow[]).map(mapLog),
     workoutSessions: (workoutResult.results as WorkoutRow[]).map(mapWorkout),

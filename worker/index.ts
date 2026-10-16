@@ -15,6 +15,7 @@ import { registerRoutineRoutes } from './routes/routines';
 import { registerSearchRoutes } from './routes/search';
 import { registerPublicShareRoute, registerShareRoutes } from './routes/shares';
 import { registerWorkoutRoutes } from './routes/workouts';
+import { registerWorkspaceRoutes } from './routes/workspace';
 
 const app = new Hono<AppEnv>();
 const publicApi = new Hono<AppEnv>();
@@ -67,6 +68,7 @@ privateApi.use('*', async (c, next) => {
 });
 
 registerArchiveTools(privateApi);
+registerWorkspaceRoutes(privateApi);
 registerListRoutes(privateApi);
 registerItemRoutes(privateApi);
 registerLogRoutes(privateApi);

@@ -1,0 +1,58 @@
+import { z } from 'zod';
+const name = z.string().trim().min(1).max(80);
+const key = z.string().uuid();
+const savedViewFilters = z
+  .object({
+    browse: z.enum(['all', 'kept', 'want', 'queue', 'revisited', 'not-opened-lately']),
+    search: z.string().max(200),
+    type: z.string().max(60),
+    rankFilter: z.enum(['all', 'top5', 'top10', 'unranked']),
+    decisionFilter: z.enum(['all', 'none', 'favorite', 'meh', 'would_not_again']),
+    sort: z.enum(['rank', 'recent', 'name', 'times']),
+    addedSince: z.string().regex(/^(|\d{4}-\d{2}-\d{2})$/),
+    addedBefore: z.string().regex(/^(|\d{4}-\d{2}-\d{2})$/),
+    visits: z.enum(['all', 'never', 'once', 'again']),
+  })
+  .strict();
+const distinct = <T extends { id: string }>(values: T[]) =>
+  new Set(values.map((value) => value.id)).size === values.length;
+export const collectionWorkspace = z
+  .object({
+    rankings: z
+      .array(
+        z
+          .object({
+            id: key,
+            name,
+            itemIds: z
+              .array(key)
+              .max(500)
+              .refine((ids) => new Set(ids).size === ids.length),
+          })
+          .strict(),
+      )
+      .max(20)
+      .refine(distinct)
+      .default([]),
+    views: z
+      .array(z.object({ id: key, name, filters: savedViewFilters }).strict())
+      .max(30)
+      .refine(distinct)
+      .default([]),
+  })
+  .strict();
+export type CollectionWorkspace = z.infer<typeof collectionWorkspace>;
+export type SavedViewFilters = z.infer<typeof savedViewFilters>;
+export type WorkspaceResponse = { workspace: CollectionWorkspace; revision: number };
+export const workspaceUpdate = z
+  .object({ workspace: collectionWorkspace, expectedRevision: z.number().int().nonnegative() })
+  .strict();
+export function filterWorkspace(workspace: CollectionWorkspace, itemIds: Set<string>): CollectionWorkspace {
+  return {
+    ...workspace,
+    rankings: workspace.rankings.map((ranking) => ({
+      ...ranking,
+      itemIds: ranking.itemIds.filter((id) => itemIds.has(id)),
+    })),
+  };
+}

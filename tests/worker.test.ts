@@ -34,6 +34,7 @@ beforeAll(async () => {
     '0009_product_flow.sql',
     '0010_completion.sql',
     '0011_archive_tools.sql',
+    '0012_collection_workspace.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -109,6 +110,92 @@ async function archiveItem(owner: string, listId: string, title: string, extra =
   expect(response.status).toBe(201);
   return ((await response.json()) as { item: Item }).item;
 }
+
+test('saved views and context rankings enforce owners and revisions and survive backup restore', async () => {
+  const owner = 'workspaceowner';
+  const list = await archiveCollection(owner, 'Context orders');
+  const first = await archiveItem(owner, list.id, 'A');
+  const second = await archiveItem(owner, list.id, 'B');
+  const foreign = await archiveCollection('foreignworkspace', 'Other collection');
+  const foreignItem = await archiveItem('foreignworkspace', foreign.id, 'Foreign');
+  const workspace = {
+    rankings: [{ id: crypto.randomUUID(), name: 'Best value', itemIds: [second.id, first.id] }],
+    views: [
+      {
+        id: crypto.randomUUID(),
+        name: 'New things',
+        filters: {
+          browse: 'want',
+          search: '',
+          type: 'all',
+          rankFilter: 'all',
+          decisionFilter: 'all',
+          sort: 'name',
+          addedSince: '',
+          addedBefore: '',
+          visits: 'all',
+        },
+      },
+    ],
+  };
+  expect((await call(`/lists/${list.id}/workspace`, 'foreignworkspace')).status).toBe(404);
+  expect(
+    (await call(`/lists/${list.id}/workspace`, owner, 'PUT', { workspace, expectedRevision: 0 })).status,
+  ).toBe(200);
+  expect(
+    (await call(`/lists/${list.id}/workspace`, owner, 'PUT', { workspace, expectedRevision: 0 })).status,
+  ).toBe(409);
+  const injected = { ...workspace, rankings: [{ ...workspace.rankings[0], itemIds: [foreignItem.id] }] };
+  expect(
+    (await call(`/lists/${list.id}/workspace`, owner, 'PUT', { workspace: injected, expectedRevision: 1 }))
+      .status,
+  ).toBe(409);
+  const saved = await (await call(`/lists/${list.id}/workspace`, owner)).json();
+  expect(saved).toEqual({ workspace, revision: 1 });
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(exported.lists[0].workspace).toEqual(workspace);
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=workspacerestored',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(exported),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const restoredId = ((await restored.json()) as { ids: string[] }).ids[0];
+  const importedItems = (
+    (await (await call(`/lists/${restoredId}/items`, 'workspacerestored')).json()) as { items: Item[] }
+  ).items;
+  const imported = (
+    (await (await call(`/lists/${restoredId}/workspace`, 'workspacerestored')).json()) as {
+      workspace: typeof workspace;
+    }
+  ).workspace;
+  expect(imported.rankings[0].itemIds).toEqual(
+    ['B', 'A'].map((title) => importedItems.find((item) => item.title === title)!.id),
+  );
+  expect(imported.views[0].filters).toEqual(workspace.views[0].filters);
+  expect((await call(`/lists/${list.id}`, owner)).status).toBe(200);
+  await call(`/items/${second.id}`, owner, 'DELETE');
+  const hidden = (
+    (await (await call(`/lists/${list.id}/workspace`, owner)).json()) as { workspace: typeof workspace }
+  ).workspace;
+  expect(hidden.rankings[0].itemIds).toEqual([first.id]);
+  expect(
+    archiveFile.parse(await (await call('/export/records', owner)).json()).lists[0].workspace.rankings[0]
+      .itemIds,
+  ).toEqual([first.id]);
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  expect((await call(`/lists/${list.id}/workspace`, owner)).status).toBe(404);
+});
 
 test('Want to try is independent of calls, ranks and the revisit queue, including batch capture', async () => {
   const owner = 'wantowner';

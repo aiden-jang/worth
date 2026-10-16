@@ -24,6 +24,9 @@ import { BlankSlips } from './BlankSlips';
 import { IndexRows, ItemActions } from './CollectionIndex';
 import { CollectionTools } from './CollectionTools';
 import { CallFace } from './PersonalCall';
+import { SavedViews } from './SavedViews';
+import { FilingMoment } from './FilingMoment';
+import type { SavedViewFilters } from '../shared/workspace';
 
 type CaptureDraft = { title: string; batchTitles: string; batchMode: boolean; wantToTry?: boolean };
 
@@ -89,7 +92,10 @@ export function CollectionView({
   const [search, setSearch] = useViewPreference(`collection:${list.id}:search`, '');
   const [addedSince, setAddedSince] = useViewPreference(`collection:${list.id}:addedSince`, '');
   const [addedBefore, setAddedBefore] = useViewPreference(`collection:${list.id}:addedBefore`, '');
-  const [visits, setVisits] = useViewPreference(`collection:${list.id}:visits`, 'all');
+  const [visits, setVisits] = useViewPreference<SavedViewFilters['visits']>(
+    `collection:${list.id}:visits`,
+    'all',
+  );
   const [type, setType] = useViewPreference(`collection:${list.id}:type`, 'all');
   const [rankFilter, setRankFilter] = useViewPreference<RankFilter>(
     `collection:${list.id}:rankFilter`,
@@ -106,6 +112,7 @@ export function CollectionView({
   const [selecting, setSelecting] = useState(false);
   const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState('');
+  const [filing, setFiling] = useState({ sequence: 0, count: 0, message: '' });
   const [selectedId, setSelectedId] = useViewPreference<string | null>(
     `collection:${list.id}:selectedId`,
     null,
@@ -185,6 +192,11 @@ export function CollectionView({
       setSort('rank');
       setSelectedId(item.id);
       setStatus(`${item.title} added to ${list.name}.`);
+      setFiling((previous) => ({
+        sequence: previous.sequence + 1,
+        count: 1,
+        message: `${item.title} added to ${list.name}.`,
+      }));
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -212,6 +224,11 @@ export function CollectionView({
       setSort('rank');
       setSelectedId(created.length === 1 ? (created[0]?.id ?? null) : null);
       setStatus(`${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`);
+      setFiling((previous) => ({
+        sequence: previous.sequence + 1,
+        count: created.length,
+        message: `${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`,
+      }));
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -469,6 +486,7 @@ export function CollectionView({
           )}
           {status && (
             <p className="collection-capture-status" role="status">
+              {filing.message === status && <FilingMoment key={filing.sequence} count={filing.count} />}
               {status}
             </p>
           )}
@@ -564,7 +582,7 @@ export function CollectionView({
                 <select
                   aria-label="Filter by visit count"
                   value={visits}
-                  onChange={(event) => setVisits(event.target.value)}
+                  onChange={(event) => setVisits(event.target.value as SavedViewFilters['visits'])}
                 >
                   <option value="all">Any number</option>
                   <option value="never">Never logged</option>
@@ -591,6 +609,33 @@ export function CollectionView({
             </div>
           )}
 
+          <SavedViews
+            listId={list.id}
+            current={{
+              browse,
+              search,
+              type,
+              rankFilter,
+              decisionFilter,
+              sort,
+              addedSince,
+              addedBefore,
+              visits,
+            }}
+            onApply={(filters) => {
+              setBrowse(filters.browse);
+              setSearch(filters.search);
+              setType(filters.type);
+              setRankFilter(filters.rankFilter);
+              setDecisionFilter(filters.decisionFilter);
+              setSort(filters.sort);
+              setAddedSince(filters.addedSince);
+              setAddedBefore(filters.addedBefore);
+              setVisits(filters.visits);
+              setShowSearch(Boolean(filters.search));
+              setSelectedId(null);
+            }}
+          />
           {selecting && (
             <CollectionTools
               list={list}
