@@ -56,6 +56,8 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await expect(
     page.getByRole('region', { name: 'Your call for Coffee' }).filter({ visible: true }),
   ).toBeVisible();
+  // Axe must inspect the settled cream panel, not its translucent arrival frame.
+  await expect(slip).toHaveCSS('opacity', '1');
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
   ).toEqual([]);
