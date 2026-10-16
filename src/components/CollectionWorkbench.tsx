@@ -18,9 +18,10 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { SavedRankings } from './SavedRankings';
 import { ItemContextReadout } from './ItemContextReadout';
 import { CollectionPublishing } from './CollectionPublishing';
+import { CollectionShelf } from './CollectionShelf';
 import '../workbench.css';
 
-type Mode = 'rank' | 'compare' | 'draw' | 'publish';
+type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf';
 type RankingDraft = { ids: string[]; revision: number };
 const validDraft = (value: unknown): value is RankingDraft => {
   if (!value || typeof value !== 'object') return false;
@@ -129,7 +130,7 @@ export function CollectionWorkbench({
             Close workbench
           </button>
         </div>
-        <p>Try a different order, compare records, or choose what comes next.</p>
+        <p>Try a different order, compare records, or make something to keep.</p>
         <nav className="workbench-tabs" aria-label="Workbench tools">
           {(
             [
@@ -137,6 +138,7 @@ export function CollectionWorkbench({
               ['compare', 'Comparison table'],
               ['draw', 'Decision draw'],
               ['publish', 'Booklets & cards'],
+              ['shelf', 'Your shelf'],
             ] as const
           ).map(([id, label]) => (
             <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
@@ -145,6 +147,21 @@ export function CollectionWorkbench({
           ))}
         </nav>
         {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
+        {mode === 'shelf' && (
+          <CollectionShelf
+            list={list}
+            items={items}
+            onOpen={(id) => {
+              if (changed) {
+                setStatus('Keep or discard your ranking draft before opening a record.');
+                setMode('rank');
+              } else {
+                onClose();
+                onOpenItem(id);
+              }
+            }}
+          />
+        )}
         {mode === 'rank' && (
           <section aria-label="Ranking sandbox" className="workbench-section">
             <p>

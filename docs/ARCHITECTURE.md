@@ -172,3 +172,27 @@ when the browser supports that file; cancelling never initiates a download.
 Export settings use account/list-scoped seven-day device drafts, not server
 persistence. No API writes or third-party processing occur during preparation.
 Downloaded/shared files cannot be revoked.
+
+## Private collection shelves
+
+`CollectionShelf` adds a secondary workbench view with paper pockets/book spines,
+optional authored bookends, a private dedication, a keepsake and a record-bound
+inscription. It reuses the workspace JSON/revision added in migration 0012, with
+an optional bounded `shelf` property; no new migration is needed. Older workspaces
+and backups keep their previous defaults. A faceless folded-paper illustration
+can accompany actual no-call counts without assigning any opinion.
+
+Shelf settings have their own account/list-scoped device draft containing the
+expected workspace revision. Saving checks that revision and validates both item
+references in the same guarded owner/active-list SQL update. Newer saved tools
+require explicit reload confirmation. Rankings, calls, queue and list recency
+are unaffected. Records are displayed by creation time, with ID ties, never by
+rank. Search and incremental display bound rendered records without hiding long names.
+
+The earliest-kept shortcut chooses a currently available record once. Its
+inscription stays bound to that ID; no claim is made about removed historical
+records. Workspace reads and exports omit missing, moved, merged or trashed
+references and the associated inscription text. Existing database references can
+reappear after restoration until a later workspace save replaces them. Restore
+remaps keepsake/inscription IDs, rejects foreign/merged references and prohibits
+shelf tools on activities. Public snapshots and booklet defaults stay unchanged.

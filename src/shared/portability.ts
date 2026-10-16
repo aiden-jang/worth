@@ -126,7 +126,17 @@ export const archiveFile = z
         )
       )
         bad('A saved ranking contains an invalid item');
-      if (l.kind === 'activity' && (l.workspace.rankings.length || l.workspace.views.length))
+      if (l.workspace.shelf) {
+        const selected = [l.workspace.shelf.keepsakeId, l.workspace.shelf.inscription?.itemId].filter(
+          Boolean,
+        );
+        if (selected.some((id) => items.get(id!)?.listId !== l.id || !!items.get(id!)?.mergedIntoId))
+          bad('A shelf contains an invalid item');
+      }
+      if (
+        l.kind === 'activity' &&
+        (l.workspace.rankings.length || l.workspace.views.length || l.workspace.shelf)
+      )
         bad('An activity cannot contain collection tools');
       if (
         new Set(l.rankedIds).size !== l.rankedIds.length ||

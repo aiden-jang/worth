@@ -45,6 +45,10 @@
 .workbench-dialog .data-actions {
   margin: 20px 0;
 }
+.workbench-dialog .button {
+  min-height: 44px;
+  min-width: 44px;
+}
 .workbench-check {
   display: flex;
   align-items: center;

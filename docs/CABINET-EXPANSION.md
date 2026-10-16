@@ -58,11 +58,11 @@ framing and layout changes in the original checkout.
 ## Artwork and small interactions
 
 - [x] More authored collection objects: ramen, sneakers, plants, camera and other suitable categories.
-- [ ] Optional bookend decorations and physical shelf presentations.
-- [ ] Faceless undecided paper creature that never implies a personal call.
+- [x] Optional bookend decorations and physical shelf presentations.
+- [x] Faceless undecided paper creature that never implies a personal call.
 - [x] Finite filing/stack animation after successful capture, respecting reduced motion.
-- [ ] Collection keepsake independent of rank.
-- [ ] Private collection dedication and optional first-record inscription.
+- [x] Collection keepsake independent of rank.
+- [x] Private collection dedication and optional first-record inscription.
 - [ ] Caption/arrow annotations stored separately from original photos.
 - [ ] Multiple photos, captions, ordering and explicit cover selection.
 - [ ] Manually arranged photo collages for covers; original photos retained.
@@ -150,3 +150,23 @@ Further interrupted workbench/storage cases passed serially too. Six A5 PDF page
 (in-app and standalone) were rendered and visually reviewed. Desktop/phone captures
 and scope limits are in [publishing QA](../art/ui-qa/publishing/README.md).
 This remains on the separate branch, without a pull request or deployment.
+
+## Fourth implementation: personal shelves
+
+Your shelf adds paper pockets/book spines, optional sage arch/plant bookends,
+one private keepsake, dedication and a record-bound inscription. The earliest-kept
+shortcut chooses an available record once, without claiming to know deleted
+history or retargeting the inscription. An optional faceless folded-paper creature
+accompanies actual no-call counts; it never assigns an opinion.
+
+Choices persist in the owner-checked workspace, including revision conflicts,
+bounded account/list device drafts and backup ID remapping. Missing, moved,
+merged and trashed record references are omitted from responses and exports.
+Ranks and calls stay independent. This is a secondary Workbench presentation,
+preserving the existing primary collection composition.
+
+All 87 tests, formatting, lint, unused-code checks and the production build
+passed locally. The final full browser run passed all 61 journeys serially,
+including shelf Axe, draft/conflict recovery and narrow/long-name layouts. Eight reviewed desktop/phone
+captures are in [shelf QA](../art/ui-qa/shelf/README.md). The larger unchecked scope
+above remains unfinished. These features have not been deployed.

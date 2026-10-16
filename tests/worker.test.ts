@@ -6,6 +6,7 @@ import app from '../worker/index';
 import type { Item, ListDetail, ListSummary, WorkoutRoutine, WorkoutSession } from '../src/shared/models';
 import { archiveFile, type ArchiveFile } from '../src/shared/portability';
 import { itemContext } from '../src/shared/item-context';
+import { emptyCollectionShelf } from '../src/shared/workspace';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -236,6 +237,14 @@ test('saved views and context rankings enforce owners and revisions and survive 
   const foreign = await archiveCollection('foreignworkspace', 'Other collection');
   const foreignItem = await archiveItem('foreignworkspace', foreign.id, 'Foreign');
   const workspace = {
+    shelf: {
+      ...emptyCollectionShelf,
+      bookend: 'plant' as const,
+      dedication: 'For rainy Sundays',
+      keepsakeId: first.id,
+      inscription: { itemId: second.id, text: 'The beginning of this shelf.' },
+      paperCreature: true,
+    },
     rankings: [{ id: crypto.randomUUID(), name: 'Best value', itemIds: [second.id, first.id] }],
     views: [
       {
@@ -269,6 +278,18 @@ test('saved views and context rankings enforce owners and revisions and survive 
     (await call(`/lists/${list.id}/workspace`, owner, 'PUT', { workspace: injected, expectedRevision: 1 }))
       .status,
   ).toBe(409);
+  for (const shelf of [
+    { ...workspace.shelf, keepsakeId: foreignItem.id },
+    { ...workspace.shelf, inscription: { itemId: foreignItem.id, text: 'Foreign' } },
+  ])
+    expect(
+      (
+        await call(`/lists/${list.id}/workspace`, owner, 'PUT', {
+          workspace: { ...workspace, shelf },
+          expectedRevision: 1,
+        })
+      ).status,
+    ).toBe(409);
   const saved = await (await call(`/lists/${list.id}/workspace`, owner)).json();
   expect(saved).toEqual({ workspace, revision: 1 });
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
@@ -302,16 +323,44 @@ test('saved views and context rankings enforce owners and revisions and survive 
     ['B', 'A'].map((title) => importedItems.find((item) => item.title === title)!.id),
   );
   expect(imported.views[0].filters).toEqual(workspace.views[0].filters);
+  expect(imported.shelf).toEqual({
+    ...workspace.shelf,
+    keepsakeId: importedItems.find((item) => item.title === 'A')!.id,
+    inscription: {
+      ...workspace.shelf.inscription,
+      itemId: importedItems.find((item) => item.title === 'B')!.id,
+    },
+  });
   expect((await call(`/lists/${list.id}`, owner)).status).toBe(200);
   await call(`/items/${second.id}`, owner, 'DELETE');
   const hidden = (
     (await (await call(`/lists/${list.id}/workspace`, owner)).json()) as { workspace: typeof workspace }
   ).workspace;
   expect(hidden.rankings[0].itemIds).toEqual([first.id]);
+  expect(hidden.shelf.keepsakeId).toBe(first.id);
+  expect(hidden.shelf.inscription).toBeNull();
   expect(
     archiveFile.parse(await (await call('/export/records', owner)).json()).lists[0].workspace.rankings[0]
       .itemIds,
   ).toEqual([first.id]);
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([]);
+  expect(
+    ((await (await call(`/items/${first.id}`, owner)).json()) as { item: Item }).item.decision,
+  ).toBeNull();
+  await call(`/items/${first.id}`, owner, 'DELETE');
+  expect(
+    ((await (await call(`/lists/${list.id}/workspace`, owner)).json()) as { workspace: typeof workspace })
+      .workspace.shelf.keepsakeId,
+  ).toBeNull();
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: first.id }] })).status,
+  ).toBe(200);
+  expect(
+    ((await (await call(`/lists/${list.id}/workspace`, owner)).json()) as { workspace: typeof workspace })
+      .workspace.shelf.keepsakeId,
+  ).toBe(first.id);
   await call(`/lists/${list.id}`, owner, 'DELETE');
   expect((await call(`/lists/${list.id}/workspace`, owner)).status).toBe(404);
 });

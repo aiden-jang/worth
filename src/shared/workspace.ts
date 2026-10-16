@@ -1,6 +1,28 @@
 import { z } from 'zod';
 const name = z.string().trim().min(1).max(80);
 const key = z.string().uuid();
+export const collectionShelf = z
+  .object({
+    style: z.enum(['pockets', 'spines']),
+    bookend: z.enum(['none', 'arch', 'plant']),
+    dedication: z.string().max(280),
+    keepsakeId: key.nullable(),
+    inscription: z
+      .object({ itemId: key, text: z.string().max(280) })
+      .strict()
+      .nullable(),
+    paperCreature: z.boolean(),
+  })
+  .strict();
+export type ShelfPresentation = z.infer<typeof collectionShelf>;
+export const emptyCollectionShelf: ShelfPresentation = {
+  style: 'pockets',
+  bookend: 'none',
+  dedication: '',
+  keepsakeId: null,
+  inscription: null,
+  paperCreature: false,
+};
 const savedViewFilters = z
   .object({
     label: z.string().max(32).default(''),
@@ -20,6 +42,7 @@ const distinct = <T extends { id: string }>(values: T[]) =>
   new Set(values.map((value) => value.id)).size === values.length;
 export const collectionWorkspace = z
   .object({
+    shelf: collectionShelf.optional(),
     rankings: z
       .array(
         z
@@ -52,6 +75,21 @@ export const workspaceUpdate = z
 export function filterWorkspace(workspace: CollectionWorkspace, itemIds: Set<string>): CollectionWorkspace {
   return {
     ...workspace,
+    ...(workspace.shelf
+      ? {
+          shelf: {
+            ...workspace.shelf,
+            keepsakeId:
+              workspace.shelf.keepsakeId && itemIds.has(workspace.shelf.keepsakeId)
+                ? workspace.shelf.keepsakeId
+                : null,
+            inscription:
+              workspace.shelf.inscription && itemIds.has(workspace.shelf.inscription.itemId)
+                ? workspace.shelf.inscription
+                : null,
+          },
+        }
+      : {}),
     rankings: workspace.rankings.map((ranking) => ({
       ...ranking,
       itemIds: ranking.itemIds.filter((id) => itemIds.has(id)),

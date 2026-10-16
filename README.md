@@ -24,6 +24,8 @@ labeled and never writes to a private archive.
   a private comparison table, or a draw from Want to try, the revisit queue or Favorites.
 - Save filter views and named context rankings across devices. Applying a sandbox
   ranking requires a preview and checks for newer edits.
+- Browse paper pockets or book spines in Workbench → Your shelf. Choose a private
+  keepsake, dedication, record inscription and optional arch/plant bookend.
 - Keep optional recommendation sources, reasons, personal labels/stamps, version/location
   details and custom fields. Track purchases and loans, and download a calendar return reminder.
 - Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo

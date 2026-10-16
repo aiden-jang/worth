@@ -1,0 +1,252 @@
+.shelf-options {
+  border-bottom: 1px solid #38392f;
+  padding: 12px 0 24px;
+}
+.shelf-options summary {
+  min-height: 44px;
+  cursor: pointer;
+}
+.shelf-options fieldset {
+  border: 0;
+  padding: 0;
+  margin: 16px 0;
+  min-width: 0;
+}
+.shelf-options fieldset > label:not(.workbench-check),
+.shelf-search {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+  font:
+    400 14px/1.5 'DM Sans',
+    sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.shelf-options input:not([type='checkbox']),
+.shelf-options select,
+.shelf-options textarea,
+.shelf-search input {
+  width: 100%;
+  min-height: 44px;
+}
+.shelf-options p {
+  color: #aaa99b;
+}
+.shelf-scene {
+  margin: 32px 0;
+  padding: 32px;
+  border: 1px solid #737566;
+  border-radius: 22px;
+}
+.shelf-introduction {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+.shelf-introduction > div {
+  min-width: 0;
+  flex: 1;
+}
+.shelf-introduction h3 {
+  font-size: 38px;
+  line-height: 1.1;
+  font-weight: 500;
+  margin: 18px 0;
+  overflow-wrap: anywhere;
+}
+.shelf-dedication {
+  color: #ccc8b9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.shelf-bookend {
+  width: 144px;
+  flex: 0 0 144px;
+  height: 152px;
+}
+.shelf-keepsake {
+  background: #eae5d5;
+  color: #181915;
+  padding: 28px;
+  margin: 24px 0;
+  border-radius: 22px;
+  overflow-wrap: anywhere;
+}
+.shelf-keepsake h4 {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 500;
+  margin: 16px 0;
+}
+.shelf-keepsake .overline,
+.shelf-keepsake p {
+  color: #626456;
+}
+.shelf-keepsake .button {
+  color: #181915;
+  border-color: #737566;
+}
+.shelf-keepsake .button:is(:hover, :focus-visible, :active) {
+  background: #dedaca;
+  color: #181915;
+}
+.shelf-inscription {
+  border-left: 2px solid #737566;
+  margin: 28px 0;
+  padding: 4px 0 4px 22px;
+}
+.shelf-inscription p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 20px;
+}
+.shelf-inscription footer {
+  color: #aaa99b;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.shelf-undecided {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 24px 0;
+}
+.shelf-paper-creature {
+  width: 100px;
+  height: 100px;
+  flex: 0 0 100px;
+}
+.shelf-undecided p {
+  font-size: 14px;
+  color: #ccc8b9;
+}
+.shelf-undecided span,
+.shelf-order {
+  color: #aaa99b;
+  font-size: 14px;
+}
+.shelf-records {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.shelf-record {
+  min-width: 0;
+}
+.shelf-record button {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  text-align: left;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 16px 16px 4px 4px;
+  border: 1px solid #737566;
+  border-bottom: 10px solid #626456;
+  color: #181915;
+  background: #d5ddc5;
+  overflow-wrap: anywhere;
+}
+.shelf-record button:hover {
+  filter: brightness(1.05);
+}
+.shelf-record button:focus-visible {
+  outline: 3px solid #e8dc9d;
+  outline-offset: 4px;
+}
+.shelf-record-name {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.shelf-record-type,
+.shelf-record-tag {
+  font-size: 13px;
+}
+.shelf-record-tag {
+  margin-top: auto;
+  border: 1px solid #737566;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.shelf-color-1 button {
+  background: #d9bcae;
+}
+.shelf-color-2 button {
+  background: #e8dc9d;
+}
+.shelf-spines {
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 10px solid #737566;
+  padding: 0 0 12px;
+}
+.shelf-spines .shelf-record button {
+  min-height: 240px;
+  height: 100%;
+  border-radius: 12px 12px 2px 2px;
+  border-bottom: 0;
+  border-left: 9px solid #737566;
+  padding: 24px 14px;
+}
+.shelf-spines .shelf-record-name {
+  border-top: 1px solid #737566;
+  padding-top: 20px;
+}
+@media (max-width: 680px) {
+  .shelf-scene {
+    padding: 22px 18px;
+  }
+  .shelf-introduction {
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .shelf-introduction > div {
+    flex-basis: 100%;
+  }
+  .shelf-introduction h3 {
+    font-size: 30px;
+  }
+  .shelf-bookend {
+    width: 110px;
+    height: 116px;
+    flex-basis: 110px;
+    margin-left: auto;
+  }
+  .shelf-keepsake {
+    padding: 22px;
+  }
+  .shelf-keepsake h4 {
+    font-size: 26px;
+  }
+  .shelf-records {
+    grid-template-columns: 1fr;
+  }
+  .shelf-spines {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .shelf-spines .shelf-record-name {
+    font-size: 19px;
+  }
+  .shelf-undecided {
+    gap: 6px;
+  }
+  .shelf-paper-creature {
+    width: 80px;
+    height: 88px;
+    flex-basis: 80px;
+  }
+}
+@media (max-width: 360px) {
+  .shelf-spines {
+    grid-template-columns: 1fr;
+  }
+}

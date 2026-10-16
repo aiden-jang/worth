@@ -53,12 +53,12 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>What Worth stores</h2>
               <p>
                 Your collections, activity entries, notes, dates, rankings, saved filter views, context
-                rankings, private sources and recommendations, labels/stamps, custom details, purchase and
-                loan information (including names you enter), optional Favorite / Meh / Not again calls, Want
-                to try, merged originals, revisit queue, exercise measurements, routines, workout visits, and
-                uploaded photos or collection covers. Records are associated with your shared account ID.
-                Worth receives your account identity to check access and display your name; passwords are
-                handled by the account service.
+                rankings, private shelf choices, dedications and inscriptions, private sources and
+                recommendations, labels/stamps, custom details, purchase and loan information (including names
+                you enter), optional Favorite / Meh / Not again calls, Want to try, merged originals, revisit
+                queue, exercise measurements, routines, workout visits, and uploaded photos or collection
+                covers. Records are associated with your shared account ID. Worth receives your account
+                identity to check access and display your name; passwords are handled by the account service.
               </p>
             </section>
             <section>
@@ -216,6 +216,21 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 recover on this device for seven days, but comparison rounds in progress are not saved. Saved
                 views and context rankings are included in records export and photo backups. They are never
                 included in public share links.
+              </p>
+            </section>
+            <section>
+              <h2>Your collection shelf</h2>
+              <p>
+                Workbench → Your shelf offers paper pockets or book spines, optional bookends and a faceless
+                paper creature beside records without calls. Personalize this shelf keeps a private
+                dedication, one keepsake and an inscription attached to a chosen record. These choices are
+                saved across devices and included in backup, independently of ranks and calls.
+              </p>
+              <p>
+                Use earliest kept record chooses the earliest record currently available here. The inscription
+                stays attached to that record; it never moves automatically to another one. Trashed, moved or
+                merged choices stay out of the preview and exports. Drafts can recover on this device for
+                seven days. Reloading newer saved choices asks before replacing a draft.
               </p>
             </section>
             <section>
