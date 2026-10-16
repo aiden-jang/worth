@@ -129,7 +129,7 @@ Secondary screenshots and interaction checks are in the current QA directory.
 
 ## Data ownership
 
-People can download their lists, items, logs, ranks, and personal calls as JSON. The export is deliberately records-only. Photos remain in Worth and are never represented as a backup.
+People can download records-only JSON or a photo-inclusive backup. Archived collections remain included; Trash is excluded. Restore creates new private records, preserves relationships and never restores public links. Export and sharing previews must state exactly which private content is included.
 
 ## Visual rules
 

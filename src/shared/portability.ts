@@ -14,6 +14,7 @@ export const archiveFile = z
     lists: z
       .array(
         listInput.extend({
+          archived: z.boolean().default(false),
           name: title(80),
           description: text(280),
           id,
@@ -120,6 +121,7 @@ export const archiveFile = z
       if (i.startedOn && i.endedOn && i.startedOn > i.endedOn) bad('An item has an invalid date range');
     }
     for (const l of file.lists) {
+      if (l.archived && l.kind !== 'collection') bad('Only collections can be archived');
       if (
         l.workspace.duplicateReviews?.some((review) =>
           review.itemIds.some((id) => items.get(id)?.listId !== l.id || !!items.get(id)?.mergedIntoId),

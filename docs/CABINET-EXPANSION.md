@@ -28,7 +28,7 @@ framing and layout changes in the original checkout.
 - [x] Save a link with a reviewed address-based name suggestion and retained source URL.
 - [x] Saved filter/search views.
 - [x] Tags, personal care labels and custom stamps with useful filtering.
-- [ ] Archive/unarchive collections independently of Trash.
+- [x] Archive/unarchive collections independently of Trash.
 - [x] Duplicate suggestions with open, revisit and keep-both choices; never automatic merging.
 - [x] CSV import with column mapping, preview and duplicate review.
 - [x] Optional per-item custom detail fields; name-only capture remains.
@@ -217,3 +217,26 @@ all 79 journeys, including ten duplicate-review cases covering Axe, conflicts,
 revisit focus, new-member review and long/narrow layouts. Reviewed captures and limits are in
 [duplicate QA](../art/ui-qa/duplicates/README.md). The larger unfinished scope
 remains tracked above.
+
+## Seventh implementation: collection archiving
+
+Collection settings can archive/unarchive a collection independently of Trash.
+Archived collections leave home, the sidebar and everyday choices. Collections →
+Archived and explicitly labeled Search results retain access; owners can still
+edit records. Calls, ranks, photos, workspace choices and existing link access/
+expiry are unchanged. Patterns and both backup formats include archived content.
+Trash restoration retains archive state while keeping its separate link revocation.
+
+Migration 0014 adds one flag, defaulting older collections to current. Backups
+preserve it with fresh IDs on restore; old files default to current and archived
+activities are rejected. Archive-only updates touch supplied fields and cannot
+overwrite a concurrent rename/artwork change. Unsaved settings block the action;
+failed saves recover in place. Directory status supports Back navigation. Current
+empty copy points to Archived without claiming records disappeared.
+
+All 101 tests and core checks passed locally. The full browser regression passed
+all 87 journeys; all eight archiving cases passed again against the final copy/build.
+Final formatting/lint checks passed. Eight desktop/phone captures were reviewed
+alongside the cabinet references; see [archiving QA](../art/ui-qa/collection-archiving/README.md).
+This work remains local on the feature branch. The unchecked scope above,
+including actual widgets for both platforms and on-device recognition, is unfinished.

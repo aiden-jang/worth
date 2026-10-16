@@ -34,6 +34,7 @@ export class ApiError extends Error {
 }
 
 type ListRow = {
+  archived: number;
   workspace_json: string;
   id: string;
   name: string;
@@ -100,7 +101,7 @@ type ShareRow = {
 };
 
 const listQuery = `
-  SELECT l.id, l.name, l.kind, l.description, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json,
+  SELECT l.id, l.name, l.kind, l.description, l.archived, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json,
     (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.merged_into_id IS NULL) AS item_count,
     (SELECT COUNT(*) FROM active_logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
@@ -113,6 +114,7 @@ function mapList(row: ListRow): ListDetail {
   return {
     id: row.id,
     name: row.name,
+    archived: Boolean(row.archived),
     kind: row.kind,
     description: row.description,
     artwork: row.artwork ? JSON.parse(row.artwork) : null,
@@ -127,14 +129,19 @@ function mapList(row: ListRow): ListDetail {
   };
 }
 
-export async function listLists(db: D1Database, ownerId: string): Promise<ListSummary[]> {
+export async function listLists(
+  db: D1Database,
+  ownerId: string,
+  status: 'current' | 'archived' = 'current',
+): Promise<ListSummary[]> {
   const { results } = await db
-    .prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.updated_at DESC`)
-    .bind(ownerId)
+    .prepare(`${listQuery} WHERE l.owner_id = ? AND l.archived = ? ORDER BY l.updated_at DESC`)
+    .bind(ownerId, status === 'archived' ? 1 : 0)
     .all<ListRow>();
   return results.map((row) => ({
     id: row.id,
     name: row.name,
+    archived: Boolean(row.archived),
     kind: row.kind,
     description: row.description,
     artwork: row.artwork ? JSON.parse(row.artwork) : null,

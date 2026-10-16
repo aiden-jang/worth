@@ -29,6 +29,7 @@ export const listInput = z.object({
 
 export const listPatch = listInput
   .pick({ name: true, description: true, artwork: true })
+  .extend({ archived: z.boolean() })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 

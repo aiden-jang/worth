@@ -32,7 +32,9 @@ its verification. The following groups are committed and verified locally on
 - Existing-record duplicate suggestions with reversible keep-separate reviews,
   Details and explicit revisit-composer actions.
 
-Remaining work includes history/time-machine views, archived collections,
+- Reversible collection archiving with retained Search, Patterns, links and backups.
+
+Remaining work includes history/time-machine views,
 templates, inbox, offline sync, richer visits
 and relationships, boards, revisit planning, routines/measurements, photo tools,
 field guides, blind two-person choices and private collaboration. See the tracker

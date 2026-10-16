@@ -5,7 +5,14 @@ import { ApiError, listItems, listLists, requireList } from '../data';
 import { readJson } from '../http';
 
 export function registerListRoutes(api: Hono<AppEnv>): void {
-  api.get('/lists', async (c) => c.json({ lists: await listLists(c.env.DB, c.get('ownerId')) }));
+  api.get('/lists', async (c) => {
+    const archived = c.req.query('archived');
+    if (archived !== undefined && archived !== '0' && archived !== '1')
+      throw new ApiError(400, 'INVALID_QUERY', 'Choose current or archived collections');
+    return c.json({
+      lists: await listLists(c.env.DB, c.get('ownerId'), archived === '1' ? 'archived' : 'current'),
+    });
+  });
 
   api.post('/lists', async (c) => {
     const input = await readJson(c.req.raw, listInput);
@@ -36,23 +43,31 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
   api.patch('/lists/:listId', async (c) => {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
     const patch = await readJson(c.req.raw, listPatch);
+    if (patch.archived !== undefined && list.kind !== 'collection')
+      throw new ApiError(400, 'WRONG_LIST_KIND', 'Only collections can be archived');
+    // Update only supplied fields: archiving must not overwrite a concurrent rename or artwork edit.
+    const fields: string[] = [];
+    const values: (string | number | null)[] = [];
+    if (patch.name !== undefined) {
+      fields.push('name = ?');
+      values.push(patch.name);
+    }
+    if (patch.description !== undefined) {
+      fields.push('description = ?');
+      values.push(patch.description);
+    }
+    if (patch.artwork !== undefined) {
+      fields.push('artwork = ?');
+      values.push(patch.artwork ? JSON.stringify(patch.artwork) : null);
+    }
+    if (patch.archived !== undefined) {
+      fields.push('archived = ?');
+      values.push(patch.archived ? 1 : 0);
+    }
     await c.env.DB.prepare(
-      'UPDATE lists SET name = ?, description = ?, artwork = ?, updated_at = ? WHERE id = ? AND owner_id = ?',
+      `UPDATE lists SET ${fields.join(', ')}, updated_at = ? WHERE id = ? AND owner_id = ? AND trashed_at IS NULL`,
     )
-      .bind(
-        patch.name ?? list.name,
-        patch.description ?? list.description,
-        patch.artwork === undefined
-          ? list.artwork
-            ? JSON.stringify(list.artwork)
-            : null
-          : patch.artwork
-            ? JSON.stringify(patch.artwork)
-            : null,
-        Date.now(),
-        list.id,
-        c.get('ownerId'),
-      )
+      .bind(...values, Date.now(), list.id, c.get('ownerId'))
       .run();
     return c.json({ list: await requireList(c.env.DB, c.get('ownerId'), list.id) });
   });

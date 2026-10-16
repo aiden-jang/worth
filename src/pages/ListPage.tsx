@@ -96,7 +96,7 @@ export function ListPage() {
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
-      <Link className="back-link" to={`/lists?kind=${list.kind}`}>
+      <Link className="back-link" to={`/lists?kind=${list.kind}${list.archived ? '&archived=1' : ''}`}>
         <ArrowLeft size={16} /> {list.kind === 'collection' ? 'Collections' : 'Activity'}
       </Link>
       <section className="list-page-head">
@@ -153,6 +153,14 @@ export function ListPage() {
           )}
         </div>
       </section>
+      {list.archived && (
+        <div className="collection-archive-notice" role="status">
+          <span>Archived collection. You can still open and edit its records.</span>
+          <button className="button button-outline" onClick={() => setShowSettings(true)}>
+            Open settings to unarchive
+          </button>
+        </div>
+      )}
       {coverError && (
         <p className="collection-cover-notice" role="status">
           Collection saved. {coverError}
@@ -162,6 +170,7 @@ export function ListPage() {
       {showSettings && (
         <ListSettings
           listId={listId}
+          archived={list.archived ?? false}
           name={list.name}
           description={list.description}
           isCollection={list.kind === 'collection'}

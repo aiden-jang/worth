@@ -16,14 +16,14 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
         JOIN active_lists l ON l.id = g.list_id
         LEFT JOIN record_items original ON original.id = g.item_id
         LEFT JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id)
-        WHERE g.owner_id = ?
+        WHERE g.owner_id = ? AND l.archived = 0
         UNION ALL
         SELECT i.id, i.list_id, i.id AS item_id, l.name AS list_name, l.kind, 'item' AS record_kind,
           i.title, NULL AS happened_on, i.updated_at AS recorded_at,
           NULL AS amount, '' AS unit, NULL AS sets, NULL AS reps, i.decision
         FROM active_items i
         JOIN active_lists l ON l.id = i.list_id
-        WHERE i.owner_id = ?
+        WHERE i.owner_id = ? AND l.archived = 0
       )
       SELECT * FROM recent_records
       ORDER BY recorded_at DESC, id DESC
@@ -49,14 +49,14 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
     const decisionPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type, i.decision
       FROM active_items i
       JOIN active_lists l ON l.id = i.list_id AND l.owner_id = i.owner_id
-      WHERE i.owner_id = ? AND i.decision = ?
+      WHERE i.owner_id = ? AND l.archived = 0 AND i.decision = ?
       ORDER BY l.updated_at DESC, i.updated_at DESC LIMIT 5`;
     const rankedPickQuery = `SELECT l.id AS list_id, l.name AS list_name, i.id AS item_id, i.title, i.type,
         CAST(r.key AS INTEGER) + 1 AS rank
       FROM active_lists l
       JOIN json_each(l.ranked_ids) r
       JOIN active_items i ON i.id = r.value AND i.owner_id = l.owner_id
-      WHERE l.owner_id = ? AND l.kind = 'collection'
+      WHERE l.owner_id = ? AND l.kind = 'collection' AND l.archived = 0
       ORDER BY CAST(r.key AS INTEGER) ASC, l.updated_at DESC, i.updated_at DESC
       LIMIT 5`;
     const [rankedQuery, favoritesQuery, notAgainQuery] = await Promise.all([
@@ -98,7 +98,7 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
       SELECT a.id, a.list_id, l.name AS list_name, a.title, a.happened_on
       FROM latest_activity a
       JOIN active_lists l ON l.id = a.list_id AND l.owner_id = ?
-      WHERE a.position = 1
+      WHERE a.position = 1 AND l.archived = 0
       ORDER BY a.happened_on DESC
       LIMIT 4`,
     )

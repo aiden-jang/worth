@@ -9,6 +9,7 @@ import { CollectionCoverControl } from './PhotoControl';
 
 export function ListSettings({
   listId,
+  archived = false,
   name,
   description,
   isCollection,
@@ -19,6 +20,7 @@ export function ListSettings({
   onDeleted,
 }: {
   listId: string;
+  archived?: boolean;
   name: string;
   description: string;
   isCollection: boolean;
@@ -49,6 +51,16 @@ export function ListSettings({
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
       onClose();
+    },
+  });
+  const archiving = useMutation({
+    mutationFn: (target: boolean) => api.updateList(listId, { archived: target }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['list', listId] });
+      void client.invalidateQueries({ queryKey: ['lists'] });
+      void client.invalidateQueries({ queryKey: ['overview'] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
+      void client.invalidateQueries({ queryKey: ['search'] });
     },
   });
   const remove = useMutation({
@@ -128,9 +140,42 @@ export function ListSettings({
           version={updatedAt}
         />
       )}
+      {isCollection && (
+        <section className="settings-archive" aria-label="Archive collection">
+          <div>
+            <p className="overline">{archived ? 'ARCHIVED COLLECTION' : 'ARCHIVE COLLECTION'}</p>
+            <p>
+              {archived
+                ? 'Bring this collection back to the everyday view.'
+                : 'Hide this collection from home, the sidebar and everyday collection choices. Find it under Collections → Archived or in Search.'}
+            </p>
+            <p className="muted">
+              Records, ranks, photos and backups stay available. Existing public links keep their access and
+              expiry.
+            </p>
+            {hasChanges && <p className="muted">Save or discard your settings changes first.</p>}
+          </div>
+          <button
+            className="button button-outline"
+            disabled={hasChanges || archiving.isPending || update.isPending || remove.isPending}
+            onClick={() => archiving.mutate(!archived)}
+          >
+            {archiving.isPending ? 'Saving…' : archived ? 'Unarchive collection' : 'Archive collection'}
+          </button>
+          {archiving.isError && (
+            <p className="form-error" role="alert">
+              {archiving.error.message}
+            </p>
+          )}
+        </section>
+      )}
       <div className="settings-danger">
         <span>Lists and their contents can be restored from Trash for 30 days.</span>
-        <button className="text-danger" disabled={remove.isPending} onClick={() => setConfirmingDelete(true)}>
+        <button
+          className="text-danger"
+          disabled={remove.isPending || archiving.isPending}
+          onClick={() => setConfirmingDelete(true)}
+        >
           Delete this list
         </button>
       </div>
@@ -151,7 +196,7 @@ export function ListSettings({
         <ConfirmDialog
           eyebrow="DISCARD CHANGES"
           title="Leave list settings?"
-          description="Your changes to this list's name and description will be lost."
+          description="Your changes to this list's name, description and artwork will be lost."
           cancelLabel="Keep editing"
           confirmLabel="Discard changes"
           onConfirm={() => {

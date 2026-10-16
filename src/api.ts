@@ -117,6 +117,7 @@ export const api = {
   overview: () => request<Overview>('/overview'),
   patterns: () => request<ArchivePatterns>('/patterns'),
   lists: () => request<{ lists: ListSummary[] }>('/lists'),
+  archivedLists: () => request<{ lists: ListSummary[] }>('/lists?archived=1'),
   list: (id: string) => request<{ list: ListDetail }>(`/lists/${id}`),
   createList: (body: {
     name: string;
@@ -124,8 +125,10 @@ export const api = {
     description: string;
     artwork?: CollectionArt | null;
   }) => request<{ list: ListDetail }>('/lists', json('POST', body)),
-  updateList: (id: string, body: { name?: string; description?: string; artwork?: CollectionArt | null }) =>
-    request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
+  updateList: (
+    id: string,
+    body: { name?: string; description?: string; artwork?: CollectionArt | null; archived?: boolean },
+  ) => request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
   deleteList: (id: string) => trashRecord('list', id, `/lists/${id}`),
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
   createItem: (listId: string, body: ItemInput, operationId?: string) =>

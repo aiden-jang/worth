@@ -38,6 +38,7 @@ beforeAll(async () => {
     '0011_archive_tools.sql',
     '0012_collection_workspace.sql',
     '0013_item_context.sql',
+    '0014_collection_archiving.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1951,4 +1952,175 @@ test('a collection trashed just before reviewed capture leaves no rows or retry 
   expect(
     await platform.env.DB.prepare('SELECT id FROM capture_operations WHERE id = ?').bind(key).first(),
   ).toBeNull();
+});
+
+test('archived collections leave everyday views but keep records, search, links and reversible Trash', async () => {
+  const owner = 'archivist';
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Tucked coffee', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const { item } = (await (
+    await call(`/lists/${list.id}/items`, owner, 'POST', { title: 'Tucked coffee', decision: 'favorite' })
+  ).json()) as { item: Item };
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', { itemIds: [item.id], expectedRevision: 0 });
+  await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    itemId: item.id,
+    title: item.title,
+    happenedOn: '2026-10-15',
+  });
+  const shared = (await (
+    await call(`/lists/${list.id}/shares`, owner, 'POST', {
+      limit: 'all',
+    })
+  ).json()) as { token: string };
+  expect(shared.token).toBeTruthy();
+  expect((await call(`/lists/${list.id}`, 'intruder', 'PATCH', { archived: true })).status).toBe(404);
+  const archived = await call(`/lists/${list.id}`, owner, 'PATCH', { archived: true });
+  expect(archived.status).toBe(200);
+  expect(await archived.json()).toMatchObject({ list: { archived: true, rankedIds: [item.id] } });
+  expect(await (await call('/lists', owner)).json()).toMatchObject({ lists: [] });
+  expect(await (await call('/lists?archived=1', owner)).json()).toMatchObject({
+    lists: [{ id: list.id, archived: true }],
+  });
+  expect(await (await call('/lists?archived=1', 'intruder')).json()).toMatchObject({ lists: [] });
+  expect((await call('/lists?archived=maybe', owner)).status).toBe(400);
+  expect(await (await call('/overview', owner)).json()).toMatchObject({
+    lists: [],
+    recent: [],
+    ranked: [],
+    favorites: [],
+    notAgain: [],
+  });
+  expect(await (await call('/patterns', owner)).json()).toMatchObject({
+    totalCollections: 1,
+    totalRecords: 2,
+    rankedItemCount: 1,
+    favoriteCount: 1,
+    revisitCount: 1,
+  });
+  const found = (await (await call('/search?q=Tucked', owner)).json()) as {
+    results: { listArchived: boolean }[];
+  };
+  expect(found.results.length).toBeGreaterThanOrEqual(2);
+  expect(found.results.every((r) => r.listArchived)).toBe(true);
+  expect(await (await call(`/lists/${list.id}/items`, owner)).json()).toMatchObject({
+    items: [{ id: item.id, decision: 'favorite' }],
+  });
+  expect((await call(`/public/${shared.token}`, null)).status).toBe(200);
+  expect(await (await call('/trash', owner)).json()).toMatchObject({ entries: [] });
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  expect((await call(`/lists/${list.id}`, owner, 'PATCH', { archived: false })).status).toBe(404);
+  expect(await (await call('/lists?archived=1', owner)).json()).toMatchObject({ lists: [] });
+  await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'list', id: list.id }] });
+  expect(await (await call(`/lists/${list.id}`, owner)).json()).toMatchObject({ list: { archived: true } });
+  await call(`/lists/${list.id}`, owner, 'PATCH', { archived: false });
+  expect(await (await call('/lists', owner)).json()).toMatchObject({
+    lists: [{ id: list.id, archived: false }],
+  });
+  expect((await call(`/public/${shared.token}`, null)).status).toBe(404);
+});
+
+test('backups preserve archived collections and old backups default to current', async () => {
+  const owner = 'archivebackup';
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Old cameras', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const { list: activity } = (await (
+    await call('/lists', owner, 'POST', { name: 'Walks', kind: 'activity' })
+  ).json()) as { list: ListDetail };
+  expect((await call(`/lists/${activity.id}`, owner, 'PATCH', { archived: true })).status).toBe(400);
+  await call(`/lists/${list.id}`, owner, 'PATCH', { archived: true });
+  const file = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(file.lists.find((l) => l.id === list.id)?.archived).toBe(true);
+  const imported = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=archiverestored',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(file),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(imported.status).toBe(201);
+  const restored = (await (await call('/lists?archived=1', 'archiverestored')).json()) as {
+    lists: ListSummary[];
+  };
+  expect(restored.lists).toHaveLength(1);
+  expect(restored.lists[0]).toMatchObject({ archived: true, name: 'Old cameras' });
+  expect(restored.lists[0].id).not.toBe(list.id);
+  const legacy = {
+    ...file,
+    lists: file.lists.map((l) => Object.fromEntries(Object.entries(l).filter(([key]) => key !== 'archived'))),
+  };
+  expect(archiveFile.parse(legacy).lists.every((l) => !l.archived)).toBe(true);
+  expect(
+    archiveFile.safeParse({ ...file, lists: file.lists.map((l) => ({ ...l, archived: true })) }).success,
+  ).toBe(false);
+});
+
+test('archive-only updates do not overwrite settings changed after the initial read', async () => {
+  const owner = 'archiveconcurrent';
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Earlier name', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const db = platform.env.DB;
+  let intercepted = false;
+  const wrapped = new Proxy(db, {
+    get(target, key) {
+      if (key === 'prepare')
+        return (sql: string) => {
+          if (!sql.startsWith('UPDATE lists SET archived')) return target.prepare(sql);
+          const prepared = target.prepare(sql);
+          return {
+            bind: (...values: (string | number | null)[]) => ({
+              run: async () => {
+                intercepted = true;
+                await target
+                  .prepare('UPDATE lists SET name = ?, description = ?, artwork = ? WHERE id = ?')
+                  .bind(
+                    'Concurrent name',
+                    'Kept description',
+                    JSON.stringify({ object: 'camera', tone: 'sage' }),
+                    list.id,
+                  )
+                  .run();
+                return prepared.bind(...values).run();
+              },
+            }),
+          };
+        };
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const response = await app.request(
+    `https://worth.test/api/lists/${list.id}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ archived: true }),
+    },
+    { ...platform.env, DB: wrapped },
+    platform.ctx,
+  );
+  expect(intercepted).toBe(true);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({
+    list: {
+      archived: true,
+      name: 'Concurrent name',
+      description: 'Kept description',
+      artwork: { object: 'camera', tone: 'sage' },
+    },
+  });
 });

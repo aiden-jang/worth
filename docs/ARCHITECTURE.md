@@ -250,3 +250,28 @@ members; groups with fewer than two disappear without mutating stored originals.
 Backup remaps review/group IDs and item references; validation rejects foreign or
 merged references and nonempty activity review tools. Older workspaces remain
 unchanged. No review state is exposed in public snapshots.
+
+## Collection archiving
+
+Migration `0014_collection_archiving.sql` adds a boolean `lists.archived`, defaulting
+to false. `active_lists` continues to mean non-Trash: archiving is organization,
+not deletion or an access boundary. Direct collection/record/photo routes remain
+owner checked and editable. The list directory selects current lists by default;
+`GET /lists?archived=1` selects archived collections. All home overview sections
+exclude archived parents. Search includes them with `listArchived` labels; Patterns
+includes their actual records. Sidebar and capture/move destinations use the
+current list directory. Activity lists cannot be archived.
+
+`PATCH /lists/:id` updates only whitelisted supplied fields, with an owner and
+non-Trash guard. An archive-only change therefore cannot overwrite a rename or
+artwork edit completed after the initial read. The settings action is blocked by
+unsaved settings changes and reports failures in place. Collection status is
+reversible and is independent of rank, calls, workspace revisions, public-link
+expiry and 30-day Trash. Restoring a trashed collection retains its archive flag;
+Trash still revokes links permanently.
+
+Records/complete backups include archived collections and their content. Restore
+retains the flag with new record IDs; old backups default to current, and an
+archived activity backup is rejected. Directory status is in the URL for Back
+navigation; current and archived queries use separate cache keys invalidated by
+changes to collection settings.

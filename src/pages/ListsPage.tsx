@@ -72,6 +72,13 @@ export function ListsPage() {
   const [params, setParams] = useSearchParams();
   const creating = params.get('create') === '1';
   const requestedKind = params.get('kind');
+  const showingArchived = params.get('archived') === '1' && requestedKind !== 'activity' && !creating;
+  const archivedLists = useQuery({
+    queryKey: ['lists', 'archived'],
+    queryFn: api.archivedLists,
+    enabled: showingArchived,
+  });
+  const directory = showingArchived ? archivedLists : lists;
   const listScope: ListKind | null =
     requestedKind === 'collection' || requestedKind === 'activity' ? requestedKind : null;
   const [name, setName] = useState('');
@@ -85,8 +92,8 @@ export function ListsPage() {
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useViewPreference('collection-directory:query', '');
-  const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
-  const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const collectionLists = directory.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const activityLists = directory.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
   const visibleActivityLists = listScope === 'collection' ? [] : activityLists;
   const matchingCollectionLists = visibleCollectionLists.filter((list) => {
@@ -114,13 +121,15 @@ export function ListsPage() {
   const pageTitle =
     listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
   const workoutShortcut = params.get('action') === 'workout';
-  const pageDescription = workoutShortcut
-    ? 'Choose an activity list to start a workout.'
-    : listScope === 'collection'
-      ? 'The good, the meh, and the “not again.”'
-      : listScope === 'activity'
-        ? 'Record what happened and when.'
-        : 'Your collections and activity logs.';
+  const pageDescription = showingArchived
+    ? 'Tucked away. Still yours. Open a collection to unarchive it in settings.'
+    : workoutShortcut
+      ? 'Choose an activity list to start a workout.'
+      : listScope === 'collection'
+        ? 'The good, the meh, and the “not again.”'
+        : listScope === 'activity'
+          ? 'Record what happened and when.'
+          : 'Your collections and activity logs.';
   const create = useMutation({
     mutationFn: async (input: {
       name: string;
@@ -239,6 +248,33 @@ export function ListsPage() {
           </div>
         )}
       </div>
+
+      {!creating && listScope !== 'activity' && (
+        <div className="collection-status-controls" role="group" aria-label="Collection status">
+          <button
+            className="button button-outline"
+            aria-pressed={!showingArchived}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.delete('archived');
+              setParams(next);
+            }}
+          >
+            Current
+          </button>
+          <button
+            className="button button-outline"
+            aria-pressed={showingArchived}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.set('archived', '1');
+              setParams(next);
+            }}
+          >
+            Archived
+          </button>
+        </div>
+      )}
 
       {creating && (
         <section className="create-panel cabinet-create" aria-label="Create a list">
@@ -394,19 +430,19 @@ export function ListsPage() {
       )}
 
       {!creating &&
-        (lists.isPending ? (
+        (directory.isPending ? (
           <p className="loading-line" role="status">
             Loading your lists…
           </p>
-        ) : lists.isError ? (
+        ) : directory.isError ? (
           <p className="error-banner" role="alert">
-            Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
+            Couldn't load your lists. <button onClick={() => void directory.refetch()}>Try again</button>
           </p>
-        ) : lists.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
+        ) : directory.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
           <div className="list-groups">
             {visibleCollectionLists.length > 0 && (
               <ListDirectory
-                heading="Collections"
+                heading={showingArchived ? 'Archived collections' : 'Collections'}
                 detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
                 lists={orderedCollectionLists}
                 isCollectionDirectory
@@ -425,6 +461,11 @@ export function ListsPage() {
               />
             )}
           </div>
+        ) : showingArchived ? (
+          <section className="collection-directory-empty">
+            <h2>No archived collections.</h2>
+            <p>Archive a collection from its settings when you want it out of the everyday view.</p>
+          </section>
         ) : (
           <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />
         ))}
@@ -445,10 +486,18 @@ function EmptyListScope({
   return (
     <section className="list-suggestions">
       <p className="overline">
-        {scope ? `NO ${scope === 'collection' ? 'COLLECTIONS' : 'ACTIVITIES'} YET` : 'A FEW PLACES TO START'}
+        {scope === 'collection'
+          ? 'NO CURRENT COLLECTIONS'
+          : scope === 'activity'
+            ? 'NO ACTIVITIES YET'
+            : 'A FEW PLACES TO START'}
       </p>
       <p className="starter-intro">
-        {scope === 'activity' ? 'Pick a place to keep track.' : 'An empty archive. Enjoy it while it lasts.'}
+        {scope === 'activity'
+          ? 'Pick a place to keep track.'
+          : scope === 'collection'
+            ? 'Start a collection, or open Archived.'
+            : 'Create a list, or check Archived for older collections.'}
       </p>
       <div>
         {scopedSuggestions.map((suggestion) => (

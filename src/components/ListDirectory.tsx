@@ -33,10 +33,13 @@ export function ListDirectory({
   onCollectionQueryChange?: (query: string) => void;
 }) {
   return (
-    <section className="list-directory" aria-labelledby={`${heading.toLowerCase()}-heading`}>
+    <section
+      className="list-directory"
+      aria-labelledby={`${heading.toLowerCase().replace(/\s+/g, '-')}-heading`}
+    >
       <header className="list-directory-head">
         <div>
-          <p className="overline" id={`${heading.toLowerCase()}-heading`}>
+          <p className="overline" id={`${heading.toLowerCase().replace(/\s+/g, '-')}-heading`}>
             {heading}
           </p>
           <span>{detail}</span>

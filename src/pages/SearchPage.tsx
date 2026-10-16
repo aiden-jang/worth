@@ -165,6 +165,7 @@ function SearchGroup({ label, results }: { label: string; results: SearchResult[
               {result.kind === 'list'
                 ? `LIST / ${result.detail || 'ARCHIVE'}`
                 : `${result.listName} / ${result.kind === 'item' ? 'ITEM' : result.itemId ? 'REVISIT' : 'ACTIVITY'}`}
+              {result.listArchived && ' · ARCHIVED'}
             </small>
             <strong>{result.title}</strong>
             {result.detail && <em>{result.detail}</em>}

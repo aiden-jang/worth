@@ -16,6 +16,7 @@ export interface ListSummary {
   logCount: number;
   rankedCount: number;
   favoriteCount: number;
+  archived?: boolean;
   artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
   updatedAt: number;
@@ -189,6 +190,7 @@ interface DecisionPick {
 }
 
 export interface SearchResult {
+  listArchived?: boolean;
   id: string;
   listId: string;
   listName: string;

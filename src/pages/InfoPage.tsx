@@ -220,6 +220,14 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Archived collections</h2>
+              <p>
+                Open a collection’s settings and choose Archive collection to remove it from home, the sidebar
+                and everyday collection choices. Find it under Collections → Archived or in Search. Its
+                records stay editable; Patterns and backups still include them. Use Unarchive collection in
+                settings to bring it back. Archiving has no expiry and keeps existing public links at their
+                original access and expiry. Trash is separate.
+              </p>
               <h2>Possible duplicates</h2>
               <p>
                 Open Workbench → Comparison table → Possible duplicates to review matching names and types.

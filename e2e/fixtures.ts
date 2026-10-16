@@ -160,7 +160,18 @@ export async function mockArchive(page: Page): Promise<State> {
       return reply({ list: extraList });
     }
     if (path === '/search') return reply({ results: [] });
-    if (path === '/lists') return reply({ lists: [state.list, ...state.extraLists] });
+    if (path === '/lists') {
+      const archived = new URL(request.url()).searchParams.get('archived') === '1';
+      return reply({
+        lists: [state.list, ...state.extraLists].filter((l) => Boolean(l.archived) === archived),
+      });
+    }
+    if (path === `/lists/${list.id}` && method === 'PATCH') {
+      const body = request.postDataJSON();
+      state.writes.push({ path, body });
+      Object.assign(state.list, body);
+      return reply({ list: state.list });
+    }
     if (path === `/lists/${list.id}`)
       return state.failShow
         ? reply({ error: 'UNAVAILABLE', message: 'Temporarily unavailable' }, 503)
@@ -221,7 +232,7 @@ export async function mockArchive(page: Page): Promise<State> {
       return state.failShares ? reply({ message: 'Link lookup unavailable' }, 503) : reply({ shares: [] });
     if (path === '/overview')
       return reply({
-        lists: [state.list],
+        lists: state.list.archived ? [] : [state.list],
         recent: [],
         ranked: [],
         favorites: [],

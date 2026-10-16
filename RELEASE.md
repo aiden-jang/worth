@@ -87,3 +87,12 @@ that retains the active-view read boundaries. Never drop the new columns to roll
 Smoke-check create/Want to try, merge/separate, move with a photo/history, Trash/Undo,
 list restoration with revoked public links, and a backup/restore of merged originals.
 Use disposable staging records for retention cleanup and permanent account-data deletion.
+
+## Cabinet expansion migrations
+
+The isolated cabinet expansion branch adds additive migrations `0012` (collection
+workspace/revision), `0013` (private item context/revision) and `0014` (collection
+archive flag). Apply all pending migrations before deploying its Worker. Archiving
+keeps the existing non-Trash read views and does not revoke public links. The
+feature tracker records local verification; it does not assert that these branch
+changes have been merged, passed GitHub CI or been deployed.

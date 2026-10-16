@@ -165,6 +165,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         owner_id: owner,
         name: l.name,
         kind: l.kind,
+        archived: l.archived ? 1 : 0,
         description: l.description,
         artwork: l.artwork ? JSON.stringify(l.artwork) : null,
         ranked_ids: JSON.stringify(l.rankedIds.map(id)),
