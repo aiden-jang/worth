@@ -16,3 +16,6 @@ It checks reset, zoom, saved image pixels, cancellation and narrow widths.
 Forced colors use the browser's system palette for fields, selected choices and
 keyboard focus. These captures emulate high contrast; physical-device assistive
 technology and native autofill remain device checks.
+
+High-contrast selections use a heavier bottom rule while labels retain native
+system text colors. This avoids text backplates obscuring a filled selection.
