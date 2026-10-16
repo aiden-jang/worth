@@ -128,7 +128,11 @@ export function registerLogRoutes(api: Hono<AppEnv>): void {
     const log = await requireLog(c.env.DB, c.get('ownerId'), c.req.param('logId'));
     const now = Date.now();
     await c.env.DB.batch([
-      c.env.DB.prepare('DELETE FROM logs WHERE id = ? AND owner_id = ?').bind(log.id, c.get('ownerId')),
+      c.env.DB.prepare('UPDATE logs SET trashed_at = ? WHERE id = ? AND owner_id = ?').bind(
+        now,
+        log.id,
+        c.get('ownerId'),
+      ),
       c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
         now,
         log.listId,
@@ -153,6 +157,6 @@ async function validateLogTarget(
     return;
   }
   if (!itemId) throw new ApiError(400, 'INVALID_LOG', 'Choose an item for this log');
-  const item = await requireItem(db, ownerId, itemId);
+  const item = await requireItem(db, ownerId, itemId, true);
   if (item.listId !== listId) throw new ApiError(400, 'INVALID_LOG', 'The item belongs to another list');
 }

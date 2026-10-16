@@ -48,6 +48,9 @@ type ListRow = {
 
 type ItemRow = {
   revisit_queued: number;
+  want_to_try: number;
+  merged_into_id: string | null;
+  merged_ids: string;
   id: string;
   list_id: string;
   title: string;
@@ -92,12 +95,12 @@ type ShareRow = {
 
 const listQuery = `
   SELECT l.id, l.name, l.kind, l.description, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at,
-    (SELECT COUNT(*) FROM items i WHERE i.list_id = l.id) AS item_count,
-    (SELECT COUNT(*) FROM logs g WHERE g.list_id = l.id) AS log_count,
+    (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.merged_into_id IS NULL) AS item_count,
+    (SELECT COUNT(*) FROM active_logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
-    (SELECT COUNT(*) FROM items i WHERE i.list_id = l.id AND i.decision = 'favorite') AS favorite_count,
+    (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.decision = 'favorite' AND i.merged_into_id IS NULL) AS favorite_count,
     EXISTS(SELECT 1 FROM list_photos p WHERE p.list_id = l.id) AS has_cover_photo
-  FROM lists l
+  FROM active_lists l
 `;
 
 function mapList(row: ListRow): ListDetail {
@@ -156,6 +159,9 @@ function mapItem(row: ItemRow): Item {
     note: row.note,
     decision: row.decision,
     revisitQueued: Boolean(row.revisit_queued),
+    wantToTry: Boolean(row.want_to_try),
+    mergedIntoId: row.merged_into_id,
+    mergedIds: JSON.parse(row.merged_ids ?? '[]'),
     startedOn: row.started_on,
     endedOn: row.ended_on,
     hasPhoto: Boolean(row.has_photo),
@@ -167,25 +173,39 @@ function mapItem(row: ItemRow): Item {
 }
 
 const itemQuery = `
-  SELECT i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
+  SELECT i.want_to_try, i.merged_into_id, (SELECT json_group_array(m.id) FROM record_items m WHERE m.merged_into_id = i.id) AS merged_ids, i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
     i.created_at, i.updated_at,
     EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id = i.id) AS has_photo,
-    (SELECT COUNT(*) FROM logs g WHERE g.item_id = i.id) AS log_count,
-    (SELECT MAX(g.happened_on) FROM logs g WHERE g.item_id = i.id) AS last_logged_on
-  FROM items i
+    (SELECT COUNT(*) FROM active_logs g WHERE g.item_id IN (SELECT m.id FROM record_items m WHERE m.id = i.id OR m.merged_into_id = i.id)) AS log_count,
+    (SELECT MAX(g.happened_on) FROM active_logs g WHERE g.item_id IN (SELECT m.id FROM record_items m WHERE m.id = i.id OR m.merged_into_id = i.id)) AS last_logged_on
+  FROM record_items i
 `;
 
-export async function listItems(db: D1Database, ownerId: string, listId: string): Promise<Item[]> {
+export async function listItems(
+  db: D1Database,
+  ownerId: string,
+  listId: string,
+  includeMerged = false,
+): Promise<Item[]> {
   const { results } = await db
-    .prepare(`${itemQuery} WHERE i.owner_id = ? AND i.list_id = ? ORDER BY i.created_at DESC`)
+    .prepare(
+      `${itemQuery} WHERE i.owner_id = ? AND i.list_id = ? ${includeMerged ? '' : 'AND i.merged_into_id IS NULL'} ORDER BY i.created_at DESC`,
+    )
     .bind(ownerId, listId)
     .all<ItemRow>();
   return results.map(mapItem);
 }
 
-export async function requireItem(db: D1Database, ownerId: string, id: string): Promise<Item> {
+export async function requireItem(
+  db: D1Database,
+  ownerId: string,
+  id: string,
+  includeMerged = false,
+): Promise<Item> {
   const row = await db
-    .prepare(`${itemQuery} WHERE i.owner_id = ? AND i.id = ?`)
+    .prepare(
+      `${itemQuery} WHERE i.owner_id = ? AND i.id = ? ${includeMerged ? '' : 'AND i.merged_into_id IS NULL'}`,
+    )
     .bind(ownerId, id)
     .first<ItemRow>();
   if (!row) throw new ApiError(404, 'NOT_FOUND', 'Item not found');
@@ -217,7 +237,7 @@ export async function listLogs(db: D1Database, ownerId: string, listId: string):
   const { results } = await db
     .prepare(
       `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
-      FROM logs g WHERE g.owner_id = ? AND g.list_id = ? ORDER BY g.happened_on DESC, g.created_at DESC`,
+      FROM active_logs g WHERE g.owner_id = ? AND g.list_id = ? ORDER BY g.happened_on DESC, g.created_at DESC`,
     )
     .bind(ownerId, listId)
     .all<LogRow>();
@@ -228,7 +248,7 @@ export async function requireLog(db: D1Database, ownerId: string, id: string): P
   const row = await db
     .prepare(
       `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
-      FROM logs g WHERE g.owner_id = ? AND g.id = ?`,
+      FROM active_logs g WHERE g.owner_id = ? AND g.id = ?`,
     )
     .bind(ownerId, id)
     .first<LogRow>();
@@ -259,13 +279,19 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     db
       .prepare(
         `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
-        FROM logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
+        FROM active_logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
       )
       .bind(ownerId),
     db
-      .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? ORDER BY happened_on ASC, created_at ASC')
+      .prepare(
+        'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY happened_on ASC, created_at ASC',
+      )
       .bind(ownerId),
-    db.prepare('SELECT * FROM workout_routines WHERE owner_id = ? ORDER BY created_at ASC').bind(ownerId),
+    db
+      .prepare(
+        'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY created_at ASC',
+      )
+      .bind(ownerId),
   ]);
   return {
     schemaVersion: 1,
@@ -311,7 +337,7 @@ export async function listWorkouts(
 ): Promise<WorkoutSession[]> {
   const { results } = await db
     .prepare(
-      'SELECT * FROM workout_sessions WHERE owner_id = ? AND list_id = ? ORDER BY happened_on DESC, created_at DESC',
+      'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? AND list_id = ? ORDER BY happened_on DESC, created_at DESC',
     )
     .bind(ownerId, listId)
     .all<WorkoutRow>();
@@ -319,7 +345,9 @@ export async function listWorkouts(
 }
 export async function requireWorkout(db: D1Database, ownerId: string, id: string): Promise<WorkoutSession> {
   const row = await db
-    .prepare('SELECT * FROM workout_sessions WHERE owner_id = ? AND id = ?')
+    .prepare(
+      'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? AND id = ?',
+    )
     .bind(ownerId, id)
     .first<WorkoutRow>();
   if (!row) throw new ApiError(404, 'NOT_FOUND', 'Workout not found');
@@ -370,7 +398,7 @@ export async function listRoutines(
 ): Promise<WorkoutRoutine[]> {
   const { results } = await db
     .prepare(
-      'SELECT * FROM workout_routines WHERE owner_id = ? AND list_id = ? ORDER BY title COLLATE NOCASE, created_at',
+      'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? AND list_id = ? ORDER BY title COLLATE NOCASE, created_at',
     )
     .bind(ownerId, listId)
     .all<RoutineRow>();
@@ -378,7 +406,9 @@ export async function listRoutines(
 }
 export async function requireRoutine(db: D1Database, ownerId: string, id: string): Promise<WorkoutRoutine> {
   const row = await db
-    .prepare('SELECT * FROM workout_routines WHERE owner_id = ? AND id = ?')
+    .prepare(
+      'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? AND id = ?',
+    )
     .bind(ownerId, id)
     .first<RoutineRow>();
   if (!row) throw new ApiError(404, 'NOT_FOUND', 'Routine not found');

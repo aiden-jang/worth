@@ -38,6 +38,7 @@ export const itemInput = z
     note: note.default(''),
     decision: itemDecision.default(null),
     revisitQueued: z.boolean().default(false),
+    wantToTry: z.boolean().default(false),
     startedOn: date.nullable().default(null),
     endedOn: date.nullable().default(null),
   })
@@ -53,12 +54,14 @@ export const itemPatch = z
     note: note.optional(),
     decision: itemDecision.optional(),
     revisitQueued: z.boolean().optional(),
+    wantToTry: z.boolean().optional(),
     startedOn: date.nullable().optional(),
     endedOn: date.nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0);
 
 export const itemsBatchInput = z.object({
+  wantToTry: z.boolean().default(false),
   titles: z
     .array(shortText(collectionItemTitleLimit))
     .min(1)
@@ -123,3 +126,32 @@ export const rankInput = z.object({
 });
 
 export const shareInput = z.object({ limit: z.union([z.literal(5), z.literal(10), z.literal('all')]) });
+
+export const archiveActionInput = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('move'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    destinationId: z.string().uuid(),
+  }),
+  z.object({
+    action: z.literal('merge'),
+    itemIds: z.array(z.string().uuid()).min(2).max(20),
+    targetId: z.string().uuid(),
+  }),
+  z.object({ action: z.literal('trash'), itemIds: z.array(z.string().uuid()).min(1).max(100) }),
+  z.object({
+    action: z.literal('queue'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.boolean(),
+  }),
+  z.object({
+    action: z.literal('want'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.boolean(),
+  }),
+  z.object({
+    action: z.literal('type'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.string().trim().max(60),
+  }),
+]);

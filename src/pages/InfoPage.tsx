@@ -31,7 +31,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             ? 'HELP & CONTACT'
             : kind === 'missing'
               ? '404'
-              : 'WORTH / UPDATED OCTOBER 10, 2026'}
+              : 'WORTH / UPDATED OCTOBER 15, 2026'}
         </p>
         <h1>{title}</h1>
         {kind === 'missing' ? (
@@ -53,10 +53,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>What Worth stores</h2>
               <p>
                 Your collections, activity entries, notes, dates, rankings, optional Favorite / Meh / Not
-                again calls, revisit queue, exercise measurements, routines, workout visits, and uploaded
-                photos or collection covers. Records are associated with your shared account ID. Worth
-                receives your account identity to check access and display your name; passwords are handled by
-                the account service.
+                again calls, Want to try, merged originals, revisit queue, exercise measurements, routines,
+                workout visits, and uploaded photos or collection covers. Records are associated with your
+                shared account ID. Worth receives your account identity to check access and display your name;
+                passwords are handled by the account service.
               </p>
             </section>
             <section>
@@ -94,16 +94,19 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Keeping, copying and deleting</h2>
               <p>
-                Saved records remain until you delete them. You can delete individual records or collections,
-                or remove all Worth data in Settings, including photos, routines and share snapshots. Download
-                records as JSON, or choose a backup with photos. Records-only files exclude photos. Restore
-                creates new private lists and does not recreate share links.
+                Deleted lists, items and logs remain recoverable in Trash for 30 days. Expired records are
+                permanently removed when you next open Trash. You can delete individual records or
+                collections, or permanently remove all Worth data in Settings, including Trash, photos,
+                routines and share snapshots. Download records as JSON, or choose a backup with photos.
+                Downloads exclude Trash; records-only files also exclude photos. Restore creates new private
+                lists and does not recreate share links.
               </p>
               <p>
-                Deletion removes data from the active Worth database; provider recovery copies and operational
-                logs may remain under Cloudflare’s retention practices. Deleting Worth data does not delete
-                your shared login. For shared account deletion or privacy requests, contact us so Worth data
-                can also be removed; do not assume an account-service deletion automatically clears Worth.
+                Permanent deletion removes data from the active Worth database; provider recovery copies and
+                operational logs may remain under Cloudflare’s retention practices. Deleting Worth data does
+                not delete your shared login. For shared account deletion or privacy requests, contact us so
+                Worth data can also be removed; do not assume an account-service deletion automatically clears
+                Worth.
               </p>
             </section>
             <section>
@@ -173,6 +176,21 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 Rank compares items inside one collection. Favorite, Meh and Not again are separate opinions;
                 select the same call again to clear it. The revisit queue keeps things you want to try again
                 without changing their rank or call.
+              </p>
+            </section>
+            <section>
+              <h2>Selection, merges and recovery</h2>
+              <p>
+                Use Select in a collection to move, merge, queue, change type or delete items together. Moves
+                carry photos and history and leave items unranked in the destination. A merge keeps one main
+                entry; original notes, photos, calls and visits remain in Details. Separate an original there
+                to undo its merge. Want to try is independent of opinions, rankings and the revisit queue.
+              </p>
+              <p>
+                Use Undo after deleting, or open Settings → Trash to restore lists, items and logs for 30
+                days. Restored items return unranked. Restore a containing list or item first to recover
+                records deleted separately inside it. Deleting a list revokes its public links permanently;
+                restoring does not publish them again.
               </p>
             </section>
             <section>

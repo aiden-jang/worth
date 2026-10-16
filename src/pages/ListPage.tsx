@@ -81,7 +81,11 @@ export function ListPage() {
   const focusedLog = focusLogId ? (logs.find((log) => log.id === focusLogId) ?? null) : null;
   const selected =
     items.find((item) => item.id === selectedId) ??
-    (focusedLog?.itemId ? (items.find((item) => item.id === focusedLog.itemId) ?? null) : null);
+    (focusedLog?.itemId
+      ? (items.find(
+          (item) => item.id === focusedLog.itemId || item.mergedIds?.includes(focusedLog.itemId ?? ''),
+        ) ?? null)
+      : null);
   const coverError =
     location.state && typeof location.state === 'object' && 'coverError' in location.state
       ? String(location.state.coverError)

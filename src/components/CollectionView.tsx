@@ -22,13 +22,17 @@ import {
 } from '../shared/ranking';
 import { BlankSlips } from './BlankSlips';
 import { IndexRows, ItemActions } from './CollectionIndex';
+import { CollectionTools } from './CollectionTools';
 import { CallFace } from './PersonalCall';
 
-type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue';
+type CaptureDraft = { title: string; batchTitles: string; batchMode: boolean; wantToTry?: boolean };
+
+type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue' | 'want';
 
 const browseModes: { id: BrowseMode; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'kept', label: 'Favorites' },
+  { id: 'want', label: 'Want to try' },
   { id: 'queue', label: 'Revisit queue' },
   { id: 'revisited', label: 'Revisited' },
   { id: 'not-opened-lately', label: 'Not opened lately' },
@@ -53,10 +57,10 @@ export function CollectionView({
   const captureRef = useRef<HTMLInputElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
-  const captureDraft = useDraft(
+  const captureDraft = useDraft<CaptureDraft>(
     `capture:${list.id}`,
-    { title: '', batchTitles: '', batchMode: false },
-    (value): value is { title: string; batchTitles: string; batchMode: boolean } =>
+    { title: '', batchTitles: '', batchMode: false, wantToTry: false },
+    (value): value is CaptureDraft =>
       Boolean(
         value &&
         typeof value === 'object' &&
@@ -65,7 +69,8 @@ export function CollectionView({
         'batchTitles' in value &&
         typeof value.batchTitles === 'string' &&
         'batchMode' in value &&
-        typeof value.batchMode === 'boolean',
+        typeof value.batchMode === 'boolean' &&
+        (!('wantToTry' in value) || typeof value.wantToTry === 'boolean'),
       ),
   );
   const { title, batchTitles, batchMode } = captureDraft.form;
@@ -95,6 +100,11 @@ export function CollectionView({
     'all',
   );
   const [sort, setSort] = useViewPreference<ItemSort>(`collection:${list.id}:sort`, 'rank');
+  const captureWant = Boolean(captureDraft.form.wantToTry);
+  const setCaptureWant = (wantToTry: boolean) =>
+    captureDraft.setForm((current) => ({ ...current, wantToTry }));
+  const [selecting, setSelecting] = useState(false);
+  const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState('');
   const [selectedId, setSelectedId] = useViewPreference<string | null>(
     `collection:${list.id}:selectedId`,
@@ -104,6 +114,8 @@ export function CollectionView({
   useEffect(() => {
     restoreCaptureFocus.current = null;
     setStatus('');
+    setSelecting(false);
+    setSelectionIds(new Set());
   }, [list.id]);
   useEffect(() => {
     if (!focusCapture) return;
@@ -152,6 +164,7 @@ export function CollectionView({
           type: '',
           note: '',
           decision: null,
+          wantToTry: captureWant,
           startedOn: null,
           endedOn: null,
         },
@@ -183,7 +196,7 @@ export function CollectionView({
 
   const batchCreate = useMutation({
     mutationFn: (nextTitles: string[]) =>
-      api.createItems(list.id, nextTitles, captureDraft.operationId.current),
+      api.createItems(list.id, nextTitles, captureDraft.operationId.current, captureWant),
     onSuccess: ({ items: created }) => {
       captureDraft.clear({ ...captureDraft.form, batchTitles: '' });
       captureDraft.operationId.current = crypto.randomUUID();
@@ -249,6 +262,13 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['items', list.id] });
     },
   });
+  const want = useMutation({
+    mutationFn: (item: Item) => api.updateItem(item.id, { wantToTry: !item.wantToTry }),
+    onSuccess: ({ item }) => {
+      setStatus(item.wantToTry ? 'Saved to Want to try.' : 'Removed from Want to try.');
+      void client.invalidateQueries({ queryKey: ['items', list.id] });
+    },
+  });
   const rankedIds = new Set(list.rankedIds);
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
   const hasAdvancedFilters =
@@ -274,6 +294,7 @@ export function CollectionView({
       (visits === 'again' && item.logCount <= 1)
     )
       return false;
+    if (browse === 'want') return Boolean(item.wantToTry);
     if (browse === 'queue') return Boolean(item.revisitQueued);
     if (browse === 'kept') return item.decision === 'favorite';
     if (browse === 'revisited') return item.logCount > 1;
@@ -315,6 +336,20 @@ export function CollectionView({
   }, [capturePending]);
   const selectedItem = visible.find((item) => item.id === selectedId);
   const rowActions = {
+    selection: selecting
+      ? {
+          ids: selectionIds,
+          toggle: (id: string) =>
+            setSelectionIds((old) => {
+              const next = new Set(old);
+              if (next.has(id)) next.delete(id);
+              else if (next.size < 100) next.add(id);
+              return next;
+            }),
+        }
+      : undefined,
+    onWant: (item: Item) => want.mutate(item),
+    wantPending: want.isPending,
     onQueue: (item: Item) => queue.mutate(item),
     queuePending: queue.isPending,
     rankSlots: items.length,
@@ -393,6 +428,15 @@ export function CollectionView({
               </p>
             </div>
           </form>
+          <label className="capture-want">
+            <input
+              type="checkbox"
+              checked={captureWant}
+              disabled={capturePending}
+              onChange={(e) => setCaptureWant(e.target.checked)}
+            />
+            Want to try
+          </label>
           {captureDraft.status && (title || batchTitles) && (
             <p className="draft-state" role="status">
               {captureDraft.status}
@@ -415,11 +459,12 @@ export function CollectionView({
               Start a new batch
             </button>
           )}
-          {(queue.isError ||
+          {(want.isError ||
+            queue.isError ||
             decide.isError ||
             (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
             <p className="form-error collection-capture-error" role="alert">
-              {queue.error?.message ?? decide.error?.message ?? rank.error?.message}
+              {want.error?.message ?? queue.error?.message ?? decide.error?.message ?? rank.error?.message}
             </p>
           )}
           {status && (
@@ -546,6 +591,25 @@ export function CollectionView({
             </div>
           )}
 
+          {selecting && (
+            <CollectionTools
+              list={list}
+              items={items}
+              selectedIds={selectionIds}
+              visibleIds={visible.map((i) => i.id)}
+              onSelection={setSelectionIds}
+              onDone={(message) => {
+                setStatus(message);
+                setSelectionIds(new Set());
+                setSelecting(false);
+                setSelectedId(null);
+              }}
+              onClose={() => {
+                setSelecting(false);
+                setSelectionIds(new Set());
+              }}
+            />
+          )}
           <div className="collection-index-layout">
             {items.length > 0 && (
               <div className="cabinet-index-toolbar">
@@ -560,12 +624,28 @@ export function CollectionView({
                       onClick={() => selectBrowse(mode.id)}
                     >
                       {mode.label}
-                      <small>{collectionBrowseCount(mode.id, items)}</small>
+                      <small>
+                        {mode.id === 'want'
+                          ? items.filter((i) => i.wantToTry).length
+                          : collectionBrowseCount(mode.id, items)}
+                      </small>
                     </button>
                   ))}
                 </nav>
 
                 <div className="collection-utilities">
+                  <button
+                    type="button"
+                    className="collection-search-toggle"
+                    aria-pressed={selecting}
+                    onClick={() => {
+                      setSelecting((v) => !v);
+                      setSelectionIds(new Set());
+                      setSelectedId(null);
+                    }}
+                  >
+                    {selecting ? 'Cancel selection' : 'Select'}
+                  </button>
                   <button
                     className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
                     type="button"

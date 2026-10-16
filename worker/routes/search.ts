@@ -12,7 +12,7 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
       throw new ApiError(400, 'INVALID_QUERY', 'Search with a shorter phrase');
     const ownerId = c.get('ownerId');
     const { results: lists } = await c.env.DB.prepare(
-      `SELECT id, name, kind, description FROM lists
+      `SELECT id, name, kind, description FROM active_lists
       WHERE owner_id = ? AND (name LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\')
       ORDER BY updated_at DESC LIMIT 20`,
     )
@@ -20,20 +20,21 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
       .all<{ id: string; name: string; kind: 'collection' | 'activity'; description: string }>();
     const { results: items } = await c.env.DB.prepare(
       `SELECT i.id, i.list_id, l.name AS list_name,
-      i.title, CASE WHEN i.note LIKE ? ESCAPE '\\' THEN substr(i.note, 1, 180) ELSE i.type END AS detail FROM items i JOIN lists l ON l.id = i.list_id
+      i.title, CASE WHEN original.note LIKE ? ESCAPE '\\' THEN substr(original.note, 1, 180) ELSE original.type END AS detail FROM record_items original JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) JOIN active_lists l ON l.id = i.list_id
       WHERE i.owner_id = ? AND (
-        i.title LIKE ? ESCAPE '\\' OR i.type LIKE ? ESCAPE '\\' OR i.note LIKE ? ESCAPE '\\'
+        original.title LIKE ? ESCAPE '\\' OR original.type LIKE ? ESCAPE '\\' OR original.note LIKE ? ESCAPE '\\'
       )
       ORDER BY i.updated_at DESC LIMIT 40`,
     )
       .bind(pattern, ownerId, pattern, pattern, pattern)
       .all<{ id: string; list_id: string; list_name: string; title: string; detail: string }>();
     const { results: logs } = await c.env.DB.prepare(
-      `SELECT g.id, g.list_id, g.item_id, l.name AS list_name,
+      `SELECT g.id, g.list_id, COALESCE(i.id, g.item_id) AS item_id, l.name AS list_name,
       COALESCE(i.title, g.title) AS title, CASE WHEN g.note LIKE ? ESCAPE '\\' THEN g.happened_on || ' · ' || substr(g.note, 1, 180) ELSE g.happened_on END AS detail, json_array_length(g.exercise_sets) > 0 AS exercise
-      FROM logs g
-      JOIN lists l ON l.id = g.list_id
-      LEFT JOIN items i ON i.id = g.item_id AND i.owner_id = g.owner_id
+      FROM active_logs g
+      JOIN active_lists l ON l.id = g.list_id
+      LEFT JOIN record_items original ON original.id = g.item_id
+        LEFT JOIN active_items i ON i.id = COALESCE(original.merged_into_id, original.id) AND i.owner_id = g.owner_id
       WHERE g.owner_id = ? AND (
         g.title LIKE ? ESCAPE '\\' OR g.note LIKE ? ESCAPE '\\'
       )
@@ -60,7 +61,7 @@ export function registerSearchRoutes(api: Hono<AppEnv>): void {
           kind: 'list' as const,
           itemId: null,
         })),
-        ...items.map((row) => ({
+        ...[...new Map(items.map((row) => [row.id, row])).values()].map((row) => ({
           id: row.id,
           listId: row.list_id,
           listName: row.list_name,

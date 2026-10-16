@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api';
+import { TrashPanel } from '../components/TrashTools';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
 import { cleanDeviceData } from '../shared/device-data';
@@ -107,9 +108,10 @@ export function SettingsPage() {
           {status}
         </p>
       )}
+      <TrashPanel />
       <section className="data-section">
         <h2>Take a copy.</h2>
-        <p>Download your records, or a full backup with photos. Share links aren’t included.</p>
+        <p>Download your records, or a full backup with photos. Share links and Trash aren’t included.</p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
           restore supports up to 5,000 records, 500 lists and 200 photos/covers. Keep downloaded files
@@ -249,7 +251,7 @@ export function SettingsPage() {
           title={confirm === 'delete' ? 'Delete all Worth data?' : 'Clear drafts on this device?'}
           description={
             confirm === 'delete'
-              ? 'This permanently removes your active Worth lists, records, photos, workouts, routines and shared links. Your shared login and other apps remain.'
+              ? 'This permanently removes all your Worth lists, records, photos, workouts, routines, shared links and Trash. It cannot be undone. Your shared login and other apps remain.'
               : 'This removes this account’s unfinished text/photo drafts and timers from this device. Saved Worth records and other accounts’ drafts remain.'
           }
           confirmLabel={confirm === 'delete' ? 'Delete all Worth data' : 'Clear device drafts'}

@@ -25,6 +25,31 @@ for (const width of [320, 390, 430, 768, 1440]) {
       ).toBeLessThanOrEqual(1);
       if ([390, 1440].includes(width))
         await page.screenshot({ path: info.outputPath(`${name}-${width}.png`), fullPage: true });
+      if (name === 'collection') {
+        await page.getByRole('button', { name: 'Select', exact: true }).click();
+        await page.getByRole('button', { name: 'Select visible', exact: true }).click();
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+          'selection overflow',
+        ).toBeLessThanOrEqual(1);
+        const target = await page.locator('.collection-select').first().boundingBox();
+        expect(target?.width).toBeGreaterThanOrEqual(44);
+        expect(target?.height).toBeGreaterThanOrEqual(44);
+        if ([390, 1440].includes(width))
+          await page.screenshot({ path: info.outputPath(`selection-${width}.png`), fullPage: true });
+        await page
+          .getByRole('region', { name: 'Selected items' })
+          .getByRole('button', { name: 'Move to Trash', exact: true })
+          .click();
+        const dialog = page.getByRole('dialog', { name: 'Move to Trash' });
+        expect(
+          await dialog.evaluate((node) => node.scrollWidth - node.clientWidth),
+          'selection dialog overflow',
+        ).toBeLessThanOrEqual(1);
+        if ([390, 1440].includes(width))
+          await page.screenshot({ path: info.outputPath(`trash-confirm-${width}.png`), fullPage: false });
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      }
     }
     archive.signedIn = false;
     await page.goto('/');

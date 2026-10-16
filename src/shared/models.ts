@@ -27,6 +27,9 @@ export interface ListDetail extends ListSummary {
 }
 
 export interface Item {
+  wantToTry?: boolean;
+  mergedIntoId?: string | null;
+  mergedIds?: string[];
   revisitQueued?: boolean;
   id: string;
   listId: string;
@@ -191,4 +194,14 @@ export interface SearchResult {
   itemId: string | null;
   title: string;
   detail: string;
+}
+
+export interface TrashEntry {
+  id: string;
+  kind: 'list' | 'item' | 'log';
+  title: string;
+  listId: string;
+  listName: string;
+  trashedAt: number;
+  expiresAt: number;
 }

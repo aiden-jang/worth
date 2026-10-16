@@ -59,9 +59,16 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
 
   api.delete('/lists/:listId', async (c) => {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
-    await c.env.DB.prepare('DELETE FROM lists WHERE id = ? AND owner_id = ?')
-      .bind(list.id, c.get('ownerId'))
-      .run();
+    await c.env.DB.batch([
+      c.env.DB.prepare('UPDATE lists SET trashed_at = ? WHERE id = ? AND owner_id = ?').bind(
+        Date.now(),
+        list.id,
+        c.get('ownerId'),
+      ),
+      c.env.DB.prepare(
+        'UPDATE shares SET revoked_at = ? WHERE list_id = ? AND owner_id = ? AND revoked_at IS NULL',
+      ).bind(Date.now(), list.id, c.get('ownerId')),
+    ]);
     return c.body(null, 204);
   });
 

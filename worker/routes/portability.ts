@@ -31,7 +31,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       ['log', 'log_photos', 'log_id'],
     ] as const) {
       const stats = await c.env.DB.prepare(
-        `SELECT COUNT(*) AS n, COALESCE(SUM(length(data)),0) AS bytes FROM ${table} WHERE owner_id = ?`,
+        `SELECT COUNT(*) AS n, COALESCE(SUM(length(data)),0) AS bytes FROM ${table} WHERE owner_id = ? AND ${field} IN (SELECT id FROM ${kind === 'list' ? 'active_lists' : kind === 'item' ? 'record_items' : 'active_logs'})`,
       )
         .bind(owner)
         .first<{ n: number; bytes: number }>();
@@ -44,7 +44,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         );
       for (let offset = 0; offset < (stats?.n ?? 0); offset += 6) {
         const rows = await c.env.DB.prepare(
-          `SELECT ${field} AS id, content_type, data FROM ${table} WHERE owner_id = ? ORDER BY ${field} LIMIT 6 OFFSET ?`,
+          `SELECT ${field} AS id, content_type, data FROM ${table} WHERE owner_id = ? AND ${field} IN (SELECT id FROM ${kind === 'list' ? 'active_lists' : kind === 'item' ? 'record_items' : 'active_logs'}) ORDER BY ${field} LIMIT 6 OFFSET ?`,
         )
           .bind(owner, offset)
           .all<{ id: string; content_type: string; data: number[] }>();
@@ -96,6 +96,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     await c.env.DB.batch([
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
     ]);
     return c.body(null, 204);
   });
@@ -182,6 +183,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         note: i.note,
         decision: i.decision,
         revisit_queued: i.revisitQueued ? 1 : 0,
+        want_to_try: i.wantToTry ? 1 : 0,
+        merged_into_id: i.mergedIntoId ? id(i.mergedIntoId) : null,
         started_on: i.startedOn,
         ended_on: i.endedOn,
         created_at: i.createdAt,

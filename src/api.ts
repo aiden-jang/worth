@@ -1,5 +1,6 @@
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
+  TrashEntry,
   CollectionArt,
   ArchivePatterns,
   ExerciseSet,
@@ -67,7 +68,28 @@ function json(method: string, body: unknown): RequestInit {
   return { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
 }
 
+export type TrashReference = { kind: 'list' | 'item' | 'log'; id: string };
+export type ArchiveAction = import('zod').infer<typeof import('./shared/validation').archiveActionInput>;
+export function announceTrash(entries: TrashReference[]) {
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new CustomEvent('worth:trashed', { detail: entries }));
+}
+async function trashRecord(kind: TrashReference['kind'], id: string, path: string) {
+  await request<void>(path, { method: 'DELETE' });
+  announceTrash([{ kind, id }]);
+}
 export const api = {
+  trash: () => request<{ entries: TrashEntry[] }>('/trash'),
+  restoreTrash: (entries: TrashReference[]) =>
+    request<{ restored: number }>('/trash/restore', json('POST', { entries })),
+  mergedItems: (id: string) => request<{ items: Item[] }>(`/items/${id}/merged`),
+  separateItem: (id: string, sourceId: string) =>
+    request<{ item: Item }>(`/items/${id}/separate/${sourceId}`, json('POST', {})),
+  collectionAction: (listId: string, body: ArchiveAction, key: string) =>
+    request<{ count: number; action: string }>(`/lists/${listId}/actions`, {
+      ...json('POST', body),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
   exportArchive: (photos = false) =>
     request<import('./shared/portability').ArchiveFile>(photos ? '/export/backup' : '/export/records'),
   restoreArchive: (body: import('./shared/portability').ArchiveFile, key: string) =>
@@ -93,7 +115,7 @@ export const api = {
   }) => request<{ list: ListDetail }>('/lists', json('POST', body)),
   updateList: (id: string, body: { name?: string; description?: string; artwork?: CollectionArt | null }) =>
     request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
-  deleteList: (id: string) => request<void>(`/lists/${id}`, { method: 'DELETE' }),
+  deleteList: (id: string) => trashRecord('list', id, `/lists/${id}`),
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
   createItem: (listId: string, body: ItemInput, operationId?: string) =>
     request<{ item: Item }>(`/lists/${listId}/items`, {
@@ -103,9 +125,9 @@ export const api = {
         ...(operationId ? { 'Idempotency-Key': operationId } : {}),
       },
     }),
-  createItems: (listId: string, titles: string[], operationId?: string) =>
+  createItems: (listId: string, titles: string[], operationId?: string, wantToTry = false) =>
     request<{ items: Item[] }>(`/lists/${listId}/items/batch`, {
-      ...json('POST', { titles }),
+      ...json('POST', { titles, wantToTry }),
       headers: {
         'Content-Type': 'application/json',
         ...(operationId ? { 'Idempotency-Key': operationId } : {}),
@@ -113,7 +135,7 @@ export const api = {
     }),
   updateItem: (id: string, body: Partial<ItemInput>) =>
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
-  deleteItem: (id: string) => request<void>(`/items/${id}`, { method: 'DELETE' }),
+  deleteItem: (id: string) => trashRecord('item', id, `/items/${id}`),
   routines: (listId: string) => request<{ routines: WorkoutRoutine[] }>(`/lists/${listId}/routines`),
   createRoutine: (listId: string, body: { title: string; exercises: string[] }) =>
     request<{ routine: WorkoutRoutine }>(`/lists/${listId}/routines`, json('POST', body)),
@@ -145,7 +167,7 @@ export const api = {
     }),
   updateLog: (id: string, body: Partial<LogInput>) =>
     request<{ log: Log }>(`/logs/${id}`, json('PATCH', body)),
-  deleteLog: (id: string) => request<void>(`/logs/${id}`, { method: 'DELETE' }),
+  deleteLog: (id: string) => trashRecord('log', id, `/logs/${id}`),
   rank: (listId: string, itemIds: string[], expectedRevision: number) =>
     request<{ list: ListDetail }>(`/lists/${listId}/rank`, json('PUT', { itemIds, expectedRevision })),
   shares: (listId: string) => request<{ shares: ShareSummary[] }>(`/lists/${listId}/shares`),
@@ -176,6 +198,7 @@ export const api = {
 };
 
 export interface ItemInput {
+  wantToTry?: boolean;
   revisitQueued?: boolean;
   title: string;
   type: string;

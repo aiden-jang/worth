@@ -85,7 +85,7 @@ function registerPhotoOwner(
   async function requireOwner(db: D1Database, ownerId: string, id: string): Promise<string> {
     if (!id) throw new ApiError(404, 'NOT_FOUND', 'Photo not found');
     const record =
-      pathName === 'items' ? await requireItem(db, ownerId, id) : await requireLog(db, ownerId, id);
+      pathName === 'items' ? await requireItem(db, ownerId, id, true) : await requireLog(db, ownerId, id);
     return record.listId;
   }
 

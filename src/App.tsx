@@ -8,6 +8,7 @@ import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
 import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
+import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
 const SettingsPage = lazy(() =>
@@ -99,6 +100,7 @@ function PrivateApp() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<InfoPage kind="missing" />} />
       </Routes>
+      <TrashNotice />
     </AppShell>
   ) : ['/', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
     /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (

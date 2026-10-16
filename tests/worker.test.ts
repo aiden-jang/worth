@@ -4,7 +4,7 @@ import { afterAll, beforeAll, expect, test, vi } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import app from '../worker/index';
 import type { Item, ListDetail, ListSummary, WorkoutRoutine, WorkoutSession } from '../src/shared/models';
-import type { ArchiveFile } from '../src/shared/portability';
+import { archiveFile, type ArchiveFile } from '../src/shared/portability';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -33,6 +33,7 @@ beforeAll(async () => {
     '0008_workout_routines.sql',
     '0009_product_flow.sql',
     '0010_completion.sql',
+    '0011_archive_tools.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -78,6 +79,286 @@ async function call(
     platform.ctx,
   );
 }
+
+async function archiveAction(listId: string, owner: string, body: unknown, key = crypto.randomUUID()) {
+  return app.request(
+    `https://worth.test/api/lists/${listId}/actions`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+
+async function archiveCollection(owner: string, name: string) {
+  const response = await call('/lists', owner, 'POST', { name, kind: 'collection' });
+  expect(response.status).toBe(201);
+  return ((await response.json()) as { list: ListDetail }).list;
+}
+
+async function archiveItem(owner: string, listId: string, title: string, extra = {}) {
+  const response = await call(`/lists/${listId}/items`, owner, 'POST', { title, ...extra });
+  expect(response.status).toBe(201);
+  return ((await response.json()) as { item: Item }).item;
+}
+
+test('Want to try is independent of calls, ranks and the revisit queue, including batch capture', async () => {
+  const owner = 'wantowner';
+  const list = await archiveCollection(owner, 'Future coffee');
+  const item = await archiveItem(owner, list.id, 'Next coffee', {
+    wantToTry: true,
+    decision: 'meh',
+    revisitQueued: true,
+  });
+  expect(item).toMatchObject({ wantToTry: true, decision: 'meh', revisitQueued: true });
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+    itemIds: [item.id],
+    expectedRevision: list.rankRevision,
+  });
+  const changed = await call(`/items/${item.id}`, owner, 'PATCH', { wantToTry: false });
+  expect(((await changed.json()) as { item: Item }).item).toMatchObject({
+    wantToTry: false,
+    decision: 'meh',
+    revisitQueued: true,
+  });
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([item.id]);
+  const batch = await call(`/lists/${list.id}/items/batch`, owner, 'POST', {
+    titles: ['Later', 'Eventually'],
+    wantToTry: true,
+  });
+  expect(batch.status).toBe(201);
+  expect(
+    ((await batch.json()) as { items: Item[] }).items.every((i) => i.wantToTry && i.decision === null),
+  ).toBe(true);
+});
+
+test('Trash hides records everywhere and restores photos, history and parent relationships', async () => {
+  const owner = 'trashowner';
+  const list = await archiveCollection(owner, 'Hidden archive');
+  const item = await archiveItem(owner, list.id, 'Recoverable item', {
+    note: 'Private memory',
+    decision: 'favorite',
+  });
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+    itemIds: [item.id],
+    expectedRevision: list.rankRevision,
+  });
+  const log = (
+    (await (
+      await call(`/lists/${list.id}/logs`, owner, 'POST', {
+        itemId: item.id,
+        happenedOn: '2026-10-10',
+        note: 'First visit',
+      })
+    ).json()) as { log: { id: string } }
+  ).log;
+  await platform.env.DB.prepare('INSERT INTO item_photos VALUES (?, ?, ?, ?, ?)')
+    .bind(item.id, owner, 'image/png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), Date.now())
+    .run();
+  expect((await call(`/items/${item.id}`, owner, 'DELETE')).status).toBe(204);
+  for (const path of [`/items/${item.id}`, `/items/${item.id}/photo`, `/logs/${log.id}`])
+    expect((await call(path, owner)).status).toBe(404);
+  expect(((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: unknown[] }).logs).toEqual(
+    [],
+  );
+  expect(JSON.stringify(await (await call('/search?q=Recoverable', owner)).json())).not.toContain(item.id);
+  const exported = (await (await call('/export/records', owner)).json()) as ArchiveFile;
+  expect(exported.items).toEqual([]);
+  expect(exported.logs).toEqual([]);
+  const trashBackup = await call('/export/backup', owner);
+  expect(trashBackup.status).toBe(200);
+  expect(((await trashBackup.json()) as ArchiveFile).photos).toEqual([]);
+  expect(
+    (await call('/trash/restore', 'intruder', 'POST', { entries: [{ kind: 'item', id: item.id }] })).status,
+  ).toBe(404);
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: item.id }] })).status,
+  ).toBe(200);
+  expect((await call(`/items/${item.id}/photo`, owner)).status).toBe(200);
+  expect(
+    ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items[0],
+  ).toMatchObject({ id: item.id, note: 'Private memory', logCount: 1 });
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([]);
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: item.id }] })).status,
+  ).toBe(200);
+  const ranked = ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list;
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+    itemIds: [item.id],
+    expectedRevision: ranked.rankRevision,
+  });
+  const share = (await (await call(`/lists/${list.id}/shares`, owner, 'POST', { limit: 'all' })).json()) as {
+    token: string;
+  };
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  expect((await call(`/items/${item.id}`, owner)).status).toBe(404);
+  expect((await call(`/public/${share.token}`, null)).status).toBe(404);
+  await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'list', id: list.id }] });
+  expect((await call(`/public/${share.token}`, null)).status).toBe(404);
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([item.id]);
+});
+
+test('bulk moves and merges preserve originals, photos, visits, exports and retry safety', async () => {
+  const owner = 'mergeowner';
+  const list = await archiveCollection(owner, 'Before');
+  const destination = await archiveCollection(owner, 'After');
+  const main = await archiveItem(owner, list.id, 'Coffee', { decision: 'favorite', note: 'Main note' });
+  const source = await archiveItem(owner, list.id, 'COFFEE', {
+    decision: 'meh',
+    note: 'Original note',
+    wantToTry: true,
+  });
+  const photo = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+    'base64',
+  );
+  for (const item of [main, source])
+    await platform.env.DB.prepare('INSERT INTO item_photos VALUES (?, ?, ?, ?, ?)')
+      .bind(item.id, owner, 'image/png', new Uint8Array(photo), Date.now())
+      .run();
+  await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    itemId: source.id,
+    happenedOn: '2026-10-10',
+    note: 'Original visit',
+  });
+  await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+    itemIds: [source.id, main.id],
+    expectedRevision: list.rankRevision,
+  });
+  const key = crypto.randomUUID();
+  const merge = { action: 'merge', itemIds: [main.id, source.id], targetId: main.id };
+  expect((await archiveAction(list.id, owner, merge, key)).status).toBe(200);
+  expect((await archiveAction(list.id, owner, merge, key)).status).toBe(200);
+  expect((await archiveAction(list.id, owner, { ...merge, targetId: source.id }, key)).status).toBe(409);
+  const merged = ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items;
+  expect(merged).toHaveLength(1);
+  expect(merged[0]).toMatchObject({
+    id: main.id,
+    note: 'Main note',
+    decision: 'favorite',
+    logCount: 1,
+    mergedIds: [source.id],
+  });
+  const foundOriginal = await call('/search?q=Original', owner);
+  expect(foundOriginal.status).toBe(200);
+  expect(JSON.stringify(await foundOriginal.json())).toContain(main.id);
+  expect((await call(`/items/${source.id}`, owner)).status).toBe(404);
+  expect((await call(`/items/${source.id}/photo`, owner)).status).toBe(200);
+  expect((await call(`/items/${source.id}/photo`, 'intruder')).status).toBe(404);
+  expect(
+    ((await (await call(`/items/${main.id}/merged`, owner)).json()) as { items: Item[] }).items[0],
+  ).toMatchObject({ id: source.id, note: 'Original note', decision: 'meh', wantToTry: true });
+  const moveKey = crypto.randomUUID();
+  const move = { action: 'move', itemIds: [main.id], destinationId: destination.id };
+  expect((await archiveAction(list.id, owner, move, moveKey)).status).toBe(200);
+  expect((await archiveAction(list.id, owner, move, moveKey)).status).toBe(200);
+  const backupResponse = await call('/export/backup', owner);
+  expect(backupResponse.status).toBe(200);
+  const backup = (await backupResponse.json()) as ArchiveFile;
+  expect(archiveFile.safeParse(backup).success).toBe(true);
+  expect(backup.items).toHaveLength(2);
+  expect(backup.photos).toHaveLength(2);
+  expect(backup.items.find((i) => i.id === source.id)).toMatchObject({
+    mergedIntoId: main.id,
+    listId: destination.id,
+  });
+  expect(backup.logs[0]).toMatchObject({ itemId: source.id, listId: destination.id, note: 'Original visit' });
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=importmerge',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(backup),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const imported = (await (await call('/export/records', 'importmerge')).json()) as ArchiveFile;
+  expect(imported.items.filter((i) => i.mergedIntoId)).toHaveLength(1);
+  expect((await call(`/items/${main.id}/separate/${source.id}`, owner, 'POST', {})).status).toBe(200);
+  expect((await call(`/items/${main.id}/separate/${source.id}`, owner, 'POST', {})).status).toBe(200);
+  expect(
+    ((await (await call(`/lists/${destination.id}/items`, owner)).json()) as { items: Item[] }).items,
+  ).toHaveLength(2);
+  expect(((await (await call(`/items/${source.id}`, owner)).json()) as { item: Item }).item.logCount).toBe(1);
+});
+
+test('bulk operations reject foreign items and destinations without partial writes', async () => {
+  const list = await archiveCollection('bulkowner', 'Mine');
+  const item = await archiveItem('bulkowner', list.id, 'Keep me');
+  const foreign = await archiveCollection('foreignowner', 'Other');
+  const theirs = await archiveItem('foreignowner', foreign.id, 'Not mine');
+  expect(
+    (await archiveAction(list.id, 'bulkowner', { action: 'trash', itemIds: [item.id, theirs.id] })).status,
+  ).toBe(404);
+  expect((await call(`/items/${item.id}`, 'bulkowner')).status).toBe(200);
+  expect(
+    (
+      await archiveAction(list.id, 'bulkowner', {
+        action: 'move',
+        itemIds: [item.id],
+        destinationId: foreign.id,
+      })
+    ).status,
+  ).toBe(404);
+  expect(
+    (await archiveAction(list.id, 'foreignowner', { action: 'queue', itemIds: [item.id], value: true }))
+      .status,
+  ).toBe(404);
+  expect(
+    ((await (await call(`/items/${item.id}`, 'bulkowner')).json()) as { item: Item }).item.revisitQueued,
+  ).toBe(false);
+});
+
+test('100-item Trash and Undo stay atomic and expired records cannot be restored', async () => {
+  const owner = 'hundredowner';
+  const list = await archiveCollection(owner, 'Hundred');
+  const ids = Array.from({ length: 100 }, () => crypto.randomUUID());
+  await platform.env.DB.prepare(
+    "INSERT INTO items (id, list_id, owner_id, title, created_at, updated_at) SELECT value, ?, ?, 'A record', 1, 1 FROM json_each(?)",
+  )
+    .bind(list.id, owner, JSON.stringify(ids))
+    .run();
+  expect((await archiveAction(list.id, owner, { action: 'trash', itemIds: ids })).status).toBe(200);
+  expect(((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items).toEqual(
+    [],
+  );
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: ids.map((id) => ({ kind: 'item', id })) }))
+      .status,
+  ).toBe(200);
+  expect(
+    ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items,
+  ).toHaveLength(100);
+  await platform.env.DB.prepare('UPDATE items SET trashed_at = ? WHERE id = ?')
+    .bind(Date.now() - 31 * 86400000, ids[0])
+    .run();
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: ids[0] }] })).status,
+  ).toBe(410);
+  await call('/trash', owner);
+  expect(await platform.env.DB.prepare('SELECT id FROM items WHERE id = ?').bind(ids[0]).first()).toBeNull();
+});
 
 test('private records stay owner-scoped and public snapshots exclude notes', async () => {
   const unauthenticated = await call('/lists', null);
@@ -419,7 +700,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
   expect(otherExport.logs).toEqual([]);
 });
 
-test('photos stay private, validate uploads, and disappear with their item', async () => {
+test('photos stay private, validate uploads, and remain recoverable in Trash', async () => {
   const createdList = await call('/lists', 'alice', 'POST', {
     name: 'Photos',
     kind: 'collection',
@@ -517,7 +798,14 @@ test('photos stay private, validate uploads, and disappear with their item', asy
   const row = await platform.env.DB.prepare('SELECT item_id FROM item_photos WHERE item_id = ?')
     .bind(item.id)
     .first();
-  expect(row).toBeNull();
+  expect(row).toMatchObject({ item_id: item.id });
+  await platform.env.DB.prepare('UPDATE items SET trashed_at = ? WHERE id = ?')
+    .bind(Date.now() - 31 * 86400000, item.id)
+    .run();
+  await call('/trash', 'alice');
+  expect(
+    await platform.env.DB.prepare('SELECT item_id FROM item_photos WHERE item_id = ?').bind(item.id).first(),
+  ).toBeNull();
 });
 
 test('activity logs can be found, edited, and removed without crossing accounts', async () => {

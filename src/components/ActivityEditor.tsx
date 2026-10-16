@@ -623,7 +623,7 @@ export function ActivityEditor({
           <ConfirmDialog
             eyebrow="DELETE LOG"
             title={`Delete ${log.title}?`}
-            description="This permanently removes this activity log and its private photo, if it has one."
+            description="This moves this activity log and its private photo to Trash for 30 days."
             confirmLabel="Delete log"
             pending={remove.isPending}
             error={remove.isError ? remove.error.message : undefined}

@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test';
-import type { Item, ListDetail } from '../src/shared/models';
+import type { Item, ListDetail, TrashEntry } from '../src/shared/models';
 
 export const list: ListDetail = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -37,6 +37,9 @@ export type State = {
   failShares: boolean;
   failShow: boolean;
   failCapture: boolean;
+  failAction: boolean;
+  extraLists: ListDetail[];
+  trash: TrashEntry[];
   items: Item[];
   list: ListDetail;
   writes: { path: string; body: unknown }[];
@@ -48,6 +51,9 @@ export async function mockArchive(page: Page): Promise<State> {
     failShares: false,
     failShow: false,
     failCapture: false,
+    failAction: false,
+    extraLists: [],
+    trash: [],
     items: [structuredClone(item), { ...item, id: 'tea', title: 'Tea', decision: null, note: '' }],
     list: structuredClone(list),
     writes: [],
@@ -84,8 +90,63 @@ export async function mockArchive(page: Page): Promise<State> {
     if (path === '/lists/activity/logs') return reply({ logs: [] });
     if (path === '/lists/activity/workouts') return reply({ workouts: [] });
     if (path === '/lists/activity/routines') return reply({ routines: [] });
+    if (path === '/trash') return reply({ entries: state.trash });
+    if (path === '/trash/restore') {
+      const body = request.postDataJSON() as { entries: { kind: string; id: string }[] };
+      state.trash = state.trash.filter((entry) => !body.entries.some((ref) => ref.id === entry.id));
+      return reply({ restored: body.entries.length });
+    }
+    if (path === `/lists/${list.id}/actions`) {
+      const body = request.postDataJSON();
+      state.writes.push({ path, body });
+      if (state.failAction) return reply({ message: 'Could not save this selection. Try again.' }, 503);
+      for (const entry of state.items.filter((i) => body.itemIds.includes(i.id))) {
+        if (body.action === 'want') entry.wantToTry = body.value;
+        if (body.action === 'queue') entry.revisitQueued = body.value;
+        if (body.action === 'type') entry.type = body.value;
+        if (body.action === 'move') entry.listId = body.destinationId;
+        if (body.action === 'merge' && entry.id !== body.targetId) entry.mergedIntoId = body.targetId;
+        if (body.action === 'trash')
+          state.trash.push({
+            id: entry.id,
+            kind: 'item',
+            title: entry.title,
+            listId: list.id,
+            listName: list.name,
+            trashedAt: Date.now(),
+            expiresAt: Date.now() + 30 * 86400000,
+          });
+      }
+      if (['move', 'merge', 'trash'].includes(body.action)) {
+        state.list.rankedIds = state.list.rankedIds.filter(
+          (id) => !body.itemIds.includes(id) || (body.action === 'merge' && id === body.targetId),
+        );
+        state.list.rankRevision++;
+      }
+      for (const entry of state.items)
+        entry.mergedIds = state.items.filter((i) => i.mergedIntoId === entry.id).map((i) => i.id);
+      return reply({ count: body.itemIds.length, action: body.action });
+    }
+    if (/^\/items\/[^/]+\/merged$/.test(path))
+      return reply({ items: state.items.filter((i) => i.mergedIntoId === path.split('/')[2]) });
+    if (path.includes('/separate/')) {
+      const entry = state.items.find((i) => i.id === path.split('/')[4])!;
+      entry.mergedIntoId = null;
+      for (const main of state.items)
+        main.mergedIds = state.items.filter((i) => i.mergedIntoId === main.id).map((i) => i.id);
+      return reply({ item: entry });
+    }
+    const extraList = state.extraLists.find(
+      (l) => path === `/lists/${l.id}` || path.startsWith(`/lists/${l.id}/`),
+    );
+    if (extraList) {
+      if (path.endsWith('/items'))
+        return reply({ items: state.items.filter((i) => i.listId === extraList.id && !i.mergedIntoId) });
+      if (path.endsWith('/logs')) return reply({ logs: [] });
+      return reply({ list: extraList });
+    }
     if (path === '/search') return reply({ results: [] });
-    if (path === '/lists') return reply({ lists: [state.list] });
+    if (path === '/lists') return reply({ lists: [state.list, ...state.extraLists] });
     if (path === `/lists/${list.id}`)
       return state.failShow
         ? reply({ error: 'UNAVAILABLE', message: 'Temporarily unavailable' }, 503)
@@ -99,7 +160,15 @@ export async function mockArchive(page: Page): Promise<State> {
       state.list.itemCount++;
       return reply({ item: created }, 201);
     }
-    if (path === `/lists/${list.id}/items`) return reply({ items: state.items });
+    if (path === `/lists/${list.id}/items`)
+      return reply({
+        items: state.items.filter(
+          (i) =>
+            i.listId === list.id &&
+            !i.mergedIntoId &&
+            !state.trash.some((entry) => entry.kind === 'item' && entry.id === i.id),
+        ),
+      });
     if (path === `/lists/${list.id}/logs`) return reply({ logs: [] });
     if (path.startsWith('/items/') && method === 'PATCH') {
       const body = request.postDataJSON();
