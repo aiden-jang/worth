@@ -1,3 +1,4 @@
+import { imageDimensions } from './image-dimensions';
 import regularFont from '@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2?url';
 import mediumFont from '@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2?url';
 import { bookletHtml, wrapCardText, type BookletData, type RecommendationCard } from './booklet';
@@ -22,15 +23,52 @@ async function photo(url: string, signal?: AbortSignal): Promise<string> {
   const blob = await response.blob();
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(blob.type) || blob.size > 900000)
     throw new Error('A selected photo has an unsupported type or size.');
-  const value = await dataUrl(blob);
-  const image = new Image();
-  image.src = value;
   try {
-    await image.decode();
+    imageDimensions(new Uint8Array(await blob.arrayBuffer()), blob.type);
   } catch {
-    throw new Error('A selected photo could not be opened. Try again, or turn off photos.');
+    throw new Error(
+      'A selected photo is unsupported or exceeds 20 megapixels. Choose a smaller still photo, or turn off photos.',
+    );
   }
-  return value;
+  const image = new Image();
+  const canvas = document.createElement('canvas');
+  const cancel = () => {
+    image.src = '';
+  };
+  signal?.addEventListener('abort', cancel, { once: true });
+  try {
+    signal?.throwIfAborted();
+    image.src = await dataUrl(blob);
+    try {
+      await image.decode();
+    } catch {
+      throw new Error('A selected photo could not be opened. Try again, or turn off photos.');
+    }
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('This browser could not prepare the photo. Turn off photos to continue.');
+    // Encode displayed pixels, rather than carrying EXIF/XMP into a shared file.
+    for (const side of [1600, 1200, 900]) {
+      signal?.throwIfAborted();
+      const scale = Math.min(1, side / Math.max(image.naturalWidth, image.naturalHeight));
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const encoded = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, blob.type, 0.9));
+      signal?.throwIfAborted();
+      if (
+        encoded &&
+        ['image/jpeg', 'image/png', 'image/webp'].includes(encoded.type) &&
+        encoded.size <= 900000
+      )
+        return await dataUrl(encoded);
+    }
+    throw new Error('A selected photo could not fit the export. Choose a smaller photo, or turn off photos.');
+  } finally {
+    signal?.removeEventListener('abort', cancel);
+    image.src = '';
+    canvas.width = 0;
+    canvas.height = 0;
+  }
 }
 
 export async function prepareBooklet(

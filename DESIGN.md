@@ -336,3 +336,13 @@ them. The cream diagram shows up to 12 actual neighbors, with numbered links and
 complete directional text below. It never infers a call, rank or location. Reason
 and uncertain-save dialogs retain standard drafts, explicit retry and conflicts.
 Patterns adds spaced tool links in its header, using separate 44px rows on phones; the underlying counts/call composition remains. Captures and narrow-width verification live in `art/ui-qa/connections/`.
+
+## Personal field guide
+
+Patterns → Field guide adds a secondary multi-collection editor, using the cabinet
+rail, dark canvas, 68/44px heading rhythm, 22px bordered groups and 44px controls.
+Collection/record choices and inclusion options pair on desktop and stack on phones.
+Selected records use ruled rows with captions and labeled Earlier/Later actions.
+The existing cream booklet preview is shared, with a field-guide cover label and
+no call or rank. This is a deliberate secondary-page addition; the primary cabinet
+and name-only capture are unchanged. Captures are in `art/ui-qa/field-guide/`.

@@ -72,7 +72,7 @@ framing and layout changes in the original checkout.
 ## Sharing and export
 
 - [x] Collection booklet/mini zine with exact content preview and downloadable output.
-- [ ] Personal field guide with selected records, notes and explicit locations.
+- [x] Personal field guide with selected records, notes and explicit locations.
 - [x] Individual recommendation card with a user-written reason and exact preview.
 - [ ] Private two-person this-or-that with separate choices and a deliberate reveal.
 - [ ] Private collaboration and explicit granular sharing controls.
@@ -537,3 +537,29 @@ All 18 focused desktop/phone connections/history checks passed, including Axe,
 long names and 320/430/768px reflow. The complete 207-case browser regression passed. Six focused capture checks and two final entry-point journeys then passed after the last visual fixes. All 18 final captures were inspected; see [connections QA](../art/ui-qa/connections/README.md). This group is committed locally.
 Other unchecked web features remain unfinished. This remains local feature-branch
 work, without native apps, push, pull request, merge or deployment.
+
+## Eighteenth implementation: personal field guides
+
+Patterns → Field guide assembles up to 12 records across owned collections in a
+manual order, with captions and an introduction. Notes, literal saved locations,
+collection names and photos are independent default-off choices. Calls, ranks,
+visits and other context stay out. Source records remain unchanged. Exact
+preparation creates an offline HTML file with embedded fonts/license and optional
+photos, plus an isolated A5 print preview. Edits invalidate the prior file.
+
+Account/device seven-day drafts retain captions and fallback names if a source
+becomes unavailable; partial preparation stays blocked until recovery/removal.
+Blocked storage, route changes and account switches have explicit recovery. The
+shared photo exporter now checks image dimensions before decode and reencodes
+displayed pixels without original EXIF/XMP, leaving stored sources untouched.
+Visible photo content is not redacted. There is no schema or backup version change.
+
+All 158 core tests across 39 files passed in a one-worker run after the initial
+parallel run hit process-start and timeout failures. Formatting, lint and unused-code
+checks and the production build passed. Both final entry/export journeys then
+passed again against the final build. All 18 focused guide/publishing browser journeys passed, including Axe, narrow
+reflow, draft recovery, exact projection, metadata removal and account cancellation.
+Eight captures and every page of the actual three-page A5 PDF were inspected; see
+[field-guide QA](../art/ui-qa/field-guide/README.md). The remaining unchecked web
+features are still unfinished. Work remains local on the separate feature branch,
+without native apps, push, pull request, merge or deployment.

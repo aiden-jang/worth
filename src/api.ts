@@ -201,6 +201,7 @@ export const api = {
     body: { name?: string; description?: string; artwork?: CollectionArt | null; archived?: boolean },
   ) => request<{ list: ListDetail }>(`/lists/${id}`, json('PATCH', body)),
   deleteList: (id: string) => trashRecord('list', id, `/lists/${id}`),
+  item: (id: string) => request<{ item: Item }>(`/items/${id}`),
   items: (listId: string) => request<{ items: Item[] }>(`/lists/${listId}/items`),
   createItem: (listId: string, body: ItemInput, operationId?: string) =>
     request<{ item: Item }>(`/lists/${listId}/items`, {

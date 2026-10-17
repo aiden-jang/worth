@@ -34,3 +34,6 @@
 
 /patterns/connections
   X-Robots-Tag: noindex, nofollow
+
+/patterns/field-guide
+  X-Robots-Tag: noindex, nofollow

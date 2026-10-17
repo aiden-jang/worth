@@ -168,7 +168,9 @@ message/recipient; collection name and photo are optional. Existing public snaps
 payloads are unchanged.
 
 `booklet-export.ts` embeds local WOFF2 fonts and selected owner-checked raster
-photos into self-contained HTML, or renders a 1080-pixel-wide PNG. Asset failures
+photos into self-contained HTML, or renders a 1080-pixel-wide PNG. Photo headers
+are bounded before decode, then displayed pixels are reencoded to discard original
+EXIF/XMP metadata without changing the stored photo. Asset failures
 stop preparation and retain settings for retry. Unmount aborts preparation.
 HTML escapes all text, validates data URLs and contains a restrictive CSP with no
 scripts or network access. It opens offline and prints on A5 pages. In-app print
@@ -507,3 +509,22 @@ single D1 snapshot. Restore accepts versions 1–4, defaults older files to no l
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
+
+## Personal field guides
+
+The private lazy `/patterns/field-guide` screen projects up to 12 owned collection
+records into the same bounded booklet model and shared `BookletPreview` renderer.
+Its projection excludes calls, ranks, visits, purchase/loan fields, source URLs and
+recommendation details. Notes, explicit saved location text, collection names and
+photos are four independent default-off choices. Captions and record order are
+manual; collection records are never edited. No location is inferred.
+
+The account/device seven-day draft contains references, fallback names, captions
+and choices. Current item reads determine exported content. Unavailable references
+retain captions for recovery and block preparing a partial guide. Preparation
+embeds fonts, their supplied license and optional reencoded photos into a network-
+free HTML file. A content fingerprint invalidates downloads/print when the output
+changes; an abortable preparation cannot publish into an unmounted account screen.
+Print uses only the prepared snapshot. This adds no table or backup version; guide
+drafts are local and are not included in account backups. Copies shared by the
+user cannot be revoked and have no relationship to seven-day public snapshots.

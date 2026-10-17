@@ -25,3 +25,12 @@ The installed barcode dependency’s supplied notices also include `ts-custom-er
 3.3.1 (MIT, `/licenses/ts-custom-error-mit.txt`) and `@zxing/text-encoding` 0.9.0
 (Unlicense OR Apache-2.0, `/licenses/zxing-text-encoding.txt`). These public copies
 come from the locked packages; refresh them with dependency upgrades.
+
+## Embedded booklet and field-guide fonts
+
+Booklets and field guides embed the locked `@fontsource/dm-sans` 5.3.0 Latin
+regular/medium files for standalone reading and printing. Their generated HTML
+also includes the package's supplied copyright and full SIL Open Font License
+1.1 in an inert `worth-font-license` template. The notice is imported from the
+locked package alongside the fonts, so dependency upgrades carry their supplied
+notice. Preview/print composition and private record fields are unaffected.

@@ -313,6 +313,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>A personal field guide</h2>
+              <p>
+                In Patterns, open <Link to="/patterns/field-guide">Field guide</Link>. Choose up to 12 records
+                across collections, arrange them and add your own captions. Notes, saved locations, collection
+                names and photos are separate choices, off to start. Calls, ranks and visit history stay out.
+                Prepare and review the exact file before downloading its offline HTML copy or printing a PDF.
+                Anyone with that copy can read the included content.
+              </p>
+              <p>
+                Locations use only the text saved on records. Exported photos are reencoded copies without
+                original image metadata; your saved photos stay unchanged. Visible details in a photo remain
+                visible. Guide drafts can recover on this account/device for seven days. A missing record
+                keeps its caption for copying and blocks preparation until retried or removed.
+              </p>
+            </section>
+            <section>
               <h2>Private context and return reminders</h2>
               <p>
                 In an item’s Details, open A little more context to keep a source link, why you saved it, who

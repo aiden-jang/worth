@@ -182,3 +182,15 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Current exports use version 4; restore accepts versions 1/2/3/4 and rejects 5.
   Connections restore with fresh IDs and canonicalized pairs. A capacity error
   rolls back the entire restore and can retry after freeing space.
+
+## Personal field guides
+
+- No migration or backup version change. Open Patterns → Field guide, select records
+  from two collections and verify default-off note/location/name/photo choices.
+- Prepare, review and download the standalone HTML; open it offline and print/save
+  an A5 PDF. Changing included content must disable the old file until prepared again.
+- Confirm a missing source blocks partial preparation while retaining its caption.
+  Test photo failure/retry and account changes during preparation.
+- Shared booklet/guide exports now reencode displayed photo pixels to strip original
+  image metadata. Stored originals stay unchanged; visible photo content remains.
+  Smoke-check existing booklets and recommendation cards after release too.

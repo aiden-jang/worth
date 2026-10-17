@@ -11,6 +11,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const FieldGuidePage = lazy(() =>
+  import('./pages/FieldGuidePage').then((module) => ({ default: module.FieldGuidePage })),
+);
 const ConnectionsPage = lazy(() =>
   import('./pages/ConnectionsPage').then((module) => ({ default: module.ConnectionsPage })),
 );
@@ -133,6 +136,7 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/field-guide" element={<FieldGuidePage />} />
         <Route path="/patterns/connections" element={<ConnectionsPage />} />
         <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
@@ -153,6 +157,7 @@ function PrivateApp() {
       '/code',
       '/patterns/look-back',
       '/patterns/connections',
+      '/patterns/field-guide',
       '/inbox',
       '/quick',
       '/settings',

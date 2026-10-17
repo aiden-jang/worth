@@ -99,3 +99,14 @@ test('Unicode card wrapping preserves every grapheme and intentional empty lines
     }),
   ).toThrow();
 });
+
+test('standalone files with embedded fonts retain the supplied font copyright and license', () => {
+  const html = bookletHtml(
+    { title: 'A guide', dedication: '', entries: [{ id: 'one', title: 'One', type: '', caption: '' }] },
+    [{ weight: 400, data: 'data:font/woff2;base64,AA==' }],
+  );
+  expect(html).toContain('<template id="worth-font-license">');
+  expect(html).toContain('Copyright 2014 The DM Sans Project Authors');
+  expect(html).toContain('SIL OPEN FONT LICENSE Version 1.1');
+  expect(html).not.toContain('<script>');
+});
