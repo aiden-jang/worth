@@ -312,6 +312,26 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         updated_at: g.updatedAt,
       })),
     );
+    rows(
+      'taste_history',
+      file.tasteHistory.map((event) => ({
+        id: crypto.randomUUID().replaceAll('-', ''),
+        owner_id: owner,
+        kind: event.kind,
+        list_id: event.listId ? id(event.listId) : null,
+        item_id: event.itemId ? id(event.itemId) : null,
+        before_json: JSON.stringify(
+          event.kind === 'rank' ? event.before.map((value) => (value ? id(value) : null)) : event.before,
+        ),
+        after_json: JSON.stringify(
+          event.kind === 'rank' ? event.after.map((value) => (value ? id(value) : null)) : event.after,
+        ),
+        reason: event.reason,
+        log_id: event.logId ? id(event.logId) : null,
+        revision: 0,
+        created_at: event.createdAt,
+      })),
+    );
     for (const [kind, table, field] of [
       ['list', 'list_photos', 'list_id'],
       ['item', 'item_photos', 'item_id'],

@@ -138,7 +138,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     const results = await c.env.DB.batch([
       c.env.DB.prepare(
         `UPDATE items SET title = ?, type = ?, note = ?, decision = ?, revisit_queued = ?, want_to_try = ?, context_json = CASE WHEN ? THEN ? ELSE context_json END, context_revision = context_revision + ?, started_on = ?, ended_on = ?,
-          updated_at = ? WHERE id = ? AND owner_id = ? AND list_id = ? AND trashed_at IS NULL AND merged_into_id IS NULL AND list_id IN (SELECT id FROM active_lists WHERE owner_id = ?) AND (? = 0 OR context_revision = ?)`,
+          updated_at = ? WHERE id = ? AND owner_id = ? AND list_id = ? AND trashed_at IS NULL AND merged_into_id IS NULL AND list_id IN (SELECT id FROM active_lists WHERE owner_id = ?) AND updated_at = ? AND (? = 0 OR context_revision = ?)`,
       ).bind(
         value.title,
         value.type,
@@ -156,6 +156,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
         c.get('ownerId'),
         item.listId,
         c.get('ownerId'),
+        item.updatedAt,
         contextChanged ? 1 : 0,
         patch.expectedContextRevision ?? 0,
       ),

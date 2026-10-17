@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { tasteEvent } from './taste-history';
 import { inboxEntry, inboxLimit } from './inbox';
 import { collectionTemplates } from './templates';
 import { itemInput, listInput, logInput, routineInput, workoutPatch } from './validation';
@@ -11,7 +12,8 @@ const title = (max: number) => text(max).refine((value) => value.trim().length >
 const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
-    schemaVersion: z.union([z.literal(1), z.literal(2)]),
+    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    tasteHistory: z.array(tasteEvent).max(10000).default([]),
     inbox: z.array(inboxEntry).max(inboxLimit).default([]),
     collectionTemplates: collectionTemplates.default([]),
     exportedAt: z.string().datetime(),
@@ -193,6 +195,34 @@ export const archiveFile = z
           workouts.get(g.workoutId)?.happenedOn !== g.happenedOn)
       )
         bad('A log has an invalid workout');
+    }
+    const logIds = new Set(file.logs.map((g) => g.id));
+    if (new Set(file.tasteHistory.map((e) => e.id)).size !== file.tasteHistory.length)
+      bad('History contains duplicate IDs');
+    for (const event of file.tasteHistory) {
+      if (event.kind === 'rank') {
+        if (lists.get(event.listId)?.kind !== 'collection') bad('History has an invalid collection');
+        for (const order of [event.before, event.after]) {
+          const kept = order.filter((id) => id !== null);
+          if (new Set(kept).size !== kept.length || kept.some((id) => !items.has(id!)))
+            bad('History has an invalid record');
+        }
+        if (event.logId) bad('Ranking history cannot link a visit');
+      } else {
+        const item = items.get(event.itemId),
+          log = file.logs.find((g) => g.id === event.logId);
+        if (!item) bad('Opinion history has an invalid record');
+        if (
+          event.logId &&
+          (!log ||
+            log.listId !== item?.listId ||
+            (log.itemId !== item?.id &&
+              log.itemId !== item?.mergedIntoId &&
+              items.get(log.itemId ?? '')?.mergedIntoId !== item?.id))
+        )
+          bad('Opinion history has an invalid visit');
+      }
+      if (event.logId && !logIds.has(event.logId)) bad('History has an invalid visit');
     }
     const photoKeys = new Set<string>();
     for (const p of file.photos) {

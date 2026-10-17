@@ -376,6 +376,19 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Ranking and opinion history</h2>
+              <p>
+                Workbench → Taste history records future changes to ranks and calls. Earlier changes are
+                unknown. Compare an older order with the current one, then copy it into the ranking sandbox
+                for review. Applying still needs a separate preview and confirmation.
+              </p>
+              <p>
+                Reasons and a linked visit are optional and private. Older opinion review has a date filter
+                and no reminders. History uses current record names; unavailable positions stay gaps. Backups
+                include saved history.
+              </p>
+            </section>
+            <section>
               <h2>Look back over a period</h2>
               <p>
                 <Link to="/patterns/look-back">Look back</Link> in Patterns reads a period you choose, from

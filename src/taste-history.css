@@ -1,0 +1,93 @@
+.taste-history-events {
+  display: grid;
+  gap: 20px;
+  margin-block: 24px;
+}
+.taste-history-event {
+  border-top: 1px solid #737566;
+  padding-top: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.taste-history-event h4 {
+  font-size: 24px;
+  font-weight: 400;
+  margin-block: 10px;
+}
+.taste-history-orders {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 20px;
+}
+.taste-history-order {
+  background: #eae5d5;
+  color: #27291f;
+  padding: 20px;
+  border-radius: 22px;
+  min-width: 0;
+}
+.taste-history-order h5 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 500;
+}
+.taste-history-order ol {
+  padding-left: 24px;
+}
+.taste-history-order li {
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+}
+.history-note-dialog {
+  max-width: 650px;
+}
+.history-note-dialog fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.taste-history-saved {
+  border: 1px solid #737566;
+  border-radius: 12px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .taste-history-orders {
+    grid-template-columns: 1fr;
+  }
+}
+.history-note-dialog {
+  padding: 28px;
+}
+.history-note-dialog h2 {
+  margin-top: 0;
+  font-size: 32px;
+  font-weight: 400;
+}
+.history-note-dialog label {
+  display: grid;
+  gap: 8px;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.history-note-dialog p {
+  line-height: 1.5;
+}
+.history-note-dialog textarea {
+  min-height: 120px;
+}
+.taste-history-event > .button {
+  margin: 6px 8px 6px 0;
+}
+@media (max-width: 680px) {
+  .history-note-dialog {
+    padding: 22px 18px;
+  }
+  .history-note-dialog h2 {
+    font-size: 27px;
+  }
+}

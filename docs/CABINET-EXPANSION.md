@@ -18,9 +18,9 @@ framing and layout changes in the original checkout.
 - [x] Private two-to-four-record comparison table, including notes/photos/history.
 - [x] Decision draw from Want to try, revisit queue or Favorites, with type filters.
 - [x] Saved contextual rankings such as best value or special occasion.
-- [ ] Ranking history and a taste time machine. Record future changes; do not fabricate old orders.
-- [ ] Dated opinion history, optional reasons and the visit that changed a call.
-- [ ] Optional review of older opinions, without reminders or pressure by default.
+- [x] Ranking history and a taste time machine. Record future changes; do not fabricate old orders.
+- [x] Dated opinion history, optional reasons and the visit that changed a call.
+- [x] Optional review of older opinions, without reminders or pressure by default.
 - [x] Quiet retrospectives based on real records and explicitly selected periods.
 
 ## Capture and organization
@@ -469,3 +469,37 @@ see [retrospective QA](../art/ui-qa/retrospective/README.md) for Axe, reflow, re
 and calendar cases. Ranking/opinion history and all other unchecked web scope
 remain unfinished. This work is committed locally on the separate branch, without
 native apps, push, pull request, merge, remote CI or deployment.
+
+## Sixteenth implementation: future ranking and opinion history
+
+Workbench → Taste history records future old/new ranking and call changes in the
+same database transaction as the change. Existing records, creation/import and
+restore do not invent earlier events. Moves/merge/Trash rank removals are covered;
+unchanged values add nothing. Opinion history follows its original record across
+moves, retains merged originals and is hidden with unavailable parents. Rank
+snapshots retain missing positions as gaps and show current names explicitly.
+Before/after/current comparisons remain read-only; reusing an older order enters
+the existing sandbox and still requires preview and revision-checked apply.
+
+Reasons and a visit that changed a call are optional, private and independently
+revision checked. Saved-detail reload keeps an unfinished draft for deliberate
+review. Account/device drafts recover for seven days; blocked storage requires
+explicit close confirmation. Older-opinion review uses an optional date cutoff
+and has no reminders. History reads paginate 50 changes with date-tied cursors.
+
+Migration `0018_taste_history.sql` adds event storage and atomic SQLite triggers.
+Item patches also guard the row read during the request; ranking applies recheck
+active references in the update. Version 3 exports include history in the records
+snapshot. Restore accepts versions 1/2/3, remaps all references and preserves gaps,
+dates and reasons without creating extra events. History exports support 10,000
+changes and 16 MB of history within existing backup constraints; oversized history
+returns an explicit error without omitting events. Public projections are unchanged.
+
+All 149 core tests across 37 files passed, including real D1 capacity/ownership,
+visit guards, moves, Trash and restore checks. Formatting, lint, unused-code checks,
+TypeScript and production build passed. All eight focused desktop/phone browser
+journeys passed, including Axe, 320/430/768px reflow and draft/conflict recovery.
+Ten captures were visually inspected; see [history QA](../art/ui-qa/taste-history/README.md).
+The complete 197-journey desktop/phone browser regression then passed. This group is committed locally.
+All other unchecked web features remain unfinished. Work stays on the separate
+branch, without native code, push, pull request, merge or deployment.

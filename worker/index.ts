@@ -1,3 +1,4 @@
+import { registerTasteHistoryRoutes } from './routes/taste-history';
 import { registerRetrospectiveRoutes } from './routes/retrospective';
 import { registerInboxRoutes } from './routes/inbox';
 import { registerTemplateRoutes } from './routes/templates';
@@ -86,6 +87,7 @@ registerReviewedCaptureRoutes(privateApi);
 registerLogRoutes(privateApi);
 registerOverviewRoutes(privateApi);
 registerRetrospectiveRoutes(privateApi);
+registerTasteHistoryRoutes(privateApi);
 registerSearchRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);

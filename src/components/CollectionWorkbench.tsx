@@ -24,8 +24,9 @@ import { VisitContextReadout } from './VisitContext';
 import { DuplicateReview } from './DuplicateReview';
 import '../workbench.css';
 import { CollectionSetup } from './CollectionSetup';
+import { TasteHistory } from './TasteHistory';
 
-type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture' | 'setup';
+type Mode = 'rank' | 'compare' | 'draw' | 'publish' | 'shelf' | 'capture' | 'setup' | 'history';
 type RankingDraft = { ids: string[]; revision: number };
 const validDraft = (value: unknown): value is RankingDraft => {
   if (!value || typeof value !== 'object') return false;
@@ -157,6 +158,7 @@ export function CollectionWorkbench({
               ['shelf', 'Your shelf'],
               ['capture', 'Import & capture'],
               ['setup', 'Collection setup'],
+              ['history', 'Taste history'],
             ] as const
           ).map(([id, label]) => (
             <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
@@ -164,6 +166,26 @@ export function CollectionWorkbench({
             </button>
           ))}
         </nav>
+        {mode === 'history' && (
+          <TasteHistory
+            list={list}
+            items={items}
+            logs={logs}
+            onOpen={openRecord}
+            onDraft={(ids) => {
+              if (changed || comparison) {
+                setStatus('Keep or discard the current sandbox draft before loading an older order.');
+                setMode('rank');
+                return;
+              }
+              setOrder(ids);
+              setMode('rank');
+              setStatus(
+                'Older order copied into the sandbox. Review unavailable gaps and the preview before applying.',
+              );
+            }}
+          />
+        )}
         {mode === 'setup' && <CollectionSetup list={list} />}
         {mode === 'publish' && <CollectionPublishing list={list} items={items} />}
         {mode === 'capture' && <ReviewedCapture list={list} items={items} />}

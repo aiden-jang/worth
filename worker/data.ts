@@ -1,3 +1,5 @@
+import { historyQuery, mapHistory, type HistoryRow } from './taste-history';
+import type { TasteEvent } from '../src/shared/taste-history';
 import { mapInbox, type InboxRow } from './inbox';
 import { collectionTemplates } from '../src/shared/templates';
 import type { InboxEntry } from '../src/shared/inbox';
@@ -20,7 +22,8 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 2;
+  schemaVersion: 3;
+  tasteHistory: TasteEvent[];
   exportedAt: string;
   photosExcluded: true;
   lists: ListDetail[];
@@ -305,33 +308,63 @@ export async function listShares(db: D1Database, ownerId: string, listId: string
 }
 
 export async function exportRecords(db: D1Database, ownerId: string): Promise<RecordExport> {
-  const [listResult, itemResult, logResult, workoutResult, routineResult, inboxResult, templateResult] =
-    await db.batch([
-      db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
-      db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
-      db
-        .prepare(
-          `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
+  const [
+    listResult,
+    itemResult,
+    logResult,
+    workoutResult,
+    routineResult,
+    inboxResult,
+    templateResult,
+    historyResult,
+    historySizeResult,
+  ] = await db.batch([
+    db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
+    db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
+    db
+      .prepare(
+        `SELECT g.*, EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id = g.id) AS has_photo
         FROM active_logs g WHERE g.owner_id = ? ORDER BY g.happened_on ASC, g.created_at ASC`,
-        )
-        .bind(ownerId),
-      db
-        .prepare(
-          'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY happened_on ASC, created_at ASC',
-        )
-        .bind(ownerId),
-      db
-        .prepare(
-          'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY created_at ASC',
-        )
-        .bind(ownerId),
-      db
-        .prepare(
-          'SELECT * FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL ORDER BY created_at DESC, id DESC',
-        )
-        .bind(ownerId),
-      db.prepare('SELECT templates_json FROM collection_template_sets WHERE owner_id = ?').bind(ownerId),
-    ]);
+      )
+      .bind(ownerId),
+    db
+      .prepare(
+        'SELECT * FROM workout_sessions WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY happened_on ASC, created_at ASC',
+      )
+      .bind(ownerId),
+    db
+      .prepare(
+        'SELECT * FROM workout_routines WHERE list_id IN (SELECT id FROM active_lists) AND owner_id = ? ORDER BY created_at ASC',
+      )
+      .bind(ownerId),
+    db
+      .prepare(
+        'SELECT * FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL ORDER BY created_at DESC, id DESC',
+      )
+      .bind(ownerId),
+    db.prepare('SELECT templates_json FROM collection_template_sets WHERE owner_id = ?').bind(ownerId),
+    db
+      .prepare(
+        `SELECT allowed.* FROM (${historyQuery}) allowed CROSS JOIN
+      (SELECT COUNT(*) AS n, COALESCE(SUM(length(before_json) + length(after_json) + length(CAST(reason AS BLOB)) + 300),0) AS bytes FROM (${historyQuery})) bounds
+      WHERE bounds.n <= 10000 AND bounds.bytes <= 16777216 ORDER BY allowed.created_at, allowed.id`,
+      )
+      .bind(ownerId, ownerId),
+    db
+      .prepare(
+        `SELECT COUNT(*) AS n, COALESCE(SUM(length(before_json) + length(after_json) + length(CAST(reason AS BLOB)) + 300),0) AS bytes FROM (${historyQuery})`,
+      )
+      .bind(ownerId),
+  ]);
+  const historySize = historySizeResult.results[0] as { n: number; bytes: number };
+  if (historySize.n > 10000 || historySize.bytes > 16 * 1024 * 1024)
+    throw new ApiError(
+      413,
+      'HISTORY_EXPORT_TOO_LARGE',
+      'This archive exceeds 10,000 history changes or 16 MB of history. Contact support for a full archive transfer. No history was omitted.',
+    );
+  const exportedItemIds = new Set((itemResult.results as ItemRow[]).map((i) => i.id));
+  const exportedLogIds = new Set((logResult.results as LogRow[]).map((g) => g.id));
   return {
     collectionTemplates: collectionTemplates.parse(
       JSON.parse(
@@ -339,8 +372,11 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       ),
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
-    // Older readers must reject Inbox backups instead of silently omitting a new record kind.
-    schemaVersion: 2,
+    // Older readers must reject history backups instead of silently discarding it.
+    schemaVersion: 3,
+    tasteHistory: (historyResult.results as HistoryRow[]).map((row) =>
+      mapHistory(row, exportedItemIds, exportedLogIds),
+    ),
     exportedAt: new Date().toISOString(),
     photosExcluded: true,
     lists: (listResult.results as ListRow[]).map((row) => ({

@@ -111,9 +111,18 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
     }
     const result = await c.env.DB.prepare(
       `UPDATE lists SET ranked_ids = ?, rank_revision = rank_revision + 1,
-      updated_at = ? WHERE id = ? AND owner_id = ? AND rank_revision = ?`,
+      updated_at = ? WHERE id = ? AND owner_id = ? AND rank_revision = ? AND trashed_at IS NULL
+      AND NOT EXISTS (SELECT 1 FROM json_each(?) j WHERE NOT EXISTS
+       (SELECT 1 FROM active_items i WHERE i.id = j.value AND i.list_id = lists.id AND i.owner_id = lists.owner_id))`,
     )
-      .bind(JSON.stringify(input.itemIds), Date.now(), list.id, c.get('ownerId'), input.expectedRevision)
+      .bind(
+        JSON.stringify(input.itemIds),
+        Date.now(),
+        list.id,
+        c.get('ownerId'),
+        input.expectedRevision,
+        JSON.stringify(input.itemIds),
+      )
       .run();
     if (result.meta.changes === 0)
       throw new ApiError(409, 'RANK_CHANGED', 'This ranking changed elsewhere. Refresh and try again.');

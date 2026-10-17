@@ -1,3 +1,4 @@
+import type { HistoryPage } from './shared/taste-history';
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
   TrashEntry,
@@ -92,6 +93,15 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  tasteHistory: (listId: string, cursor = '', until = '', signal?: AbortSignal) =>
+    request<HistoryPage>(
+      `/lists/${listId}/history?${new URLSearchParams({ cursor, ...(until ? { until } : {}) })}`,
+      { signal },
+    ),
+  tasteEvent: (id: string) =>
+    request<{ event: import('./shared/taste-history').TasteEvent }>(`/history/${id}`),
+  historyNote: (id: string, body: import('zod').infer<typeof import('./shared/taste-history').historyNote>) =>
+    request<{ event: import('./shared/taste-history').TasteEvent }>(`/history/${id}/note`, json('PUT', body)),
   retrospective: (filter: import('./shared/retrospective').RetrospectiveFilter, signal?: AbortSignal) =>
     request<import('./shared/retrospective').Retrospective>(
       `/retrospective?${new URLSearchParams({ from: filter.from, to: filter.to, list: filter.listId, archived: filter.includeArchived ? '1' : '0', startOffset: String(filter.startOffset), endOffset: String(filter.endOffset) })}`,

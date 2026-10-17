@@ -115,8 +115,8 @@ export function SettingsPage() {
         <p>Download your records, or a full backup with photos. Share links and Trash aren’t included.</p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates and 200
-          photos/covers. Keep downloaded files somewhere private.
+          restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates, 10,000 history
+          changes and 200 photos/covers. Keep downloaded files somewhere private.
         </p>
         <div className="data-actions">
           <button
@@ -158,7 +158,7 @@ export function SettingsPage() {
               {file.lists.length} lists · {file.items.length} items · {file.logs.length} logs ·{' '}
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
               {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
-              Inbox finds
+              Inbox finds · {file.tasteHistory.length} history changes
             </p>
             {!!file.lists.length && (
               <ul>

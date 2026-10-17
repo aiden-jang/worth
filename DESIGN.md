@@ -314,3 +314,14 @@ side by side on desktop and stack on phone. These are chronological groups, not
 ranked lists or performance cards. No call face is shown because old opinions
 are not known. This deliberate Patterns extension keeps private notes absent
 until requested and leaves long names readable.
+
+## Taste history
+
+Workbench adds a secondary Taste history tool with ruled event rows, explicit
+before-date/changes filters and optional reason editors. Expanded rankings use
+three cream before/after/current columns on desktop, stacked on phones. Missing
+positions remain numbered gaps; no face or call is inferred. Existing sandbox
+preview/apply behavior controls reusing an older order. Nested reason dialogs use
+the standard 22px cabinet form, 44px controls and explicit draft/conflict recovery.
+This deliberately extends the workbench without changing the primary collection
+composition. Verification captures are in `art/ui-qa/taste-history/`.

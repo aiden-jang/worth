@@ -398,7 +398,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. New exports use schema version 2 so older readers reject them rather than silently omit Inbox finds. Restore still accepts version 1 files, which default to no Inbox. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 3 for taste history. Restore accepts versions 1/2/3; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -447,3 +447,33 @@ query. Notes require a visible projection choice and no sharing is introduced.
 This is not reconstructed opinion/ranking history and adds no persistent record
 schema. [Retrospectives](RETROSPECTIVES.md) records date semantics, scope, display
 bounds, recovery and current-data limitations.
+
+## Taste history
+
+Migration `0018_taste_history.sql` adds private future ranking/call events. SQLite
+triggers record old/new values in the same transaction as every changed row,
+including rank removals from move/merge/Trash. Identical values and record creation
+produce no event; migration and restore never invent earlier changes. Opinion
+events reference their original item and follow its current collection; merging
+retains original events, and purging the item cascades them. Rank events belong
+to their collection. Purging that collection cascades its rank history.
+
+History reads use the same owned active-parent projections as backups; Trash is
+excluded and archived collections remain reachable. Rank snapshots retain missing
+positions as nulls and use current names, never claims of past titles. A visit
+link must belong to that opinion's current record/merge group and collection;
+removed or reassigned links are omitted. Optional reason/visit edits use their
+own revision and owner/active-reference guards in the update statement.
+
+Workbench → Taste history paginates 50 changes at a time. Optional cutoff/filter
+controls never schedule reminders. Comparing before/after/current is read-only;
+copying an old order into the existing sandbox still requires its ordinary
+preview and revision-checked apply. The reason editor retains account-bound
+seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
+
+Both backup formats use schema version 3 and include history in the same read
+batch as records. Restore accepts versions 1/2/3, remaps event/item/list/log IDs,
+retains event dates/reasons/gaps and inserts history without triggering artificial
+changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
+limits; exports do not silently trim history. Public snapshots/cards/booklets
+retain their existing projections and never inherit history or reasons.

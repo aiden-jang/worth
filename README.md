@@ -37,6 +37,7 @@ labeled and never writes to a private archive.
 - Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo
   options. Download an offline HTML copy or print/save a PDF. Prepare an individual recommendation
   card as a PNG with your own message and a preview of exactly what leaves Worth.
+- Review future ranking/call changes in Workbench → Taste history, keep optional reasons/linked visits, and compare older orders in the sandbox.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Choose a period in Patterns → Look back for a private recap of currently kept finds and dated logs.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.

@@ -51,6 +51,7 @@ beforeAll(async () => {
     '0015_visit_context.sql',
     '0016_collection_templates.sql',
     '0017_capture_inbox.sql',
+    '0018_taste_history.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -62,7 +63,7 @@ beforeAll(async () => {
     }
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
-      .split(';')
+      .split(file === '0018_taste_history.sql' ? '-- statement\n' : ';')
       .map((part) => part.trim())
       .filter(Boolean)) {
       await platform.env.DB.prepare(statement).run();
@@ -966,7 +967,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(2);
+  expect(exported.schemaVersion).toBe(3);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3054,4 +3055,226 @@ test('retrospective counts remain complete while record groups have explicit dis
   expect(data.kept).toHaveLength(50);
   expect(data.kept[0].title).toBe('Find 54');
   expect(data.kept[49].title).toBe('Find 5');
+});
+
+test('taste history records future changes atomically, preserves gaps, and follows opinions through moves', async () => {
+  const owner = 'historyowner';
+  const list = await archiveCollection(owner, 'Taste');
+  const other = await archiveCollection(owner, 'Elsewhere');
+  const item = await archiveItem(owner, list.id, 'First', { decision: 'meh' });
+  const second = await archiveItem(owner, list.id, 'Second');
+  const history = async (listId = list.id) =>
+    (await (
+      await call(`/lists/${listId}/history`, owner)
+    ).json()) as import('../src/shared/taste-history').HistoryPage;
+  expect((await history()).events).toEqual([]); // no invented initial change
+  expect(
+    (
+      await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+        itemIds: [item.id, second.id],
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await call(`/lists/${list.id}/rank`, owner, 'PUT', {
+        itemIds: [item.id, second.id],
+        expectedRevision: 1,
+      })
+    ).status,
+  ).toBe(200);
+  expect((await history()).events).toHaveLength(1); // identical order is not a new taste change
+  const changed = await call(`/items/${item.id}`, owner, 'PATCH', { decision: 'favorite' });
+  expect(changed.status).toBe(200);
+  await call(`/items/${item.id}`, owner, 'PATCH', { decision: null });
+  await call(`/items/${item.id}`, owner, 'PATCH', { note: 'Unrelated note' });
+  const events = (await history()).events;
+  expect(events).toHaveLength(3);
+  expect(events.filter((e) => e.kind === 'opinion').map((e) => [e.before, e.after])).toEqual(
+    expect.arrayContaining([
+      ['meh', 'favorite'],
+      ['favorite', null],
+    ]),
+  );
+  expect((await call(`/lists/${list.id}/history`, 'historyother')).status).toBe(404);
+  expect((await call(`/lists/${list.id}/history`, null)).status).toBe(401);
+  expect((await call(`/lists/${list.id}/history?cursor=bad`, owner)).status).toBe(400);
+  expect((await call(`/lists/${list.id}/history?until=NaN`, owner)).status).toBe(400);
+  const opinion = events.find((e) => e.kind === 'opinion')!;
+  expect((await call(`/history/${opinion.id}`, 'historyother')).status).toBe(404);
+  expect((await call(`/history/${opinion.id}`, owner)).status).toBe(200);
+  expect(
+    (
+      await call(`/history/${opinion.id}/note`, 'historyother', 'PUT', {
+        reason: 'Bad',
+        logId: null,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(404);
+  const visit = (await (
+    await call(`/lists/${list.id}/logs`, owner, 'POST', {
+      itemId: item.id,
+      happenedOn: '2026-10-01',
+      note: 'Changed my mind',
+    })
+  ).json()) as { log: Log };
+  expect(
+    (
+      await call(`/history/${opinion.id}/note`, owner, 'PUT', {
+        reason: 'A second visit',
+        logId: visit.log.id,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await call(`/history/${opinion.id}/note`, owner, 'PUT', {
+        reason: 'Stale',
+        logId: null,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+  const rank = events.find((e) => e.kind === 'rank')!;
+  expect(
+    (
+      await call(`/history/${rank.id}/note`, owner, 'PUT', {
+        reason: 'A visit',
+        logId: visit.log.id,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (await archiveAction(list.id, owner, { action: 'move', itemIds: [item.id], destinationId: other.id }))
+      .status,
+  ).toBe(200);
+  expect((await history()).events.filter((e) => e.kind === 'opinion')).toEqual([]);
+  const moved = (await history(other.id)).events;
+  expect(moved).toHaveLength(2);
+  expect(moved.find((e) => e.id === opinion.id)).toMatchObject({
+    reason: 'A second visit',
+    logId: visit.log.id,
+  });
+  await call(`/items/${second.id}`, owner, 'DELETE');
+  const remaining = await history();
+  expect(
+    remaining.events.every(
+      (e) => e.kind !== 'rank' || [...e.before, ...e.after].every((id) => id !== second.id),
+    ),
+  ).toBe(true);
+  expect(remaining.events.some((e) => e.kind === 'rank' && e.after.includes(null))).toBe(true);
+  await call(`/logs/${visit.log.id}`, owner, 'DELETE');
+  expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(exported.schemaVersion).toBe(3);
+  expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
+  expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=historyrestore',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(exported),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const roundTrip = archiveFile.parse(await (await call('/export/records', 'historyrestore')).json());
+  expect(roundTrip.tasteHistory).toHaveLength(exported.tasteHistory.length);
+  expect(roundTrip.tasteHistory.some((e) => exported.tasteHistory.some((old) => old.id === e.id))).toBe(
+    false,
+  );
+  expect(roundTrip.tasteHistory.map((e) => [e.kind, e.reason, e.createdAt])).toEqual(
+    exported.tasteHistory.map((e) => [e.kind, e.reason, e.createdAt]),
+  );
+  expect(roundTrip.tasteHistory.some((e) => e.kind === 'rank' && e.after.includes(null))).toBe(true);
+});
+
+test('history pagination retains tied dates, hides unavailable parents and guards visit ownership', async () => {
+  const owner = 'historypages',
+    list = await archiveCollection(owner, 'History pages');
+  const item = await archiveItem(owner, list.id, 'A find'),
+    other = await archiveItem(owner, list.id, 'Another find');
+  const created = (await (
+    await call(`/lists/${list.id}/logs`, owner, 'POST', { itemId: other.id, happenedOn: '2026-10-01' })
+  ).json()) as { log: Log };
+  await platform.env.DB.prepare("UPDATE items SET decision='favorite' WHERE id=?").bind(item.id).run();
+  const first = (await (
+    await call(`/lists/${list.id}/history`, owner)
+  ).json()) as import('../src/shared/taste-history').HistoryPage;
+  expect(
+    (
+      await call(`/history/${first.events[0].id}/note`, owner, 'PUT', {
+        reason: 'Wrong visit',
+        logId: created.log.id,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+  await platform.env.DB.batch(
+    Array.from({ length: 55 }, (_, i) =>
+      platform.env.DB.prepare(
+        "INSERT INTO taste_history (id,owner_id,kind,item_id,before_json,after_json,created_at) VALUES(?,?,'opinion',?,'null','\"meh\"',?)",
+      ).bind(i.toString(16).padStart(32, '0'), owner, item.id, 100),
+    ),
+  );
+  const read = async (cursor = '') =>
+    (await (
+      await call(`/lists/${list.id}/history?cursor=${cursor}`, owner)
+    ).json()) as import('../src/shared/taste-history').HistoryPage;
+  const a = await read(),
+    b = await read(a.next!);
+  expect(a.events).toHaveLength(50);
+  expect(b.events).toHaveLength(6);
+  expect(b.next).toBeNull();
+  expect(new Set([...a.events, ...b.events].map((e) => e.id)).size).toBe(56);
+  const older = (await (
+    await call(`/lists/${list.id}/history?until=101`, owner)
+  ).json()) as import('../src/shared/taste-history').HistoryPage;
+  expect(older.events.every((e) => e.createdAt === 100)).toBe(true);
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  expect((await call(`/lists/${list.id}/history`, owner)).status).toBe(404);
+  expect(
+    (
+      await call(`/history/${first.events[0].id}/note`, owner, 'PUT', {
+        reason: 'Trashed',
+        logId: null,
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(404);
+});
+
+test('history exports report their bounds without omitting excess events', async () => {
+  const owner = 'historycapacity',
+    list = await archiveCollection(owner, 'Long history'),
+    item = await archiveItem(owner, list.id, 'One');
+  await platform.env.DB.prepare(
+    `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<10001)
+ INSERT INTO taste_history (id,owner_id,kind,item_id,before_json,after_json,created_at)
+ SELECT lower(hex(randomblob(16))),?,'opinion',?,'null','"meh"',i FROM n`,
+  )
+    .bind(owner, item.id)
+    .run();
+  const tooMany = await call('/export/records', owner);
+  expect(tooMany.status).toBe(413);
+  expect(await tooMany.json()).toMatchObject({ error: 'HISTORY_EXPORT_TOO_LARGE' });
+  await platform.env.DB.prepare('DELETE FROM taste_history WHERE owner_id=? AND created_at>9999')
+    .bind(owner)
+    .run();
+  await platform.env.DB.prepare('UPDATE taste_history SET reason=? WHERE owner_id=?')
+    .bind('a'.repeat(2000), owner)
+    .run();
+  expect((await call('/export/backup', owner)).status).toBe(413);
+  await platform.env.DB.prepare('DELETE FROM lists WHERE owner_id=?').bind(owner).run();
 });
