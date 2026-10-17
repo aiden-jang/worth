@@ -3501,3 +3501,125 @@ test('connection capacity is atomic and a failed restore retries without partial
   expect(count?.n).toBe(1000);
   await platform.env.DB.prepare('DELETE FROM lists WHERE owner_id=?').bind(owner).run();
 });
+
+test('calendar separates owner plans from actual logs, uses snoozed days and retains dates in backups', async () => {
+  const owner = 'calendarowner',
+    list = await archiveCollection(owner, 'Things to revisit');
+  const item = await archiveItem(owner, list.id, 'A plan', {
+    context: { revisit: { on: '2026-10-17', snoozedUntil: '2026-11-03' } },
+  });
+  const logResponse = await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    itemId: item.id,
+    happenedOn: '2026-10-17',
+  });
+  expect(logResponse.status).toBe(201);
+  const read = async (month: string, day: string, archived = '0') => {
+    const response = await call(`/calendar?month=${month}&day=${day}&archived=${archived}`, owner);
+    expect(response.status).toBe(200);
+    return (await response.json()) as import('../src/shared/activity-calendar').ActivityCalendar;
+  };
+  const activity = (await call('/lists', owner, 'POST', { name: 'Walks', kind: 'activity' }).then((r) =>
+    r.json(),
+  )) as { list: ListDetail };
+  expect(
+    (
+      await call(`/lists/${activity.list.id}/logs`, owner, 'POST', {
+        title: 'A logged walk',
+        happenedOn: '2026-10-17',
+      })
+    ).status,
+  ).toBe(201);
+  const october = await read('2026-10', '2026-10-17');
+  expect(october.days).toEqual([{ day: '2026-10-17', planned: 0, visits: 1, activities: 1 }]);
+  expect(october.entries.map((entry) => entry.kind).sort()).toEqual(['activity', 'visit']);
+  const november = await read('2026-11', '2026-11-03');
+  expect(november.entries).toMatchObject([
+    { id: item.id, kind: 'revisit', originalDay: '2026-10-17', day: '2026-11-03' },
+  ]);
+  expect((await call('/calendar?month=2026-02&day=2026-02-30&archived=0', owner)).status).toBe(400);
+  expect(
+    (
+      (await call('/calendar?month=2026-11&day=2026-11-03&archived=0', 'calendarstranger').then((r) =>
+        r.json(),
+      )) as { entries: unknown[] }
+    ).entries,
+  ).toEqual([]);
+  expect((await call('/calendar?month=2026-11&day=2026-11-03&archived=0', null)).status).toBe(401);
+  const exported = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
+  expect(exported.items[0].context.revisit).toEqual({ on: '2026-10-17', snoozedUntil: '2026-11-03' });
+  const restore = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=calendarrestore',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(exported),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restore.status).toBe(201);
+  const restored = (await call('/calendar?month=2026-11&day=2026-11-03&archived=0', 'calendarrestore').then(
+    (r) => r.json(),
+  )) as import('../src/shared/activity-calendar').ActivityCalendar;
+  expect(restored.entries[0]).toMatchObject({
+    originalDay: '2026-10-17',
+    day: '2026-11-03',
+    title: 'A plan',
+  });
+  expect(restored.entries[0].id).not.toBe(item.id);
+  await call(`/lists/${list.id}`, owner, 'PATCH', { archived: true });
+  expect((await read('2026-11', '2026-11-03')).entries).toEqual([]);
+  expect((await read('2026-11', '2026-11-03', '1')).entries[0].archived).toBe(true);
+  await call(`/items/${item.id}`, owner, 'DELETE');
+  expect((await read('2026-11', '2026-11-03', '1')).entries).toEqual([]);
+  expect((await read('2026-10', '2026-10-17', '1')).entries.map((entry) => entry.kind)).toEqual(['activity']);
+});
+
+test('calendar counts complete days while paging entries and follows Inbox filing without duplicated plans', async () => {
+  const owner = 'calendarpages',
+    list = await archiveCollection(owner, 'Many plans');
+  const find = await inboxFind(owner, 'Unfiled plan', { context: { revisit: { on: '2026-11-03' } } });
+  const now = Date.now();
+  await platform.env.DB.batch(
+    Array.from({ length: 55 }, (_, i) =>
+      platform.env.DB.prepare(
+        'INSERT INTO items(id,owner_id,list_id,title,context_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
+      ).bind(
+        crypto.randomUUID(),
+        owner,
+        list.id,
+        `Plan ${i}`,
+        JSON.stringify(itemContext.parse({ revisit: { on: '2026-11-03' } })),
+        now,
+        now,
+      ),
+    ),
+  );
+  const response = await call('/calendar?month=2026-11&day=2026-11-03&archived=0', owner);
+  const first = (await response.json()) as import('../src/shared/activity-calendar').ActivityCalendar;
+  expect(first.days).toEqual([{ day: '2026-11-03', planned: 56, visits: 0, activities: 0 }]);
+  expect(first.entries).toHaveLength(50);
+  expect(first.entries.some((entry) => entry.kind === 'inbox' && entry.id === find.id)).toBe(true);
+  const second = (await call(
+    `/calendar?month=2026-11&day=2026-11-03&archived=0&after=${encodeURIComponent(first.next!)}`,
+    owner,
+  ).then((r) => r.json())) as import('../src/shared/activity-calendar').ActivityCalendar;
+  expect(second.entries).toHaveLength(6);
+  expect(second.next).toBeNull();
+  expect(new Set([...first.entries, ...second.entries].map((e) => `${e.kind}:${e.id}`)).size).toBe(56);
+  const filing = await inboxRequest(owner, `/inbox/${find.id}/file`, {
+    targetListId: list.id,
+    expectedRevision: find.revision,
+  });
+  expect(filing.status).toBe(201);
+  const after = (await call('/calendar?month=2026-11&day=2026-11-03&archived=0', owner).then((r) =>
+    r.json(),
+  )) as import('../src/shared/activity-calendar').ActivityCalendar;
+  expect(after.days[0].planned).toBe(56);
+  expect(after.entries.every((entry) => entry.kind !== 'inbox')).toBe(true);
+});

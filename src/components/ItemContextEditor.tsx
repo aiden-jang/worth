@@ -27,6 +27,7 @@ export function ItemContextEditor({
   const context = {
     ...emptyItemContext,
     ...value,
+    revisit: { ...emptyItemContext.revisit, ...value?.revisit },
     purchase: { ...emptyItemContext.purchase, ...value?.purchase },
     loan: { ...emptyItemContext.loan, ...value?.loan },
   };
@@ -90,6 +91,51 @@ export function ItemContextEditor({
           />
         </label>
       ))}
+      <details className="record-extras">
+        <summary>Plan a revisit</summary>
+        <p>
+          A chosen day, without reminders. This stays separate from your queue, call and actual visits. Save
+          this record to keep changes.
+        </p>
+        <label>
+          Revisit on
+          <input
+            type="date"
+            value={context.revisit.on ?? ''}
+            onChange={(e) =>
+              onChange({ ...context, revisit: { on: e.target.value || null, snoozedUntil: null } })
+            }
+          />
+        </label>
+        <label>
+          Snooze until (optional)
+          <input
+            type="date"
+            disabled={!context.revisit.on}
+            min={context.revisit.on ?? undefined}
+            value={context.revisit.snoozedUntil ?? ''}
+            onChange={(e) =>
+              onChange({ ...context, revisit: { ...context.revisit, snoozedUntil: e.target.value || null } })
+            }
+          />
+        </label>
+        {context.revisit.snoozedUntil && (
+          <button
+            type="button"
+            className="button button-outline"
+            onClick={() => onChange({ ...context, revisit: { ...context.revisit, snoozedUntil: null } })}
+          >
+            Clear snooze
+          </button>
+        )}
+        {context.revisit.on && (
+          <p>
+            Originally {context.revisit.on}
+            {context.revisit.snoozedUntil ? `; now ${context.revisit.snoozedUntil}` : ''}. A logged visit does
+            not clear this plan automatically.
+          </p>
+        )}
+      </details>
       <details className="record-extras">
         <summary>Labels and stamps</summary>
         <label>

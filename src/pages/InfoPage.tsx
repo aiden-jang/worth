@@ -313,6 +313,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Revisit plans and the calendar</h2>
+              <p>
+                In a record’s optional context, open Plan a revisit. Set a day, or snooze to a later day while
+                keeping the original date. Save the record to keep changes. Clear snooze returns to the
+                original day; clearing the revisit date removes the plan. Your call, ranking and revisit queue
+                stay independent. Logging a visit does not clear a plan automatically.
+              </p>
+              <p>
+                Patterns → <Link to="/patterns/calendar">Activity calendar</Link> shows these plans separately
+                from entered visits and activity logs. Choose a month and show it, then choose a day to open
+                its readable agenda. Archived collections are optional. Trash hides their affected entries;
+                Inbox plans follow the record when filed. Worth sends no reminders or notifications. Plans
+                stay on their saved day until you deliberately change them.
+              </p>
+            </section>
+            <section>
               <h2>A personal field guide</h2>
               <p>
                 In Patterns, open <Link to="/patterns/field-guide">Field guide</Link>. Choose up to 12 records

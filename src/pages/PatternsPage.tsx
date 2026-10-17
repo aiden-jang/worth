@@ -39,6 +39,9 @@ export function PatternsPage() {
         <Link className="retro-entry connection-entry" to="/patterns/connections">
           Connections →
         </Link>
+        <Link className="retro-entry" to="/patterns/calendar">
+          Activity calendar →
+        </Link>
         <Link className="retro-entry" to="/patterns/field-guide">
           Make a field guide →
         </Link>

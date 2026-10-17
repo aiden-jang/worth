@@ -528,3 +528,27 @@ changes; an abortable preparation cannot publish into an unmounted account scree
 Print uses only the prepared snapshot. This adds no table or backup version; guide
 drafts are local and are not included in account backups. Copies shared by the
 user cannot be revoked and have no relationship to seven-day public snapshots.
+
+## Revisit plans and activity calendar
+
+Patterns → Activity calendar reads literal dates from logged visits/activities and
+optional revisit plans. Item context keeps the original chosen day and optional
+snoozed day separately. A plan never adds a visit or changes the call, ranking or
+revisit queue. Logging a visit does not clear a plan; rescheduling/removal is an
+explicit context save with the existing revision and draft recovery.
+
+The private `/calendar` endpoint returns complete monthly per-day counts plus a
+50-entry keyset page for the selected day, in one D1 snapshot. Inbox plans appear
+until filing, then follow the filed record. Archived content requires an explicit
+choice; Trash hides affected plans and logs. Names reflect current saved records,
+not a fabricated historical snapshot. Logged activity counts represent log entries,
+not workout sessions or achievements. Plans are shown on their effective saved day;
+overdue plans are not moved to today. No reminders or notifications are scheduled.
+
+The screen keeps month/archive choices in an account/device seven-day draft; a
+restored choice requires Show calendar. Desktop days use an ordered monthly grid;
+phone days become full-width labeled rows, retaining 44px targets. The selected
+day always has a readable linked agenda and optional next/first-entry controls.
+Revisit dates round-trip in existing context JSON backups, with old files defaulting
+to no plan. No database migration or backup format change is needed. Public links,
+booklets, cards and field guides retain their existing explicit projections.

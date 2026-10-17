@@ -1,3 +1,4 @@
+import { registerCalendarRoutes } from './routes/calendar';
 import { registerConnectionRoutes } from './routes/connections';
 import { registerTasteHistoryRoutes } from './routes/taste-history';
 import { registerRetrospectiveRoutes } from './routes/retrospective';
@@ -88,6 +89,7 @@ registerReviewedCaptureRoutes(privateApi);
 registerLogRoutes(privateApi);
 registerOverviewRoutes(privateApi);
 registerRetrospectiveRoutes(privateApi);
+registerCalendarRoutes(privateApi);
 registerTasteHistoryRoutes(privateApi);
 registerConnectionRoutes(privateApi);
 registerSearchRoutes(privateApi);

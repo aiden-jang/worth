@@ -93,6 +93,15 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  calendar: (
+    filter: import('./shared/activity-calendar').CalendarFilter,
+    cursor = '',
+    signal?: AbortSignal,
+  ) =>
+    request<import('./shared/activity-calendar').ActivityCalendar>(
+      `/calendar?${new URLSearchParams({ month: filter.month, day: filter.day, archived: filter.includeArchived ? '1' : '0', ...(cursor ? { after: cursor } : {}) })}`,
+      { signal },
+    ),
   connections: () =>
     request<{ connections: import('./shared/connections').ConnectionView[] }>('/connections'),
   connection: (id: string) =>

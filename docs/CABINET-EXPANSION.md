@@ -51,7 +51,7 @@ framing and layout changes in the original checkout.
 - [ ] Trip replay from explicit dates/locations, with a readable stop list.
 - [x] Purchase date, price/currency, return deadline and ownership status.
 - [x] Borrowed/lent records and optional calendar-file return reminders, imported by the user into their calendar.
-- [ ] Revisit dates, snooze and an activity calendar.
+- [x] Revisit dates, snooze and an activity calendar.
 - [ ] Richer routine plans, exercise aliases and additional explicit measurements.
 - [ ] Time capsules with a chosen opening date and a current-vs-snapshot comparison.
 
@@ -563,3 +563,30 @@ Eight captures and every page of the actual three-page A5 PDF were inspected; se
 [field-guide QA](../art/ui-qa/field-guide/README.md). The remaining unchecked web
 features are still unfinished. Work remains local on the separate feature branch,
 without native apps, push, pull request, merge or deployment.
+
+## Nineteenth implementation: revisit plans and activity calendar
+
+Record context keeps an optional original revisit day and a later snoozed day,
+with normal revision-checked saves and seven-day draft recovery. Clearing snooze
+returns to the original date. Calls, ranks and the manual revisit queue stay
+independent; logging a visit never clears a plan automatically. Worth schedules
+no reminders. Plans follow Inbox filing and record moves, and are hidden by Trash.
+
+Patterns → Activity calendar reads complete monthly day counts and a 50-entry
+keyset page for a selected day in one owned D1 snapshot. Actual entered visits and
+activity logs have separate labels from plans. Archived collections are explicit.
+Desktop days use an ordered month grid; phone dates use full-width rows. Choosing
+a day focuses its loaded agenda, with a direct return to the month. Failed refresh
+feedback stays beside the day controls and identifies retained entries. Context
+backs up through the existing format, with no migration/version change; old files
+default to no plan. Public/export projections keep their existing scope.
+
+All 162 core tests across 40 files passed with one worker. Real D1 cases cover
+privacy, actual log/plan separation, snoozed/original dates, complete counts and
+stable pagination, archive/Trash, Inbox filing and backup ID remapping. Formatting,
+lint, unused-code checks, TypeScript and production builds passed. All 12 focused
+calendar/context journeys passed, then six calendar cases passed twice after the
+last focus/retry/return refinements. Axe, 320/430/768px reflow and all ten final
+captures were inspected; see [calendar QA](../art/ui-qa/activity-calendar/README.md).
+Other unchecked web features remain unfinished. This work remains local on the
+separate branch, without native apps, push, pull request, merge or deployment.

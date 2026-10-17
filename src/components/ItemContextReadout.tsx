@@ -4,6 +4,8 @@ import { emptyItemContext, type ItemContext } from '../shared/item-context';
 export function ItemContextReadout({ value }: { value: ItemContext | undefined }) {
   if (!value || JSON.stringify(value) === JSON.stringify(emptyItemContext)) return null;
   const details = [
+    ['Revisit on', value.revisit?.on],
+    ['Snoozed until', value.revisit?.snoozedUntil],
     ['Why saved', value.whySaved],
     ['Recommended by', value.recommendedBy],
     ['Recommendation', value.recommendation],

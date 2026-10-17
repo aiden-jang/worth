@@ -194,3 +194,15 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Shared booklet/guide exports now reencode displayed photo pixels to strip original
   image metadata. Stored originals stay unchanged; visible photo content remains.
   Smoke-check existing booklets and recommendation cards after release too.
+
+## Revisit plans and activity calendar
+
+- No migration or backup version change. Context adds an optional original revisit
+  day and snoozed day. Old contexts/backups default to no plan. Use a compatible
+  application version when recovering JSON context introduced by this release.
+- Save and reopen a plan; verify snooze keeps its original day and Clear snooze
+  returns it to that day. Calls, ranks and the existing revisit queue must not change.
+- Open Patterns → Activity calendar, choose a month and show it. Check planned
+  revisits, logged visits and activity logs have distinct labels and entered dates.
+- Check archived inclusion, Trash hiding, Inbox filing, selected-day pagination,
+  offline retry and record-backup restore. Worth schedules no notifications.

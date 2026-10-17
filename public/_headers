@@ -37,3 +37,6 @@
 
 /patterns/field-guide
   X-Robots-Tag: noindex, nofollow
+
+/patterns/calendar
+  X-Robots-Tag: noindex, nofollow

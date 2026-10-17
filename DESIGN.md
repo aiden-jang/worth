@@ -346,3 +346,15 @@ Selected records use ruled rows with captions and labeled Earlier/Later actions.
 The existing cream booklet preview is shared, with a field-guide cover label and
 no call or rank. This is a deliberate secondary-page addition; the primary cabinet
 and name-only capture are unchanged. Captures are in `art/ui-qa/field-guide/`.
+
+## Activity calendar
+
+Patterns → Activity calendar is a deliberate secondary cabinet addition. It keeps
+the dark canvas, 192px rail, 68/44px title rhythm, DM Sans, bordered 12px controls
+and 44px targets. Desktop dates form a seven-column ordered grid with neutral
+counts; phones use full-width dated rows so dates and counts remain readable at
+320px. The selected day has a ruled linked agenda on both layouts. Plans and real
+logs use distinct plain labels, without streaks, scores or inferred completion.
+Revisit dates live in the existing optional context disclosure; name-only capture
+and the independent revisit queue are unchanged. Captures belong in
+`art/ui-qa/activity-calendar/`.

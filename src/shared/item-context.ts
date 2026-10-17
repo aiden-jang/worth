@@ -21,6 +21,7 @@ const labels = (max: number, length: number) =>
     .default([]);
 export const itemContext = z
   .object({
+    revisit: z.object({ on: day, snoozedUntil: day }).strict().default({}),
     sourceUrl: text(1000).refine((value) => {
       if (!value) return true;
       try {
@@ -74,6 +75,8 @@ export const itemContext = z
   .superRefine((value, context) => {
     const bad = (path: (string | number)[], message: string) =>
       context.addIssue({ code: 'custom', path, message });
+    if (value.revisit.snoozedUntil && (!value.revisit.on || value.revisit.snoozedUntil < value.revisit.on))
+      bad(['revisit', 'snoozedUntil'], 'Choose a revisit date first and snooze to that day or later');
     if (value.purchase.price !== null && !value.purchase.currency)
       bad(['purchase', 'currency'], 'Add a currency for this price');
     if (
@@ -102,6 +105,8 @@ export function contextSearchText(value: ItemContext | undefined): string {
     ...value.labels,
     ...value.stamps,
     ...value.fields.flatMap((field) => [field.name, field.value]),
+    value.revisit?.on,
+    value.revisit?.snoozedUntil,
     value.purchase.boughtOn,
     value.purchase.returnBy,
     value.purchase.price === null ? '' : `${value.purchase.price} ${value.purchase.currency}`,
