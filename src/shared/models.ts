@@ -97,7 +97,7 @@ export interface PublicShare {
   createdAt: number;
 }
 
-export interface RecentEntry {
+interface RecentEntry {
   id: string;
   listId: string;
   listName: string;
@@ -123,7 +123,7 @@ export interface Overview {
   lastTimes: LastTime[];
 }
 
-export interface RankedPick {
+interface RankedPick {
   listId: string;
   listName: string;
   itemId: string;
@@ -165,7 +165,7 @@ export interface ArchivePatterns {
   } | null;
 }
 
-export interface LastTime {
+interface LastTime {
   id: string;
   listId: string;
   listName: string;
@@ -173,7 +173,7 @@ export interface LastTime {
   happenedOn: string;
 }
 
-export interface DecisionPick {
+interface DecisionPick {
   listId: string;
   listName: string;
   itemId: string;

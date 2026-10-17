@@ -1,3 +1,4 @@
+import { draftLifetime } from '../shared/device-data';
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -9,7 +10,7 @@ export function useDraft<T>(name: string, initial: T, validate: (value: unknown)
   const read = () => {
     try {
       const value = key ? JSON.parse(localStorage.getItem(key) ?? 'null') : null;
-      if (value && value.updatedAt > Date.now() - 7 * 86400000 && validate(value.form)) return value;
+      if (value && value.updatedAt > Date.now() - draftLifetime && validate(value.form)) return value;
       if (key) localStorage.removeItem(key);
       return null;
     } catch {

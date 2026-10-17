@@ -1,3 +1,4 @@
+import { draftLifetime } from '../shared/device-data';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -46,7 +47,7 @@ export function useDraftPhoto(name: string) {
     access(key, 'read')
       .then((value) => {
         if (!live || revision.current) return;
-        if (value && value.updatedAt > Date.now() - 7 * 86400000 && value.file instanceof File) {
+        if (value && value.updatedAt > Date.now() - draftLifetime && value.file instanceof File) {
           setFile(value.file);
           setStatus('Photo restored from this device.');
         } else if (value) void access(key, 'delete').catch(() => {});

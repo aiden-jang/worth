@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { api } from '../api';
 import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
-import { cleanDeviceData } from '../shared/device-data';
+import { cleanDeviceData, draftLifetime } from '../shared/device-data';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
 export function SettingsPage() {
@@ -77,7 +77,7 @@ export function SettingsPage() {
       try {
         const old = JSON.parse(localStorage.getItem(retryStorage.current) ?? 'null');
         retry.current =
-          old && old.updatedAt > Date.now() - 7 * 86400000 && typeof old.key === 'string'
+          old && old.updatedAt > Date.now() - draftLifetime && typeof old.key === 'string'
             ? old.key
             : crypto.randomUUID();
         localStorage.setItem(

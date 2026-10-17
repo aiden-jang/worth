@@ -1,4 +1,3 @@
-/* Cabinet edition: authored covers, an intentional first view, and live creation preview. */
 .collection-artwork {
   width: 100%;
   height: 100%;
@@ -215,7 +214,7 @@
 .opinion-slip .opinion-slip-verdict:has(.undecided-slips) strong {
   font-size: 34px;
 }
-/* Creation is one small decision with a live visual preview. */
+
 .create-panel.cabinet-create {
   padding: 32px;
   border-radius: 22px;
@@ -566,7 +565,6 @@
   }
 }
 
-/* Finishing pass: the quieter screens belong to the same cabinet. */
 .search-page .global-search {
   min-height: 56px;
   border-radius: 12px;

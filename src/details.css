@@ -874,8 +874,7 @@
     gap: 0;
   }
 }
-.photo-buttons > label,
-.collection-cover-header-buttons > label {
+.photo-buttons > label {
   position: relative;
 }
 .photo-file-input {
@@ -886,13 +885,11 @@
   opacity: 0;
   cursor: pointer;
 }
-.photo-buttons > label:focus-within,
-.collection-cover-header-buttons > label:focus-within {
+.photo-buttons > label:focus-within {
   outline: 2px solid var(--acid);
   outline-offset: 3px;
 }
-.photo-buttons > label:has(input:disabled),
-.collection-cover-header-buttons > label:has(input:disabled) {
+.photo-buttons > label:has(input:disabled) {
   opacity: 0.5;
 }
 .add-dialog .dialog-head h2 {

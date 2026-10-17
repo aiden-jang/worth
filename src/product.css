@@ -135,25 +135,6 @@ button:disabled {
   color: var(--muted);
   margin-top: 4px;
 }
-.call-legend {
-  display: grid;
-  grid-template-columns: 110px repeat(3, minmax(0, 1fr));
-  align-items: center;
-  gap: 16px;
-  max-width: 720px;
-  margin: 16px 0 24px;
-}
-.call-legend-entry {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font: 13px var(--mono);
-}
-.category-drawing {
-  width: 94px;
-  height: 104px;
-  flex: none;
-}
 .clear-call {
   border: 0;
   background: transparent;
@@ -171,43 +152,6 @@ button:disabled {
   display: flex;
   justify-content: space-around;
   padding: 8px 10px 0;
-}
-.product-category-line .category-drawing {
-  width: 98px;
-  height: 116px;
-}
-.call-legend-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 0;
-  margin: 6px 0 0;
-  width: 100%;
-}
-.call-legend-hero > p {
-  position: absolute;
-  top: -158px;
-  left: 20px;
-}
-.call-legend-hero .call-legend-entry {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font: 16px var(--mono);
-  text-align: center;
-}
-.call-legend-hero .call-face {
-  width: 100%;
-  height: auto;
-}
-.call-legend-hero .call-legend-meh .call-face {
-  transform: scale(1.1);
-}
-.call-legend-hero small {
-  font: 12px var(--mono);
-  white-space: nowrap;
-  color: var(--muted);
 }
 .product-example {
   border-top: 1px solid var(--line-strong);
@@ -259,10 +203,6 @@ button:disabled {
   margin-top: 12px;
   color: var(--muted);
 }
-.product-example .category-drawing {
-  width: 80px;
-  height: 88px;
-}
 .empty-archive {
   align-items: start;
 }
@@ -276,10 +216,6 @@ button:disabled {
 .empty-archive p {
   max-width: 44ch;
 }
-.empty-index .category-drawing {
-  width: 110px;
-  height: 130px;
-}
 
 @media (max-width: 1100px) and (min-width: 681px) {
   .app-shell-dark {
@@ -288,18 +224,12 @@ button:disabled {
   .page-width {
     width: calc(100% - 48px);
   }
-  .list-page-head .category-drawing {
-    display: none;
-  }
   .call-choices button {
     flex-direction: column;
   }
   .product-example li {
     gap: 10px;
     padding: 10px;
-  }
-  .product-example .category-drawing {
-    width: 55px;
   }
   .product-example li strong {
     font-size: 18px;
@@ -384,46 +314,11 @@ button:disabled {
   .site-footer > span:nth-child(2) {
     width: auto;
   }
-  .call-legend {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 18px 0 24px;
-  }
-  .call-legend > p {
-    grid-column: 1 / -1;
-  }
-  .call-legend-entry {
-    font-size: 11px;
-    gap: 4px;
-  }
-  .call-legend-entry .call-face {
-    width: 36px;
-    height: 34px;
-  }
   .product-wordmark {
     font-size: 34px;
   }
   .product-category-line {
     display: none;
-  }
-  .call-legend-hero {
-    margin: 0;
-    row-gap: 12px;
-  }
-  .call-legend-hero > p {
-    position: static;
-    grid-column: 1 / -1;
-  }
-  .call-legend-hero .call-face {
-    width: 100%;
-    height: auto;
-  }
-  .call-legend-hero .call-legend-entry {
-    font-size: 12px;
-    gap: 6px;
-  }
-  .call-legend-hero small {
-    font-size: 10px;
   }
   .product-example {
     padding: 18px 0;
@@ -442,27 +337,14 @@ button:disabled {
   .product-example li:not(:first-child) {
     display: none;
   }
-  .product-example .category-drawing {
-    width: 58px;
-    height: 80px;
-  }
   .product-example li strong {
     font-size: 20px;
   }
   .product-example .call-badge {
     margin-top: 4px;
   }
-  .list-page-head > .category-drawing {
-    width: 60px;
-    height: 72px;
-  }
   .empty-archive {
     display: block;
-  }
-  .empty-index .category-drawing {
-    width: 70px;
-    height: 90px;
-    margin-bottom: 20px;
   }
   .empty-archive h1 {
     font-size: 48px;
@@ -474,9 +356,6 @@ button:disabled {
 @media (max-width: 350px) {
   .page-width {
     width: calc(100% - 32px);
-  }
-  .call-legend-entry {
-    flex-direction: column;
   }
 }
 @media (max-width: 680px) {

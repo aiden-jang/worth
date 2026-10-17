@@ -52,6 +52,11 @@ That runs formatting, tests against a migrated local D1, typechecking, and a pro
 
 One Cloudflare Worker serves the React app and `/api/*` on the same origin. D1 stores lists, entries, ranking, share snapshots, and small photos. The Worker verifies the shared `accounts.aidenjang.com` session on private routes. Public share tokens expose only a fixed snapshot; editing your private list does not silently change what a shared link shows.
 
+`ActivityView` owns browsing and editor selection. `ActivityEditor` owns the activity draft,
+saving, and confirmations; `ExerciseSetFields` and `ActivityMeasurements` are controlled
+fields that receive only their part of the draft. Persistence and API calls remain outside
+those field components.
+
 Photos and collection covers are capped at 900 KB after client-side compression. They are served privately with
 no-store caching and are never included in exports or public shares. This keeps storage simple on the free plan,
 but D1 is not a photo-library backend. If photo volume grows, move the same private photo route to a dedicated
