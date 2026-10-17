@@ -1,3 +1,5 @@
+import { connectionsQuery, mapConnection, type ConnectionRow } from './connections';
+import type { RecordConnection } from '../src/shared/connections';
 import { historyQuery, mapHistory, type HistoryRow } from './taste-history';
 import type { TasteEvent } from '../src/shared/taste-history';
 import { mapInbox, type InboxRow } from './inbox';
@@ -22,7 +24,8 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 3;
+  schemaVersion: 4;
+  connections: RecordConnection[];
   tasteHistory: TasteEvent[];
   exportedAt: string;
   photosExcluded: true;
@@ -318,6 +321,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     templateResult,
     historyResult,
     historySizeResult,
+    connectionResult,
   ] = await db.batch([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
@@ -355,6 +359,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
         `SELECT COUNT(*) AS n, COALESCE(SUM(length(before_json) + length(after_json) + length(CAST(reason AS BLOB)) + 300),0) AS bytes FROM (${historyQuery})`,
       )
       .bind(ownerId),
+    db.prepare(`${connectionsQuery} ORDER BY c.created_at,c.id`).bind(ownerId),
   ]);
   const historySize = historySizeResult.results[0] as { n: number; bytes: number };
   if (historySize.n > 10000 || historySize.bytes > 16 * 1024 * 1024)
@@ -373,7 +378,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject history backups instead of silently discarding it.
-    schemaVersion: 3,
+    schemaVersion: 4,
+    connections: (connectionResult.results as ConnectionRow[]).map(mapConnection),
     tasteHistory: (historyResult.results as HistoryRow[]).map((row) =>
       mapHistory(row, exportedItemIds, exportedLogIds),
     ),

@@ -398,7 +398,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 3 for taste history. Restore accepts versions 1/2/3; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 4 for connections and taste history. Restore accepts versions 1/2/3/4; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -471,9 +471,39 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Both backup formats use schema version 3 and include history in the same read
-batch as records. Restore accepts versions 1/2/3, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 4 backup formats include history in the same read
+batch as records. Restore accepts versions 1/2/3/4, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
 retain their existing projections and never inherit history or reasons.
+
+## Private record connections
+
+`0019_record_connections.sql` adds up to 1,000 saved links per owner. Related,
+edition/version and same-thing/across-places pairs are symmetric and canonical;
+replacement direction means the first record replaces the second and requires a
+reason. A recursive CTE checks replacement cycles inside the insert. A database
+trigger enforces capacity during creation and restore, including concurrent saves.
+
+Insert reference guards require both current owned records. Reads and backup
+projections retain available merged originals, resolve their current main record
+for opening, include explicitly labeled archived collections and omit links with
+Trashed/unavailable parents. Moving a record preserves links through its stable
+ID. Purging a record cascades its links. Removing a link keeps a private tombstone;
+its creation fingerprint survives edits/removal, so a late retry cannot resurrect
+it. An explicit new review uses a fresh ID. Reason edits/removal use revisions.
+
+The private lazy `/patterns/connections` screen preserves the Patterns cabinet
+layout. Creation freezes an account-scoped retry payload before sending it;
+uncertain replies can retry exactly or check the saved ID. The user explicitly
+starts another review. Drafts last seven days; blocked storage, offline state,
+route changes and stale reasons have visible recovery. The constellation is a
+bounded diagram of up to 12 neighbors with a numbered readable alternative; the
+full list pages 25 matching links, including type, direction and reason.
+
+Version 4 records/photo backups add raw connection references to the existing
+single D1 snapshot. Restore accepts versions 1–4, defaults older files to no links,
+checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
+fresh ID remapping. Capacity failure rolls back all records and the restore
+receipt. Public sharing, ranks, calls and source record content do not change.

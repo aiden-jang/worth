@@ -215,8 +215,8 @@ function HistoryNote({
   const initial = { reason: event.reason, logId: event.logId, expectedRevision: event.revision };
   const draft = useDraft(`history:${event.id}`, initial, historyDraft);
   const [confirmClose, setConfirmClose] = useState(false);
-  const dirty = draft.form.reason !== event.reason || draft.form.logId !== event.logId;
   const [saved, setSaved] = useState(event);
+  const dirty = draft.form.reason !== saved.reason || draft.form.logId !== saved.logId;
   const item = items.find((i) => i.id === event.itemId);
   const visits =
     event.kind === 'opinion'

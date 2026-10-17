@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { recordConnection, normalizeConnection, hasReplacementCycle } from './connections';
 import { tasteEvent } from './taste-history';
 import { inboxEntry, inboxLimit } from './inbox';
 import { collectionTemplates } from './templates';
@@ -12,7 +13,8 @@ const title = (max: number) => text(max).refine((value) => value.trim().length >
 const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
-    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    connections: z.array(recordConnection).max(1000).default([]),
     tasteHistory: z.array(tasteEvent).max(10000).default([]),
     inbox: z.array(inboxEntry).max(inboxLimit).default([]),
     collectionTemplates: collectionTemplates.default([]),
@@ -196,6 +198,17 @@ export const archiveFile = z
       )
         bad('A log has an invalid workout');
     }
+    if (new Set(file.connections.map((c) => c.id)).size !== file.connections.length)
+      bad('Connections contain duplicate IDs');
+    const connectionPairs = new Set<string>();
+    for (const raw of file.connections) {
+      const c = normalizeConnection(raw),
+        key = `${c.kind}:${c.fromId}:${c.toId}`;
+      if (!items.has(c.fromId) || !items.has(c.toId)) bad('A connection has an invalid record');
+      if (connectionPairs.has(key)) bad('Connections contain a duplicate pair');
+      connectionPairs.add(key);
+    }
+    if (hasReplacementCycle(file.connections)) bad('Replacement connections cannot form a loop');
     const logIds = new Set(file.logs.map((g) => g.id));
     if (new Set(file.tasteHistory.map((e) => e.id)).size !== file.tasteHistory.length)
       bad('History contains duplicate IDs');

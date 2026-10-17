@@ -199,3 +199,15 @@
     justify-self: start;
   }
 }
+
+.patterns-head .retro-entry + .retro-entry {
+  margin-left: 20px;
+}
+@media (max-width: 680px) {
+  .patterns-head .retro-entry {
+    display: flex;
+  }
+  .patterns-head .retro-entry + .retro-entry {
+    margin-left: 0;
+  }
+}

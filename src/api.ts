@@ -93,6 +93,22 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  connections: () =>
+    request<{ connections: import('./shared/connections').ConnectionView[] }>('/connections'),
+  connection: (id: string) =>
+    request<{ connection: import('./shared/connections').ConnectionView }>(`/connections/${id}`),
+  createConnection: (body: import('./shared/connections').ConnectionInput, key: string) =>
+    request<{ connection: import('./shared/connections').ConnectionView }>('/connections', {
+      ...json('POST', body),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  updateConnection: (id: string, reason: string, expectedRevision: number) =>
+    request<{ connection: import('./shared/connections').ConnectionView }>(
+      `/connections/${id}`,
+      json('PUT', { reason, expectedRevision }),
+    ),
+  removeConnection: (id: string, expectedRevision: number) =>
+    request<void>(`/connections/${id}`, json('DELETE', { expectedRevision })),
   tasteHistory: (listId: string, cursor = '', until = '', signal?: AbortSignal) =>
     request<HistoryPage>(
       `/lists/${listId}/history?${new URLSearchParams({ cursor, ...(until ? { until } : {}) })}`,

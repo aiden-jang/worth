@@ -376,6 +376,20 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Connect records</h2>
+              <p>
+                <Link to="/patterns/connections">Connections</Link> in Patterns links related finds, editions
+                or versions, the same thing across places, and replacements. Records keep their own calls,
+                ranks, notes and photos. A replacement points from the new choice to the old one and needs a
+                reason; loops are rejected.
+              </p>
+              <p>
+                Links and reasons are private, included in backups, and kept when a record moves. Trash
+                temporarily hides affected links. Removing a connection leaves both records intact. The
+                constellation has a complete readable list with its types, directions and reasons.
+              </p>
+            </section>
+            <section>
               <h2>Ranking and opinion history</h2>
               <p>
                 Workbench → Taste history records future changes to ranks and calls. Earlier changes are

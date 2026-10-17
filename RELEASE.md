@@ -169,3 +169,16 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   references without creating extra change events. Unsupported version 4 fails.
 - Restore supports 10,000 history changes and 16 MB of history within the existing 32 MB/batch limits.
   No automatic review reminders, new public projection or native code is included.
+
+## Record connections
+
+- Apply `0019_record_connections.sql` after earlier migrations. Capacity is guarded
+  atomically at 1,000 saved links per owner; removing a link frees a slot.
+- Check Patterns → Connections with related finds, editions/versions, same thing
+  across places, and directional replacements with reasons. Replacement loops
+  fail without partial writes. The diagram has a complete readable alternative.
+- Verify uncertain-save retry/check, stale reason reload, removal confirmation,
+  archived labels and links retained through moves/merge/Trash recovery.
+- Current exports use version 4; restore accepts versions 1/2/3/4 and rejects 5.
+  Connections restore with fresh IDs and canonicalized pairs. A capacity error
+  rolls back the entire restore and can retry after freeing space.

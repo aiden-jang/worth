@@ -52,6 +52,7 @@ beforeAll(async () => {
     '0016_collection_templates.sql',
     '0017_capture_inbox.sql',
     '0018_taste_history.sql',
+    '0019_record_connections.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -63,7 +64,7 @@ beforeAll(async () => {
     }
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
-      .split(file === '0018_taste_history.sql' ? '-- statement\n' : ';')
+      .split(migration.includes('-- statement\n') ? '-- statement\n' : ';')
       .map((part) => part.trim())
       .filter(Boolean)) {
       await platform.env.DB.prepare(statement).run();
@@ -967,7 +968,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(3);
+  expect(exported.schemaVersion).toBe(4);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3170,7 +3171,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(3);
+  expect(exported.schemaVersion).toBe(4);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3276,5 +3277,227 @@ test('history exports report their bounds without omitting excess events', async
     .bind('a'.repeat(2000), owner)
     .run();
   expect((await call('/export/backup', owner)).status).toBe(413);
+  await platform.env.DB.prepare('DELETE FROM lists WHERE owner_id=?').bind(owner).run();
+});
+
+async function connectRecords(owner: string, body: unknown, key = crypto.randomUUID()) {
+  return app.request(
+    'https://worth.test/api/connections',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+test('private connections retry exactly, reject duplicate pairs and stale reasons, and follow records', async () => {
+  const owner = 'connectionowner',
+    list = await archiveCollection(owner, 'Books'),
+    other = await archiveCollection(owner, 'Editions');
+  const a = await archiveItem(owner, list.id, 'First edition', {
+      decision: 'meh',
+      context: { location: 'Bookshop', version: 'Hardback' },
+    }),
+    b = await archiveItem(owner, other.id, 'Second edition');
+  const payload = { fromId: a.id, toId: b.id, kind: 'edition', reason: 'Same story' },
+    key = crypto.randomUUID();
+  const response = await connectRecords(owner, payload, key);
+  expect(response.status).toBe(201);
+  const { connection } = (await response.json()) as {
+    connection: import('../src/shared/connections').ConnectionView;
+  };
+  expect((await connectRecords(owner, payload, key)).status).toBe(201);
+  expect((await connectRecords(owner, { ...payload, reason: 'Changed' }, key)).status).toBe(409);
+  expect((await connectRecords(owner, { ...payload, fromId: b.id, toId: a.id })).status).toBe(409);
+  expect((await call('/connections', null)).status).toBe(401);
+  expect(await (await call('/connections', 'connectionother')).json()).toEqual({ connections: [] });
+  expect((await call(`/connections/${connection.id}`, 'connectionother')).status).toBe(404);
+  expect(
+    (
+      await call(`/connections/${connection.id}`, owner, 'PUT', {
+        reason: 'Private reason',
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await call(`/connections/${connection.id}`, owner, 'PUT', {
+        reason: 'Stale reason',
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(409);
+  await call(`/lists/${other.id}`, owner, 'PATCH', { archived: true });
+  const read = (await (await call('/connections', owner)).json()) as {
+    connections: import('../src/shared/connections').ConnectionView[];
+  };
+  expect(read.connections[0].from.archived || read.connections[0].to.archived).toBe(true);
+  expect(read.connections[0].reason).toBe('Private reason');
+  expect([read.connections[0].from, read.connections[0].to].find((node) => node.id === a.id)?.detail).toBe(
+    'Bookshop · Hardback',
+  );
+  await call(`/items/${a.id}`, owner, 'DELETE');
+  expect(await (await call('/connections', owner)).json()).toEqual({ connections: [] });
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: a.id }] })).status,
+  ).toBe(200);
+  expect(
+    (await archiveAction(list.id, owner, { action: 'move', itemIds: [a.id], destinationId: other.id }))
+      .status,
+  ).toBe(200);
+  const moved = (await (await call('/connections', owner)).json()) as {
+    connections: import('../src/shared/connections').ConnectionView[];
+  };
+  expect(moved.connections).toHaveLength(1);
+  expect(moved.connections[0].from.listId).toBe(other.id);
+  expect(moved.connections[0].to.listId).toBe(other.id);
+  expect((await call(`/connections/${connection.id}`, owner, 'DELETE', { expectedRevision: 0 })).status).toBe(
+    409,
+  );
+  expect((await call(`/connections/${connection.id}`, owner, 'DELETE', { expectedRevision: 1 })).status).toBe(
+    204,
+  );
+  expect((await connectRecords(owner, payload, key)).status).toBe(410);
+  expect((await connectRecords(owner, payload)).status).toBe(201);
+  expect(((await (await call(`/items/${a.id}`, owner)).json()) as { item: Item }).item.decision).toBe('meh');
+});
+
+test('replacement chains reject loops and backup remapping preserves directions and reasons', async () => {
+  const owner = 'replacementowner',
+    list = await archiveCollection(owner, 'Equipment');
+  const a = await archiveItem(owner, list.id, 'New'),
+    b = await archiveItem(owner, list.id, 'Middle'),
+    d = await archiveItem(owner, list.id, 'Old');
+  expect(
+    (await connectRecords(owner, { fromId: a.id, toId: b.id, kind: 'replaces', reason: '' })).status,
+  ).toBe(400);
+  expect(
+    (await connectRecords(owner, { fromId: a.id, toId: b.id, kind: 'replaces', reason: 'Lighter' })).status,
+  ).toBe(201);
+  expect(
+    (await connectRecords(owner, { fromId: b.id, toId: d.id, kind: 'replaces', reason: 'Quieter' })).status,
+  ).toBe(201);
+  expect(
+    (await connectRecords(owner, { fromId: d.id, toId: a.id, kind: 'replaces', reason: 'Would loop' }))
+      .status,
+  ).toBe(409);
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(exported.connections).toHaveLength(2);
+  expect(exported.schemaVersion).toBe(4);
+  const restored = await app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: 'preview_user=connectionrestore',
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(exported),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(restored.status).toBe(201);
+  const round = archiveFile.parse(await (await call('/export/records', 'connectionrestore')).json());
+  expect(round.connections).toHaveLength(2);
+  for (const connection of round.connections) {
+    expect(exported.connections.some((c) => c.id === connection.id)).toBe(false);
+    expect(round.items.some((i) => i.id === connection.fromId)).toBe(true);
+    expect(round.items.some((i) => i.id === connection.toId)).toBe(true);
+  }
+  expect(round.connections.map((c) => c.reason).sort()).toEqual(['Lighter', 'Quieter']);
+  const invalid = {
+    ...exported,
+    connections: [
+      ...exported.connections,
+      { ...exported.connections[0], id: crypto.randomUUID(), fromId: d.id, toId: a.id },
+    ],
+  };
+  expect(archiveFile.safeParse(invalid).success).toBe(false);
+});
+
+test('connection capacity is atomic and a failed restore retries without partial records', async () => {
+  const owner = 'connectioncapacity',
+    list = await archiveCollection(owner, 'Many links'),
+    first = '00000000-0000-4000-8000-000000000001';
+  await platform.env.DB.prepare(
+    "INSERT INTO items(id,list_id,owner_id,title,created_at,updated_at) VALUES(?,?,?,'Center',1,1)",
+  )
+    .bind(first, list.id, owner)
+    .run();
+  await platform.env.DB.prepare(
+    `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<1001)
+ INSERT INTO items(id,list_id,owner_id,title,created_at,updated_at) SELECT '10000000-0000-4000-8000-'||printf('%012d',i),?,?,'Linked '||i,1,1 FROM n`,
+  )
+    .bind(list.id, owner)
+    .run();
+  await platform.env.DB.prepare(
+    `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<1000)
+ INSERT INTO record_connections(id,owner_id,from_id,to_id,kind,reason,fingerprint,created_at)
+ SELECT '60000000-0000-4000-8000-'||printf('%012d',i),?,?,'10000000-0000-4000-8000-'||printf('%012d',i),'related','','seeded',i FROM n`,
+  )
+    .bind(owner, first)
+    .run();
+  const tooMany = await connectRecords(owner, {
+    fromId: first,
+    toId: '10000000-0000-4000-8000-000000001001',
+    kind: 'related',
+    reason: '',
+  });
+  expect(tooMany.status).toBe(409);
+  expect(await tooMany.json()).toMatchObject({ error: 'CONNECTION_LIMIT' });
+  const sourceOwner = 'connectionsource',
+    sourceList = await archiveCollection(sourceOwner, 'Source');
+  const a = await archiveItem(sourceOwner, sourceList.id, 'A'),
+    b = await archiveItem(sourceOwner, sourceList.id, 'B');
+  expect(
+    (await connectRecords(sourceOwner, { fromId: a.id, toId: b.id, kind: 'related', reason: '' })).status,
+  ).toBe(201);
+  const file = await (await call('/export/records', sourceOwner)).json(),
+    key = crypto.randomUUID();
+  const restore = () =>
+    app.request(
+      'https://worth.test/api/import',
+      {
+        method: 'POST',
+        headers: {
+          Cookie: `preview_user=${owner}`,
+          Origin: 'https://worth.test',
+          'Content-Type': 'application/json',
+          'Idempotency-Key': key,
+        },
+        body: JSON.stringify(file),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  expect((await restore()).status).toBe(409);
+  expect(((await (await call('/lists', owner)).json()) as { lists: ListDetail[] }).lists).toHaveLength(1);
+  expect(
+    (
+      await call('/connections/60000000-0000-4000-8000-000000000001', owner, 'DELETE', {
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(204);
+  expect((await restore()).status).toBe(201);
+  expect((await restore()).status).toBe(201);
+  expect(((await (await call('/lists', owner)).json()) as { lists: ListDetail[] }).lists).toHaveLength(2);
+  const count = await platform.env.DB.prepare(
+    'SELECT COUNT(*) AS n FROM record_connections WHERE owner_id=? AND removed_at IS NULL',
+  )
+    .bind(owner)
+    .first<{ n: number }>();
+  expect(count?.n).toBe(1000);
   await platform.env.DB.prepare('DELETE FROM lists WHERE owner_id=?').bind(owner).run();
 });

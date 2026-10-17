@@ -44,9 +44,9 @@ framing and layout changes in the original checkout.
 
 - [x] Why saved, recommendation source and recommendation follow-through.
 - [x] Per-visit location, version, order and reaction, separate from the overall call.
-- [ ] Related records and an accessible personal constellation view.
-- [ ] Same thing across places and linked editions/versions.
-- [ ] Replacement chains with a reason for switching.
+- [x] Related records and an accessible personal constellation view.
+- [x] Same thing across places and linked editions/versions.
+- [x] Replacement chains with a reason for switching.
 - [ ] Cross-collection moments, temporary shortlists, evening boards and trip boards.
 - [ ] Trip replay from explicit dates/locations, with a readable stop list.
 - [x] Purchase date, price/currency, return deadline and ownership status.
@@ -503,3 +503,37 @@ Ten captures were visually inspected; see [history QA](../art/ui-qa/taste-histor
 The complete 197-journey desktop/phone browser regression then passed. This group is committed locally.
 All other unchecked web features remain unfinished. Work stays on the separate
 branch, without native code, push, pull request, merge or deployment.
+
+## Seventeenth implementation: private record connections
+
+Patterns → Connections links related finds, editions/versions, the same thing
+across places and directional replacement chains. Each record keeps its own call,
+rank and content. Replacement links require a reason and reject loops inside the
+write. Symmetric pairs canonicalize, with duplicate protection. Current location/
+version labels distinguish similarly named records. The faceless constellation
+shows up to 12 real neighbors with legible numbered nodes and a readable legend;
+the full list pages 25 matching connections, preserving type, direction and reason.
+
+Creation freezes an account/device payload before sending. Lost replies can retry
+exactly or check the saved ID; another review is explicit. Reasons use independent
+revisions, preserve stale drafts and show saved details before a deliberate retry.
+Blocked storage, offline controls and route changes retain visible recovery.
+Archived collections are labeled and explicit in creation choices. Moves retain
+links; merged originals remain identifiable; Trash hides affected links until
+restoration. Removal retains its retry identity, so old requests cannot resurrect
+it. Purging a source cascades its connections.
+
+Migration `0019_record_connections.sql` adds storage, uniqueness and atomic
+1,000-link capacity enforcement. Version 4 exports include connections in the
+same records snapshot. Restore accepts versions 1–4, checks references, duplicate
+pairs and replacement cycles, and canonicalizes after fresh ID remapping. Capacity
+failure rolls back all records and its receipt; freeing space permits the same
+restore retry. Public projections remain unchanged. A small history editor fix
+also compares a recovered draft against newly loaded saved details.
+
+All 154 tests across 38 files and core checks passed, including real D1 ownership,
+retries, loop rejection, removal, source details, capacity and atomic restore.
+All 18 focused desktop/phone connections/history checks passed, including Axe,
+long names and 320/430/768px reflow. The complete 207-case browser regression passed. Six focused capture checks and two final entry-point journeys then passed after the last visual fixes. All 18 final captures were inspected; see [connections QA](../art/ui-qa/connections/README.md). This group is committed locally.
+Other unchecked web features remain unfinished. This remains local feature-branch
+work, without native apps, push, pull request, merge or deployment.

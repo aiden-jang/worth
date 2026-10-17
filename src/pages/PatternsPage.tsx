@@ -36,6 +36,9 @@ export function PatternsPage() {
         <Link className="retro-entry" to="/patterns/look-back">
           Look back over a period →
         </Link>
+        <Link className="retro-entry connection-entry" to="/patterns/connections">
+          Connections →
+        </Link>
       </header>
       {data.totalRecords === 0 ? (
         <CabinetEmptyState

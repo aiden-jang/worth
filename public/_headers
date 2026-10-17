@@ -31,3 +31,6 @@
 
 /patterns/look-back
   X-Robots-Tag: noindex, nofollow
+
+/patterns/connections
+  X-Robots-Tag: noindex, nofollow

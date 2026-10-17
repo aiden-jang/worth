@@ -11,6 +11,9 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const ConnectionsPage = lazy(() =>
+  import('./pages/ConnectionsPage').then((module) => ({ default: module.ConnectionsPage })),
+);
 const RetrospectivePage = lazy(() =>
   import('./pages/RetrospectivePage').then((module) => ({ default: module.RetrospectivePage })),
 );
@@ -130,6 +133,7 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/connections" element={<ConnectionsPage />} />
         <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/read" element={<PhotoTextPage />} />
@@ -148,6 +152,7 @@ function PrivateApp() {
       '/read',
       '/code',
       '/patterns/look-back',
+      '/patterns/connections',
       '/inbox',
       '/quick',
       '/settings',

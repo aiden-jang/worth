@@ -1,3 +1,5 @@
+import { connectionCapacity } from '../connections';
+import { normalizeConnection } from '../../src/shared/connections';
 import { inboxChanged, inboxGuard } from '../inbox';
 import { inboxLimit } from '../../src/shared/inbox';
 import { itemInput } from '../../src/shared/validation';
@@ -313,6 +315,23 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       })),
     );
     rows(
+      'record_connections',
+      file.connections.map((link) => {
+        const remapped = normalizeConnection({ ...link, fromId: id(link.fromId), toId: id(link.toId) });
+        return {
+          id: crypto.randomUUID(),
+          owner_id: owner,
+          from_id: remapped.fromId,
+          to_id: remapped.toId,
+          kind: link.kind,
+          reason: link.reason,
+          fingerprint: 'restored',
+          revision: 0,
+          created_at: link.createdAt,
+        };
+      }),
+    );
+    rows(
       'taste_history',
       file.tasteHistory.map((event) => ({
         id: crypto.randomUUID().replaceAll('-', ''),
@@ -372,6 +391,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       const saved = await previousOperation(c.env.DB, key, owner, 'import', hash);
       if (saved) return c.json(saved, 201);
       templateCapacityError(error);
+      connectionCapacity(error);
       inboxChanged(error);
     }
     return c.json(result, 201);
