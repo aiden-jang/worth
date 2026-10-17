@@ -105,6 +105,7 @@ export function ActivityEditor({
   const save = useMutation({
     mutationFn: async () => {
       const input = cleanLogInput(form);
+      const photoKey = photoDraft.operationId.current;
       const blob = photo ? await preparePhoto(photo) : null;
       const id = log?.id ?? draft.savedId.current;
       let result = id
@@ -114,8 +115,9 @@ export function ActivityEditor({
       // A lost create response may have saved an older version of this draft.
       if (!id) result = await api.updateLog(result.log.id, input);
       if (blob) {
-        await api.uploadPhoto('logs', result.log.id, blob);
-        result.log.hasPhoto = true;
+        const prepared = await photoDraft.freeze(blob, photoKey);
+        const uploaded = await api.uploadPhoto('logs', result.log.id, prepared.file, prepared.key);
+        result.log.hasPhoto = uploaded.hasPhoto;
       }
       return result;
     },
@@ -600,13 +602,7 @@ export function ActivityEditor({
             <summary>
               Photo <span>optional · private</span>
             </summary>
-            <PhotoControl
-              kind="logs"
-              id={log.id}
-              hasPhoto={log.hasPhoto}
-              version={log.updatedAt}
-              listId={listId}
-            />
+            <PhotoControl kind="logs" id={log.id} hasPhoto={log.hasPhoto} version={log.updatedAt} />
           </details>
         )}
         {log && (

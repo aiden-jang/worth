@@ -194,6 +194,15 @@ export function SettingsPage() {
               </div>
             )}
             {file.photosExcluded && <p>Photos are not in this file and will not be restored.</p>}
+            {!!file.photoAssets.length && (
+              <p>
+                {file.photoAssets.length} saved photo sources include their captions, order and arrows.{' '}
+                {file.photosExcluded
+                  ? 'The original images are absent; restored galleries will mark them unavailable.'
+                  : 'Only originals present in this file can be restored.'}
+              </p>
+            )}
+
             <p>
               No public share links will be created. Restoring the same file again after a successful restore
               creates another copy.

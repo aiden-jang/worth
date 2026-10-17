@@ -63,10 +63,10 @@ framing and layout changes in the original checkout.
 - [x] Finite filing/stack animation after successful capture, respecting reduced motion.
 - [x] Collection keepsake independent of rank.
 - [x] Private collection dedication and optional first-record inscription.
-- [ ] Caption/arrow annotations stored separately from original photos.
-- [ ] Multiple photos, captions, ordering and explicit cover selection.
+- [x] Caption/arrow annotations stored separately from original photos.
+- [x] Multiple photos, captions, ordering and explicit cover selection.
 - [ ] Manually arranged photo collages for covers; original photos retained.
-- [ ] Before/after photo slider with a keyboard-accessible alternative.
+- [x] Before/after photo slider with a keyboard-accessible alternative.
 - [x] Activity-specific neutral illustrations without scores or call faces.
 
 ## Sharing and export
@@ -590,3 +590,35 @@ last focus/retry/return refinements. Axe, 320/430/768px reflow and all ten final
 captures were inspected; see [calendar QA](../art/ui-qa/activity-calendar/README.md).
 Other unchecked web features remain unfinished. This work remains local on the
 separate branch, without native apps, push, pull request, merge or deployment.
+
+## Twentieth implementation: photo galleries and comparisons
+
+Manage photos keeps up to 12 stored sources per record or visit, with manual
+ordering, separate captions/arrows and an explicit cover choice. Keyboard position
+controls and readable arrow labels accompany overlays. Before/after compares two
+chosen originals with a keyboard slider or full side-by-side view; chronology is
+never inferred. Source removal requires confirmation and clears only that source,
+without silently choosing another cover. Calls and ranks remain independent.
+
+Migration `0020_photo_galleries.sql` preserves existing sources, including Trash,
+and retains selected-cover caches for existing displays. Immutable upload IDs,
+content hashes, owner/parent/revision guards and removal tombstones protect exact
+retries. Prepared bytes and identity recover on the same account/device for seven
+days. Metadata conflicts keep drafts and an explicitly replaced previous copy.
+The gallery lives outside its parent disclosure, closes on account changes and
+returns focus to Manage photos. Missing sources retain captions and arrows.
+
+Version 5 backups include source metadata and original bytes once, remap IDs and
+restore old single-photo formats. Records-only restores retain metadata while
+clearly identifying absent image files. Stored sources stay unchanged by captions,
+arrows and comparisons; uploads may resize before storage. Existing public and
+opt-in export projections remain selected-cover-only and omit gallery metadata.
+
+All 168 core tests across 41 files passed, with formatting, lint, unused-code,
+TypeScript and production build checks. The complete 237-case desktop/phone
+regression passed, followed by all 14 final gallery journeys. Real D1 cases cover
+migration, immutable retries, owner/capacity/revision guards, source removal and
+backup integrity. Axe, narrow reflow, recovery and all 16 final captures are recorded
+in [gallery QA](../art/ui-qa/photo-gallery/README.md). The remaining unchecked web
+features stay unfinished. Work remains local to the separate branch, without
+native code, push, pull request, merge or deployment.

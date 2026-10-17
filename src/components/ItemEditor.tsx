@@ -135,6 +135,7 @@ export function ItemEditor({
         delete input.context;
         delete input.expectedContextRevision;
       }
+      const photoKey = photoDraft.operationId.current;
       const blob = photo ? await preparePhoto(photo) : null;
       const id = item?.id ?? draft.savedId.current;
       let result = id
@@ -143,8 +144,9 @@ export function ItemEditor({
       draft.rememberSaved(result.item.id);
       if (!id) result = await api.updateItem(result.item.id, input);
       if (blob) {
-        await api.uploadPhoto('items', result.item.id, blob);
-        result.item.hasPhoto = true;
+        const prepared = await photoDraft.freeze(blob, photoKey);
+        const uploaded = await api.uploadPhoto('items', result.item.id, prepared.file, prepared.key);
+        result.item.hasPhoto = uploaded.hasPhoto;
       }
       return result;
     },
@@ -422,13 +424,7 @@ export function ItemEditor({
             <summary>
               Photo <span>optional · private</span>
             </summary>
-            <PhotoControl
-              kind="items"
-              id={item.id}
-              hasPhoto={item.hasPhoto}
-              version={item.updatedAt}
-              listId={listId}
-            />
+            <PhotoControl kind="items" id={item.id} hasPhoto={item.hasPhoto} version={item.updatedAt} />
           </details>
         )}
         {item && <MergedRecords item={item} />}

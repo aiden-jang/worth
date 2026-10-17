@@ -1,3 +1,4 @@
+import { galleryEntries, gallerySource } from './photo-gallery';
 import { z } from 'zod';
 import { recordConnection, normalizeConnection, hasReplacementCycle } from './connections';
 import { tasteEvent } from './taste-history';
@@ -13,7 +14,8 @@ const title = (max: number) => text(max).refine((value) => value.trim().length >
 const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
-    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+    photoAssets: z.array(gallerySource).max(5000).default([]),
     connections: z.array(recordConnection).max(1000).default([]),
     tasteHistory: z.array(tasteEvent).max(10000).default([]),
     inbox: z.array(inboxEntry).max(inboxLimit).default([]),
@@ -43,12 +45,23 @@ export const archiveFile = z
           listId: id,
           ...dated,
           mergedIntoId: id.nullable().default(null),
+          gallery: galleryEntries.default([]),
+          coverPhotoId: id.nullable().default(null),
         }),
       )
       .max(5000),
     logs: z
       .array(
-        logInput.extend({ title: text(120), note: text(4000), unit: text(24), id, listId: id, ...dated }),
+        logInput.extend({
+          title: text(120),
+          note: text(4000),
+          unit: text(24),
+          id,
+          listId: id,
+          ...dated,
+          gallery: galleryEntries.default([]),
+          coverPhotoId: id.nullable().default(null),
+        }),
       )
       .max(5000),
     workoutRoutines: z
@@ -91,7 +104,7 @@ export const archiveFile = z
     photos: z
       .array(
         z.object({
-          kind: z.enum(['list', 'item', 'log']),
+          kind: z.enum(['list', 'item', 'log', 'asset']),
           id,
           contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
           data: z
@@ -237,6 +250,35 @@ export const archiveFile = z
       }
       if (event.logId && !logIds.has(event.logId)) bad('History has an invalid visit');
     }
+    const sources = new Map(file.photoAssets.map((source) => [source.id, source]));
+    if (
+      sources.size !== file.photoAssets.length ||
+      file.photoAssets.some((source) => records.some((record) => record.id === source.id))
+    )
+      bad('Photo assets contain duplicate IDs');
+    const used = new Set<string>();
+    for (const [kind, parents] of [
+      ['item', file.items],
+      ['log', file.logs],
+    ] as const)
+      for (const parent of parents) {
+        if (parent.coverPhotoId && !parent.gallery.some((entry) => entry.id === parent.coverPhotoId))
+          bad('A photo cover has an invalid source');
+        for (const entry of parent.gallery) {
+          const source = sources.get(entry.id);
+          if (!source || source.kind !== kind || source.recordId !== parent.id || used.has(entry.id))
+            bad('A photo gallery has an invalid source');
+          used.add(entry.id);
+        }
+      }
+    if (used.size !== sources.size) bad('A photo asset has no gallery entry');
+    if (
+      file.schemaVersion < 5 &&
+      (sources.size ||
+        file.items.some((i) => i.gallery.length || i.coverPhotoId) ||
+        file.logs.some((g) => g.gallery.length || g.coverPhotoId))
+    )
+      bad('Photo galleries require backup version 5');
     const photoKeys = new Set<string>();
     for (const p of file.photos) {
       if (photoKeys.has(`${p.kind}:${p.id}`)) bad('The file contains duplicate photos');
@@ -246,10 +288,28 @@ export const archiveFile = z
           ? lists.has(p.id)
           : p.kind === 'item'
             ? items.has(p.id)
-            : file.logs.some((g) => g.id === p.id))
+            : p.kind === 'asset'
+              ? sources.has(p.id)
+              : file.logs.some((g) => g.id === p.id))
       )
         bad('A photo has an invalid record');
     }
+    for (const photo of file.photos) {
+      if (
+        (photo.kind === 'item' && items.get(photo.id)?.gallery.length) ||
+        (photo.kind === 'log' && file.logs.find((g) => g.id === photo.id)?.gallery.length)
+      )
+        bad('A gallery cannot also contain a legacy cover photo');
+      if (photo.kind === 'asset' && !sources.get(photo.id)?.available)
+        bad('A photo source is marked unavailable');
+      if (photo.kind === 'asset' && sources.get(photo.id)?.contentType !== photo.contentType)
+        bad('A photo original has the wrong type');
+    }
+    if (
+      !file.photosExcluded &&
+      file.photoAssets.some((source) => source.available && !photoKeys.has(`asset:${source.id}`))
+    )
+      bad('A photo source is missing its original');
     if (file.photosExcluded && file.photos.length) bad('A records-only file cannot contain photos');
   });
 export type ArchiveFile = z.infer<typeof archiveFile>;

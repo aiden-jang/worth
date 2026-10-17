@@ -1,8 +1,11 @@
+import { imageDimensions } from './image-dimensions';
 export async function preparePhoto(file: File): Promise<Blob> {
   const maxBytes = 900_000;
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
     throw new Error('Choose a JPEG, PNG, or WebP image.');
   }
+  if (!file.size || file.size > 20 * 1024 * 1024) throw new Error('Choose a photo up to 20 MB.');
+  imageDimensions(new Uint8Array(await file.arrayBuffer()), file.type);
   if (file.size <= maxBytes) return file;
 
   const bitmap = await createImageBitmap(file);
@@ -31,5 +34,7 @@ export async function preparePhoto(file: File): Promise<Blob> {
     throw new Error('This photo is still too large. Try a smaller one.');
   } finally {
     bitmap.close();
+    canvas.width = 0;
+    canvas.height = 0;
   }
 }

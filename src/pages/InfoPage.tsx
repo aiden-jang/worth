@@ -329,6 +329,31 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Photo galleries and comparisons</h2>
+              <p>
+                In a record’s Photo section, open Manage photos. Keep up to 12 saved photos, arrange them, add
+                captions and place arrows with labeled position controls. Save photo choices to keep captions,
+                arrows, order and your selected cover. No cover selected hides the cover image while keeping
+                the gallery. New uploads become the cover; earlier photos stay.
+              </p>
+              <p>
+                Annotations stay separate from saved image pixels. Uploads may be resized to fit Worth’s size
+                limit; these stored sources stay unchanged when annotated or compared. Remove original
+                permanently removes that source and its caption/arrows after confirmation. Removing a cover
+                clears it without choosing a replacement. Public ranking links do not include gallery images
+                or annotations. Booklet, card and field-guide photo choices still use only the selected cover
+                and exclude gallery captions/arrows.
+              </p>
+              <p>
+                Before / after comparison uses two originals you choose and label. The slider works with arrow
+                keys, or choose Side by side to see both originals in full. No chronology is inferred. Photo
+                choice drafts and selected upload files can recover on this account/device for seven days.
+                Failed saves keep the draft; loading newer saved choices can retain one previous draft for
+                copying. A records-only restore keeps gallery captions, order and arrows while clearly marking
+                absent original images.
+              </p>
+            </section>
+            <section>
               <h2>A personal field guide</h2>
               <p>
                 In Patterns, open <Link to="/patterns/field-guide">Field guide</Link>. Choose up to 12 records

@@ -165,8 +165,8 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Verify Workbench → Taste history, before/after/current comparison and explicit
   sandbox preview/apply; moved/merged/trashed records must retain appropriate gaps.
 - Check optional private reasons/visits, stale revision recovery and device drafts.
-- Current exports use version 3. Restore accepts versions 1/2/3 and remaps history
-  references without creating extra change events. Unsupported version 4 fails.
+- Taste history introduced version 3. Current exports use version 5; restore accepts versions 1–5 and remaps history
+  references without creating extra change events. Future versions beyond the current reader fail.
 - Restore supports 10,000 history changes and 16 MB of history within the existing 32 MB/batch limits.
   No automatic review reminders, new public projection or native code is included.
 
@@ -179,7 +179,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   fail without partial writes. The diagram has a complete readable alternative.
 - Verify uncertain-save retry/check, stale reason reload, removal confirmation,
   archived labels and links retained through moves/merge/Trash recovery.
-- Current exports use version 4; restore accepts versions 1/2/3/4 and rejects 5.
+- Connections introduced version 4; current gallery exports use version 5. Restore accepts versions 1–5 and rejects 6.
   Connections restore with fresh IDs and canonicalized pairs. A capacity error
   rolls back the entire restore and can retry after freeing space.
 
@@ -206,3 +206,18 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   revisits, logged visits and activity logs have distinct labels and entered dates.
 - Check archived inclusion, Trash hiding, Inbox filing, selected-day pagination,
   offline retry and record-backup restore. Worth schedules no notifications.
+
+## Private photo galleries
+
+- Apply `0020_photo_galleries.sql` after earlier migrations. It copies existing
+  private item/log photos, including Trash, into saved source assets. Selected
+  cover tables remain caches, duplicating one selected source per record.
+- Test Manage photos, caption/arrow saves, explicit cover clearing/selection,
+  ordering, upload retry after a lost response, and confirmed original removal.
+  A late retry of a removed upload must never recreate it.
+- Current exports use version 5; restore accepts 1–5. Check all originals and their
+  metadata round-trip, selected caches rebuild, old single-photo files still work,
+  and records-only restores preserve metadata with unavailable original states.
+- Check keyboard comparison and side-by-side views, narrow dialogs, blocked storage,
+  account changes, moved/merged records and restored Trash. Existing public shares
+  and booklet/card/guide projections must retain their prior opt-in scope.

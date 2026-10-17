@@ -1,3 +1,4 @@
+import { registerGalleryRoutes } from './routes/photo-gallery';
 import { registerCalendarRoutes } from './routes/calendar';
 import { registerConnectionRoutes } from './routes/connections';
 import { registerTasteHistoryRoutes } from './routes/taste-history';
@@ -95,6 +96,7 @@ registerConnectionRoutes(privateApi);
 registerSearchRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
+registerGalleryRoutes(privateApi);
 registerExportRoutes(privateApi);
 registerPortabilityRoutes(privateApi);
 registerWorkoutRoutes(privateApi);

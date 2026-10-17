@@ -137,13 +137,7 @@ export function CollectionLogEditor({
             <X size={22} />
           </button>
         </div>
-        <PhotoControl
-          kind="logs"
-          id={log.id}
-          hasPhoto={log.hasPhoto}
-          version={log.updatedAt}
-          listId={listId}
-        />
+        <PhotoControl kind="logs" id={log.id} hasPhoto={log.hasPhoto} version={log.updatedAt} />
         <form className="editor-form record-form" onSubmit={submit}>
           <label>
             When

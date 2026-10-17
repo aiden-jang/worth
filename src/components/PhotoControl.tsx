@@ -1,6 +1,9 @@
 import { Camera, Trash } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
+const PhotoGallery = lazy(() =>
+  import('./PhotoGallery').then((module) => ({ default: module.PhotoGallery })),
+);
 import { api } from '../api';
 import type { CollectionArt } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
@@ -12,89 +15,43 @@ export function PhotoControl({
   id,
   hasPhoto,
   version,
-  listId,
 }: {
   kind: 'items' | 'logs';
   id: string;
   hasPhoto: boolean;
   version: number;
-  listId: string;
 }) {
-  const client = useQueryClient();
-  const [error, setError] = useState('');
-  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
-  const upload = useMutation({
-    mutationFn: async (file: File) => api.uploadPhoto(kind, id, await preparePhoto(file)),
-    onSuccess: () => {
-      setError('');
-      void client.invalidateQueries({ queryKey: [kind, listId] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-    },
-    onError: (failure) => setError(failure.message),
-  });
-  const remove = useMutation({
-    mutationFn: () => api.deletePhoto(kind, id),
-    onSuccess: () => {
-      setConfirmingRemoval(false);
-      void client.invalidateQueries({ queryKey: [kind, listId] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-    },
-    onError: (failure) => setError(failure.message),
-  });
-
+  const controls = useRef<HTMLDivElement>(null),
+    manage = useRef<HTMLButtonElement>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   return (
-    <div className="photo-control">
-      {hasPhoto && <img src={`/api/${kind}/${id}/photo?v=${version}`} alt="Your uploaded memory" />}
+    <div className="photo-control" ref={controls}>
+      {hasPhoto && <img src={`/api/${kind}/${id}/photo?v=${version}`} alt="Your uploaded cover photo" />}
       <div className="photo-actions">
-        <p className="photo-state">{hasPhoto ? 'Private photo' : 'No photo attached'}</p>
-        <div className="photo-buttons">
-          <label className="button button-outline">
-            <Camera size={17} /> {hasPhoto ? 'Replace photo' : 'Add a photo'}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="photo-file-input"
-              disabled={upload.isPending}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) upload.mutate(file);
-                event.target.value = '';
-              }}
-            />
-          </label>
-          {hasPhoto && (
-            <button
-              className="icon-button"
-              aria-label="Remove photo"
-              disabled={remove.isPending}
-              onClick={() => setConfirmingRemoval(true)}
-            >
-              <Trash size={18} />
-            </button>
-          )}
-        </div>
+        <p className="photo-state">{hasPhoto ? 'Private cover photo' : 'No cover image available'}</p>
+        <button
+          type="button"
+          className="button button-outline"
+          ref={manage}
+          onClick={() => setGalleryOpen(true)}
+        >
+          <Camera size={17} />
+          Manage photos
+        </button>
       </div>
-      {upload.isPending && (
-        <p className="muted" role="status">
-          Uploading photo…
-        </p>
-      )}
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
-      {confirmingRemoval && (
-        <ConfirmDialog
-          eyebrow="REMOVE PHOTO"
-          title="Remove this photo?"
-          description="This permanently removes the private photo from this record. The record and its notes stay intact."
-          confirmLabel="Remove photo"
-          pending={remove.isPending}
-          error={remove.isError ? remove.error.message : undefined}
-          onConfirm={() => remove.mutate()}
-          onClose={() => setConfirmingRemoval(false)}
-        />
+      {galleryOpen && (
+        <Suspense fallback={<p role="status">Opening photo controls…</p>}>
+          <PhotoGallery
+            kind={kind}
+            id={id}
+            onClose={() => {
+              const disclosure = controls.current?.closest('details');
+              if (disclosure) disclosure.open = true;
+              setGalleryOpen(false);
+              requestAnimationFrame(() => manage.current?.focus());
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -43,6 +43,7 @@ labeled and never writes to a private archive.
 - Set an optional revisit date and snooze in record context. Patterns → Activity calendar separates those plans from entered visits and activity logs, with a readable daily agenda.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Choose a period in Patterns → Look back for a private recap of currently kept finds and dated logs.
+- Keep up to 12 private photos per record, add separate captions/arrows, choose their order and cover, or compare two originals with a keyboard slider and full side-by-side view.
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share

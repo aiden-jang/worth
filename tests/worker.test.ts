@@ -53,6 +53,7 @@ beforeAll(async () => {
     '0017_capture_inbox.sql',
     '0018_taste_history.sql',
     '0019_record_connections.sql',
+    '0020_photo_galleries.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -61,6 +62,43 @@ beforeAll(async () => {
       await platform.env.DB.prepare(
         "INSERT INTO workout_sessions (id, list_id, owner_id, title, happened_on, planned_exercises, created_at, updated_at) VALUES ('old-visit', 'pre-flow', 'migration', 'Earlier visit', '2026-10-01', '[\"Row\"]', 1, 1)",
       ).run();
+    }
+    if (file === '0020_photo_galleries.sql') {
+      const db = platform.env.DB;
+      await db
+        .prepare(
+          "INSERT INTO lists(id,owner_id,name,kind,created_at,updated_at) VALUES(?,?,'Earlier photos','collection',1,1)",
+        )
+        .bind('a1111111-1111-4111-8111-111111111111', 'gallerymigration')
+        .run();
+      for (const [itemId, trashed] of [
+        ['a2222222-2222-4222-8222-222222222222', null],
+        ['a4444444-4444-4444-8444-444444444444', 1],
+      ]) {
+        await db
+          .prepare(
+            "INSERT INTO items(id,list_id,owner_id,title,trashed_at,created_at,updated_at) VALUES(?,'a1111111-1111-4111-8111-111111111111','gallerymigration','Earlier find',?,1,1)",
+          )
+          .bind(itemId, trashed)
+          .run();
+        await db
+          .prepare(
+            "INSERT INTO item_photos(item_id,owner_id,content_type,data,updated_at) VALUES(?,'gallerymigration','image/png',?,1)",
+          )
+          .bind(itemId, new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]))
+          .run();
+      }
+      await db
+        .prepare(
+          "INSERT INTO logs(id,list_id,item_id,owner_id,happened_on,created_at,updated_at) VALUES('a3333333-3333-4333-8333-333333333333','a1111111-1111-4111-8111-111111111111','a2222222-2222-4222-8222-222222222222','gallerymigration','2026-10-01',1,1)",
+        )
+        .run();
+      await db
+        .prepare(
+          "INSERT INTO log_photos(log_id,owner_id,content_type,data,updated_at) VALUES('a3333333-3333-4333-8333-333333333333','gallerymigration','image/png',?,1)",
+        )
+        .bind(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]))
+        .run();
     }
     const migration = await readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8');
     for (const statement of migration
@@ -449,9 +487,7 @@ test('Trash hides records everywhere and restores photos, history and parent rel
       })
     ).json()) as { log: { id: string } }
   ).log;
-  await platform.env.DB.prepare('INSERT INTO item_photos VALUES (?, ?, ?, ?, ?)')
-    .bind(item.id, owner, 'image/png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), Date.now())
-    .run();
+  expect((await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), 0)).status).toBe(200);
   expect((await call(`/items/${item.id}`, owner, 'DELETE')).status).toBe(204);
   for (const path of [`/items/${item.id}`, `/items/${item.id}/photo`, `/logs/${log.id}`])
     expect((await call(path, owner)).status).toBe(404);
@@ -514,9 +550,9 @@ test('bulk moves and merges preserve originals, photos, visits, exports and retr
     'base64',
   );
   for (const item of [main, source])
-    await platform.env.DB.prepare('INSERT INTO item_photos VALUES (?, ?, ?, ?, ?)')
-      .bind(item.id, owner, 'image/png', new Uint8Array(photo), Date.now())
-      .run();
+    expect(
+      (await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), 0, new Uint8Array(photo))).status,
+    ).toBe(200);
   await call(`/lists/${list.id}/logs`, owner, 'POST', {
     itemId: source.id,
     happenedOn: '2026-10-10',
@@ -968,7 +1004,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(4);
+  expect(exported.schemaVersion).toBe(5);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -1648,11 +1684,9 @@ test('backup restores relationships and photos privately, and all-data deletion 
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
     'base64',
   );
-  await platform.env.DB.prepare(
-    'INSERT INTO item_photos (item_id,owner_id,content_type,data,updated_at) VALUES (?,?,?,?,?)',
-  )
-    .bind(item.id, owner, 'image/png', new Uint8Array(photo), Date.now())
-    .run();
+  expect(
+    (await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), 0, new Uint8Array(photo))).status,
+  ).toBe(200);
   const backupResponse = await call('/export/backup', owner);
   expect(backupResponse.status).toBe(200);
   const backup = (await backupResponse.json()) as ArchiveFile;
@@ -3171,7 +3205,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(4);
+  expect(exported.schemaVersion).toBe(5);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3391,7 +3425,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(4);
+  expect(exported.schemaVersion).toBe(5);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3622,4 +3656,334 @@ test('calendar counts complete days while paging entries and follows Inbox filin
   )) as import('../src/shared/activity-calendar').ActivityCalendar;
   expect(after.days[0].planned).toBe(56);
   expect(after.entries.every((entry) => entry.kind !== 'inbox')).toBe(true);
+});
+
+test('photo gallery migration retains existing item, visit and trashed source originals', async () => {
+  const owner = 'gallerymigration';
+  for (const [kind, recordId] of [
+    ['items', 'a2222222-2222-4222-8222-222222222222'],
+    ['logs', 'a3333333-3333-4333-8333-333333333333'],
+  ] as const) {
+    const response = await call(`/${kind}/${recordId}/photos`, owner);
+    expect(response.status).toBe(200);
+    const { gallery } = (await response.json()) as {
+      gallery: import('../src/shared/photo-gallery').PhotoGallery;
+    };
+    expect(gallery.entries).toHaveLength(1);
+    expect(gallery.coverId).toBe(gallery.entries[0].id);
+    expect(gallery.entries[0].source.available).toBe(true);
+    expect((await call(`/${kind}/${recordId}/photos/${gallery.coverId}`, owner)).status).toBe(200);
+    expect((await call(`/${kind}/${recordId}/photos/${gallery.coverId}`, 'gallerystranger')).status).toBe(
+      404,
+    );
+  }
+  const trashedId = 'a4444444-4444-4444-8444-444444444444';
+  expect((await call(`/items/${trashedId}/photos`, owner)).status).toBe(404);
+  await platform.env.DB.prepare('UPDATE items SET trashed_at=NULL WHERE id=?').bind(trashedId).run();
+  expect(
+    (
+      (await call(`/items/${trashedId}/photos`, owner).then((r) => r.json())) as {
+        gallery: import('../src/shared/photo-gallery').PhotoGallery;
+      }
+    ).gallery.entries,
+  ).toHaveLength(1);
+});
+
+async function galleryUpload(
+  owner: string,
+  kind: 'items' | 'logs',
+  recordId: string,
+  key: string,
+  revision: number,
+  bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+) {
+  return app.request(
+    `https://worth.test/api/${kind}/${recordId}/photos/${key}`,
+    {
+      method: 'PUT',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'image/png',
+        'X-Worth-Gallery-Revision': String(revision),
+      },
+      body: bytes,
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+test('galleries preserve original bytes while captions, arrows, order and cover have revision checks', async () => {
+  const owner = 'galleryowner',
+    list = await archiveCollection(owner, 'Photos'),
+    item = await archiveItem(owner, list.id, 'A memory'),
+    a = crypto.randomUUID(),
+    b = crypto.randomUUID();
+  const first = await galleryUpload(owner, 'items', item.id, a, 0);
+  expect(first.status).toBe(200);
+  const second = await galleryUpload(
+    owner,
+    'items',
+    item.id,
+    b,
+    1,
+    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 2]),
+  );
+  expect(second.status).toBe(200);
+  const album = ((await second.json()) as { gallery: import('../src/shared/photo-gallery').PhotoGallery })
+    .gallery;
+  expect(album.entries.map((entry) => entry.id)).toEqual([a, b]);
+  expect(album.coverId).toBe(b);
+  const entries = album.entries.map(({ id, caption, arrows }) => ({ id, caption, arrows })).reverse();
+  entries[1].caption = 'A separate caption';
+  entries[1].arrows = [
+    { id: crypto.randomUUID(), fromX: 0.1, fromY: 0.2, toX: 0.8, toY: 0.9, label: 'This corner' },
+  ];
+  expect(
+    (await call(`/items/${item.id}/photos`, owner, 'PUT', { expectedRevision: 2, entries, coverId: a }))
+      .status,
+  ).toBe(200);
+  expect(
+    (await call(`/items/${item.id}/photos`, owner, 'PUT', { expectedRevision: 2, entries, coverId: b }))
+      .status,
+  ).toBe(409);
+  // A guessed future revision must never apply a stale snapshot across another write.
+  expect(
+    (await call(`/items/${item.id}/photos`, owner, 'PUT', { expectedRevision: 4, entries, coverId: b }))
+      .status,
+  ).toBe(409);
+  expect((await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), 4)).status).toBe(409);
+  const original = await call(`/items/${item.id}/photos/${a}`, owner);
+  expect(Array.from(new Uint8Array(await original.arrayBuffer()))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  expect(
+    Array.from(new Uint8Array(await (await call(`/items/${item.id}/photo`, owner)).arrayBuffer())),
+  ).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  const saved = (await call(`/items/${item.id}/photos`, owner).then((r) => r.json())) as {
+    gallery: import('../src/shared/photo-gallery').PhotoGallery;
+  };
+  expect(saved.gallery.entries[1]).toMatchObject({
+    id: a,
+    caption: 'A separate caption',
+    arrows: entries[1].arrows,
+  });
+  expect(
+    ((await call(`/items/${item.id}`, owner).then((r) => r.json())) as { item: Item }).item.decision,
+  ).toBeNull();
+  expect((await call(`/items/${item.id}/photos`, 'galleryother')).status).toBe(404);
+  expect((await call(`/items/${item.id}/photos`, null)).status).toBe(401);
+  expect(
+    (
+      await call(`/items/${item.id}/photos`, owner, 'PUT', {
+        expectedRevision: 3,
+        entries: entries.slice(1),
+        coverId: a,
+      })
+    ).status,
+  ).toBe(409);
+});
+
+test('photo uploads retry immutably, removed originals cannot resurrect, and capacity is atomic', async () => {
+  const owner = 'galleryretries',
+    list = await archiveCollection(owner, 'Retry photos'),
+    item = await archiveItem(owner, list.id, 'A memory'),
+    key = crypto.randomUUID();
+  const responses = await Promise.all([
+    galleryUpload(owner, 'items', item.id, key, 0),
+    galleryUpload(owner, 'items', item.id, key, 0),
+  ]);
+  expect(responses.map((r) => r.status)).toEqual([200, 200]);
+  expect(
+    (
+      await galleryUpload(
+        owner,
+        'items',
+        item.id,
+        key,
+        0,
+        new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1]),
+      )
+    ).status,
+  ).toBe(409);
+  expect(
+    (await call(`/items/${item.id}/photos/${key}`, owner, 'DELETE', { expectedRevision: 0 })).status,
+  ).toBe(409);
+  expect(
+    (await call(`/items/${item.id}/photos/${key}`, owner, 'DELETE', { expectedRevision: 1 })).status,
+  ).toBe(200);
+  expect((await galleryUpload(owner, 'items', item.id, key, 0)).status).toBe(410);
+  expect((await call(`/items/${item.id}/photo`, owner)).status).toBe(404);
+  let revision = 2;
+  for (let i = 0; i < 11; i++) {
+    expect((await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), revision++)).status).toBe(200);
+  }
+  const race = await Promise.all([
+    galleryUpload(owner, 'items', item.id, crypto.randomUUID(), revision),
+    galleryUpload(owner, 'items', item.id, crypto.randomUUID(), revision),
+  ]);
+  expect(race.map((r) => r.status).sort()).toEqual([200, 409]);
+  const album = (
+    (await call(`/items/${item.id}/photos`, owner).then((r) => r.json())) as {
+      gallery: import('../src/shared/photo-gallery').PhotoGallery;
+    }
+  ).gallery;
+  expect(album.entries).toHaveLength(12);
+  await expect(
+    platform.env.DB.prepare(
+      'INSERT INTO photo_assets(id,owner_id,item_id,content_type,created_at) VALUES(?,?,?,?,?)',
+    )
+      .bind(crypto.randomUUID(), owner, item.id, 'image/png', Date.now())
+      .run(),
+  ).rejects.toThrow('photo gallery full');
+  await expect(
+    platform.env.DB.prepare(
+      'INSERT INTO photo_assets(id,owner_id,item_id,content_type,created_at) VALUES(?,?,?,?,?)',
+    )
+      .bind(crypto.randomUUID(), 'gallerywrongowner', item.id, 'image/png', Date.now())
+      .run(),
+  ).rejects.toThrow('photo owner changed');
+
+  expect((await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), album.revision)).status).toBe(
+    409,
+  );
+  await call(`/items/${item.id}`, owner, 'DELETE');
+  expect((await call(`/items/${item.id}/photos/${album.entries[0].id}`, owner)).status).toBe(404);
+});
+
+async function importGalleryFile(owner: string, file: unknown) {
+  return app.request(
+    'https://worth.test/api/import',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': crypto.randomUUID(),
+      },
+      body: JSON.stringify(file),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+test('version 5 gallery backups preserve all originals and independent metadata, while records-only restores retain missing-source recovery', async () => {
+  const owner = 'gallerybackup',
+    list = await archiveCollection(owner, 'Photo keepsakes'),
+    item = await archiveItem(owner, list.id, 'A memory'),
+    a = crypto.randomUUID(),
+    b = crypto.randomUUID();
+  expect((await galleryUpload(owner, 'items', item.id, a, 0)).status).toBe(200);
+  expect(
+    (await galleryUpload(owner, 'items', item.id, b, 1, new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 2])))
+      .status,
+  ).toBe(200);
+  const entries = [
+    { id: b, caption: 'Second first', arrows: [] },
+    {
+      id: a,
+      caption: 'Earlier original',
+      arrows: [{ id: crypto.randomUUID(), fromX: 0.2, fromY: 0.2, toX: 0.8, toY: 0.8, label: 'Look here' }],
+    },
+  ];
+  expect(
+    (await call(`/items/${item.id}/photos`, owner, 'PUT', { expectedRevision: 2, entries, coverId: a }))
+      .status,
+  ).toBe(200);
+  const response = await call('/export/backup', owner);
+  expect(response.status).toBe(200);
+  const backup = archiveFile.parse(await response.json());
+  expect(backup.schemaVersion).toBe(5);
+  expect(backup.photoAssets).toHaveLength(2);
+  expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
+  expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
+  expect((await importGalleryFile('galleryrecipient', backup)).status).toBe(201);
+  const round = archiveFile.parse(await call('/export/backup', 'galleryrecipient').then((r) => r.json()));
+  expect(round.photoAssets).toHaveLength(2);
+  expect(
+    round.photoAssets.every(
+      (source) => source.available && !backup.photoAssets.some((old) => old.id === source.id),
+    ),
+  ).toBe(true);
+  expect(round.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
+  expect(round.items[0].gallery[1].arrows[0]).toMatchObject({ fromX: 0.2, toX: 0.8, label: 'Look here' });
+  expect(round.items[0].coverPhotoId).toBe(round.items[0].gallery[1].id);
+  expect(
+    Array.from(
+      new Uint8Array(
+        await (await call(`/items/${round.items[0].id}/photo`, 'galleryrecipient')).arrayBuffer(),
+      ),
+    ),
+  ).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  const records = archiveFile.parse(await call('/export/records', owner).then((r) => r.json()));
+  expect((await importGalleryFile('gallerytext', records)).status).toBe(201);
+  const text = archiveFile.parse(await call('/export/backup', 'gallerytext').then((r) => r.json()));
+  expect(text.photoAssets.every((source) => !source.available)).toBe(true);
+  expect(text.photos).toEqual([]);
+  expect(text.items[0].gallery[1].caption).toBe('Earlier original');
+  expect(
+    (await call(`/items/${text.items[0].id}/photos/${text.items[0].gallery[0].id}`, 'gallerytext')).status,
+  ).toBe(404);
+  expect((await call(`/items/${text.items[0].id}/photo`, 'gallerytext')).status).toBe(404);
+  const corrupt = {
+    ...backup,
+    photos: backup.photos.map((photo, index) =>
+      index ? photo : { ...photo, data: btoa(String.fromCharCode(137, 80, 78, 71, 13, 10, 26, 10, 99)) },
+    ),
+  };
+  expect((await importGalleryFile('gallerycorrupt', corrupt)).status).toBe(400);
+  expect(
+    ((await call('/lists', 'gallerycorrupt').then((r) => r.json())) as { lists: unknown[] }).lists,
+  ).toEqual([]);
+  const legacy = {
+    ...backup,
+    schemaVersion: 1,
+    photoAssets: [],
+    items: backup.items.map((record) => ({ ...record, gallery: [], coverPhotoId: null })),
+    photos: [{ ...backup.photos.find((photo) => photo.id === a)!, kind: 'item', id: item.id }],
+  };
+  expect((await importGalleryFile('gallerylegacy', legacy)).status).toBe(201);
+  const oldRound = archiveFile.parse(await call('/export/backup', 'gallerylegacy').then((r) => r.json()));
+  expect(oldRound.photoAssets).toHaveLength(1);
+  expect(oldRound.items[0].coverPhotoId).toBe(oldRound.photoAssets[0].id);
+  expect((await call(`/items/${oldRound.items[0].id}/photo`, 'gallerylegacy', 'DELETE')).status).toBe(204);
+  expect((await call(`/items/${oldRound.items[0].id}/photo`, 'gallerylegacy')).status).toBe(404);
+  const after = archiveFile.parse(await call('/export/backup', 'gallerylegacy').then((r) => r.json()));
+  expect(after.photoAssets).toEqual([]);
+  expect(after.items[0].gallery).toEqual([]);
+});
+
+test('a full gallery can save every allowed Unicode caption and arrow label without an accidental body-size limit', async () => {
+  const owner = 'gallerytextbounds',
+    list = await archiveCollection(owner, 'Many captions'),
+    item = await archiveItem(owner, list.id, 'A memory');
+  for (let revision = 0; revision < 12; revision++)
+    expect((await galleryUpload(owner, 'items', item.id, crypto.randomUUID(), revision)).status).toBe(200);
+  const { gallery } = (await call(`/items/${item.id}/photos`, owner).then((r) => r.json())) as {
+    gallery: import('../src/shared/photo-gallery').PhotoGallery;
+  };
+  const entries = gallery.entries.map(({ id }) => ({
+    id,
+    caption: '눈'.repeat(500),
+    arrows: Array.from({ length: 6 }, () => ({
+      id: crypto.randomUUID(),
+      fromX: 0.2,
+      fromY: 0.2,
+      toX: 0.7,
+      toY: 0.7,
+      label: '너'.repeat(120),
+    })),
+  }));
+  const body = { expectedRevision: 12, entries, coverId: entries[0].id };
+  expect(Buffer.byteLength(JSON.stringify(body))).toBeGreaterThan(32768);
+  const response = await call(`/items/${item.id}/photos`, owner, 'PUT', body);
+  expect(response.status).toBe(200);
+  const saved = (await response.json()) as { gallery: import('../src/shared/photo-gallery').PhotoGallery };
+  expect(
+    saved.gallery.entries.every(
+      (entry) =>
+        entry.caption.length === 500 &&
+        entry.arrows.length === 6 &&
+        entry.arrows.every((arrow) => arrow.label.length === 120),
+    ),
+  ).toBe(true);
 });

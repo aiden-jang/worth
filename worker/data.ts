@@ -1,3 +1,4 @@
+import { galleryEntries, type GalleryEntry, type GallerySource } from '../src/shared/photo-gallery';
 import { connectionsQuery, mapConnection, type ConnectionRow } from './connections';
 import type { RecordConnection } from '../src/shared/connections';
 import { historyQuery, mapHistory, type HistoryRow } from './taste-history';
@@ -24,14 +25,15 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 4;
+  schemaVersion: 5;
+  photoAssets: GallerySource[];
   connections: RecordConnection[];
   tasteHistory: TasteEvent[];
   exportedAt: string;
   photosExcluded: true;
   lists: ListDetail[];
-  items: Item[];
-  logs: Log[];
+  items: (Item & { gallery: GalleryEntry[]; coverPhotoId: string | null })[];
+  logs: (Log & { gallery: GalleryEntry[]; coverPhotoId: string | null })[];
   workoutSessions: WorkoutSession[];
   workoutRoutines: WorkoutRoutine[];
 };
@@ -65,6 +67,8 @@ type ListRow = {
 };
 
 type ItemRow = {
+  gallery_json: string;
+  cover_photo_id: string | null;
   context_json: string;
   context_revision: number;
   revisit_queued: number;
@@ -87,6 +91,8 @@ type ItemRow = {
 };
 
 type LogRow = {
+  gallery_json: string;
+  cover_photo_id: string | null;
   context_json: string;
   revision: number;
   workout_id: string | null;
@@ -207,7 +213,7 @@ function mapItem(row: ItemRow): Item {
 }
 
 const itemQuery = `
-  SELECT i.context_revision, i.context_json, i.want_to_try, i.merged_into_id, (SELECT json_group_array(m.id) FROM record_items m WHERE m.merged_into_id = i.id) AS merged_ids, i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
+  SELECT i.gallery_json,i.cover_photo_id,i.context_revision, i.context_json, i.want_to_try, i.merged_into_id, (SELECT json_group_array(m.id) FROM record_items m WHERE m.merged_into_id = i.id) AS merged_ids, i.revisit_queued, i.id, i.list_id, i.title, i.type, i.note, i.decision, i.started_on, i.ended_on,
     i.created_at, i.updated_at,
     EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id = i.id) AS has_photo,
     (SELECT COUNT(*) FROM active_logs g WHERE g.item_id IN (SELECT m.id FROM record_items m WHERE m.id = i.id OR m.merged_into_id = i.id)) AS log_count,
@@ -322,6 +328,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     historyResult,
     historySizeResult,
     connectionResult,
+    photoAssetResult,
   ] = await db.batch([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
@@ -360,7 +367,18 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       )
       .bind(ownerId),
     db.prepare(`${connectionsQuery} ORDER BY c.created_at,c.id`).bind(ownerId),
+    db
+      .prepare(
+        `SELECT a.id, CASE WHEN a.item_id IS NOT NULL THEN 'item' ELSE 'log' END AS kind, COALESCE(a.item_id,a.log_id) AS recordId, a.content_type AS contentType,a.fingerprint,a.created_at AS createdAt,a.data IS NOT NULL AS available FROM photo_assets a WHERE a.owner_id=? AND a.removed_at IS NULL AND (EXISTS(SELECT 1 FROM record_items i WHERE i.id=a.item_id AND i.owner_id=a.owner_id) OR EXISTS(SELECT 1 FROM active_logs g WHERE g.id=a.log_id AND g.owner_id=a.owner_id)) ORDER BY a.created_at,a.id LIMIT 5001`,
+      )
+      .bind(ownerId),
   ]);
+  if (photoAssetResult.results.length > 5000)
+    throw new ApiError(
+      413,
+      'PHOTO_EXPORT_TOO_LARGE',
+      'This archive exceeds 5,000 photo sources. Contact support for a full archive transfer. No photos were omitted.',
+    );
   const historySize = historySizeResult.results[0] as { n: number; bytes: number };
   if (historySize.n > 10000 || historySize.bytes > 16 * 1024 * 1024)
     throw new ApiError(
@@ -378,7 +396,10 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject history backups instead of silently discarding it.
-    schemaVersion: 4,
+    schemaVersion: 5,
+    photoAssets: (
+      photoAssetResult.results as (Omit<GallerySource, 'available'> & { available: number })[]
+    ).map((row) => ({ ...row, available: !!row.available })),
     connections: (connectionResult.results as ConnectionRow[]).map(mapConnection),
     tasteHistory: (historyResult.results as HistoryRow[]).map((row) =>
       mapHistory(row, exportedItemIds, exportedLogIds),
@@ -396,8 +417,16 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
         ),
       ),
     })),
-    items: (itemResult.results as ItemRow[]).map(mapItem),
-    logs: (logResult.results as LogRow[]).map(mapLog),
+    items: (itemResult.results as ItemRow[]).map((row) => ({
+      ...mapItem(row),
+      gallery: galleryEntries.parse(JSON.parse(row.gallery_json)),
+      coverPhotoId: row.cover_photo_id,
+    })),
+    logs: (logResult.results as LogRow[]).map((row) => ({
+      ...mapLog(row),
+      gallery: galleryEntries.parse(JSON.parse(row.gallery_json)),
+      coverPhotoId: row.cover_photo_id,
+    })),
     workoutSessions: (workoutResult.results as WorkoutRow[]).map(mapWorkout),
     workoutRoutines: (routineResult.results as RoutineRow[]).map(mapRoutine),
   };

@@ -400,7 +400,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 4 for connections and taste history. Restore accepts versions 1/2/3/4; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 5 for photo galleries, connections and taste history. Restore accepts versions 1–5; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -473,8 +473,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 4 backup formats include history in the same read
-batch as records. Restore accepts versions 1/2/3/4, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 5 backup formats include history in the same read
+batch as records. Restore accepts versions 1–5, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -505,7 +505,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–4, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–5, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -552,3 +552,41 @@ day always has a readable linked agenda and optional next/first-entry controls.
 Revisit dates round-trip in existing context JSON backups, with old files defaulting
 to no plan. No database migration or backup format change is needed. Public links,
 booklets, cards and field guides retain their existing explicit projections.
+
+## Private photo galleries
+
+Additive migration `0020_photo_galleries.sql` copies existing item/log cover bytes
+into owner-bound source assets, including photos whose parents are in Trash.
+Items/logs hold an ordered bounded metadata array, independent revision and nullable
+selected source ID. Existing single-photo tables become selected-cover caches,
+keeping old rendering/export routes compatible. The cache duplicates one selected
+source; annotations never overwrite its bytes. Source rows cascade with the original
+record. Removed sources retain only retry identity/fingerprint metadata and null
+out bytes; their caption/arrow entry and selected cover are removed atomically.
+
+Gallery reads and source files require the owned active parent, retaining merged
+original identity. Metadata changes guard both the supplied revision and the row
+read during the request. Full metadata saves cannot add/remove source identities;
+explicit upload/removal paths do that. Upload UUIDs bind immutable bytes and parent
+through SHA-256. Concurrent exact retries recover the same source; late retries
+cannot resurrect removals. SQL triggers enforce parent ownership and 12-source
+capacity, including missing originals retained by records-only restore.
+
+Version 5 backups read metadata and all owned active source references in the
+records snapshot, with optional immutable source bytes read separately. Expected
+sources/fingerprints are checked and missing bytes fail the backup rather than
+being omitted. Selected cover bytes are not exported twice. Restore accepts 1–5,
+remaps parent/source/arrow IDs, preserves captions/order/cover and reconstructs cover
+caches from available sources. Old single-photo files create compatible source
+metadata and caches within the same restore transaction. Records-only files restore
+metadata with unavailable source states. The existing 32 MB/200 binary photo limits
+remain, with at most 5,000 source metadata entries and explicit transfer errors.
+
+The lazy scrolling browser gallery dialog preserves the cabinet editor, with a
+seven-day account/device draft and one recoverable replaced snapshot. Upload files
+and their operation identities are stored together in IndexedDB; prepared bytes are
+checkpointed before sending. Source headers are bounded before decoding. Private
+captions/arrows remain plain text, with normalized source coordinates and a readable
+annotation list. Before/after is an explicit source selection with a keyboard range
+and full side-by-side alternative; no visit date or chronological order is inferred.
+Existing public snapshots and opt-in booklet/card/guide projections are unchanged.

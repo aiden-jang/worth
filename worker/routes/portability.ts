@@ -1,3 +1,4 @@
+import { photoFingerprint } from '../photo-gallery';
 import { connectionCapacity } from '../connections';
 import { normalizeConnection } from '../../src/shared/connections';
 import { inboxChanged, inboxGuard } from '../inbox';
@@ -34,13 +35,22 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     let photoBytes = 0;
     for (const [kind, table, field] of [
       ['list', 'list_photos', 'list_id'],
-      ['item', 'item_photos', 'item_id'],
-      ['log', 'log_photos', 'log_id'],
+      ['asset', 'photo_assets', 'id'],
     ] as const) {
+      const eligible =
+        kind === 'list'
+          ? `${field} IN (SELECT id FROM active_lists WHERE owner_id=?)`
+          : 'id IN (SELECT value FROM json_each(?)) AND removed_at IS NULL AND data IS NOT NULL';
+      const scope =
+        kind === 'list'
+          ? owner
+          : JSON.stringify(
+              records.photoAssets.filter((source) => source.available).map((source) => source.id),
+            );
       const stats = await c.env.DB.prepare(
-        `SELECT COUNT(*) AS n, COALESCE(SUM(length(data)),0) AS bytes FROM ${table} WHERE owner_id = ? AND ${field} IN (SELECT id FROM ${kind === 'list' ? 'active_lists' : kind === 'item' ? 'record_items' : 'active_logs'})`,
+        `SELECT COUNT(*) AS n, COALESCE(SUM(length(data)),0) AS bytes FROM ${table} WHERE owner_id = ? AND ${eligible}`,
       )
-        .bind(owner)
+        .bind(owner, scope)
         .first<{ n: number; bytes: number }>();
       photoBytes += stats?.bytes ?? 0;
       if (photos.length + (stats?.n ?? 0) > 200 || photoBytes > 22 * 1024 * 1024)
@@ -51,12 +61,23 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         );
       for (let offset = 0; offset < (stats?.n ?? 0); offset += 6) {
         const rows = await c.env.DB.prepare(
-          `SELECT ${field} AS id, content_type, data FROM ${table} WHERE owner_id = ? AND ${field} IN (SELECT id FROM ${kind === 'list' ? 'active_lists' : kind === 'item' ? 'record_items' : 'active_logs'}) ORDER BY ${field} LIMIT 6 OFFSET ?`,
+          `SELECT ${field} AS id, content_type, data FROM ${table} WHERE owner_id = ? AND ${eligible} ORDER BY ${field} LIMIT 6 OFFSET ?`,
         )
-          .bind(owner, offset)
+          .bind(owner, scope, offset)
           .all<{ id: string; content_type: string; data: number[] }>();
         for (const row of rows.results) {
           const bytes = new Uint8Array(row.data);
+          const source = kind === 'asset' ? records.photoAssets.find((source) => source.id === row.id) : null;
+          if (
+            source &&
+            (source.contentType !== row.content_type ||
+              (source.fingerprint && (await photoFingerprint(bytes)) !== source.fingerprint))
+          )
+            throw new ApiError(
+              409,
+              'EXPORT_CHANGED',
+              'A photo changed while preparing this backup. Try again.',
+            );
           let binary = '';
           for (let i = 0; i < bytes.length; i += 8192)
             binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
@@ -73,11 +94,19 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     const candidate = { ...records, photosExcluded: false, photos };
     const expected = [
       ...records.lists.filter((l) => l.hasCoverPhoto).map((l) => `list:${l.id}`),
-      ...records.items.filter((i) => i.hasPhoto).map((i) => `item:${i.id}`),
-      ...records.logs.filter((g) => g.hasPhoto).map((g) => `log:${g.id}`),
+      ...records.photoAssets.filter((source) => source.available).map((source) => `asset:${source.id}`),
     ];
     const keys = new Set(photos.map((p) => `${p.kind}:${p.id}`));
-    if (!archiveFile.safeParse(candidate).success || expected.some((key) => !keys.has(key)))
+    const coverConsistent = [...records.items, ...records.logs].every(
+      (record) =>
+        record.hasPhoto ===
+        !!records.photoAssets.find((source) => source.id === record.coverPhotoId && source.available),
+    );
+    if (
+      !coverConsistent ||
+      !archiveFile.safeParse(candidate).success ||
+      expected.some((key) => !keys.has(key))
+    )
       throw new ApiError(
         409,
         'EXPORT_CHANGED',
@@ -140,6 +169,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.workoutSessions,
         ...file.workoutRoutines,
         ...file.inbox,
+        ...file.photoAssets,
       ].map((r) => [r.id, crypto.randomUUID()]),
     );
     const id = (source: string) => map.get(source)!;
@@ -259,6 +289,14 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         want_to_try: i.wantToTry ? 1 : 0,
         context_json: JSON.stringify(i.context),
         merged_into_id: i.mergedIntoId ? id(i.mergedIntoId) : null,
+        gallery_json: JSON.stringify(
+          i.gallery.map((entry) => ({
+            ...entry,
+            id: id(entry.id),
+            arrows: entry.arrows.map((arrow) => ({ ...arrow, id: crypto.randomUUID() })),
+          })),
+        ),
+        cover_photo_id: i.coverPhotoId ? id(i.coverPhotoId) : null,
         started_on: i.startedOn,
         ended_on: i.endedOn,
         created_at: i.createdAt,
@@ -302,6 +340,14 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         title: g.title,
         happened_on: g.happenedOn,
         context_json: JSON.stringify(g.context),
+        gallery_json: JSON.stringify(
+          g.gallery.map((entry) => ({
+            ...entry,
+            id: id(entry.id),
+            arrows: entry.arrows.map((arrow) => ({ ...arrow, id: crypto.randomUUID() })),
+          })),
+        ),
+        cover_photo_id: g.coverPhotoId ? id(g.coverPhotoId) : null,
         note: g.note,
         amount: g.amount,
         unit: g.unit,
@@ -351,6 +397,54 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         created_at: event.createdAt,
       })),
     );
+
+    rows(
+      'photo_assets',
+      file.photoAssets.map((source) => ({
+        id: id(source.id),
+        owner_id: owner,
+        item_id: source.kind === 'item' ? id(source.recordId) : null,
+        log_id: source.kind === 'log' ? id(source.recordId) : null,
+        content_type: source.contentType,
+        fingerprint: source.fingerprint,
+        created_at: source.createdAt,
+      })),
+    );
+    const assetPhotos = file.photos.filter((photo) => photo.kind === 'asset');
+    for (let at = 0; at < assetPhotos.length; at += 20) {
+      const group = assetPhotos.slice(at, at + 20),
+        bindings: (string | Uint8Array)[] = [];
+      for (const photo of group) {
+        const bytes = Uint8Array.from(atob(photo.data), (character) => character.charCodeAt(0)),
+          source = file.photoAssets.find((source) => source.id === photo.id)!;
+        if (
+          bytes.length > 900000 ||
+          photoContentType(bytes) !== source.contentType ||
+          (source.fingerprint && (await photoFingerprint(bytes)) !== source.fingerprint)
+        )
+          throw new ApiError(
+            400,
+            'INVALID_PHOTO',
+            'A backup original has an invalid type, size or fingerprint.',
+          );
+        bindings.push(id(photo.id), bytes);
+      }
+      statements.push(
+        c.env.DB.prepare(
+          `UPDATE photo_assets SET data=CASE id ${group.map(() => 'WHEN ? THEN ?').join(' ')} ELSE data END WHERE owner_id=? AND id IN(SELECT value FROM json_each(?))`,
+        ).bind(...bindings, owner, JSON.stringify(group.map((photo) => id(photo.id)))),
+      );
+    }
+    if (file.photoAssets.length)
+      for (const [table, field, parent] of [
+        ['item_photos', 'item_id', 'items'],
+        ['log_photos', 'log_id', 'logs'],
+      ] as const)
+        statements.push(
+          c.env.DB.prepare(
+            `INSERT INTO ${table}(${field},owner_id,content_type,data,updated_at) SELECT p.id,p.owner_id,a.content_type,a.data,? FROM ${parent} p JOIN photo_assets a ON a.id=p.cover_photo_id AND a.owner_id=p.owner_id AND a.${field}=p.id WHERE p.owner_id=? AND p.list_id IN(SELECT value FROM json_each(?)) AND a.removed_at IS NULL AND a.data IS NOT NULL`,
+          ).bind(Date.now(), owner, JSON.stringify(result.ids)),
+        );
     for (const [kind, table, field] of [
       ['list', 'list_photos', 'list_id'],
       ['item', 'item_photos', 'item_id'],
@@ -360,6 +454,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       for (let index = 0; index < photos.length; index += 20) {
         const group = photos.slice(index, index + 20);
         const bindings: (string | number | Uint8Array)[] = [];
+        const assetBindings: (string | number | Uint8Array)[] = [];
+        const albums: { recordId: string; assetId: string }[] = [];
         for (const p of group) {
           let binary: string;
           try {
@@ -371,12 +467,37 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
           if (bytes.length > 900000 || photoContentType(bytes) !== p.contentType)
             throw new ApiError(400, 'INVALID_PHOTO', 'A backup photo has an invalid type or size');
           bindings.push(id(p.id), owner, p.contentType, bytes, Date.now());
+          if (kind !== 'list') {
+            const assetId = crypto.randomUUID();
+            assetBindings.push(
+              assetId,
+              owner,
+              id(p.id),
+              p.contentType,
+              bytes,
+              await photoFingerprint(bytes),
+              Date.now(),
+            );
+            albums.push({ recordId: id(p.id), assetId });
+          }
         }
         statements.push(
           c.env.DB.prepare(
             `INSERT INTO ${table} (${field},owner_id,content_type,data,updated_at) VALUES ${group.map(() => '(?,?,?,?,?)').join(',')}`,
           ).bind(...bindings),
         );
+        if (kind !== 'list' && albums.length) {
+          statements.push(
+            c.env.DB.prepare(
+              `INSERT INTO photo_assets(id,owner_id,${field},content_type,data,fingerprint,created_at) VALUES ${albums.map(() => '(?,?,?,?,?,?,?)').join(',')}`,
+            ).bind(...assetBindings),
+          );
+          statements.push(
+            c.env.DB.prepare(
+              `UPDATE ${kind === 'item' ? 'items' : 'logs'} SET cover_photo_id=(SELECT json_extract(value,'$.assetId') FROM json_each(?) WHERE json_extract(value,'$.recordId')=${kind === 'item' ? 'items' : 'logs'}.id), gallery_json=(SELECT json_array(json_object('id',json_extract(value,'$.assetId'),'caption','','arrows',json('[]'))) FROM json_each(?) WHERE json_extract(value,'$.recordId')=${kind === 'item' ? 'items' : 'logs'}.id) WHERE owner_id=? AND id IN (SELECT json_extract(value,'$.recordId') FROM json_each(?))`,
+            ).bind(JSON.stringify(albums), JSON.stringify(albums), owner, JSON.stringify(albums)),
+          );
+        }
       }
     }
     if (statements.length > 44)

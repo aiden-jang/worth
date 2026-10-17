@@ -93,6 +93,29 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  gallery: (kind: 'items' | 'logs', id: string) =>
+    request<{ gallery: import('./shared/photo-gallery').PhotoGallery }>(`/${kind}/${id}/photos`),
+  changeGallery: (
+    kind: 'items' | 'logs',
+    id: string,
+    input: import('zod').infer<typeof import('./shared/photo-gallery').galleryPatch>,
+  ) =>
+    request<{ gallery: import('./shared/photo-gallery').PhotoGallery }>(
+      `/${kind}/${id}/photos`,
+      json('PUT', input),
+    ),
+  addGalleryPhoto: (kind: 'items' | 'logs', id: string, assetId: string, blob: Blob, revision: number) =>
+    request<{ gallery: import('./shared/photo-gallery').PhotoGallery }>(`/${kind}/${id}/photos/${assetId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': blob.type, 'X-Worth-Gallery-Revision': String(revision) },
+      body: blob,
+    }),
+  removeGalleryPhoto: (kind: 'items' | 'logs', id: string, assetId: string, revision: number) =>
+    request<{ gallery: import('./shared/photo-gallery').PhotoGallery }>(
+      `/${kind}/${id}/photos/${assetId}`,
+      json('DELETE', { expectedRevision: revision }),
+    ),
+
   calendar: (
     filter: import('./shared/activity-calendar').CalendarFilter,
     cursor = '',
@@ -284,14 +307,12 @@ export const api = {
   publicShare: (token: string) => request<{ share: PublicShare }>(`/public/${token}`),
   search: (query: string, signal?: AbortSignal) =>
     request<{ results: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}`, { signal }),
-  uploadPhoto: (kind: 'items' | 'logs', id: string, blob: Blob) =>
+  uploadPhoto: (kind: 'items' | 'logs', id: string, blob: Blob, key: string) =>
     request<{ hasPhoto: boolean }>(`/${kind}/${id}/photo`, {
       method: 'PUT',
-      headers: { 'Content-Type': blob.type },
+      headers: { 'Content-Type': blob.type, 'Idempotency-Key': key },
       body: blob,
     }),
-  deletePhoto: (kind: 'items' | 'logs', id: string) =>
-    request<void>(`/${kind}/${id}/photo`, { method: 'DELETE' }),
   uploadListCover: (id: string, blob: Blob) =>
     request<{ hasCoverPhoto: boolean }>(`/lists/${id}/cover`, {
       method: 'PUT',

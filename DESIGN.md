@@ -358,3 +358,15 @@ logs use distinct plain labels, without streaks, scores or inferred completion.
 Revisit dates live in the existing optional context disclosure; name-only capture
 and the independent revisit queue are unchanged. Captures belong in
 `art/ui-qa/activity-calendar/`.
+
+## Photo galleries
+
+Manage photos opens a secondary native scrolling dialog from the established Photo
+disclosure. It keeps the dark cabinet, 22px corners, DM Sans, 44px controls and the
+existing cream opinion slip in the parent editor. Desktop source previews pair with
+caption/order/cover controls; phones stack them. Source images use their own aspect
+ratio so normalized arrows align with the actual pixels. Arrow labels have a readable
+list and four labeled coordinate sliders, without pointer-only editing. Before/after
+uses explicit choices, a large keyboard range and a full side-by-side alternative.
+Sources, captions and arrays do not infer calls, ranks or dates. Captures and deliberate
+layout verification belong in `art/ui-qa/photo-gallery/`.
