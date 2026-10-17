@@ -62,7 +62,8 @@
       "changes": [
         "Make shelf helpers depend on the fields they use rather than the journal storage model.",
         "Keep duet image options with their component and re-export through the existing image entry point.",
-        "Limit stale deployment-chunk reload recovery to production; cancelled development imports no longer interrupt navigation."
+        "Limit stale deployment-chunk reload recovery to production; cancelled development imports no longer interrupt navigation.",
+        "Ignore synthetic hover on touch-only devices so a flower detail panel cannot intercept the opening tap."
       ],
       "sourceFilesScanned": 188,
       "staticRuntimeCycles": [],
@@ -73,12 +74,23 @@
           "log": "bloomnote-verify-recovery-final.log"
         },
         {
-          "command": "pnpm --filter @bloomnote/web run e2e",
-          "result": "pending a complete uninterrupted rerun",
-          "log": "bloomnote-browser-clean.log"
+          "command": "pnpm run verify:fast after the touch-hover fix",
+          "result": "passed",
+          "log": "bloomnote-fast-hover-oct17.log"
+        },
+        {
+          "command": "Touch-hover regression with the original unguarded handler",
+          "result": "failed at the intended assertion, then restored the fixed handler",
+          "log": "bloomnote-touch-mutation-red-oct17.log"
+        },
+        {
+          "command": "pnpm --filter @bloomnote/web run e2e after the touch fix",
+          "result": "passed in Chromium and WebKit with no retries",
+          "log": "bloomnote-browser-touch-final-oct17.log"
         }
       ],
-      "commit": "c3ff3be9098b7da91b1edd01e8745274c5e0bc32"
+      "commit": "c3ff3be9098b7da91b1edd01e8745274c5e0bc32",
+      "followUpCommits": ["d453e1c2c1db9592202292930247be097c0bc245"]
     },
     {
       "repository": "wherever",
@@ -124,7 +136,8 @@
         },
         {
           "command": "pnpm run test:e2e --workers=1",
-          "result": "pending uninterrupted rerun after updating the obsolete text-emoji assertion"
+          "result": "passed in Chromium and WebKit with no retries",
+          "log": "iguess-browser-oct17.log"
         }
       ],
       "commit": "012164626060651fcd9eeeb1307332dfc5ba5362"
@@ -195,8 +208,8 @@
         },
         {
           "command": "npm run test:browser",
-          "result": "pending uninterrupted rerun; earlier rendering run timed out under contention",
-          "log": "portfolio-browser-final.log"
+          "result": "passed in Chromium and WebKit with no retries",
+          "log": "portfolio-browser-oct17.log"
         }
       ],
       "commit": "561891ac81f88d0bdb6b153a5e41ace1274131f6"
@@ -264,8 +277,20 @@
           "result": "passed"
         },
         {
-          "command": "pnpm run test:e2e with E2E_SHARD=1/6 through 6/6",
-          "result": "pending an awake host"
+          "command": "pnpm run verify with E2E_SHARD=1/6",
+          "result": "passed",
+          "log": "eif-verify-oct17-shard-1.log"
+        },
+        {
+          "command": "pnpm run test:e2e with E2E_SHARD=2/6 through 6/6",
+          "result": "passed; all browser groups completed without retries",
+          "logs": [
+            "eif-browser-oct17-shard-2.log",
+            "eif-browser-oct17-shard-3.log",
+            "eif-browser-oct17-shard-4.log",
+            "eif-browser-oct17-shard-5.log",
+            "eif-browser-oct17-shard-6.log"
+          ]
         }
       ],
       "commit": "ee05960c83518043be20ca00b4f4025f2123b360"
@@ -311,11 +336,15 @@
   },
   "startedOn": "2026-10-16",
   "updatedOn": "2026-10-17",
-  "status": "Code audit and cleanup complete; final browser verification partly pending because the host repeatedly slept.",
+  "status": "Architecture and comments audit complete across all nine repositories. Cleanup is committed on main; all remaining browser suites have completed successfully.",
   "verificationLimits": [
-    "macOS power logs confirmed repeated deep sleep during browser runs. Tests and timeouts were not weakened.",
-    "Browser completion remains pending for Bloomnote, iguess, Portfolio, and Everything Is Fine.",
-    "Accounts passed all cases across its full browser run and one unchanged targeted rerun; the full run itself retained one transient reset-request timeout."
+    "Accounts passed every case across its full browser run and one unchanged isolated WebKit rerun; its full run retained one transient reset-request timeout. The individual outcomes are recorded above.",
+    "Browser automation does not replace a physical iPhone Safari check."
   ],
-  "testInfrastructure": "Portfolio checks independent link descriptions concurrently while retaining every accessible-description assertion."
+  "testInfrastructure": "Portfolio checks independent link descriptions concurrently while retaining every accessible-description assertion.",
+  "verificationHistory": [
+    "Earlier browser attempts were interrupted by confirmed macOS deep sleep. The October 17 completion runs showed no wall-clock discontinuity.",
+    "An uninterrupted Bloomnote WebKit run exposed a flower hover panel intercepting a touch click. The handler now checks for a fine hover-capable pointer. The new assertion failed with the old handler and the full browser suite passed with the fix.",
+    "No assertion, timeout, retry setting, size ceiling, or test floor was weakened to complete verification."
+  ]
 }
