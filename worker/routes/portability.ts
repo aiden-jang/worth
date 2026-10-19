@@ -1,4 +1,6 @@
 import { exportReceiptPhotos, restoreReceiptRows } from '../receipt-portability';
+import { exportCapsulePhotos, prepareCapsuleRestore } from '../capsule-portability';
+import { capsuleFailure } from '../capsules';
 import { receiptFailure } from '../receipts';
 import { photoFingerprint } from '../photo-gallery';
 import { connectionCapacity } from '../connections';
@@ -28,7 +30,12 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.workoutRoutines.length +
         records.inbox.length +
         records.boards.length +
-        records.receipts.length >
+        records.receipts.length +
+        records.capsules.length +
+        records.capsules.reduce(
+          (sum, capsule) => sum + capsule.entries.reduce((count, entry) => count + entry.photos.length, 0),
+          0,
+        ) >
         5000
     )
       throw new ApiError(
@@ -91,6 +98,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       }
     }
     await exportReceiptPhotos(c.env.DB, owner, records.receipts, photos, photoBytes);
+    await exportCapsulePhotos(c.env.DB, owner, records.capsules, photos);
     if (photos.length > 200)
       throw new ApiError(
         413,
@@ -104,6 +112,11 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       ...records.receipts
         .filter((receipt) => receipt.attachment?.available)
         .map((receipt) => `receipt:${receipt.id}`),
+      ...records.capsules.flatMap((capsule) =>
+        capsule.entries.flatMap((entry) =>
+          entry.photos.filter((photo) => photo.available).map((photo) => `capsule:${photo.id}`),
+        ),
+      ),
     ];
     const keys = new Set(photos.map((p) => `${p.kind}:${p.id}`));
     const coverConsistent = [...records.items, ...records.logs].every(
@@ -145,6 +158,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       c.env.DB.prepare('DELETE FROM collection_template_receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM memory_boards WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM receipts WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM time_capsules WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -183,6 +197,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.photoAssets,
         ...file.boards,
         ...file.receipts,
+        ...file.capsules,
+        ...file.capsules.flatMap((capsule) => capsule.entries.flatMap((entry) => entry.photos)),
       ].map((r) => [r.id, crypto.randomUUID()]),
     );
     const id = (source: string) => map.get(source)!;
@@ -451,6 +467,10 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     );
     rows('memory_boards', restoredBoards);
     statements.push(...(await restoreReceiptRows(c.env.DB, owner, file, id)));
+    const capsules = await prepareCapsuleRestore(c.env.DB, owner, file, id);
+    rows('time_capsules', capsules.capsules);
+    rows('capsule_photos', capsules.photos);
+    statements.push(...capsules.statements);
     const assetPhotos = file.photos.filter((photo) => photo.kind === 'asset');
     for (let at = 0; at < assetPhotos.length; at += 20) {
       const group = assetPhotos.slice(at, at + 20),
@@ -561,6 +581,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       templateCapacityError(error);
       connectionCapacity(error);
       if (error instanceof Error && error.message.includes('receipt capacity reached')) receiptFailure(error);
+      if (error instanceof Error && error.message.includes('capsule capacity reached')) capsuleFailure(error);
       inboxChanged(error);
     }
     return c.json(result, 201);

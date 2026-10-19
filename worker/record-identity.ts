@@ -12,6 +12,8 @@ export function recordIdentityGuard(db: D1Database, ids: readonly string[]) {
     'memory_boards',
     'receipts',
     'activity_plan_receipts',
+    'time_capsules',
+    'capsule_photos',
   ];
   const encoded = JSON.stringify(ids);
   return db

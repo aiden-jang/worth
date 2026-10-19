@@ -52,7 +52,7 @@ its verification. The following groups are committed and verified locally on
   group history while preserving original entries and units.
 
 Remaining work includes offline reading and pending saves,
-time capsules, private
+private
 two-person choices and granular collaboration. See the tracker for individual
 unchecked features; a related completed tool does not complete these automatically.
 

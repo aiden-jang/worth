@@ -752,3 +752,27 @@ ownership, remaps alias-group and record IDs and preserves independent snapshots
 Earlier versions default to empty additions. Restore never recreates
 creation receipts; all-data deletion removes them through their list relationship.
 Public snapshots keep their existing title/type-only scope.
+
+## Private time capsules
+
+Migration 0025 adds fixed capsule bodies and independent photo copies. A capsule
+has one explicit opening instant, chosen calendar day and IANA timezone. Only an
+owned summary is returned while closed; content, photos and current comparisons
+require the first server-checked manual Open. Opening is idempotent and records
+the first real opening time. This is an application access rule, not a
+cryptographic time lock: raw owner backups intentionally include unopened bodies.
+
+Source review uses an explicit field mask, immutable selected gallery IDs and a
+canonical hash. Creation rereads canonical owned sources, verifies the reviewed
+hash, and guards source, rank, gallery and exact photo bytes inside the same D1
+batch as the fixed body/copies. A stale review cannot silently save newer private
+content. A failed/lost reply retains an exact account-scoped request on the device;
+checking that request reveals only the same gated view. Removal clears contents
+and photo bytes but retains a minimal nonce tombstone against late retries.
+
+Backup format 9 accepts older versions, remaps capsule/entry/photo identities and
+source references, and preserves closed/opened state. Missing originals are
+explicit; independent copied bytes survive original removal. Records-only restore
+retains captions/arrows with an unavailable-image state. Twenty-five capsules,
+six sources and four photos per capsule bound storage and review. Capsule content
+must never enter the separate offline-reading projection.

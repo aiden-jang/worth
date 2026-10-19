@@ -1,7 +1,9 @@
 import type { Log, WorkoutSession } from './models';
 import { exerciseGroupKey, type ExerciseAlias } from './activity-plans';
 
-export function formatActivityMetric(log: Log): string {
+export function formatActivityMetric(
+  log: Pick<Log, 'exerciseSets' | 'weightUnit' | 'measurements' | 'amount' | 'unit' | 'sets' | 'reps'>,
+): string {
   const measurements = (log.measurements ?? []).map(
     (value) => `${value.name}: ${value.value}${value.unit ? ` ${value.unit}` : ''}`,
   );

@@ -53,7 +53,7 @@ framing and layout changes in the original checkout.
 - [x] Borrowed/lent records and optional calendar-file return reminders, imported by the user into their calendar.
 - [x] Revisit dates, snooze and an activity calendar.
 - [x] Richer routine plans, exercise aliases and additional explicit measurements.
-- [ ] Time capsules with a chosen opening date and a current-vs-snapshot comparison.
+- [x] Time capsules with a chosen opening date and a current-vs-snapshot comparison.
 
 ## Artwork and small interactions
 
@@ -770,3 +770,21 @@ production builds passed. Twenty desktop/phone captures were inspected against
 the cabinet references; deliberate extensions are in [activity QA](../art/ui-qa/activity-plans/README.md).
 Four unchecked web groups remain. This group is committed locally on the separate
 branch, without native apps, push, pull request, merge, remote CI or deployment.
+
+## Time capsule implementation
+
+Web-only capsules store a fixed message and up to six explicitly reviewed owned
+record/visit projections, with up to four independent photo copies. Optional
+notes/photos are off by default. Closed summaries never contain message/source
+content; manual Open checks the actual server instant against the chosen day and
+timezone. Opened capsules can explicitly compare the same fields with current
+sources; removed originals never erase the fixed copy. Raw owner backups include
+unopened contents, with visible privacy copy. Version 9 restores fresh identities,
+closed/opened state, missing-source flags and full/records-only photo behavior.
+
+Capsule verification: all 211 core tests across 46 files passed; 37 affected
+browser journeys passed across capsules, boards and galleries, plus two future-date
+and blocked-storage journeys. The single skipped phone case repeats the desktop
+320/430/768px sweep. Desktop/phone and narrow/tablet captures were inspected in
+`art/ui-qa/capsules`. Private collaboration, two-person choices and full offline
+reading/sync remain the three unchecked groups.

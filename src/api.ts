@@ -93,6 +93,25 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  capsules: () => request<{ capsules: import('./shared/capsules').CapsuleSummary[] }>('/capsules'),
+  capsule: (id: string) => request<import('./shared/capsules').CapsuleView>(`/capsules/${id}`),
+  capsulePreview: (selection: import('./shared/record-snapshots').SourceSelection) =>
+    request<{ preview: import('./shared/record-snapshots').SourcePreview }>(
+      '/capsules/source-preview',
+      json('POST', selection),
+    ),
+  createCapsule: (input: import('./shared/capsules').CapsuleInput, key: string) =>
+    request<import('./shared/capsules').CapsuleView>('/capsules', {
+      ...json('POST', input),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  checkCapsuleSave: (id: string, input: import('./shared/capsules').CapsuleInput) =>
+    request<import('./shared/capsules').CapsuleView>(`/capsules/${id}/check`, json('POST', input)),
+  openCapsule: (id: string) =>
+    request<import('./shared/capsules').CapsuleView>(`/capsules/${id}/open`, { method: 'POST' }),
+  capsuleCurrent: (id: string) =>
+    request<{ current: import('./shared/capsules').CapsuleCurrent[] }>(`/capsules/${id}/current`),
+  removeCapsule: (id: string) => request<void>(`/capsules/${id}`, { method: 'DELETE' }),
   receipts: () => request<{ receipts: import('./shared/receipts').ReceiptSummary[] }>('/receipts'),
   receipt: (id: string) => request<{ receipt: import('./shared/receipts').ReceiptView }>(`/receipts/${id}`),
   createReceipt: (input: import('./shared/receipts').ReceiptInput, key: string, file: Blob | null) => {

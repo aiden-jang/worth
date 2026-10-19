@@ -430,3 +430,15 @@ history displays preferred group names while retaining each recorded name in its
 entry. Literal measurement/unit choices reuse the existing accessible chart; missing
 units leave gaps and negative recorded values extend its axis below zero. No call
 faces, activity scores, unit conversions or automatic completion are introduced.
+
+## Time capsules
+
+Capsules deliberately extend the secondary Boards composition with a faceless,
+repo-native envelope. Keep the rail, dark cabinet, 68px desktop/44px phone titles,
+22px cards and 44px controls. A cream message appears only after explicit opening.
+A short entrance settles once; reduced motion stays still. Source review is a
+native scrolling dialog with named field checkboxes, original photo previews and
+an exact chosen-fields preview. Calls and ranks are independent. The composer
+allows a name/date without sources; optional notes/photos never become implicit.
+Closed cards expose names, dates and counts only. Owner backup scope remains
+visible because opening dates are app-level access rules.

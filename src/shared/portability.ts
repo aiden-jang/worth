@@ -1,4 +1,5 @@
 import { savedReceipt } from './receipts';
+import { savedCapsule } from './capsules';
 import { exerciseAliases, routineTargets, validRoutineTargets } from './activity-plans';
 import { savedBoard } from './memory-boards';
 import { galleryEntries, gallerySource } from './photo-gallery';
@@ -26,9 +27,11 @@ export const archiveFile = z
       z.literal(6),
       z.literal(7),
       z.literal(8),
+      z.literal(9),
     ]),
     boards: z.array(savedBoard).max(100).default([]),
     receipts: z.array(savedReceipt).max(100).default([]),
+    capsules: z.array(savedCapsule).max(25).default([]),
     photoAssets: z.array(gallerySource).max(5000).default([]),
     connections: z.array(recordConnection).max(1000).default([]),
     tasteHistory: z.array(tasteEvent).max(10000).default([]),
@@ -122,7 +125,7 @@ export const archiveFile = z
     photos: z
       .array(
         z.object({
-          kind: z.enum(['list', 'item', 'log', 'asset', 'receipt']),
+          kind: z.enum(['list', 'item', 'log', 'asset', 'receipt', 'capsule']),
           id,
           contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
           data: z
@@ -153,6 +156,8 @@ export const archiveFile = z
       ...file.inbox,
       ...file.boards,
       ...file.receipts,
+      ...file.capsules,
+      ...file.capsules.flatMap((capsule) => capsule.entries.flatMap((entry) => entry.photos)),
     ];
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
     if (new Set(records.map((r) => r.id)).size !== records.length)
@@ -162,6 +167,23 @@ export const archiveFile = z
     const workouts = new Map(file.workoutSessions.map((w) => [w.id, w]));
     const logsForBoards = new Set(file.logs.map((log) => log.id));
     const receipts = new Map(file.receipts.map((receipt) => [receipt.id, receipt]));
+    const capsulePhotos = new Map(
+      file.capsules.flatMap((capsule) =>
+        capsule.entries.flatMap((entry) => entry.photos.map((photo) => [photo.id, photo] as const)),
+      ),
+    );
+    if (file.schemaVersion < 9 && file.capsules.length) bad('Time capsules require backup version 9');
+    if (new TextEncoder().encode(JSON.stringify(file.capsules)).length > 8 * 1024 * 1024)
+      bad('Restore up to 8 MB of capsule text.');
+    for (const capsule of file.capsules)
+      for (const entry of capsule.entries)
+        if (
+          entry.reference &&
+          (entry.kind === 'item'
+            ? !items.has(entry.reference.id) || !!items.get(entry.reference.id)?.mergedIntoId
+            : !logsForBoards.has(entry.reference.id))
+        )
+          bad('A capsule has an unavailable record reference.');
     if (file.schemaVersion < 7 && file.receipts.length) bad('Receipts require backup version 7');
     if (new TextEncoder().encode(JSON.stringify(file.receipts)).length > 16777216)
       bad('Restore up to 16 MB of receipt text.');
@@ -312,6 +334,18 @@ export const archiveFile = z
       if (event.logId && !logIds.has(event.logId)) bad('History has an invalid visit');
     }
     const sources = new Map(file.photoAssets.map((source) => [source.id, source]));
+    for (const capsule of file.capsules)
+      for (const entry of capsule.entries)
+        for (const photo of entry.photos)
+          if (photo.sourceAssetId) {
+            const asset = sources.get(photo.sourceAssetId);
+            if (
+              !asset ||
+              asset.kind !== entry.kind ||
+              (entry.reference && asset.recordId !== entry.reference.id)
+            )
+              bad('A capsule photo has an unavailable source.');
+          }
     if (
       sources.size !== file.photoAssets.length ||
       file.photoAssets.some((source) => records.some((record) => record.id === source.id))
@@ -353,11 +387,19 @@ export const archiveFile = z
               ? sources.has(p.id)
               : p.kind === 'receipt'
                 ? receipts.has(p.id)
-                : file.logs.some((g) => g.id === p.id))
+                : p.kind === 'capsule'
+                  ? capsulePhotos.has(p.id)
+                  : file.logs.some((g) => g.id === p.id))
       )
         bad('A photo has an invalid record');
     }
     for (const photo of file.photos) {
+      if (
+        photo.kind === 'capsule' &&
+        (!capsulePhotos.get(photo.id)?.available ||
+          capsulePhotos.get(photo.id)?.contentType !== photo.contentType)
+      )
+        bad('A capsule photo has an invalid type or availability.');
       if (
         (photo.kind === 'item' && items.get(photo.id)?.gallery.length) ||
         (photo.kind === 'log' && file.logs.find((g) => g.id === photo.id)?.gallery.length)
@@ -387,6 +429,11 @@ export const archiveFile = z
     )
       bad('A receipt is missing its attachment copy.');
     if (file.photosExcluded && file.photos.length) bad('A records-only file cannot contain photos');
+    if (
+      !file.photosExcluded &&
+      [...capsulePhotos.values()].some((photo) => photo.available && !photoKeys.has(`capsule:${photo.id}`))
+    )
+      bad('A capsule is missing its photo copy.');
   });
 export type ArchiveFile = z.infer<typeof archiveFile>;
 export const archiveByteLimit = 32 * 1024 * 1024;

@@ -62,9 +62,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 check access and display your name; passwords are handled by the account service.
               </p>
               <p>
-                Private connections, ranking/opinion history, revisit plans and boards also stay with your
-                account. Reviewed receipts store the text, merchant, date, amounts and record links you
-                choose. An image copy is stored only when you explicitly include it in the reviewed save.
+                Time capsules keep fixed messages and chosen record/photo copies. Opening dates are enforced
+                by Worth; owner backups include unopened contents. Private connections, ranking/opinion
+                history, revisit plans and boards also stay with your account. Reviewed receipts store the
+                text, merchant, date, amounts and record links you choose. An image copy is stored only when
+                you explicitly include it in the reviewed save.
               </p>
             </section>
             <section>

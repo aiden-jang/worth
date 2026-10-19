@@ -1,4 +1,6 @@
 import { mapReceipt, type ReceiptRow } from './receipt-data';
+import { mapCapsule, type CapsuleRow } from './capsule-data';
+import { normalizeCapsuleReferences, type SavedCapsule } from '../src/shared/capsules';
 import { exerciseAliases, routineTargets, activityMeasurements } from '../src/shared/activity-plans';
 import { exportReceiptReferences, type SavedReceipt } from '../src/shared/receipts';
 import { mapBoard, type BoardRow } from './board-data';
@@ -30,7 +32,8 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 8;
+  schemaVersion: 9;
+  capsules: SavedCapsule[];
   receipts: SavedReceipt[];
   boards: SavedBoard[];
   photoAssets: GallerySource[];
@@ -350,6 +353,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     boardSizeResult,
     receiptResult,
     receiptSizeResult,
+    capsuleResult,
+    capsuleSizeResult,
   ] = await db.batch([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
@@ -416,7 +421,24 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
         'SELECT COUNT(*) AS n,COALESCE(SUM(length(CAST(body_json AS BLOB))),0) AS bytes FROM receipts WHERE owner_id=? AND removed_at IS NULL',
       )
       .bind(ownerId),
+    db
+      .prepare(
+        `SELECT * FROM time_capsules WHERE owner_id=? AND removed_at IS NULL AND (SELECT COALESCE(SUM(length(CAST(body_json AS BLOB))),0) FROM time_capsules WHERE owner_id=? AND removed_at IS NULL)<=8388608 ORDER BY created_at,id LIMIT 26`,
+      )
+      .bind(ownerId, ownerId),
+    db
+      .prepare(
+        'SELECT COUNT(*) AS n,COALESCE(SUM(length(CAST(body_json AS BLOB))),0) AS bytes FROM time_capsules WHERE owner_id=? AND removed_at IS NULL',
+      )
+      .bind(ownerId),
   ]);
+  const capsuleBounds = capsuleSizeResult.results[0] as { n: number; bytes: number };
+  if (capsuleBounds.n > 25 || capsuleBounds.bytes > 8388608)
+    throw new ApiError(
+      413,
+      'BACKUP_TOO_LARGE',
+      'Capsules exceed the backup limit of 25 capsules or 8 MB. No capsules were omitted.',
+    );
   const receiptBounds = receiptSizeResult.results[0] as { n: number; bytes: number };
   if (receiptBounds.n > 100 || receiptBounds.bytes > 16777216)
     throw new ApiError(
@@ -457,7 +479,15 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject new backup kinds instead of silently discarding them.
-    schemaVersion: 8,
+    schemaVersion: 9,
+    capsules: (capsuleResult.results as CapsuleRow[]).map((row) =>
+      normalizeCapsuleReferences(
+        mapCapsule(row),
+        boardItemIds,
+        exportedLogIds,
+        new Set((photoAssetResult.results as { id: string }[]).map((photo) => photo.id)),
+      ),
+    ),
     boards: (boardResult.results as BoardRow[]).map((row) =>
       exportBoardReferences(mapBoard(row), boardItemIds, exportedLogIds),
     ),

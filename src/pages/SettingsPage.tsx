@@ -118,7 +118,10 @@ export function SettingsPage() {
       <TrashPanel />
       <section className="data-section">
         <h2>Take a copy.</h2>
-        <p>Download your records, or a full backup with photos. Share links and Trash aren’t included.</p>
+        <p>
+          Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
+          capsule backups include unopened contents; keep downloaded files private.
+        </p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
           restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates, 1,000 connections,

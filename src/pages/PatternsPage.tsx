@@ -45,6 +45,9 @@ export function PatternsPage() {
         <Link className="retro-entry" to="/patterns/boards">
           Boards &amp; trips →
         </Link>
+        <Link className="retro-entry" to="/capsules">
+          Time capsules →
+        </Link>
         <Link className="retro-entry" to="/patterns/field-guide">
           Make a field guide →
         </Link>

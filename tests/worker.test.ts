@@ -59,6 +59,7 @@ beforeAll(async () => {
     '0022_memory_boards.sql',
     '0023_receipts.sql',
     '0024_activity_plans.sql',
+    '0025_time_capsules.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1009,7 +1010,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(8);
+  expect(exported.schemaVersion).toBe(9);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3202,7 +3203,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(8);
+  expect(exported.schemaVersion).toBe(9);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3422,7 +3423,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(8);
+  expect(exported.schemaVersion).toBe(9);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3889,7 +3890,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(8);
+  expect(backup.schemaVersion).toBe(9);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4263,7 +4264,7 @@ test('version six backup remaps boards and row identities and preserves missing-
   const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
   await call(`/items/${missing.id}`, owner, 'DELETE');
   const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
-  expect(backup.schemaVersion).toBe(8);
+  expect(backup.schemaVersion).toBe(9);
   expect(archiveFile.safeParse(backup).success).toBe(true);
   expect(backup.boards[0].entries[1]).toMatchObject({
     reference: null,
@@ -4592,7 +4593,7 @@ test('version seven receipt backups preserve exact attachments, creation provena
   await call(`/items/${missing.id}`, owner, 'DELETE');
   await call(`/lists/${list.id}`, owner, 'DELETE');
   const backup = archiveFile.parse(await call('/export/backup', owner).then((r) => r.json()));
-  expect(backup.schemaVersion).toBe(8);
+  expect(backup.schemaVersion).toBe(9);
   expect(backup.photos.filter((p) => p.kind === 'receipt')).toHaveLength(1);
   expect(backup.receipts[0].lines[0]).toMatchObject({
     createdHere: true,
@@ -4914,7 +4915,7 @@ test('activity plans and aliases survive fresh-ID restore with literal measureme
   });
   expect(logResponse.status).toBe(201);
   const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
-  expect(backup.schemaVersion).toBe(8);
+  expect(backup.schemaVersion).toBe(9);
   expect(backup.lists[0].exerciseAliases).toEqual([group]);
   expect(backup.logs[0].measurements).toEqual(measurements);
   const restoreKey = crypto.randomUUID(),
@@ -5040,4 +5041,414 @@ test('activity plans keep concurrent exercise writes on the workout date', async
     const logs = ((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] }).logs;
     expect(logs.every((log) => log.happenedOn === workout.happenedOn)).toBe(true);
   }
+});
+
+async function capsuleSource(
+  owner: string,
+  kind: 'item' | 'log',
+  id: string,
+  fields: string[] = kind === 'item' ? ['type', 'decision', 'rank', 'dates'] : ['dates', 'results'],
+  photoIds: string[] = [],
+) {
+  const response = await call('/capsules/source-preview', owner, 'POST', { kind, id, fields, photoIds });
+  expect(response.status).toBe(200);
+  return ((await response.json()) as { preview: import('../src/shared/record-snapshots').SourcePreview })
+    .preview;
+}
+function capsuleRequest(
+  previews: import('../src/shared/record-snapshots').SourcePreview[] = [],
+  opensAt = Date.parse('2099-01-01T00:00:00Z'),
+) {
+  return {
+    name: 'For a later day',
+    message: 'PRIVATE CAPSULE LETTER',
+    opening: { day: new Date(opensAt).toISOString().slice(0, 10), zone: 'UTC', opensAt },
+    sources: previews.map((preview) => ({
+      id: crypto.randomUUID(),
+      selection: preview.selection,
+      hash: preview.hash,
+    })),
+  };
+}
+
+test('capsules keep closed contents and photos private until an explicit server-clock opening', async () => {
+  const owner = 'capsuleowner',
+    list = await archiveCollection(owner, 'A few things'),
+    item = await archiveItem(owner, list.id, 'PRIVATE SNAPSHOT TITLE', {
+      note: 'PRIVATE SNAPSHOT NOTE',
+      decision: null,
+    });
+  const preview = await capsuleSource(owner, 'item', item.id, ['decision', 'rank', 'note']);
+  const input = capsuleRequest([preview]),
+    key = crypto.randomUUID();
+  const created = await planCreate('/capsules', owner, input, key);
+  expect(created.status).toBe(201);
+  const view = (await created.json()) as import('../src/shared/capsules').CapsuleView;
+  expect(view.capsule).toBeNull();
+  expect(view.current).toEqual([]);
+  expect(view.summary.openedAt).toBeNull();
+  expect(JSON.stringify(view)).not.toMatch(/PRIVATE CAPSULE|PRIVATE SNAPSHOT/);
+  expect(JSON.stringify(await (await call('/capsules', owner)).json())).not.toMatch(
+    /PRIVATE CAPSULE|PRIVATE SNAPSHOT/,
+  );
+  expect((await call(`/capsules/${key}`, 'capsulestranger')).status).toBe(404);
+  expect((await call(`/capsules/${key}/current`, owner)).status).toBe(409);
+  expect(
+    (await call(`/capsules/${key}/open`, owner, 'POST', { now: Date.parse('2100-01-01T00:00:00Z') })).status,
+  ).toBe(409);
+  expect((await call(`/capsules/${key}/check`, owner, 'POST', input)).status).toBe(200);
+  expect(
+    (await call(`/capsules/${key}/check`, owner, 'POST', { ...input, message: 'A different pending body' }))
+      .status,
+  ).toBe(409);
+  const backup = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(backup.schemaVersion).toBe(9);
+  expect(backup.capsules[0].message).toBe(input.message);
+  expect(backup.capsules[0].openedAt).toBeNull();
+  await call(`/items/${item.id}`, owner, 'PATCH', {
+    note: 'CURRENT NOTE',
+    title: 'CURRENT TITLE',
+    decision: 'meh',
+  });
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(input.opening.opensAt + 1000);
+  try {
+    const opened = await call(`/capsules/${key}/open`, owner, 'POST');
+    expect(opened.status).toBe(200);
+    const result = (await opened.json()) as import('../src/shared/capsules').CapsuleView;
+    expect(result.capsule?.entries[0].data).toEqual({
+      title: 'PRIVATE SNAPSHOT TITLE',
+      decision: null,
+      rank: null,
+      note: 'PRIVATE SNAPSHOT NOTE',
+    });
+    expect(result.capsule?.message).toBe(input.message);
+    const firstOpened = result.capsule!.openedAt;
+    clock.mockReturnValue(input.opening.opensAt + 2000);
+    expect(
+      (
+        (await (
+          await call(`/capsules/${key}/open`, owner, 'POST')
+        ).json()) as import('../src/shared/capsules').CapsuleView
+      ).capsule!.openedAt,
+    ).toBe(firstOpened);
+    const current = (
+      (await (await call(`/capsules/${key}/current`, owner)).json()) as {
+        current: import('../src/shared/capsules').CapsuleCurrent[];
+      }
+    ).current[0];
+    expect(current.data).toEqual({
+      title: 'CURRENT TITLE',
+      decision: 'meh',
+      rank: null,
+      note: 'CURRENT NOTE',
+    });
+    expect((await planCreate('/capsules', owner, input, key)).status).toBe(201);
+  } finally {
+    clock.mockRestore();
+  }
+  expect((await call(`/capsules/${key}`, owner, 'DELETE')).status).toBe(204);
+  expect((await planCreate('/capsules', owner, input, key)).status).toBe(410);
+  expect((await call(`/capsules/${key}/check`, owner, 'POST', input)).status).toBe(410);
+  expect(
+    ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items[0].title,
+  ).toBe('CURRENT TITLE');
+});
+
+test('capsules refuse stale reviews and source changes inside the creation transaction', async () => {
+  const owner = 'capsulerace',
+    list = await archiveCollection(owner, 'Sources'),
+    item = await archiveItem(owner, list.id, 'Reviewed title', { note: 'Reviewed note' });
+  const preview = await capsuleSource(owner, 'item', item.id, ['note']);
+  await call(`/items/${item.id}`, owner, 'PATCH', { note: 'Changed before create' });
+  const staleKey = crypto.randomUUID();
+  expect((await planCreate('/capsules', owner, capsuleRequest([preview]), staleKey)).status).toBe(409);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM time_capsules WHERE id=?').bind(staleKey).first(),
+  ).toBeNull();
+  const current = await capsuleSource(owner, 'item', item.id, ['note']),
+    input = capsuleRequest([current]),
+    key = crypto.randomUUID(),
+    db = platform.env.DB;
+  let raced = false,
+    batches = 0;
+  const wrapped = new Proxy(db, {
+    get(target, property) {
+      if (property === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          // Canonical preparation itself reads a batch; inject only immediately before the write.
+          if (++batches === 2) {
+            raced = true;
+            await target
+              .prepare('UPDATE items SET note=? WHERE id=?')
+              .bind('Changed during creation', item.id)
+              .run();
+          }
+          return target.batch(statements);
+        };
+      const value = Reflect.get(target, property);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const response = await app.request(
+    'https://worth.test/api/capsules',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(input),
+    },
+    { ...platform.env, DB: wrapped },
+    platform.ctx,
+  );
+  expect(raced).toBe(true);
+  expect(response.status).toBe(409);
+  expect(await db.prepare('SELECT id FROM time_capsules WHERE id=?').bind(key).first()).toBeNull();
+  expect(
+    (await call('/capsules/source-preview', 'othercapsuleowner', 'POST', preview.selection)).status,
+  ).toBe(404);
+});
+
+test('capsules retain exact copied photos after original removal and restore independent images with fresh IDs', async () => {
+  const owner = 'capsulephotos',
+    list = await archiveCollection(owner, 'Photo memories'),
+    item = await archiveItem(owner, list.id, 'The original record'),
+    assetId = crypto.randomUUID();
+  const bytes = Uint8Array.from(
+    Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pJ8AAAAASUVORK5CYII=',
+      'base64',
+    ),
+  );
+  const uploaded = await galleryUpload(owner, 'items', item.id, assetId, 0, bytes);
+  expect(uploaded.status).toBe(200);
+  const arrow = {
+    id: crypto.randomUUID(),
+    fromX: 0.1,
+    fromY: 0.2,
+    toX: 0.8,
+    toY: 0.7,
+    label: 'The small detail',
+  };
+  expect(
+    (
+      await call(`/items/${item.id}/photos`, owner, 'PUT', {
+        expectedRevision: 1,
+        coverId: assetId,
+        entries: [{ id: assetId, caption: 'Caption at capture', arrows: [arrow] }],
+      })
+    ).status,
+  ).toBe(200);
+  const preview = await capsuleSource(owner, 'item', item.id, [], [assetId]),
+    input = capsuleRequest([preview], Date.parse('2020-01-01T00:00:00Z')),
+    key = crypto.randomUUID();
+  expect((await planCreate('/capsules', owner, input, key)).status).toBe(201);
+  const row = await platform.env.DB.prepare('SELECT body_json FROM time_capsules WHERE id=?')
+      .bind(key)
+      .first<{ body_json: string }>(),
+    body = JSON.parse(row!.body_json) as import('../src/shared/capsules').SavedCapsule,
+    photo = body.entries[0].photos[0];
+  expect(photo.id).not.toBe(assetId);
+  expect(photo.arrows[0].id).not.toBe(arrow.id);
+  expect(photo.arrows[0]).toMatchObject({ fromX: 0.1, fromY: 0.2, toX: 0.8, toY: 0.7, label: arrow.label });
+  expect((await call(`/capsules/${key}/photos/${photo.id}`, owner)).status).toBe(404);
+  const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
+  expect(backup.capsules[0].openedAt).toBeNull();
+  expect(backup.photos.filter((row) => row.kind === 'capsule')).toHaveLength(1);
+  expect(
+    (await call(`/items/${item.id}/photos/${assetId}`, owner, 'DELETE', { expectedRevision: 2 })).status,
+  ).toBe(200);
+  expect((await call(`/capsules/${key}/open`, owner, 'POST')).status).toBe(200);
+  const image = await call(`/capsules/${key}/photos/${photo.id}`, owner);
+  expect(image.status).toBe(200);
+  expect(new Uint8Array(await image.arrayBuffer())).toEqual(bytes);
+  expect(image.headers.get('cache-control')).toContain('no-store');
+  expect((await call(`/capsules/${key}/photos/${photo.id}`, 'capsulephotoother')).status).toBe(404);
+  const comparison = (await (await call(`/capsules/${key}/current`, owner)).json()) as {
+    current: import('../src/shared/capsules').CapsuleCurrent[];
+  };
+  expect(comparison.current[0].available).toBe(true);
+  expect(comparison.current[0].photos[0].available).toBe(false);
+  const target = 'capsulephotorestored';
+  expect((await planCreate('/import', target, backup)).status).toBe(201);
+  const restored = archiveFile.parse(await (await call('/export/records', target)).json()),
+    copy = restored.capsules[0],
+    copied = copy.entries[0].photos[0];
+  expect(copy.id).not.toBe(key);
+  expect(copy.entries[0].id).not.toBe(body.entries[0].id);
+  expect(copy.entries[0].reference?.id).toBe(restored.items[0].id);
+  expect(copied.id).not.toBe(photo.id);
+  expect(copied.sourceAssetId).toBe(restored.photoAssets[0].id);
+  expect(copied.arrows[0].id).not.toBe(photo.arrows[0].id);
+  expect(copy.openedAt).toBeNull();
+  expect(
+    (
+      (await (
+        await call(`/capsules/${copy.id}`, target)
+      ).json()) as import('../src/shared/capsules').CapsuleView
+    ).capsule,
+  ).toBeNull();
+  await call(`/capsules/${copy.id}/open`, target, 'POST');
+  expect(
+    new Uint8Array(await (await call(`/capsules/${copy.id}/photos/${copied.id}`, target)).arrayBuffer()),
+  ).toEqual(bytes);
+  const recordsOnly = { ...backup, photosExcluded: true, photos: [] };
+  expect((await planCreate('/import', 'capsulerecordsonly', recordsOnly)).status).toBe(201);
+  const bare = archiveFile.parse(await (await call('/export/records', 'capsulerecordsonly')).json())
+    .capsules[0];
+  expect(bare.entries[0].photos[0].available).toBe(false);
+  expect(bare.entries[0].photos[0].caption).toBe('Caption at capture');
+  await call(`/capsules/${bare.id}/open`, 'capsulerecordsonly', 'POST');
+  expect(
+    (await call(`/capsules/${bare.id}/photos/${bare.entries[0].photos[0].id}`, 'capsulerecordsonly')).status,
+  ).toBe(404);
+  const corrupted = {
+    ...backup,
+    photos: backup.photos.map((image) =>
+      image.kind === 'capsule' ? { ...image, data: Buffer.from([...bytes, 1]).toString('base64') } : image,
+    ),
+  };
+  expect((await planCreate('/import', 'capsulebadcopy', corrupted)).status).toBe(400);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM lists WHERE owner_id=?').bind('capsulebadcopy').first(),
+  ).toBeNull();
+  expect((await call(`/capsules/${key}`, owner, 'DELETE')).status).toBe(204);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM capsule_photos WHERE capsule_id=?').bind(key).first(),
+  ).toBeNull();
+  expect((await planCreate('/capsules', owner, input, key)).status).toBe(410);
+});
+
+test('capsule capacity is atomic and a failed restore rolls back all records and its retry receipt', async () => {
+  const owner = 'capsulecapacity',
+    ids: string[] = [];
+  for (let index = 0; index < 24; index++) {
+    const id = crypto.randomUUID();
+    ids.push(id);
+    expect(
+      (await planCreate('/capsules', owner, { ...capsuleRequest(), name: `Capsule ${index}` }, id)).status,
+    ).toBe(201);
+  }
+  const a = crypto.randomUUID(),
+    b = crypto.randomUUID(),
+    input = capsuleRequest();
+  const simultaneous = await Promise.all([
+    planCreate('/capsules', owner, input, a),
+    planCreate('/capsules', owner, input, b),
+  ]);
+  expect(simultaneous.map((response) => response.status).sort()).toEqual([201, 409]);
+  const failed = simultaneous[0].status === 409 ? a : b;
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM time_capsules WHERE id=?').bind(failed).first(),
+  ).toBeNull();
+  const source = 'capsuleimportsource',
+    list = await archiveCollection(source, 'Restore rollback');
+  await archiveItem(source, list.id, 'Must not partially restore');
+  expect((await planCreate('/capsules', source, capsuleRequest())).status).toBe(201);
+  const backup = archiveFile.parse(await (await call('/export/records', source)).json()),
+    key = crypto.randomUUID();
+  expect((await planCreate('/import', owner, backup, key)).status).toBe(409);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM lists WHERE owner_id=?').bind(owner).first(),
+  ).toBeNull();
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM capture_operations WHERE id=?').bind(key).first(),
+  ).toBeNull();
+  expect((await call(`/capsules/${ids[0]}`, owner, 'DELETE')).status).toBe(204);
+  expect((await planCreate('/import', owner, backup, key)).status).toBe(201);
+  expect((await planCreate('/import', owner, backup, key)).status).toBe(201);
+  expect(((await (await call('/capsules', owner)).json()) as { capsules: unknown[] }).capsules).toHaveLength(
+    25,
+  );
+  expect(
+    (
+      await app.request(
+        'https://worth.test/api/data',
+        {
+          method: 'DELETE',
+          headers: {
+            Cookie: `preview_user=${owner}`,
+            Origin: 'https://worth.test',
+            'X-Worth-Confirmation': 'delete-all-worth-data',
+          },
+        },
+        platform.env,
+        platform.ctx,
+      )
+    ).status,
+  ).toBe(204);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM time_capsules WHERE owner_id=?').bind(owner).first(),
+  ).toBeNull();
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM capsule_photos WHERE owner_id=?').bind(owner).first(),
+  ).toBeNull();
+  expect(((await (await call('/capsules', source)).json()) as { capsules: unknown[] }).capsules).toHaveLength(
+    1,
+  );
+});
+
+test('capsules compare the original identity after moves, keep call and rank independent, and preserve missing sources', async () => {
+  const owner = 'capsulelinks',
+    list = await archiveCollection(owner, 'Original collection'),
+    destination = await archiveCollection(owner, 'Destination'),
+    item = await archiveItem(owner, list.id, 'Coffee', { decision: null });
+  expect(
+    (await call(`/lists/${list.id}/rank`, owner, 'PUT', { itemIds: [item.id], expectedRevision: 0 })).status,
+  ).toBe(200);
+  const preview = await capsuleSource(owner, 'item', item.id, ['decision', 'rank']);
+  expect(preview.data).toEqual({ title: 'Coffee', decision: null, rank: 1 });
+  const input = capsuleRequest([preview], Date.parse('2020-01-01T00:00:00Z')),
+    key = crypto.randomUUID();
+  expect((await planCreate('/capsules', owner, input, key)).status).toBe(201);
+  expect(
+    (
+      await archiveAction(list.id, owner, {
+        action: 'move',
+        itemIds: [item.id],
+        destinationId: destination.id,
+      })
+    ).status,
+  ).toBe(200);
+  await call(`/items/${item.id}`, owner, 'PATCH', { decision: 'meh' });
+  await call(`/capsules/${key}/open`, owner, 'POST');
+  const frozen = (
+    (await (await call(`/capsules/${key}`, owner)).json()) as import('../src/shared/capsules').CapsuleView
+  ).capsule!;
+  expect(frozen.entries[0].listName).toBe('Original collection');
+  expect(frozen.entries[0].data.decision).toBeNull();
+  expect(frozen.entries[0].data.rank).toBe(1);
+  const current = (
+    (await (await call(`/capsules/${key}/current`, owner)).json()) as {
+      current: import('../src/shared/capsules').CapsuleCurrent[];
+    }
+  ).current[0];
+  expect(current.available).toBe(true);
+  expect(current.listName).toBe('Destination');
+  expect(current.data?.rank).toBeNull();
+  expect(current.data?.decision).toBe('meh');
+  expect((await planCreate('/capsules', owner, capsuleRequest(), item.id)).status).toBe(409);
+  await call(`/items/${item.id}`, owner, 'DELETE');
+  const missing = (
+    (await (await call(`/capsules/${key}/current`, owner)).json()) as {
+      current: import('../src/shared/capsules').CapsuleCurrent[];
+    }
+  ).current[0];
+  expect(missing.available).toBe(false);
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(exported.capsules[0].entries[0].reference).toBeNull();
+  expect(exported.capsules[0].entries[0].data.title).toBe('Coffee');
+  const parent = await archiveItem(owner, destination.id, 'Visit name'),
+    logResponse = await call(`/lists/${destination.id}/logs`, owner, 'POST', {
+      itemId: parent.id,
+      happenedOn: '2026-10-19',
+    }),
+    log = ((await logResponse.json()) as { log: Log }).log;
+  const visit = await capsuleSource(owner, 'log', log.id, ['dates']);
+  expect(visit.data.title).toBe('Visit name');
+  await call(`/items/${parent.id}`, owner, 'PATCH', { title: 'Changed fallback name' });
+  expect((await planCreate('/capsules', owner, capsuleRequest([visit]))).status).toBe(409);
 });
