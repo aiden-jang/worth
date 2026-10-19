@@ -370,3 +370,13 @@ list and four labeled coordinate sliders, without pointer-only editing. Before/a
 uses explicit choices, a large keyboard range and a full side-by-side alternative.
 Sources, captions and arrays do not infer calls, ranks or dates. Captures and deliberate
 layout verification belong in `art/ui-qa/photo-gallery/`.
+
+## Cover collages
+
+Workbench opens a separate scrolling collage dialog over its existing composition.
+This deliberate secondary tool uses the cabinet palette, DM Sans, 22px corners and
+44px targets. Available photos use a three-column shelf, two on phones; coordinate
+controls pair on desktop and stack on phones. A 1.6-ratio sketch labels layers;
+the separately prepared 1280 × 800 image is the exact save/download preview. No
+pointer-only positioning, inferred crop, call or rank is added. Sources fit inside
+manual frames and remain unchanged. Captures belong in `art/ui-qa/cover-collage/`.

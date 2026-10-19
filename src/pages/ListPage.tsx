@@ -104,7 +104,7 @@ export function ListPage() {
           {list.kind === 'collection' && list.hasCoverPhoto && (
             <img
               className="cabinet-personal-cover"
-              src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`}
+              src={`/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`}
               alt=""
             />
           )}
@@ -177,6 +177,7 @@ export function ListPage() {
           artwork={list.artwork ?? null}
           hasCoverPhoto={list.hasCoverPhoto}
           updatedAt={list.updatedAt}
+          coverRevision={list.coverRevision}
           onClose={() => setShowSettings(false)}
           onDeleted={() => navigate('/lists')}
         />

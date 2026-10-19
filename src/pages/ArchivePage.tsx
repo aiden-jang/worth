@@ -86,7 +86,7 @@ export function ArchivePage() {
             const count = list.kind === 'collection' ? list.itemCount : list.logCount;
             const noun = list.kind === 'collection' ? 'item' : 'log';
             const cover = list.hasCoverPhoto
-              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              ? `/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`
               : list.kind === 'collection'
                 ? starterCollectionCover(list.name, list.artwork)
                 : null;

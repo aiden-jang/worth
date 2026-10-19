@@ -16,6 +16,7 @@ export function ListSettings({
   artwork,
   hasCoverPhoto,
   updatedAt,
+  coverRevision,
   onClose,
   onDeleted,
 }: {
@@ -27,6 +28,7 @@ export function ListSettings({
   artwork: CollectionArt | null;
   hasCoverPhoto: boolean;
   updatedAt: number;
+  coverRevision?: number;
   onClose: () => void;
   onDeleted: () => void;
 }) {
@@ -138,6 +140,7 @@ export function ListSettings({
           artwork={artwork}
           hasCoverPhoto={hasCoverPhoto}
           version={updatedAt}
+          revision={coverRevision}
         />
       )}
       {isCollection && (

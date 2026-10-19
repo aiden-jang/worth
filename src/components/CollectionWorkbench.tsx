@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+const CoverCollage = lazy(() =>
+  import('./CoverCollage').then((module) => ({ default: module.CoverCollage })),
+);
+
 import { api } from '../api';
 import { useDraft } from '../hooks/useDraft';
 import { decisionLabel } from '../shared/decisions';
@@ -56,6 +60,8 @@ export function CollectionWorkbench({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<Mode>('rank');
+  const [collageOpen, setCollageOpen] = useState(false);
+  const collageButton = useRef<HTMLButtonElement>(null);
   const draft = useDraft<RankingDraft>(
     `workbench:${list.id}`,
     { ids: list.rankedIds, revision: list.rankRevision },
@@ -165,7 +171,23 @@ export function CollectionWorkbench({
               {label}
             </button>
           ))}
+          <button ref={collageButton} onClick={() => setCollageOpen(true)}>
+            Cover collage
+          </button>
         </nav>
+        {collageOpen && (
+          <Suspense fallback={<p role="status">Opening collage…</p>}>
+            <CoverCollage
+              list={list}
+              items={items}
+              logs={logs}
+              onClose={() => {
+                setCollageOpen(false);
+                requestAnimationFrame(() => collageButton.current?.focus());
+              }}
+            />
+          </Suspense>
+        )}
         {mode === 'history' && (
           <TasteHistory
             list={list}

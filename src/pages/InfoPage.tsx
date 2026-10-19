@@ -298,6 +298,22 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Cover collages</h2>
+              <p>
+                Workbench → Cover collage arranges up to six saved record or visit photos. Choose each frame’s
+                position, size, layer and optional caption. Originals fit without cropping and stay intact.
+                Prepare the exact image, inspect it, then save it as this collection’s private cover or
+                download it. Shelf crops may vary; calls and ranks stay separate.
+              </p>
+              <p>
+                Arrangements recover on this account/device for seven days when storage is available. Prepared
+                files stay in this tab. Changed arrangements need a fresh preparation. If a cover changed
+                elsewhere, review it before deliberately replacing it. A failed response can retry the same
+                prepared image. Full backups include the saved cover and source photos; records-only backups
+                contain no image files.
+              </p>
+            </section>
+            <section>
               <h2>Booklets and recommendation cards</h2>
               <p>
                 In Workbench, open Booklets &amp; cards. Choose up to 12 records for a booklet, add a

@@ -92,7 +92,7 @@ export function ListDirectory({
           <div className="collection-directory-grid">
             {lists.map((list, index) => {
               const cover = list.hasCoverPhoto
-                ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+                ? `/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`
                 : starterCollectionCover(list.name, list.artwork);
               return (
                 <div className="collection-directory-entry" key={list.id}>
@@ -173,7 +173,8 @@ function CollectionCoverAction({ list }: { list: ListSummary }) {
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
   const upload = useMutation({
-    mutationFn: async (file: File) => api.uploadListCover(list.id, await preparePhoto(file)),
+    mutationFn: async (file: File) =>
+      api.uploadListCover(list.id, await preparePhoto(file), list.coverRevision ?? 0),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });

@@ -221,3 +221,15 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Check keyboard comparison and side-by-side views, narrow dialogs, blocked storage,
   account changes, moved/merged records and restored Trash. Existing public shares
   and booklet/card/guide projections must retain their prior opt-in scope.
+
+## Manual cover collages
+
+- Apply `0021_cover_revisions.sql` after earlier migrations. Existing covers remain intact.
+
+- Verify source selection, keyboard geometry/layering, captions, exact prepared
+  image/download and private cover save. Sources and independent calls/ranks stay intact.
+- Test lost replies, stale versions, current-cover review, and delayed preparation
+  cancellation. A retry after cover removal must not recreate it.
+- Check draft recovery, unavailable sources, blocked storage, account changes and
+  narrow dialogs. Full backups retain covers and source assets through format 5;
+  collage layouts stay on the device. Cover revision counters reset on fresh-ID restore.

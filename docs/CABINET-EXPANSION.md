@@ -65,7 +65,7 @@ framing and layout changes in the original checkout.
 - [x] Private collection dedication and optional first-record inscription.
 - [x] Caption/arrow annotations stored separately from original photos.
 - [x] Multiple photos, captions, ordering and explicit cover selection.
-- [ ] Manually arranged photo collages for covers; original photos retained.
+- [x] Manually arranged photo collages for covers; original photos retained.
 - [x] Before/after photo slider with a keyboard-accessible alternative.
 - [x] Activity-specific neutral illustrations without scores or call faces.
 
@@ -622,3 +622,37 @@ backup integrity. Axe, narrow reflow, recovery and all 16 final captures are rec
 in [gallery QA](../art/ui-qa/photo-gallery/README.md). The remaining unchecked web
 features stay unfinished. Work remains local to the separate branch, without
 native code, push, pull request, merge or deployment.
+
+## Twenty-first implementation: manual cover collages
+
+Workbench → Cover collage arranges up to six owned record/visit sources in a manual
+layer order, with keyboard position/size controls, optional typed captions and a
+chosen cabinet background. Sources fit without cropping. The arrangement sketch
+and exact 1280 × 800 prepared image are separate. Only the inspected WebP/PNG saves
+or downloads; edits invalidate older prepared files. Original sources, gallery
+metadata, calls and ranks remain unchanged.
+
+Account/list drafts recover on this device for seven days. Prepared images remain
+in the current tab. Missing sources retain captions/geometry; stopped or superseded
+preparation cannot replace a later preview. Lost save replies retry the same bytes.
+Changed covers require a current image review and another explicit save. Failed
+review images have a retry path before replacement. Account changes remove the
+body-level dialog. Close and browser Back protect unfinished arrangements, including
+blocked storage, with focus restored on closing. Confirmation targets are 44px.
+
+Migration `0021_cover_revisions.sql` preserves existing images and adds an independent
+cover counter. Every current cover writer supplies it. Active owner and counter
+checks share the write transaction. Concurrent/stale writes, repeated timestamps,
+unrelated collection edits and cover removal cannot permit a stale replacement.
+Identical current bytes can confirm an exact retry without another write. Cover
+cache URLs use the counter. It resets with fresh IDs on restore; saved covers and
+sources retain format 5 backup support, with no public projection change.
+
+All 173 core tests across 42 files and core checks passed. The complete 249-case
+browser regression passed; after the last navigation refinement all 14 focused
+collage journeys passed against the final build. These include Axe, exact downloaded/
+uploaded bytes, source reload, recovery, conflicts, failed review images, account
+changes, 320/430/768px reflow, browser Back, closing focus and measured touch targets.
+All 14 final captures were inspected; see [collage QA](../art/ui-qa/cover-collage/README.md).
+Remaining unchecked web features stay unfinished. Work remains local to the separate
+branch, without native code, push, pull request, merge or deployment.

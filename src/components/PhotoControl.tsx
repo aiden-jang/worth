@@ -63,18 +63,20 @@ export function CollectionCoverControl({
   artwork,
   hasCoverPhoto,
   version,
+  revision,
 }: {
   listId: string;
   listName: string;
   artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
   version: number;
+  revision?: number;
 }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const upload = useMutation({
-    mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file)),
+    mutationFn: async (file: File) => api.uploadListCover(listId, await preparePhoto(file), revision ?? 0),
     onSuccess: () => {
       setError('');
       void client.invalidateQueries({ queryKey: ['list', listId] });
@@ -84,7 +86,7 @@ export function CollectionCoverControl({
     onError: (failure) => setError(failure.message),
   });
   const remove = useMutation({
-    mutationFn: () => api.deleteListCover(listId),
+    mutationFn: () => api.deleteListCover(listId, revision ?? 0),
     onSuccess: () => {
       setConfirmingRemoval(false);
       void client.invalidateQueries({ queryKey: ['list', listId] });
@@ -94,7 +96,7 @@ export function CollectionCoverControl({
     onError: (failure) => setError(failure.message),
   });
   const starterCover = hasCoverPhoto ? null : starterCollectionCover(listName, artwork);
-  const coverSource = hasCoverPhoto ? `/api/lists/${listId}/cover?v=${version}` : starterCover;
+  const coverSource = hasCoverPhoto ? `/api/lists/${listId}/cover?v=${revision ?? version}` : starterCover;
   const coverState = hasCoverPhoto
     ? 'Private cover'
     : starterCover

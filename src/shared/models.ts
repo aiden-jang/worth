@@ -19,6 +19,7 @@ export interface ListSummary {
   archived?: boolean;
   artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
+  coverRevision?: number;
   updatedAt: number;
 }
 

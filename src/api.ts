@@ -313,13 +313,17 @@ export const api = {
       headers: { 'Content-Type': blob.type, 'Idempotency-Key': key },
       body: blob,
     }),
-  uploadListCover: (id: string, blob: Blob) =>
-    request<{ hasCoverPhoto: boolean }>(`/lists/${id}/cover`, {
+  uploadListCover: (id: string, blob: Blob, revision: number) =>
+    request<{ hasCoverPhoto: boolean; revision: number }>(`/lists/${id}/cover`, {
       method: 'PUT',
-      headers: { 'Content-Type': blob.type },
+      headers: { 'Content-Type': blob.type, 'X-Worth-Cover-Revision': String(revision) },
       body: blob,
     }),
-  deleteListCover: (id: string) => request<void>(`/lists/${id}/cover`, { method: 'DELETE' }),
+  deleteListCover: (id: string, revision: number) =>
+    request<void>(`/lists/${id}/cover`, {
+      method: 'DELETE',
+      headers: { 'X-Worth-Cover-Revision': String(revision) },
+    }),
 };
 
 export interface ItemInput {

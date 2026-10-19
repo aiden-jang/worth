@@ -590,3 +590,31 @@ captions/arrows remain plain text, with normalized source coordinates and a read
 annotation list. Before/after is an explicit source selection with a keyboard range
 and full side-by-side alternative; no visit date or chronological order is inferred.
 Existing public snapshots and opt-in booklet/card/guide projections are unchanged.
+
+## Manual cover collages
+
+`CoverCollage` opens a body-level native dialog from Workbench. Up to six typed
+item/log source references, separate captions, normalized integer geometry and
+layer order recover in an account/list device draft for seven days. Source data is
+not rewritten. The render job validates dimensions before bounded sequential
+bitmap decoding, closes each bitmap and clears its canvas. Fetches bind the account
+and have a timeout. Closing, cancellation and account recovery abort preparation;
+controller identity prevents late work from replacing a later preview. Edits
+invalidate prepared files. Only the exact inspected WebP/PNG may save or download.
+
+Migration `0021_cover_revisions.sql` adds an independent counter to collections.
+Cover writes accept `X-Worth-Cover-Revision`; every current web caller supplies its
+observed counter. Absent headers retain old-client compatibility. A guarded D1
+batch rechecks the active owner and read counter before changing bytes and
+incrementing it. Other collection edits and repeated/backward timestamps do not
+invalidate the review or permit a stale overwrite. Identical current bytes can
+confirm an exact retry without writing, but a removed cover cannot reappear from
+an old request. DELETE increments the counter too. Reads recheck the active parent
+and optionally require the observed cover counter.
+
+Conflict review fetches the current collection and its revision-bound cover before
+the user deliberately adopts that version and explicitly saves again. No request
+silently refreshes its write precondition. An uncertain in-tab retry retains its
+prepared bytes. Reload keeps the arrangement but requires new preparation/review.
+Layout drafts are device-local; saved covers and immutable sources use existing
+version 5 full backups. Records-only exports contain no images. Cover counters reset with fresh IDs on restore. No public sharing projection changes.

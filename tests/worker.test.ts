@@ -54,6 +54,7 @@ beforeAll(async () => {
     '0018_taste_history.sql',
     '0019_record_connections.sql',
     '0020_photo_galleries.sql',
+    '0021_cover_revisions.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -3986,4 +3987,119 @@ test('a full gallery can save every allowed Unicode caption and arrow label with
         entry.arrows.every((arrow) => arrow.label.length === 120),
     ),
   ).toBe(true);
+});
+
+test('collection cover versions reject stale replacements and removals while exact retries cannot resurrect a removed cover', async () => {
+  const owner = 'collageowner';
+  const list = (
+    (await (await call('/lists', owner, 'POST', { name: 'Collage', kind: 'collection' })).json()) as {
+      list: ListDetail;
+    }
+  ).list;
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pJ8AAAAASUVORK5CYII=',
+    'base64',
+  );
+  const other = Buffer.concat([png, Buffer.from('other')]);
+  const put = (bytes: Buffer, version: string, user = owner, method = 'PUT') =>
+    app.request(
+      `https://worth.test/api/lists/${list.id}/cover`,
+      {
+        method,
+        headers: {
+          Cookie: `preview_user=${user}`,
+          Origin: 'https://worth.test',
+          'Content-Type': 'image/png',
+          'X-Worth-Cover-Revision': version,
+        },
+        ...(method === 'PUT' ? { body: new Uint8Array(bytes) } : {}),
+      },
+      platform.env,
+      platform.ctx,
+    );
+  const start = String(list.coverRevision ?? 0);
+  expect((await put(png, 'NaN')).status).toBe(400);
+  expect((await put(png, start, 'collagestranger')).status).toBe(404);
+  const initial = await put(png, start);
+  expect(initial.status).toBe(200);
+  const saved = (await initial.json()) as { revision: number };
+  expect(saved.revision).toBe(1);
+  expect((await put(png, start)).status).toBe(200);
+  expect((await put(other, start)).status).toBe(409);
+  expect((await put(png, start, owner, 'DELETE')).status).toBe(409);
+  // A collection timestamp may repeat after other writes or clock changes; its cover counter cannot.
+  await platform.env.DB.prepare('UPDATE lists SET updated_at=? WHERE id=?')
+    .bind(list.updatedAt, list.id)
+    .run();
+  expect((await put(other, start)).status).toBe(409);
+  await call(`/lists/${list.id}`, owner, 'PATCH', { name: 'Renamed while arranging' });
+  expect(
+    ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list.coverRevision,
+  ).toBe(1);
+  const concurrent = await Promise.all([
+    put(other, String(saved.revision)),
+    put(Buffer.concat([png, Buffer.from('third')]), String(saved.revision)),
+  ]);
+  expect(concurrent.map((r) => r.status).sort()).toEqual([200, 409]);
+  const current = ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list;
+  const staleGet = await app.request(
+    `https://worth.test/api/lists/${list.id}/cover`,
+    { headers: { Cookie: `preview_user=${owner}`, 'X-Worth-Cover-Revision': start } },
+    platform.env,
+    platform.ctx,
+  );
+  expect(staleGet.status).toBe(404);
+  expect((await put(png, String(current.coverRevision ?? 0), owner, 'DELETE')).status).toBe(204);
+  expect((await put(png, start)).status).toBe(409);
+  expect((await call(`/lists/${list.id}/cover`, owner)).status).toBe(404);
+  expect((await put(png, String((current.coverRevision ?? 0) + 100000))).status).toBe(409);
+  const latest = ((await (await call(`/lists/${list.id}`, owner)).json()) as { list: ListDetail }).list;
+  expect((await put(png, String(latest.coverRevision ?? 0))).status).toBe(200);
+  const backup = (await (await call('/export/backup', owner)).json()) as ArchiveFile;
+  // Cover bytes already use the existing full-backup representation.
+  expect(backup.photos.some((p) => p.kind === 'list' && p.id === list.id)).toBe(true);
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  expect((await put(png, String(latest.coverRevision ?? 0))).status).toBe(404);
+  expect((await call(`/lists/${list.id}/cover`, owner)).status).toBe(404);
+});
+
+test('a cover write rolls back if its collection is trashed between the owner read and transaction', async () => {
+  const owner = 'collagerace';
+  const list = (
+    (await (await call('/lists', owner, 'POST', { name: 'Cover race', kind: 'collection' })).json()) as {
+      list: ListDetail;
+    }
+  ).list;
+  const db = platform.env.DB;
+  let raced = false;
+  const wrapped = new Proxy(db, {
+    get(target, key) {
+      if (key === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          raced = true;
+          await target.prepare('UPDATE lists SET trashed_at=1 WHERE id=?').bind(list.id).run();
+          return target.batch(statements);
+        };
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const response = await app.request(
+    `https://worth.test/api/lists/${list.id}/cover`,
+    {
+      method: 'PUT',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'image/png',
+        'X-Worth-Cover-Revision': String(list.coverRevision ?? 0),
+      },
+      body: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+    },
+    { ...platform.env, DB: wrapped },
+    platform.ctx,
+  );
+  expect(raced).toBe(true);
+  expect(response.status).toBe(409);
+  expect(await db.prepare('SELECT 1 FROM list_photos WHERE list_id=?').bind(list.id).first()).toBeNull();
 });

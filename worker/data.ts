@@ -64,6 +64,7 @@ type ListRow = {
   ranked_count: number;
   favorite_count: number;
   has_cover_photo: number;
+  cover_revision: number;
 };
 
 type ItemRow = {
@@ -122,7 +123,7 @@ type ShareRow = {
 };
 
 const listQuery = `
-  SELECT l.id, l.name, l.kind, l.description, l.archived, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json,
+  SELECT l.id, l.name, l.kind, l.description, l.archived, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json, l.cover_revision,
     (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.merged_into_id IS NULL) AS item_count,
     (SELECT COUNT(*) FROM active_logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
@@ -146,6 +147,7 @@ function mapList(row: ListRow): ListDetail {
     rankedCount: row.ranked_count,
     favoriteCount: row.favorite_count,
     hasCoverPhoto: Boolean(row.has_cover_photo),
+    coverRevision: row.cover_revision,
     updatedAt: row.updated_at,
   };
 }
@@ -408,6 +410,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     photosExcluded: true,
     lists: (listResult.results as ListRow[]).map((row) => ({
       ...mapList(row),
+      coverRevision: undefined, // New IDs start a fresh cover revision on restore.
       workspace: filterWorkspace(
         collectionWorkspace.parse(JSON.parse(row.workspace_json)),
         new Set(

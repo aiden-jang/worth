@@ -13,6 +13,7 @@ export function ConfirmDialog({
   onConfirm,
   onClose,
   children,
+  className,
 }: {
   eyebrow?: string;
   title: string;
@@ -24,6 +25,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onClose: () => void;
   children?: ReactNode;
+  className?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -38,7 +40,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <dialog
-      className="confirm-dialog"
+      className={className ? `confirm-dialog ${className}` : 'confirm-dialog'}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       ref={dialog}

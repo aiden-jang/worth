@@ -52,6 +52,8 @@ labeled and never writes to a private archive.
 - Read English printed text from a photo on-device, edit it, then review a name and optional note before saving. No photo upload or external AI processing is used for recognition.
 - Read product barcodes on-device, or optionally look up a checked ISBN and review a book title before capture.
 - Review browser-shared text/links in web capture; bookmark private shortlist and saved-find shortcuts.
+- Arrange saved photos into a private cover collage, with keyboard positioning,
+  optional captions, exact preview, local download and reviewed cover replacement.
 - Save reusable collection detail names and private setup templates for new, empty collections.
 - Export records or a photo-inclusive backup; preview a validated restore as new lists.
   Worth-only data deletion leaves the shared account and other apps alone.

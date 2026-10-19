@@ -150,7 +150,11 @@ export function ListsPage() {
       const created = await api.createList(input);
       if (!input.coverFile || input.kind !== 'collection') return { ...created, coverError: '' };
       try {
-        await api.uploadListCover(created.list.id, await preparePhoto(input.coverFile));
+        await api.uploadListCover(
+          created.list.id,
+          await preparePhoto(input.coverFile),
+          created.list.coverRevision ?? 0,
+        );
         return { ...created, coverError: '' };
       } catch (error) {
         return {

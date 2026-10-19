@@ -431,7 +431,7 @@ function ListPickerGroup({
         const cover =
           list.kind === 'collection'
             ? list.hasCoverPhoto
-              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              ? `/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`
               : starterCollectionCover(list.name, list.artwork)
             : null;
         return (
