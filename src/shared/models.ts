@@ -1,3 +1,5 @@
+import type { ActivityMeasurement, ExerciseAlias, RoutineTarget } from './activity-plans';
+
 export type CollectionArt = {
   object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag' | 'ramen' | 'sneaker' | 'plant' | 'camera';
   tone: 'sage' | 'clay' | 'butter';
@@ -24,6 +26,8 @@ export interface ListSummary {
 }
 
 export interface ListDetail extends ListSummary {
+  exerciseAliases?: ExerciseAlias[];
+  exerciseAliasRevision?: number;
   workspace?: import('./workspace').CollectionWorkspace;
   rankedIds: string[];
   rankRevision: number;
@@ -52,6 +56,8 @@ export interface Item {
 }
 
 export interface WorkoutRoutine {
+  targets?: RoutineTarget[];
+  revision?: number;
   id: string;
   listId: string;
   title: string;
@@ -61,6 +67,8 @@ export interface WorkoutRoutine {
 }
 
 export interface WorkoutSession {
+  targets?: RoutineTarget[];
+  revision?: number;
   status?: 'active' | 'finished';
   skippedExercises?: string[];
   plannedExercises?: string[];
@@ -73,6 +81,8 @@ export interface WorkoutSession {
 }
 
 export interface Log {
+  exercise?: boolean;
+  measurements?: ActivityMeasurement[];
   context?: import('./visit-context').VisitContext;
   revision?: number;
   workoutId?: string | null;

@@ -58,6 +58,7 @@ beforeAll(async () => {
     '0021_cover_revisions.sql',
     '0022_memory_boards.sql',
     '0023_receipts.sql',
+    '0024_activity_plans.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1008,7 +1009,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(7);
+  expect(exported.schemaVersion).toBe(8);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -2354,22 +2355,14 @@ test('a visit update refuses a parent trashed between its read and write', async
   let raced = false;
   const wrapped = new Proxy(db, {
     get(target, key) {
-      if (key === 'prepare')
-        return (sql: string) => {
-          if (!sql.startsWith('UPDATE logs SET item_id')) return target.prepare(sql);
-          const statement = target.prepare(sql);
-          return {
-            bind: (...values: (string | number | null)[]) => ({
-              run: async () => {
-                raced = true;
-                await target
-                  .prepare('UPDATE lists SET trashed_at = ? WHERE id = ?')
-                  .bind(Date.now(), list.id)
-                  .run();
-                return statement.bind(...values).run();
-              },
-            }),
-          };
+      if (key === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          raced = true;
+          await target
+            .prepare('UPDATE lists SET trashed_at = ? WHERE id = ?')
+            .bind(Date.now(), list.id)
+            .run();
+          return target.batch(statements);
         };
       const value = Reflect.get(target, key);
       return typeof value === 'function' ? value.bind(target) : value;
@@ -3209,7 +3202,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(7);
+  expect(exported.schemaVersion).toBe(8);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3429,7 +3422,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(7);
+  expect(exported.schemaVersion).toBe(8);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3896,7 +3889,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(7);
+  expect(backup.schemaVersion).toBe(8);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4270,7 +4263,7 @@ test('version six backup remaps boards and row identities and preserves missing-
   const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
   await call(`/items/${missing.id}`, owner, 'DELETE');
   const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
-  expect(backup.schemaVersion).toBe(7);
+  expect(backup.schemaVersion).toBe(8);
   expect(archiveFile.safeParse(backup).success).toBe(true);
   expect(backup.boards[0].entries[1]).toMatchObject({
     reference: null,
@@ -4599,7 +4592,7 @@ test('version seven receipt backups preserve exact attachments, creation provena
   await call(`/items/${missing.id}`, owner, 'DELETE');
   await call(`/lists/${list.id}`, owner, 'DELETE');
   const backup = archiveFile.parse(await call('/export/backup', owner).then((r) => r.json()));
-  expect(backup.schemaVersion).toBe(7);
+  expect(backup.schemaVersion).toBe(8);
   expect(backup.photos.filter((p) => p.kind === 'receipt')).toHaveLength(1);
   expect(backup.receipts[0].lines[0]).toMatchObject({
     createdHere: true,
@@ -4684,4 +4677,367 @@ test('receipt capacity rolls back a whole restore and its receipt, allowing the 
     ).status,
   ).toBe(204);
   expect(await call('/receipts', owner).then((r) => r.json())).toEqual({ receipts: [] });
+});
+
+async function planCreate(path: string, owner: string, body: unknown, key: string = crypto.randomUUID()) {
+  return app.request(
+    `https://worth.test/api${path}`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+async function activityPlanList(owner: string) {
+  const response = await call('/lists', owner, 'POST', { name: 'Training notes', kind: 'activity' });
+  expect(response.status).toBe(201);
+  return ((await response.json()) as { list: ListDetail }).list;
+}
+test('activity plans snapshot future targets, guard revisions and replay exactly without resurrecting removed records', async () => {
+  const owner = 'planowner',
+    list = await activityPlanList(owner),
+    key = crypto.randomUUID();
+  const targets = [
+    {
+      exercise: 'Run',
+      sets: null,
+      reps: null,
+      weight: null,
+      weightUnit: 'kg',
+      restSeconds: 75,
+      durationSeconds: 600,
+      distance: 0,
+      distanceUnit: 'km',
+      note: 'Keep this a reference.',
+    },
+  ];
+  const body = { title: 'A small loop', exercises: ['Run'], targets };
+  const created = await planCreate(`/lists/${list.id}/routines`, owner, body, key);
+  expect(created.status).toBe(201);
+  const routine = ((await created.json()) as { routine: WorkoutRoutine }).routine;
+  expect(routine.id).toBe(key);
+  expect(routine.targets).toEqual(targets);
+  expect(routine.revision).toBe(0);
+  expect((await planCreate(`/lists/${list.id}/routines`, owner, body, key)).status).toBe(201);
+  expect(
+    (await planCreate(`/lists/${list.id}/routines`, owner, { ...body, title: 'Changed retry' }, key)).status,
+  ).toBe(409);
+  expect((await planCreate(`/lists/${list.id}/routines`, 'otherplanowner', body, key)).status).toBe(404);
+  const start = {
+      title: 'Morning',
+      happenedOn: '2026-10-19',
+      routineId: routine.id,
+      expectedRoutineRevision: 0,
+    },
+    workoutKey = crypto.randomUUID();
+  const first = await planCreate(`/lists/${list.id}/workouts`, owner, start, workoutKey);
+  expect(first.status).toBe(201);
+  const workout = ((await first.json()) as { workout: WorkoutSession }).workout;
+  expect(workout.targets).toEqual(targets);
+  expect(((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] }).logs).toHaveLength(
+    0,
+  );
+  const updated = await call(`/routines/${routine.id}`, owner, 'PUT', {
+    ...body,
+    targets: [{ ...targets[0], durationSeconds: 900 }],
+    expectedRevision: 0,
+  });
+  expect(updated.status).toBe(200);
+  expect((await call(`/routines/${routine.id}`, owner, 'PUT', { ...body, expectedRevision: 0 })).status).toBe(
+    409,
+  );
+  // Exact old creation retries resolve before reading today's source routine.
+  const retry = await planCreate(`/lists/${list.id}/workouts`, owner, start, workoutKey);
+  expect(retry.status).toBe(201);
+  expect(((await retry.json()) as { workout: WorkoutSession }).workout.targets).toEqual(targets);
+  const staleKey = crypto.randomUUID();
+  expect((await planCreate(`/lists/${list.id}/workouts`, owner, start, staleKey)).status).toBe(409);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM activity_plan_receipts WHERE id=?').bind(staleKey).first(),
+  ).toBeNull();
+  const future = await planCreate(`/lists/${list.id}/workouts`, owner, {
+    ...start,
+    expectedRoutineRevision: 1,
+  });
+  expect(future.status).toBe(201);
+  expect(((await future.json()) as { workout: WorkoutSession }).workout.targets?.[0].durationSeconds).toBe(
+    900,
+  );
+  // An old client that omits targets preserves them.
+  expect(
+    (
+      await call(`/routines/${routine.id}`, owner, 'PUT', {
+        title: 'Renamed',
+        exercises: ['Run'],
+        expectedRevision: 1,
+      })
+    ).status,
+  ).toBe(200);
+  expect((await call(`/routines/${routine.id}?revision=1`, owner, 'DELETE')).status).toBe(409);
+  expect((await call(`/routines/${routine.id}?revision=2`, owner, 'DELETE')).status).toBe(204);
+  expect((await planCreate(`/lists/${list.id}/routines`, owner, body, key)).status).toBe(410);
+  expect((await call(`/workouts/${workout.id}?revision=0`, owner, 'DELETE')).status).toBe(204);
+  expect((await planCreate(`/lists/${list.id}/workouts`, owner, start, workoutKey)).status).toBe(410);
+});
+
+test('activity plans keep measurement-only exercises explicit and date changes invalidate old log editors', async () => {
+  const owner = 'measurementowner',
+    list = await activityPlanList(owner);
+  const workoutResponse = await planCreate(`/lists/${list.id}/workouts`, owner, {
+    title: 'Time only',
+    happenedOn: '2026-10-19',
+  });
+  const workout = ((await workoutResponse.json()) as { workout: WorkoutSession }).workout;
+  const input = {
+    title: 'Walk',
+    happenedOn: workout.happenedOn,
+    workoutId: workout.id,
+    exercise: true,
+    measurements: [
+      { name: 'Duration', value: 0, unit: 'seconds' },
+      { name: 'Elevation', value: -4, unit: 'm' },
+    ],
+  };
+  expect((await call(`/lists/${list.id}/logs`, owner, 'POST', { ...input, exercise: false })).status).toBe(
+    400,
+  );
+  const created = await call(`/lists/${list.id}/logs`, owner, 'POST', input);
+  expect(created.status).toBe(201);
+  const log = ((await created.json()) as { log: Log }).log;
+  expect(log.exercise).toBe(true);
+  expect(log.exerciseSets).toEqual([]);
+  expect(log.measurements).toEqual(input.measurements);
+  const changed = await call(`/workouts/${workout.id}`, owner, 'PATCH', {
+    happenedOn: '2026-10-20',
+    expectedRevision: 0,
+  });
+  expect(changed.status).toBe(200);
+  const moved = ((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] }).logs[0];
+  expect(moved.happenedOn).toBe('2026-10-20');
+  expect(moved.revision).toBe((log.revision ?? 0) + 1);
+  expect(
+    (await call(`/logs/${log.id}`, owner, 'PATCH', { note: 'Old edit', expectedRevision: log.revision }))
+      .status,
+  ).toBe(409);
+  const patch = await call(`/logs/${log.id}`, owner, 'PATCH', {
+    note: 'Preserve measurements',
+    expectedRevision: moved.revision,
+  });
+  expect(patch.status).toBe(200);
+  expect(((await patch.json()) as { log: Log }).log.measurements).toEqual(input.measurements);
+  expect(
+    (await call(`/workouts/${workout.id}`, owner, 'PATCH', { status: 'finished', expectedRevision: 0 }))
+      .status,
+  ).toBe(409);
+  expect((await call(`/workouts/${workout.id}?revision=1`, owner, 'DELETE')).status).toBe(204);
+  const retained = ((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] }).logs[0];
+  expect(retained.workoutId).toBeNull();
+  expect(retained.measurements).toEqual(input.measurements);
+  const collection = await archiveCollection(owner, 'Private things'),
+    item = await archiveItem(owner, collection.id, 'A thing');
+  expect(
+    (
+      await call(`/lists/${collection.id}/logs`, owner, 'POST', {
+        itemId: item.id,
+        happenedOn: '2026-10-19',
+        measurements: input.measurements,
+      })
+    ).status,
+  ).toBe(400);
+});
+
+test('activity plans and aliases survive fresh-ID restore with literal measurements and separate snapshots', async () => {
+  const owner = 'aliasowner',
+    list = await activityPlanList(owner),
+    group = { id: crypto.randomUUID(), name: 'Run', aliases: ['Jog', 'Easy run'] };
+  expect(
+    (
+      await call(`/lists/${list.id}/exercise-aliases`, 'someoneelse', 'PUT', {
+        expectedRevision: 0,
+        groups: [group],
+      })
+    ).status,
+  ).toBe(404);
+  const first = await call(`/lists/${list.id}/exercise-aliases`, owner, 'PUT', {
+    expectedRevision: 0,
+    groups: [group],
+  });
+  expect(first.status).toBe(200);
+  // Lost response, exact current content: acknowledge without incrementing the revision.
+  const repeat = await call(`/lists/${list.id}/exercise-aliases`, owner, 'PUT', {
+    expectedRevision: 0,
+    groups: [group],
+  });
+  expect(repeat.status).toBe(200);
+  expect(((await repeat.json()) as { list: ListDetail }).list.exerciseAliasRevision).toBe(1);
+  expect(
+    (await call(`/lists/${list.id}/exercise-aliases`, owner, 'PUT', { expectedRevision: 0, groups: [] }))
+      .status,
+  ).toBe(409);
+  expect(
+    (
+      await call(`/lists/${list.id}/exercise-aliases`, owner, 'PUT', {
+        expectedRevision: 1,
+        groups: [group, { id: crypto.randomUUID(), name: 'Other', aliases: [' JOG '] }],
+      })
+    ).status,
+  ).toBe(400);
+  const targets = [{ exercise: 'Run', durationSeconds: 600, restSeconds: 75, note: 'Only a plan' }];
+  const routineResponse = await planCreate(`/lists/${list.id}/routines`, owner, {
+    title: 'Plan',
+    exercises: ['Run'],
+    targets,
+  });
+  expect(routineResponse.status).toBe(201);
+  const routine = ((await routineResponse.json()) as { routine: WorkoutRoutine }).routine;
+  const visitResponse = await planCreate(`/lists/${list.id}/workouts`, owner, {
+    title: 'Visit',
+    happenedOn: '2026-10-19',
+    routineId: routine.id,
+  });
+  const workout = ((await visitResponse.json()) as { workout: WorkoutSession }).workout;
+  const measurements = [{ name: 'Distance', value: 0, unit: 'mi' }];
+  const logResponse = await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    title: 'Jog',
+    exercise: true,
+    happenedOn: '2026-10-19',
+    workoutId: workout.id,
+    measurements,
+  });
+  expect(logResponse.status).toBe(201);
+  const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
+  expect(backup.schemaVersion).toBe(8);
+  expect(backup.lists[0].exerciseAliases).toEqual([group]);
+  expect(backup.logs[0].measurements).toEqual(measurements);
+  const restoreKey = crypto.randomUUID(),
+    restored = await planCreate('/import', owner, backup, restoreKey);
+  expect(restored.status).toBe(201);
+  expect((await planCreate('/import', owner, backup, restoreKey)).status).toBe(201);
+  const exported = archiveFile.parse(await (await call('/export/backup', owner)).json()),
+    copy = exported.lists.find((row) => row.id !== list.id)!;
+  expect(copy.exerciseAliases[0].id).not.toBe(group.id);
+  expect(copy.exerciseAliases[0].aliases).toEqual(group.aliases);
+  const newRoutine = exported.workoutRoutines.find((row) => row.listId === copy.id)!,
+    newWorkout = exported.workoutSessions.find((row) => row.listId === copy.id)!,
+    newLog = exported.logs.find((row) => row.listId === copy.id)!;
+  expect(newRoutine.targets).toEqual(routine.targets);
+  expect(newWorkout.targets).toEqual(workout.targets);
+  expect(newLog.workoutId).toBe(newWorkout.id);
+  expect(newLog.title).toBe('Jog');
+  expect(newLog.measurements).toEqual(measurements);
+  expect(newLog.exercise).toBe(true);
+  expect(
+    (
+      await app.request(
+        'https://worth.test/api/data',
+        {
+          method: 'DELETE',
+          headers: {
+            Cookie: `preview_user=${owner}`,
+            Origin: 'https://worth.test',
+            'X-Worth-Confirmation': 'delete-all-worth-data',
+          },
+        },
+        platform.env,
+        platform.ctx,
+      )
+    ).status,
+  ).toBe(204);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM activity_plan_receipts WHERE owner_id=?')
+      .bind(owner)
+      .first(),
+  ).toBeNull();
+});
+
+test('activity plans accept bounded Unicode target plans and keep creation IDs disjoint from other record kinds', async () => {
+  const owner = 'planboundsowner',
+    list = await activityPlanList(owner),
+    collection = await archiveCollection(owner, 'Things'),
+    item = await archiveItem(owner, collection.id, 'Existing identity');
+  expect(
+    (
+      await planCreate(
+        `/lists/${list.id}/routines`,
+        owner,
+        { title: 'Collision', exercises: ['Run'] },
+        item.id,
+      )
+    ).status,
+  ).toBe(409);
+  expect(
+    await platform.env.DB.prepare('SELECT id FROM activity_plan_receipts WHERE id=?').bind(item.id).first(),
+  ).toBeNull();
+  const exercises = Array.from({ length: 40 }, (_, i) => `Exercise ${i} ${'界'.repeat(100)}`),
+    targets = exercises.map((exercise) => ({
+      exercise,
+      note: '界'.repeat(300),
+      sets: 100,
+      reps: 10000,
+      weight: 100000,
+      weightUnit: 'lb',
+      durationSeconds: 86400,
+      distance: 1000000,
+      distanceUnit: 'mi',
+      restSeconds: 86400,
+    }));
+  const response = await planCreate(`/lists/${list.id}/routines`, owner, {
+    title: 'Large explicit plan',
+    exercises,
+    targets,
+  });
+  expect(response.status).toBe(201);
+  expect(((await response.json()) as { routine: WorkoutRoutine }).routine.targets).toHaveLength(40);
+  expect(
+    (
+      await planCreate(`/lists/${list.id}/routines`, owner, {
+        title: 'Wrong names',
+        exercises: ['Run'],
+        targets: [{ exercise: 'Walk', sets: 2 }],
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (await planCreate(`/lists/${collection.id}/routines`, owner, { title: 'Wrong kind', exercises: ['Run'] }))
+      .status,
+  ).toBe(400);
+});
+
+test('activity plans keep concurrent exercise writes on the workout date', async () => {
+  const owner = 'plandateowner',
+    list = await activityPlanList(owner);
+  const created = await planCreate(`/lists/${list.id}/workouts`, owner, {
+    title: 'Date boundary',
+    happenedOn: '2026-10-19',
+  });
+  let workout = ((await created.json()) as { workout: WorkoutSession }).workout;
+  for (let index = 0; index < 3; index++) {
+    const nextDay = `2026-10-${20 + index}`;
+    const [entryResponse, moveResponse] = await Promise.all([
+      call(`/lists/${list.id}/logs`, owner, 'POST', {
+        title: `Timed entry ${index}`,
+        exercise: true,
+        workoutId: workout.id,
+        happenedOn: workout.happenedOn,
+        measurements: [{ name: 'Duration', value: 30, unit: 'seconds' }],
+      }),
+      call(`/workouts/${workout.id}`, owner, 'PATCH', {
+        happenedOn: nextDay,
+        expectedRevision: workout.revision,
+      }),
+    ]);
+    expect([201, 400, 409]).toContain(entryResponse.status);
+    expect(moveResponse.status).toBe(200);
+    workout = ((await moveResponse.json()) as { workout: WorkoutSession }).workout;
+    const logs = ((await (await call(`/lists/${list.id}/logs`, owner)).json()) as { logs: Log[] }).logs;
+    expect(logs.every((log) => log.happenedOn === workout.happenedOn)).toBe(true);
+  }
 });

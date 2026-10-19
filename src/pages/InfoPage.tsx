@@ -422,6 +422,19 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 visit to continue logging; swap, reorder or skip names for that visit without changing the
                 routine. Finish shows a recap of saved entries. Rest timers are optional.
               </p>
+              <p>
+                Optional routine targets keep planned sets, reps, weight, rest, duration, distance and notes.
+                Starting a workout copies that plan; actual results stay blank. Future routine changes do not
+                change earlier visits. Exercise aliases group chosen names in this activity's history and
+                last-time recall without renaming entries or changing workout completion. Named measurements
+                keep literal values and units, including zero; charts never convert or combine different
+                units. For time-only exercise entries, remove blank sets and add a named measurement.
+              </p>
+              <p>
+                Plan edits check saved revisions. Check saved plan or groups to compare a newer version before
+                replacing a draft. Uncertain routine/workout creations keep a fixed retry so a lost response
+                cannot create another copy. Device recovery depends on this account and browser storage.
+              </p>
             </section>
             <section>
               <h2>Browser capture and quick picks</h2>

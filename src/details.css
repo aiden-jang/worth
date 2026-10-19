@@ -1425,6 +1425,8 @@
   margin-bottom: 24px;
 }
 .exercise-metrics button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--line-strong);
@@ -1876,4 +1878,96 @@
 }
 .visit-context-fields > label + label {
   margin-top: 20px;
+}
+
+.plan-editor-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+.routine-target-card,
+.measurement-card {
+  min-width: 0;
+  border: 1px solid #38392f;
+  border-radius: 16px;
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+.routine-target-editor > .routine-target-card + .routine-target-card {
+  margin-top: 16px;
+}
+.routine-target-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.routine-target-fields label {
+  min-width: 0;
+}
+.record-form .routine-target-card > .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: #f0ecdf;
+  overflow-wrap: anywhere;
+}
+.record-form .checkbox-label input[type='checkbox'] {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  padding: 0;
+  accent-color: #e8dc9d;
+}
+.routine-target-fields input,
+.routine-target-fields select {
+  width: 100%;
+  min-width: 0;
+}
+.plan-target-readout {
+  padding-left: 20px;
+}
+.plan-target-readout li {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.plan-target-readout span {
+  display: block;
+  color: #aaa99b;
+}
+.plan-draft-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+}
+.saved-plan-review {
+  margin-top: 24px;
+  display: grid;
+  gap: 20px;
+}
+.saved-plan-review > .button {
+  justify-self: start;
+}
+.saved-plan-review > .previous-exercise {
+  margin: 0;
+}
+.exercise-aliases-dialog .editor-form + .button {
+  margin-top: 24px;
+}
+.workout-exercises small {
+  overflow-wrap: anywhere;
+}
+.exercise-directory > .button {
+  margin: 12px 0;
+}
+@media (max-width: 360px) {
+  .routine-target-fields {
+    grid-template-columns: 1fr;
+  }
 }

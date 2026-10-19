@@ -1,4 +1,5 @@
 import { savedReceipt } from './receipts';
+import { exerciseAliases, routineTargets, validRoutineTargets } from './activity-plans';
 import { savedBoard } from './memory-boards';
 import { galleryEntries, gallerySource } from './photo-gallery';
 import { z } from 'zod';
@@ -24,6 +25,7 @@ export const archiveFile = z
       z.literal(5),
       z.literal(6),
       z.literal(7),
+      z.literal(8),
     ]),
     boards: z.array(savedBoard).max(100).default([]),
     receipts: z.array(savedReceipt).max(100).default([]),
@@ -37,6 +39,7 @@ export const archiveFile = z
     lists: z
       .array(
         listInput.extend({
+          exerciseAliases: exerciseAliases.default([]),
           archived: z.boolean().default(false),
           name: title(80),
           description: text(280),
@@ -78,7 +81,8 @@ export const archiveFile = z
       .max(5000),
     workoutRoutines: z
       .array(
-        routineInput.extend({
+        routineInput.omit({ expectedRevision: true }).extend({
+          targets: routineTargets.default([]),
           title: title(80),
           exercises: z
             .array(title(120))
@@ -100,6 +104,7 @@ export const archiveFile = z
       .array(
         workoutPatch
           .innerType()
+          .omit({ expectedRevision: true })
           .required()
           .extend({
             title: text(80),
@@ -109,6 +114,7 @@ export const archiveFile = z
             status: z.enum(['active', 'finished']).default('finished'),
             plannedExercises: z.array(z.string().min(1).max(120)).max(40).default([]),
             skippedExercises: z.array(z.string().min(1).max(120)).max(40).default([]),
+            targets: routineTargets.default([]),
           }),
       )
       .max(5000)
@@ -130,6 +136,14 @@ export const archiveFile = z
   })
   .superRefine((file, context) => {
     const bad = (message: string) => context.addIssue({ code: 'custom', message });
+    if (
+      file.schemaVersion < 8 &&
+      (file.lists.some((list) => list.exerciseAliases.length) ||
+        file.workoutRoutines.some((routine) => routine.targets.length) ||
+        file.workoutSessions.some((workout) => workout.targets.length) ||
+        file.logs.some((log) => log.measurements.length || log.exercise))
+    )
+      bad('Routine targets, exercise aliases and named measurements require backup version 8');
     const records = [
       ...file.lists,
       ...file.items,
@@ -184,6 +198,7 @@ export const archiveFile = z
       if (i.startedOn && i.endedOn && i.startedOn > i.endedOn) bad('An item has an invalid date range');
     }
     for (const l of file.lists) {
+      if (l.kind !== 'activity' && l.exerciseAliases.length) bad('Exercise aliases need an activity list');
       if (l.archived && l.kind !== 'collection') bad('Only collections can be archived');
       if (
         l.workspace.duplicateReviews?.some((review) =>
@@ -221,6 +236,8 @@ export const archiveFile = z
       if (l.kind === 'activity' && l.rankedIds.length) bad('An activity cannot contain item ranks');
     }
     for (const w of file.workoutSessions) {
+      if (!validRoutineTargets(w.plannedExercises, w.targets))
+        bad('A workout target has no matching exercise');
       if (lists.get(w.listId)?.kind !== 'activity') bad('A workout has an invalid activity');
       if (
         new Set(w.plannedExercises.map((n) => n.toLowerCase().replace(/\s+/g, ' '))).size !==
@@ -230,9 +247,13 @@ export const archiveFile = z
       )
         bad('A workout has an invalid lineup');
     }
-    for (const r of file.workoutRoutines)
+    for (const r of file.workoutRoutines) {
       if (lists.get(r.listId)?.kind !== 'activity') bad('A routine has an invalid activity');
+      if (!validRoutineTargets(r.exercises, r.targets)) bad('A routine target has no matching exercise');
+    }
     for (const g of file.logs) {
+      if (lists.get(g.listId)?.kind !== 'activity' && g.measurements.length)
+        bad('Named measurements need an activity log');
       const list = lists.get(g.listId);
       if (list?.kind === 'activity' && hasVisitContext(g.context))
         bad('An activity cannot contain collection visit details');

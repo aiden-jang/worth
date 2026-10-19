@@ -52,7 +52,7 @@ framing and layout changes in the original checkout.
 - [x] Purchase date, price/currency, return deadline and ownership status.
 - [x] Borrowed/lent records and optional calendar-file return reminders, imported by the user into their calendar.
 - [x] Revisit dates, snooze and an activity calendar.
-- [ ] Richer routine plans, exercise aliases and additional explicit measurements.
+- [x] Richer routine plans, exercise aliases and additional explicit measurements.
 - [ ] Time capsules with a chosen opening date and a current-vs-snapshot comparison.
 
 ## Artwork and small interactions
@@ -729,3 +729,44 @@ hook. Lint, unused-code checks, Worker/TypeScript checks and the production buil
 passed. Desktop/phone captures were inspected against the cabinet; deliberate
 extensions are in [receipt QA](../art/ui-qa/receipts/README.md).
 Five unchecked web groups remain. This work stays local on the separate branch.
+
+## Twenty-fourth implementation: activity plans and measurements
+
+Routines now keep optional target sets, reps, weight/unit, rest, duration,
+distance/unit and notes. Starting a workout copies names and plans while results
+stay blank. Later routine edits/removal preserve prior visits. The editors show
+plans separately from actual results, allow unmatched plans to be removed
+explicitly, and offer the chosen rest duration without starting a timer.
+Time-only exercise entries can save named measurements without invented reps,
+weight or individual sets. Up to 12 literal measurements keep zero/negative values
+and entered units. History separates measurement/unit choices and leaves gaps.
+
+Each activity supports up to 30 preferred-name groups with eight alternate names.
+Grouping changes history and last-time recall only. Original names, saved results,
+plans and workout completion remain intact; removing a group separates history.
+Overlapping normalized names are rejected. The collapsed history directory keeps
+these tools optional and retains its original-name entry index.
+
+Migration 0024 adds independent plan/alias revisions and exact creation receipts.
+Owner, source, activity, identity and revision guards run inside writes. Known
+creation retries work after source changes; removed creations cannot return from
+old retries. Workout date changes advance attached log revisions, and atomic log
+source/date guards refuse races with parent deletion or date changes. Older
+clients preserve omitted targets/measurements. Version 8 backups preserve separate
+routine/workout snapshots, literal measurements and aliases with fresh IDs.
+
+Account/device drafts recover partial input. Pending creations freeze their request
+and identity. Saved-plan comparisons ask before replacing a draft and keep its
+previous text readable while open. New log drafts retain their original revision
+through reloads; older unversioned drafts remain copyable and block stale saves.
+
+The complete 201-test core suite passed, followed by all 16 final affected draft,
+history and model checks after correcting time-only Save. All 12 desktop/phone
+activity journeys passed across the final runs: ten together and the two recovered
+log cases after fixing test field lookup and old-draft setup timing. The two final
+history journeys also passed after the last copy correction. No timeout or behavior
+assertion was weakened. Formatting, lint, unused-code checks, Worker/TypeScript and
+production builds passed. Twenty desktop/phone captures were inspected against
+the cabinet references; deliberate extensions are in [activity QA](../art/ui-qa/activity-plans/README.md).
+Four unchecked web groups remain. This group is committed locally on the separate
+branch, without native apps, push, pull request, merge, remote CI or deployment.

@@ -1,6 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-export function RestTimer({ workoutId }: { workoutId: string }) {
+export function RestTimer({
+  workoutId,
+  plannedSeconds,
+}: {
+  workoutId: string;
+  plannedSeconds?: number | null;
+}) {
   const owner = useQueryClient().getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
   const key = `worth:rest:${owner}:${workoutId}`;
   const [end, setEnd] = useState(() => {
@@ -26,7 +32,7 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     };
   }, [key]);
   const [now, setNow] = useState(Date.now());
-  const [seconds, setSeconds] = useState(60);
+  const [seconds, setSeconds] = useState(plannedSeconds ?? 60);
   useEffect(() => {
     if (!end) return;
     const interval = setInterval(() => setNow(Date.now()), 500);
@@ -54,11 +60,23 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
           disabled={remaining > 0}
           onChange={(e) => setSeconds(Number(e.target.value))}
         >
-          {[30, 60, 90, 120, 180].map((n) => (
-            <option value={n} key={n}>
-              {n < 60 ? `${n}s` : `${n / 60} min`}
-            </option>
-          ))}
+          {[
+            ...new Set([
+              30,
+              60,
+              90,
+              120,
+              180,
+              ...(plannedSeconds === undefined || plannedSeconds === null ? [] : [plannedSeconds]),
+            ]),
+          ]
+            .sort((a, b) => a - b)
+            .map((n) => (
+              <option value={n} key={n}>
+                {n < 60 || n % 60 ? `${n}s` : `${n / 60} min`}
+                {n === plannedSeconds ? ' · planned' : ''}
+              </option>
+            ))}
         </select>
       </label>
       <span className="rest-time" aria-label={`${remaining} seconds remaining`}>

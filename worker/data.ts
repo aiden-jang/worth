@@ -1,4 +1,5 @@
 import { mapReceipt, type ReceiptRow } from './receipt-data';
+import { exerciseAliases, routineTargets, activityMeasurements } from '../src/shared/activity-plans';
 import { exportReceiptReferences, type SavedReceipt } from '../src/shared/receipts';
 import { mapBoard, type BoardRow } from './board-data';
 import { exportBoardReferences, type SavedBoard } from '../src/shared/memory-boards';
@@ -29,7 +30,7 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 7;
+  schemaVersion: 8;
   receipts: SavedReceipt[];
   boards: SavedBoard[];
   photoAssets: GallerySource[];
@@ -55,6 +56,8 @@ export class ApiError extends Error {
 }
 
 type ListRow = {
+  exercise_aliases: string;
+  exercise_alias_revision: number;
   archived: number;
   workspace_json: string;
   id: string;
@@ -98,6 +101,8 @@ type ItemRow = {
 };
 
 type LogRow = {
+  exercise_mode: number;
+  measurements_json: string;
   gallery_json: string;
   cover_photo_id: string | null;
   context_json: string;
@@ -129,7 +134,7 @@ type ShareRow = {
 };
 
 const listQuery = `
-  SELECT l.id, l.name, l.kind, l.description, l.archived, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json, l.cover_revision,
+  SELECT l.id, l.name, l.kind, l.description, l.archived, l.artwork, l.ranked_ids, l.rank_revision, l.updated_at, l.workspace_json, l.cover_revision, l.exercise_aliases, l.exercise_alias_revision,
     (SELECT COUNT(*) FROM record_items i WHERE i.list_id = l.id AND i.merged_into_id IS NULL) AS item_count,
     (SELECT COUNT(*) FROM active_logs g WHERE g.list_id = l.id) AS log_count,
     json_array_length(l.ranked_ids) AS ranked_count,
@@ -140,6 +145,8 @@ const listQuery = `
 
 function mapList(row: ListRow): ListDetail {
   return {
+    exerciseAliases: exerciseAliases.parse(JSON.parse(row.exercise_aliases ?? '[]')),
+    exerciseAliasRevision: row.exercise_alias_revision ?? 0,
     id: row.id,
     name: row.name,
     archived: Boolean(row.archived),
@@ -264,6 +271,8 @@ export async function requireItem(
 function mapLog(row: LogRow): Log {
   const context = visitContext.parse(JSON.parse(row.context_json ?? '{}'));
   return {
+    exercise: !!row.exercise_mode,
+    measurements: activityMeasurements.parse(JSON.parse(row.measurements_json ?? '[]')),
     context: hasVisitContext(context) ? context : undefined,
     revision: row.revision ?? 0,
     id: row.id,
@@ -448,7 +457,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject new backup kinds instead of silently discarding them.
-    schemaVersion: 7,
+    schemaVersion: 8,
     boards: (boardResult.results as BoardRow[]).map((row) =>
       exportBoardReferences(mapBoard(row), boardItemIds, exportedLogIds),
     ),
@@ -492,6 +501,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
 }
 
 type WorkoutRow = {
+  targets_json: string;
+  revision: number;
   status: 'active' | 'finished';
   skipped_exercises: string;
   planned_exercises: string;
@@ -505,6 +516,8 @@ type WorkoutRow = {
 };
 function mapWorkout(row: WorkoutRow): WorkoutSession {
   return {
+    targets: routineTargets.parse(JSON.parse(row.targets_json ?? '[]')),
+    revision: row.revision ?? 0,
     plannedExercises: JSON.parse(row.planned_exercises ?? '[]'),
     skippedExercises: JSON.parse(row.skipped_exercises ?? '[]'),
     status: row.status,
@@ -547,6 +560,8 @@ export async function validateWorkoutTarget(
   happenedOn: string,
   exerciseSets: unknown[],
   itemId: string | null,
+  measurements: unknown[] = [],
+  exercise = false,
 ): Promise<void> {
   if (!workoutId) return;
   const workout = await requireWorkout(db, ownerId, workoutId);
@@ -554,11 +569,17 @@ export async function validateWorkoutTarget(
     throw new ApiError(400, 'INVALID_WORKOUT', 'Choose a workout in this activity list');
   if (workout.happenedOn !== happenedOn)
     throw new ApiError(400, 'INVALID_WORKOUT_DATE', 'The exercise date must match its workout');
-  if (!exerciseSets.length || itemId)
-    throw new ApiError(400, 'INVALID_WORKOUT_EXERCISE', 'Workout entries must contain exercise sets');
+  if ((!exerciseSets.length && !(exercise && measurements.length)) || itemId)
+    throw new ApiError(
+      400,
+      'INVALID_WORKOUT_EXERCISE',
+      'Workout entries need exercise sets or explicitly recorded exercise measurements',
+    );
 }
 
 type RoutineRow = {
+  targets_json: string;
+  revision: number;
   id: string;
   list_id: string;
   owner_id: string;
@@ -569,6 +590,8 @@ type RoutineRow = {
 };
 function mapRoutine(row: RoutineRow): WorkoutRoutine {
   return {
+    targets: routineTargets.parse(JSON.parse(row.targets_json ?? '[]')),
+    revision: row.revision ?? 0,
     id: row.id,
     listId: row.list_id,
     title: row.title,

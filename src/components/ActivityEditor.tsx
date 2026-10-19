@@ -2,6 +2,8 @@ import { Plus, Trash, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, type LogInput } from '../api';
+import { activityMeasurements, exerciseKey, targetSummary } from '../shared/activity-plans';
+import { ActivityMeasurements } from './ActivityMeasurements';
 import { formatDate, today } from '../format';
 import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
@@ -18,6 +20,7 @@ import { RestTimer } from './RestTimer';
 
 export function ActivityEditor({
   listId,
+  aliases = [],
   log,
   repeatLog,
   existingTitles,
@@ -30,6 +33,7 @@ export function ActivityEditor({
   onNext,
 }: {
   listId: string;
+  aliases?: import('../shared/activity-plans').ExerciseAlias[];
   log: Log | null;
   repeatLog: Log | null;
   existingTitles: string[];
@@ -51,6 +55,7 @@ export function ActivityEditor({
         ? {
             ...emptyLog(),
             title: initialExercise,
+            exercise: true,
             workoutId: initialWorkout.id,
             happenedOn: initialWorkout.happenedOn,
             exerciseSets: [{ reps: null, weight: null }],
@@ -62,6 +67,7 @@ export function ActivityEditor({
     isLogDraft,
   );
   const { form, setForm } = draft;
+  const unversionedDraft = Boolean(log && form.expectedRevision === undefined);
   const photoDraft = useDraftPhoto(
     `log:${listId}:${log?.id ?? `new:${initialWorkout?.id ?? repeatLog?.id ?? 'blank'}:${initialExercise}`}`,
   );
@@ -69,7 +75,7 @@ export function ActivityEditor({
   const setPhoto = photoDraft.change;
   const online = useConnection();
   const [saveNext, setSaveNext] = useState(false);
-  const [exerciseMode, setExerciseMode] = useState(Boolean(form.exerciseSets?.length));
+  const [exerciseMode, setExerciseMode] = useState(Boolean(form.exercise || form.exerciseSets?.length));
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [confirmingPrevious, setConfirmingPrevious] = useState(false);
   const activeWorkout =
@@ -82,7 +88,11 @@ export function ActivityEditor({
     workoutId: form.workoutId,
     beforeCreatedAt: activeWorkout?.createdAt ?? log?.createdAt,
     workouts,
+    aliases,
   });
+  const plannedTarget = activeWorkout?.targets?.find(
+    (target) => exerciseKey(target.exercise) === exerciseKey(form.title),
+  );
   function applyPrevious() {
     if (!previous?.exerciseSets?.length) return;
     setForm({
@@ -105,6 +115,7 @@ export function ActivityEditor({
   const save = useMutation({
     mutationFn: async () => {
       const input = cleanLogInput(form);
+      if (log) input.expectedRevision = form.expectedRevision ?? log.revision ?? 0;
       const photoKey = photoDraft.operationId.current;
       const blob = photo ? await preparePhoto(photo) : null;
       const id = log?.id ?? draft.savedId.current;
@@ -164,7 +175,7 @@ export function ActivityEditor({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (save.isPending) return;
+    if (save.isPending || unversionedDraft) return;
     save.mutate();
   }
 
@@ -223,6 +234,12 @@ export function ActivityEditor({
               {draft.status}
             </p>
           )}
+          {unversionedDraft && (
+            <p className="draft-state">
+              This older draft has no saved revision. Copy changes you want to keep, then close and discard
+              this device draft to reload the saved entry.
+            </p>
+          )}
           <div className="activity-mode" aria-label="Log type">
             <button
               type="button"
@@ -232,7 +249,7 @@ export function ActivityEditor({
                   setConfirmingActivity(true);
                   return;
                 }
-                setForm({ ...form, exerciseSets: [], workoutId: null });
+                setForm({ ...form, exercise: false, exerciseSets: [], workoutId: null });
                 setExerciseMode(false);
               }}
             >
@@ -243,8 +260,13 @@ export function ActivityEditor({
               aria-pressed={exerciseMode}
               onClick={() => {
                 setExerciseMode(true);
-                if (!form.exerciseSets?.length)
-                  setForm({ ...form, exerciseSets: [{ reps: null, weight: null }] });
+                setForm({
+                  ...form,
+                  exercise: true,
+                  exerciseSets: form.exerciseSets?.length
+                    ? form.exerciseSets
+                    : [{ reps: null, weight: null }],
+                });
               }}
             >
               Exercise
@@ -368,12 +390,29 @@ export function ActivityEditor({
             </section>
           )}
           {exerciseMode && activeWorkout?.status === 'active' && (
-            <RestTimer key={activeWorkout.id} workoutId={activeWorkout.id} />
+            <RestTimer
+              key={`${activeWorkout.id}:${plannedTarget?.restSeconds ?? 'default'}`}
+              workoutId={activeWorkout.id}
+              plannedSeconds={plannedTarget?.restSeconds}
+            />
+          )}
+          {exerciseMode && plannedTarget && (
+            <aside className="previous-exercise" aria-label="Planned target">
+              <p className="overline">PLANNED · NOT LOGGED</p>
+              <p>{targetSummary(plannedTarget) || 'No numeric target entered.'}</p>
+              {plannedTarget.note && <p>{plannedTarget.note}</p>}
+              <p className="exercise-helper">
+                A reference copied when this workout started. Enter actual results below.
+              </p>
+            </aside>
           )}
           {exerciseMode && (
             <fieldset className="exercise-sets">
               <legend>Exercise sets</legend>
               <p className="exercise-helper">Leave weight blank for bodyweight sets.</p>
+              <p className="exercise-helper">
+                For time or distance only, remove blank sets and add named measurements below.
+              </p>
               <label>
                 Weight unit
                 <select
@@ -477,11 +516,17 @@ export function ActivityEditor({
                 <Plus size={16} /> {form.exerciseSets?.at(-1)?.reps ? 'Duplicate last set' : 'Add set'}
               </button>
               <p className="exercise-total">
-                {form.exerciseSets?.length ?? 0} {form.exerciseSets?.length === 1 ? 'set' : 'sets'} ·{' '}
-                {(form.exerciseSets ?? []).reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps
+                {form.exerciseSets?.length
+                  ? `${form.exerciseSets.length} ${form.exerciseSets.length === 1 ? 'set' : 'sets'} · ${form.exerciseSets.reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps`
+                  : 'No individual sets entered.'}
               </p>
             </fieldset>
           )}
+          <ActivityMeasurements
+            value={form.measurements ?? []}
+            onChange={(measurements) => setForm({ ...form, measurements })}
+            disabled={save.isPending}
+          />
           <details
             className="record-extras"
             open={Boolean(
@@ -587,11 +632,16 @@ export function ActivityEditor({
             className="button button-accent"
             disabled={
               !online ||
+              unversionedDraft ||
               !photoDraft.ready ||
               !form.title.trim() ||
               save.isPending ||
               Boolean(log && !hasLogChanges) ||
-              Boolean(exerciseMode && !form.exerciseSets?.length)
+              Boolean(
+                exerciseMode &&
+                !form.exerciseSets?.length &&
+                !(form.measurements?.length && activityMeasurements.safeParse(form.measurements).success),
+              )
             }
           >
             {save.isPending ? 'Saving…' : log ? 'Save changes' : 'Save log'}
@@ -629,6 +679,7 @@ export function ActivityEditor({
         )}
         {historyTitle && (
           <ExerciseHistory
+            aliases={aliases}
             key={historyTitle}
             listId={listId}
             title={historyTitle}
@@ -656,7 +707,7 @@ export function ActivityEditor({
             cancelLabel="Keep editing"
             confirmLabel="Use Activity"
             onConfirm={() => {
-              setForm({ ...form, exerciseSets: [], workoutId: null });
+              setForm({ ...form, exercise: false, exerciseSets: [], workoutId: null });
               setExerciseMode(false);
               setConfirmingActivity(false);
             }}
@@ -686,6 +737,7 @@ export function ActivityEditor({
 
 function emptyLog(title = ''): LogInput {
   return {
+    measurements: [],
     workoutId: null,
     exerciseSets: [],
     weightUnit: 'kg',
@@ -702,6 +754,9 @@ function emptyLog(title = ''): LogInput {
 
 function fromLog(log: Log): LogInput {
   return {
+    expectedRevision: log.revision ?? 0,
+    exercise: log.exercise || Boolean(log.exerciseSets?.length),
+    measurements: (log.measurements ?? []).map((measurement) => ({ ...measurement })),
     workoutId: log.workoutId ?? null,
     exerciseSets: (log.exerciseSets ?? []).map((set) => ({ ...set })),
     weightUnit: log.weightUnit ?? 'kg',
@@ -717,5 +772,13 @@ function fromLog(log: Log): LogInput {
 }
 
 function cleanLogInput(input: LogInput): LogInput {
-  return { ...input, title: input.title.trim(), unit: input.unit.trim(), note: input.note.trim() };
+  const parsed = activityMeasurements.safeParse(input.measurements ?? []);
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Check named measurements.');
+  return {
+    ...input,
+    measurements: parsed.data,
+    title: input.title.trim(),
+    unit: input.unit.trim(),
+    note: input.note.trim(),
+  };
 }

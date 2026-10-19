@@ -48,9 +48,11 @@ its verification. The following groups are committed and verified locally on
   complete readable stop list.
 - Reviewed receipts, on-device extraction, explicit line-to-record choices and
   optional exact image attachments, with recoverable saves and backups.
+- Routine target snapshots, explicit named measurements and exercise aliases that
+  group history while preserving original entries and units.
 
 Remaining work includes offline reading and pending saves,
-richer routines/aliases/measurements, time capsules, private
+time capsules, private
 two-person choices and granular collaboration. See the tracker for individual
 unchecked features; a related completed tool does not complete these automatically.
 

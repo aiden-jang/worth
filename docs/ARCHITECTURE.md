@@ -400,7 +400,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 7 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–7; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 8 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–8; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -473,8 +473,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 7 backup formats include history in the same read
-batch as records. Restore accepts versions 1–7, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 8 backup formats include history in the same read
+batch as records. Restore accepts versions 1–8, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -505,7 +505,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–7, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–8, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -645,7 +645,7 @@ projection or invitation is added by a board.
 
 Version 6 exports read boards in the same D1 snapshot as records. Unavailable or
 merged source references become explicit missing links while entered text remains.
-Restore accepts versions 1–7 (older files default to no boards), validates source
+Restore accepts versions 1–8 (older files default to no boards), validates source
 references, remaps board/entry/source IDs and resets revisions. Capacity failure
 rolls back the complete restore and receipt, permitting the same retry after space
 is freed. Board text is bounded at 16 MiB within existing backup limits. All-data
@@ -696,9 +696,59 @@ sources. Text is bounded at 100 receipts/16 MiB within existing backup limits.
 Created-record provenance and the originally entered name remain, while stale original destination references
 normalize to live item links; missing sources retain entered line text/amounts.
 Full backup images use a separate receipt photo kind and validate exact bytes.
-Restore accepts versions 1–7, defaults older files to no receipts, gives receipt,
+Restore accepts versions 1–8, defaults older files to no receipts, gives receipt,
 line and source links fresh IDs, and never creates a second set of linked records.
 Records-only restores mark absent image bytes unavailable. Capacity failure rolls
 back all records and the restore receipt, allowing the same retry after space is
 freed. All-data deletion clears reviews, images and removal tombstones. Public
 title/type snapshots remain unchanged.
+
+## Routine plans, aliases and named measurements
+
+Migration 0024 adds optional routine targets, independent routine/workout revisions,
+list-scoped exercise alias groups, explicit exercise mode and up to 12 named numeric
+measurements per log. Existing sets migrate to exercise mode without changing results,
+dates or timestamps. Targets hold sets, reps, weight/unit, rest, duration, distance/unit
+and notes. Starting a routine snapshots names and targets only; actual sets and
+measurements remain empty. Later routine changes/deletion preserve earlier visits.
+Editing a visit's lineup requires explicitly removing unmatched target plans.
+
+Creation uses one retry identity and canonical request hash in an atomic transaction
+with list/source/identity guards. Receipt tombstones prevent a late retry from
+recreating a removed routine or workout. The current source revision is checked
+inside the write batch. Updates and removals compare independent revisions; older
+clients that omit targets or measurements preserve saved values. Moving a workout's
+date advances attached log revisions, so an open old editor cannot undo that move.
+
+Each activity can group up to 30 preferred names with up to eight alternate names.
+Whitespace/case matches are already normalized, and names cannot overlap groups.
+Grouping changes only private history and last-time recall: original log names,
+workout completion, saved plans and units remain unchanged. Removing a group splits
+history again. The alias set has its own revision. A lost update response with exact
+current content is acknowledged without writing another revision.
+
+The native editors retain account/device drafts, including incomplete numeric
+fields and older draft shapes. An older plan draft without a revision requires
+review of saved data before applying it. New creations checkpoint a frozen request;
+unknown results retry the same request and identity. Plan conflicts show the saved
+version, ask before replacing the draft and retain its previous text for copying
+while that editor stays open. Alias editing has equivalent compare/replace behavior.
+Older activity drafts without a saved revision keep their text readable and block
+submission until the user copies any desired changes and reloads the saved entry.
+New activity drafts retain their original log revision across reloads. Source and
+workout-date guards run inside the log write transaction, including races with
+parent deletion or a workout date change.
+
+Named measurements retain the entered name, literal finite value and unit. Zero and
+negative values remain values; missing is not zero. Explicit exercise entries can
+use named time/distance measurements without invented reps or weight. History uses
+separate choices for each normalized measurement name and exact unit. No conversion,
+unit mixing, averaging, score or inferred set is added. Missing values leave gaps;
+the chart supports negative values and a readable original-name entry index.
+
+Version 8 includes aliases, future plans and recorded measurements in the same
+records snapshot. Restore accepts versions 1–8, validates target names and activity
+ownership, remaps alias-group and record IDs and preserves independent snapshots.
+Earlier versions default to empty additions. Restore never recreates
+creation receipts; all-data deletion removes them through their list relationship.
+Public snapshots keep their existing title/type-only scope.

@@ -21,6 +21,7 @@ import { registerOverviewRoutes } from './routes/overview';
 import { registerPhotoRoutes } from './routes/photos';
 import { registerPortabilityRoutes } from './routes/portability';
 import { registerRoutineRoutes } from './routes/routines';
+import { registerActivityAliasRoutes } from './routes/activity-aliases';
 import { registerSearchRoutes } from './routes/search';
 import { registerPublicShareRoute, registerShareRoutes } from './routes/shares';
 import { registerWorkoutRoutes } from './routes/workouts';
@@ -105,6 +106,7 @@ registerExportRoutes(privateApi);
 registerPortabilityRoutes(privateApi);
 registerWorkoutRoutes(privateApi);
 registerRoutineRoutes(privateApi);
+registerActivityAliasRoutes(privateApi);
 
 app.route('/api', publicApi);
 app.route('/api', privateApi);

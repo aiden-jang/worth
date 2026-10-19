@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Fragment, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { api } from '../api';
+import type { ExerciseAliases } from '../shared/activity-plans';
+import { ExerciseAliasesEditor } from './ExerciseAliasesEditor';
 import { formatDate, formatElapsedDays, today } from '../format';
 import { useViewPreference } from '../hooks/useViewPreference';
 import type { Log, WorkoutSession } from '../shared/models';
@@ -16,6 +18,7 @@ import { WorkoutSessions } from './WorkoutSessions';
 
 export function ActivityView({
   listId,
+  aliases,
   logs,
   loading,
   error,
@@ -26,6 +29,7 @@ export function ActivityView({
   onNew,
 }: {
   listId: string;
+  aliases: ExerciseAliases;
   logs: Log[];
   loading: boolean;
   error: boolean;
@@ -39,6 +43,7 @@ export function ActivityView({
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
+  const [editingAliases, setEditingAliases] = useState(false);
   const [routineSeed, setRoutineSeed] = useState<RoutineDraft | null>(null);
   const [initialExercise, setInitialExercise] = useState('');
   const [creatingWorkout, setCreatingWorkout] = useState(false);
@@ -179,7 +184,15 @@ export function ActivityView({
         onCloseSeed={() => setRoutineSeed(null)}
         onStarted={clearFilters}
       />
-      {!loading && !error && <ExerciseDirectory logs={logs} listId={listId} onOpen={setHistoryTitle} />}
+      {!loading && !error && (
+        <ExerciseDirectory
+          logs={logs}
+          listId={listId}
+          aliases={aliases.groups}
+          onOpen={setHistoryTitle}
+          onManageAliases={() => setEditingAliases(true)}
+        />
+      )}
       <div className="workout-launch">
         <button
           type="button"
@@ -259,6 +272,7 @@ export function ActivityView({
             const seen = new Set<string>();
             setRoutineSeed({
               title: workout.title,
+              targets: workout.targets ?? [],
               exercises: names.filter((name) => {
                 const key = name.trim().replace(/\s+/g, ' ').toLowerCase();
                 if (seen.has(key)) return false;
@@ -338,6 +352,7 @@ export function ActivityView({
       )}
       {historyTitle && (
         <ExerciseHistory
+          aliases={aliases.groups}
           key={historyTitle}
           listId={listId}
           title={historyTitle}
@@ -348,6 +363,7 @@ export function ActivityView({
       )}
       {(newOpen || selected) && (!routeParams.get('workout') || !workoutsQuery.isPending) && (
         <ActivityEditor
+          aliases={aliases.groups}
           key={selected?.id ?? `new-${repeatLog?.id ?? restoredWorkout?.id ?? 'blank'}-${restoredExercise}`}
           listId={listId}
           log={newOpen ? null : selected}
@@ -369,6 +385,9 @@ export function ActivityView({
             onNew(workout.id, title);
           }}
         />
+      )}
+      {editingAliases && (
+        <ExerciseAliasesEditor listId={listId} current={aliases} onClose={() => setEditingAliases(false)} />
       )}
     </section>
   );

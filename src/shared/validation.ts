@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { activityMeasurements, routineTargets } from './activity-plans';
 import { collectionFields } from './collection-fields';
 import { visitContext } from './visit-context';
 import { collectionItemTitleLimit } from './collection-capture';
@@ -93,6 +94,8 @@ const plannedExercises = z
     'Each exercise can only appear once',
   );
 export const routineInput = z.object({
+  targets: routineTargets.optional(),
+  expectedRevision: z.number().int().nonnegative().optional(),
   title: shortText(80),
   exercises: plannedExercises.refine((names) => names.length > 0, 'Add at least one exercise'),
 });
@@ -100,14 +103,23 @@ export const workoutInput = z.object({
   title: z.string().trim().max(80).default(''),
   happenedOn: date,
   routineId: z.string().uuid().optional(),
+  expectedRoutineRevision: z.number().int().nonnegative().optional(),
 });
 export const workoutPatch = workoutInput
-  .omit({ routineId: true })
-  .extend({ status: z.enum(['active', 'finished']), plannedExercises, skippedExercises: plannedExercises })
+  .omit({ routineId: true, expectedRoutineRevision: true })
+  .extend({
+    status: z.enum(['active', 'finished']),
+    plannedExercises,
+    skippedExercises: plannedExercises,
+    targets: routineTargets,
+    expectedRevision: z.number().int().nonnegative(),
+  })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 
 export const logInput = z.object({
+  exercise: z.boolean().default(false),
+  measurements: activityMeasurements.default([]),
   context: visitContext.default({}),
   workoutId: z.string().uuid().nullable().default(null),
   exerciseSets: z

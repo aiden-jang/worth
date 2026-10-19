@@ -256,3 +256,20 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   accessible cream controls and 320/430/768px reflow.
 - Check version 7/older and receipt-only backups, exact image bytes, fresh-ID
   links/provenance, absent images in records-only restores and atomic capacity rollback.
+
+## Routine plan extension
+
+- Apply migration 0024 before serving version 8 records and target/alias queries.
+- Verify future starts snapshot targets without creating results, earlier visits
+  retain their plans, unmatched targets require explicit removal and changes use
+  independent revisions. Move a workout date with an old log editor open.
+- Retry an interrupted creation with its exact key, including after source changes;
+  remove a routine/workout and confirm old requests cannot resurrect it.
+- Group and ungroup exercise names without rewriting logs or workout completion.
+  Check overlap validation, stale-set recovery and an exact lost-response retry.
+- Log time-only named measurements, zero and negative values; keep units separate
+  in history with gaps for absent values. Check legacy aggregate results.
+- Check versions 1–8 restore, fresh alias IDs, measurements, original names and
+  independent routine/workout snapshots. All-data deletion clears retry receipts.
+- Inspect target, actual-result, comparison, pending-start and alias/history states
+  on desktop and phone; test keyboard access, long names and 320/430/768px reflow.

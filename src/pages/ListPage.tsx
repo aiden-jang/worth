@@ -255,6 +255,7 @@ export function ListPage() {
       ) : (
         <ActivityView
           listId={listId}
+          aliases={{ groups: list.exerciseAliases ?? [], revision: list.exerciseAliasRevision ?? 0 }}
           logs={logs}
           loading={logsQuery.isPending}
           error={logsQuery.isError}

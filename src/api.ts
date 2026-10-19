@@ -292,17 +292,54 @@ export const api = {
     request<{ item: Item }>(`/items/${id}`, json('PATCH', body)),
   deleteItem: (id: string) => trashRecord('item', id, `/items/${id}`),
   routines: (listId: string) => request<{ routines: WorkoutRoutine[] }>(`/lists/${listId}/routines`),
-  createRoutine: (listId: string, body: { title: string; exercises: string[] }) =>
-    request<{ routine: WorkoutRoutine }>(`/lists/${listId}/routines`, json('POST', body)),
-  updateRoutine: (id: string, body: { title: string; exercises: string[] }) =>
-    request<{ routine: WorkoutRoutine }>(`/routines/${id}`, json('PUT', body)),
-  deleteRoutine: (id: string) => request<void>(`/routines/${id}`, { method: 'DELETE' }),
+  createRoutine: (
+    listId: string,
+    body: { title: string; exercises: string[]; targets?: import('./shared/activity-plans').RoutineTarget[] },
+    operationId?: string,
+  ) =>
+    request<{ routine: WorkoutRoutine }>(`/lists/${listId}/routines`, {
+      ...json('POST', body),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(operationId ? { 'Idempotency-Key': operationId } : {}),
+      },
+    }),
+  updateRoutine: (
+    id: string,
+    body: {
+      title: string;
+      exercises: string[];
+      targets?: import('./shared/activity-plans').RoutineTarget[];
+      expectedRevision?: number;
+    },
+  ) => request<{ routine: WorkoutRoutine }>(`/routines/${id}`, json('PUT', body)),
+  deleteRoutine: (id: string, revision?: number) =>
+    request<void>(`/routines/${id}${revision === undefined ? '' : `?revision=${revision}`}`, {
+      method: 'DELETE',
+    }),
+  updateExerciseAliases: (id: string, body: import('./shared/activity-plans').ExerciseAliases) =>
+    request<{ list: ListDetail }>(
+      `/lists/${id}/exercise-aliases`,
+      json('PUT', { expectedRevision: body.revision, groups: body.groups }),
+    ),
   workouts: (listId: string) => request<{ workouts: WorkoutSession[] }>(`/lists/${listId}/workouts`),
-  createWorkout: (listId: string, body: { title: string; happenedOn: string; routineId?: string }) =>
-    request<{ workout: WorkoutSession }>(`/lists/${listId}/workouts`, json('POST', body)),
+  createWorkout: (
+    listId: string,
+    body: { title: string; happenedOn: string; routineId?: string; expectedRoutineRevision?: number },
+    operationId?: string,
+  ) =>
+    request<{ workout: WorkoutSession }>(`/lists/${listId}/workouts`, {
+      ...json('POST', body),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(operationId ? { 'Idempotency-Key': operationId } : {}),
+      },
+    }),
   updateWorkout: (
     id: string,
     body: {
+      expectedRevision?: number;
+      targets?: import('./shared/activity-plans').RoutineTarget[];
       title?: string;
       happenedOn?: string;
       status?: 'active' | 'finished';
@@ -310,7 +347,10 @@ export const api = {
       skippedExercises?: string[];
     },
   ) => request<{ workout: WorkoutSession }>(`/workouts/${id}`, json('PATCH', body)),
-  deleteWorkout: (id: string) => request<void>(`/workouts/${id}`, { method: 'DELETE' }),
+  deleteWorkout: (id: string, revision?: number) =>
+    request<void>(`/workouts/${id}${revision === undefined ? '' : `?revision=${revision}`}`, {
+      method: 'DELETE',
+    }),
   logs: (listId: string) => request<{ logs: Log[] }>(`/lists/${listId}/logs`),
   createLog: (listId: string, body: LogInput, operationId?: string) =>
     request<{ log: Log }>(`/lists/${listId}/logs`, {
@@ -368,6 +408,9 @@ export interface ItemInput {
 }
 
 export interface LogInput {
+  exercise?: boolean;
+  measurements?: import('./shared/activity-plans').MeasurementDraft[];
+  expectedRevision?: number;
   context?: import('./shared/visit-context').VisitContext;
   workoutId?: string | null;
   exerciseSets?: ExerciseSet[];

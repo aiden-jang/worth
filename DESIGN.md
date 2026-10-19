@@ -414,3 +414,19 @@ that preview; restored drafts do not move focus automatically. The directory's
 small faceless receipt object uses authored SVG rather than an opinion character.
 Saved line text is independent of a current linked title. No inferred spending
 analysis, purchase date or call is added.
+
+## Richer activity plans
+
+The routine shelf, activity header and native editors retain the workout cabinet
+references. Optional target plans extend the existing editor disclosure, with
+separate dark cards for each chosen exercise, two fluid field columns and a single
+column at 320px. Targets are labeled planned and never populate actual result
+fields. Time/distance-only entries use named measurements after removing blank sets.
+A separate saved-plan panel makes conflict comparison deliberate and keeps the
+previous draft readable. No original reference composition is replaced.
+
+Exercise names are managed inside the existing collapsed history directory. Alias
+history displays preferred group names while retaining each recorded name in its
+entry. Literal measurement/unit choices reuse the existing accessible chart; missing
+units leave gaps and negative recorded values extend its axis below zero. No call
+faces, activity scores, unit conversions or automatic completion are introduced.
