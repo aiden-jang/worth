@@ -11,6 +11,10 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const BoardsPage = lazy(() =>
+  import('./pages/BoardsPage').then((module) => ({ default: module.BoardsPage })),
+);
+const BoardPage = lazy(() => import('./pages/BoardsPage').then((module) => ({ default: module.BoardPage })));
 const ActivityCalendarPage = lazy(() =>
   import('./pages/ActivityCalendarPage').then((module) => ({ default: module.ActivityCalendarPage })),
 );
@@ -139,6 +143,8 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/boards" element={<BoardsPage />} />
+        <Route path="/patterns/boards/:id" element={<BoardPage />} />
         <Route path="/patterns/calendar" element={<ActivityCalendarPage />} />
         <Route path="/patterns/field-guide" element={<FieldGuidePage />} />
         <Route path="/patterns/connections" element={<ConnectionsPage />} />
@@ -163,13 +169,16 @@ function PrivateApp() {
       '/patterns/connections',
       '/patterns/field-guide',
       '/patterns/calendar',
+      '/patterns/boards',
       '/inbox',
       '/quick',
       '/settings',
       '/lists',
       '/search',
       '/patterns',
-    ].includes(location.pathname) || /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
+    ].includes(location.pathname) ||
+    /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ||
+    /^\/patterns\/boards\/[^/]+\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (
     <InfoPage kind="missing" />

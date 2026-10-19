@@ -1,3 +1,4 @@
+import { recordIdentityGuard } from './record-identity';
 import {
   galleryEntries,
   type GalleryEntry,
@@ -205,6 +206,7 @@ export async function addGalleryPhoto(
     );
   try {
     await db.batch([
+      recordIdentityGuard(db, [assetId]),
       guard(db, owner, kind, recordId, album.revision),
       db
         .prepare(

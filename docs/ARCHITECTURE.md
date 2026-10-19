@@ -400,7 +400,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 5 for photo galleries, connections and taste history. Restore accepts versions 1–5; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 6 for boards, photo galleries, connections and taste history. Restore accepts versions 1–6; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -473,8 +473,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 5 backup formats include history in the same read
-batch as records. Restore accepts versions 1–5, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 6 backup formats include history in the same read
+batch as records. Restore accepts versions 1–6, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -505,7 +505,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–5, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–6, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -618,3 +618,41 @@ silently refreshes its write precondition. An uncertain in-tab retry retains its
 prepared bytes. Reload keeps the arrangement but requires new preparation/review.
 Layout drafts are device-local; saved covers and immutable sources use existing
 version 5 full backups. Records-only exports contain no images. Cover counters reset with fresh IDs on restore. No public sharing projection changes.
+
+## Private boards and trip replay
+
+`memory_boards` (migration 0022) stores up to 100 active boards per owner, with a
+trigger-enforced capacity, independent revisions and removal tombstones. Each board
+holds up to 40 manually ordered entries. Source references may identify owned active
+items or visits; source and revision checks run inside the write transaction. An
+already saved unavailable reference may stay only on the same entry identity.
+Merged originals are unavailable rather than silently retargeted. Names, notes,
+dates, times and literal locations are independent of current source content.
+
+A stable creation ID and canonical payload hash handle concurrent/lost replies.
+Removed IDs cannot be retried into existence. The editor checkpoints a frozen
+payload before saving; uncertain requests can retry exactly or check their ID.
+Saved comparisons require an explicit choice and another save. One previous draft
+retains its original revision. Seven-day drafts are account/device scoped. Blocked
+storage, route changes, missing boards and account changes preserve clear recovery.
+
+`/patterns/boards` and its detail/editor extend the cabinet's secondary pages. Trip
+replay follows entered order, has a complete readable index and advances at most
+once through the sequence on explicit Play. It stops on visibility changes and
+unmount. No visits, travel times, locations or completion are inferred. Photos are
+current selected source covers behind an explicit per-entry choice. No public
+projection or invitation is added by a board.
+
+Version 6 exports read boards in the same D1 snapshot as records. Unavailable or
+merged source references become explicit missing links while entered text remains.
+Restore accepts versions 1–6 (older files default to no boards), validates source
+references, remaps board/entry/source IDs and resets revisions. Capacity failure
+rolls back the complete restore and receipt, permitting the same retry after space
+is freed. Board text is bounded at 16 MiB within existing backup limits. All-data
+deletion also removes board tombstones. Full backups use existing source photos;
+records-only exports preserve text and missing-photo states.
+
+Client-chosen board and gallery identities also check the shared backup record ID
+namespace inside their creation transaction, including Trash rows. A valid UUID
+that belongs to a different record kind cannot make the resulting backup invalid.
+Exact existing retries are still resolved before this guard.

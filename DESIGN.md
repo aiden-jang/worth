@@ -380,3 +380,21 @@ controls pair on desktop and stack on phones. A 1.6-ratio sketch labels layers;
 the separately prepared 1280 × 800 image is the exact save/download preview. No
 pointer-only positioning, inferred crop, call or rank is added. Sources fit inside
 manual frames and remain unchanged. Captures belong in `art/ui-qa/cover-collage/`.
+
+## Private boards and trips
+
+Patterns → Boards extends the secondary-page cabinet: 68px desktop / 44px phone
+headings, a wrapping two-column directory, disclosed filters that keep saved boards
+above the phone fold, four small authored faceless objects,
+dark 22px cards and labeled 44px controls. Moment, shortlist, evening and trip are
+explicit kinds rather than inferred activity. The scrolling native editor uses
+disclosed source choices, literal dates and keyboard Earlier/Later ordering. Source
+calls and ranks stay outside the board.
+
+Trip replay deliberately uses a single cream stop ticket with dark text and
+muted #626456 labels. Previous/Next, a readable full index and the complete entry
+list remain available. Optional Play advances once through the entered sequence;
+it stops when hidden, and reduced motion removes ticket arrival animation. This
+is an intentional supporting composition, not a replacement for the collection
+index/opinion-slip reference. Long names and unavailable-source explanations wrap;
+phone cards and source controls stack. See the board QA captures for verification.

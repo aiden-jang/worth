@@ -66,8 +66,13 @@ export function SettingsPage() {
         throw new Error(
           `Could not read this Worth file: ${parsed.error.issues[0]?.message ?? 'Invalid records'}`,
         );
-      if (!parsed.data.lists.length && !parsed.data.collectionTemplates.length && !parsed.data.inbox.length)
-        throw new Error('This file has no lists, Inbox finds or templates to restore.');
+      if (
+        !parsed.data.lists.length &&
+        !parsed.data.collectionTemplates.length &&
+        !parsed.data.inbox.length &&
+        !parsed.data.boards.length
+      )
+        throw new Error('This file has no lists, Inbox finds, boards or templates to restore.');
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -160,7 +165,23 @@ export function SettingsPage() {
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
               {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
               Inbox finds · {file.tasteHistory.length} history changes · {file.connections.length} connections
+              · {file.boards.length} boards
             </p>
+            {!!file.boards.length && (
+              <section aria-label="Boards to restore">
+                <p>
+                  {file.boards.length} private boards will be restored with new IDs. Their source links will
+                  follow restored records.
+                </p>
+                <ul>
+                  {file.boards.map((board) => (
+                    <li key={board.id}>
+                      {board.name} · {board.entries.length} entries
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {!!file.lists.length && (
               <ul>
                 {file.lists.map((l) => (
@@ -224,7 +245,7 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''} restored. Existing data was kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }

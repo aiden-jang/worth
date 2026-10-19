@@ -1,3 +1,5 @@
+import { mapBoard, type BoardRow } from './board-data';
+import { exportBoardReferences, type SavedBoard } from '../src/shared/memory-boards';
 import { galleryEntries, type GalleryEntry, type GallerySource } from '../src/shared/photo-gallery';
 import { connectionsQuery, mapConnection, type ConnectionRow } from './connections';
 import type { RecordConnection } from '../src/shared/connections';
@@ -25,7 +27,8 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 5;
+  schemaVersion: 6;
+  boards: SavedBoard[];
   photoAssets: GallerySource[];
   connections: RecordConnection[];
   tasteHistory: TasteEvent[];
@@ -331,6 +334,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     historySizeResult,
     connectionResult,
     photoAssetResult,
+    boardResult,
+    boardSizeResult,
   ] = await db.batch([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
@@ -374,7 +379,25 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
         `SELECT a.id, CASE WHEN a.item_id IS NOT NULL THEN 'item' ELSE 'log' END AS kind, COALESCE(a.item_id,a.log_id) AS recordId, a.content_type AS contentType,a.fingerprint,a.created_at AS createdAt,a.data IS NOT NULL AS available FROM photo_assets a WHERE a.owner_id=? AND a.removed_at IS NULL AND (EXISTS(SELECT 1 FROM record_items i WHERE i.id=a.item_id AND i.owner_id=a.owner_id) OR EXISTS(SELECT 1 FROM active_logs g WHERE g.id=a.log_id AND g.owner_id=a.owner_id)) ORDER BY a.created_at,a.id LIMIT 5001`,
       )
       .bind(ownerId),
+    db
+      .prepare(
+        `SELECT * FROM memory_boards WHERE owner_id=? AND removed_at IS NULL AND
+      (SELECT COALESCE(SUM(length(CAST(body_json AS BLOB))),0) FROM memory_boards WHERE owner_id=? AND removed_at IS NULL)<=16777216 ORDER BY created_at,id LIMIT 101`,
+      )
+      .bind(ownerId, ownerId),
+    db
+      .prepare(
+        'SELECT COUNT(*) AS n,COALESCE(SUM(length(CAST(body_json AS BLOB))),0) AS bytes FROM memory_boards WHERE owner_id=? AND removed_at IS NULL',
+      )
+      .bind(ownerId),
   ]);
+  const boardBounds = boardSizeResult.results[0] as { n: number; bytes: number };
+  if (boardBounds.n > 100 || boardBounds.bytes > 16777216)
+    throw new ApiError(
+      413,
+      'BACKUP_TOO_LARGE',
+      'Board text exceeds the backup limit of 100 boards or 16 MB. No boards were omitted.',
+    );
   if (photoAssetResult.results.length > 5000)
     throw new ApiError(
       413,
@@ -388,6 +411,9 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       'HISTORY_EXPORT_TOO_LARGE',
       'This archive exceeds 10,000 history changes or 16 MB of history. Contact support for a full archive transfer. No history was omitted.',
     );
+  const boardItemIds = new Set(
+    (itemResult.results as ItemRow[]).filter((item) => !item.merged_into_id).map((item) => item.id),
+  );
   const exportedItemIds = new Set((itemResult.results as ItemRow[]).map((i) => i.id));
   const exportedLogIds = new Set((logResult.results as LogRow[]).map((g) => g.id));
   return {
@@ -397,8 +423,11 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       ),
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
-    // Older readers must reject history backups instead of silently discarding it.
-    schemaVersion: 5,
+    // Older readers must reject new backup kinds instead of silently discarding them.
+    schemaVersion: 6,
+    boards: (boardResult.results as BoardRow[]).map((row) =>
+      exportBoardReferences(mapBoard(row), boardItemIds, exportedLogIds),
+    ),
     photoAssets: (
       photoAssetResult.results as (Omit<GallerySource, 'available'> & { available: number })[]
     ).map((row) => ({ ...row, available: !!row.available })),

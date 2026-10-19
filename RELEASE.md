@@ -233,3 +233,14 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Check draft recovery, unavailable sources, blocked storage, account changes and
   narrow dialogs. Full backups retain covers and source assets through format 5;
   collage layouts stay on the device. Cover revision counters reset on fresh-ID restore.
+
+### Private boards and trips
+
+- Apply additive migration 0022 before serving board routes.
+- Check name-only creation, manual cross-collection order and optional source covers.
+- Check uncertain create/update recovery, stale review, unavailable source text and
+  blocked-storage navigation; account changes must close private editors.
+- Check manual archive filters, removal leaving sources intact, keyboard trip replay,
+  reduced motion, responsive readable stop lists and accessible errors.
+- Check version 6/older backups, fresh-ID reference remapping, all-data deletion and
+  capacity rollback with the original restore receipt. Boards do not change public links.

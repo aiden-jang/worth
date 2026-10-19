@@ -41,6 +41,7 @@ labeled and never writes to a private archive.
 - Link related finds, editions, the same thing across places and reasoned replacement chains in Patterns → Connections, with a readable constellation view.
 - Review future ranking/call changes in Workbench → Taste history, keep optional reasons/linked visits, and compare older orders in the sandbox.
 - Set an optional revisit date and snooze in record context. Patterns → Activity calendar separates those plans from entered visits and activity logs, with a readable daily agenda.
+- Gather cross-collection records and visits into private moments, shortlists, evening and trip boards, with manual stop replay and a readable list.
 - Browse collections, search private records, view Patterns, and review workout history.
 - Choose a period in Patterns → Look back for a private recap of currently kept finds and dated logs.
 - Keep up to 12 private photos per record, add separate captions/arrows, choose their order and cover, or compare two originals with a keyboard slider and full side-by-side view.

@@ -1,3 +1,4 @@
+import { savedBoard } from './memory-boards';
 import { galleryEntries, gallerySource } from './photo-gallery';
 import { z } from 'zod';
 import { recordConnection, normalizeConnection, hasReplacementCycle } from './connections';
@@ -14,7 +15,15 @@ const title = (max: number) => text(max).refine((value) => value.trim().length >
 const dated = { createdAt: time, updatedAt: time };
 export const archiveFile = z
   .object({
-    schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+    schemaVersion: z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.literal(6),
+    ]),
+    boards: z.array(savedBoard).max(100).default([]),
     photoAssets: z.array(gallerySource).max(5000).default([]),
     connections: z.array(recordConnection).max(1000).default([]),
     tasteHistory: z.array(tasteEvent).max(10000).default([]),
@@ -125,6 +134,7 @@ export const archiveFile = z
       ...file.workoutSessions,
       ...file.workoutRoutines,
       ...file.inbox,
+      ...file.boards,
     ];
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
     if (new Set(records.map((r) => r.id)).size !== records.length)
@@ -132,6 +142,20 @@ export const archiveFile = z
     const lists = new Map(file.lists.map((l) => [l.id, l]));
     const items = new Map(file.items.map((i) => [i.id, i]));
     const workouts = new Map(file.workoutSessions.map((w) => [w.id, w]));
+    const logsForBoards = new Set(file.logs.map((log) => log.id));
+    if (file.schemaVersion < 6 && file.boards.length) bad('Boards require backup version 6');
+    if (new TextEncoder().encode(JSON.stringify(file.boards)).length > 16777216)
+      bad('Restore up to 16 MB of board text.');
+    for (const board of file.boards)
+      for (const entry of board.entries)
+        if (entry.reference) {
+          if (
+            entry.reference.kind === 'item'
+              ? !items.has(entry.reference.id) || !!items.get(entry.reference.id)?.mergedIntoId
+              : !logsForBoards.has(entry.reference.id)
+          )
+            bad('A board contains an unavailable record reference.');
+        }
     for (const i of file.items) {
       if (lists.get(i.listId)?.kind !== 'collection') bad('An item has an invalid collection');
       if (

@@ -8,6 +8,7 @@ import { appendTemplates, templateCapacityError } from '../templates';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
 import { archiveFile, archiveByteLimit } from '../../src/shared/portability';
+import { boardForm, boardPayload } from '../../src/shared/memory-boards';
 import { ApiError, exportRecords } from '../data';
 import { readBytes, photoContentType } from '../http';
 import { operationId, fingerprint, previousOperation } from '../operations';
@@ -23,7 +24,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.logs.length +
         records.workoutSessions.length +
         records.workoutRoutines.length +
-        records.inbox.length >
+        records.inbox.length +
+        records.boards.length >
         5000
     )
       throw new ApiError(
@@ -134,6 +136,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       c.env.DB.prepare('DELETE FROM inbox_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_sets WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_receipts WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM memory_boards WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -170,6 +173,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.workoutRoutines,
         ...file.inbox,
         ...file.photoAssets,
+        ...file.boards,
       ].map((r) => [r.id, crypto.randomUUID()]),
     );
     const id = (source: string) => map.get(source)!;
@@ -410,6 +414,26 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         created_at: source.createdAt,
       })),
     );
+    const restoredBoards = await Promise.all(
+      file.boards.map(async (board) => {
+        const body = boardPayload(boardForm(board));
+        body.entries = body.entries.map((entry) => ({
+          ...entry,
+          id: crypto.randomUUID(),
+          reference: entry.reference ? { ...entry.reference, id: id(entry.reference.id) } : null,
+        }));
+        return {
+          id: id(board.id),
+          owner_id: owner,
+          body_json: JSON.stringify(body),
+          revision: 0,
+          create_hash: await fingerprint(body),
+          created_at: board.createdAt,
+          updated_at: board.updatedAt,
+        };
+      }),
+    );
+    rows('memory_boards', restoredBoards);
     const assetPhotos = file.photos.filter((photo) => photo.kind === 'asset');
     for (let at = 0; at < assetPhotos.length; at += 20) {
       const group = assetPhotos.slice(at, at + 20),
@@ -511,6 +535,12 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     } catch (error) {
       const saved = await previousOperation(c.env.DB, key, owner, 'import', hash);
       if (saved) return c.json(saved, 201);
+      if (error instanceof Error && error.message.includes('board capacity reached'))
+        throw new ApiError(
+          409,
+          'BOARD_LIMIT',
+          'Restoring these boards would exceed 100 boards. Remove a board, then retry this same restore.',
+        );
       templateCapacityError(error);
       connectionCapacity(error);
       inboxChanged(error);

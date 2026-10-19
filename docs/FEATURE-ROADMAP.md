@@ -39,17 +39,23 @@ its verification. The following groups are committed and verified locally on
 - Private visit-specific location, edition, order/setup and reaction, with draft
   recovery and revision-aware detail editing.
 
-Remaining work includes history/time-machine views, inbox, offline
-sync, linked records and relationships, boards, revisit planning, routines and
-measurements, photo tools, field guides, blind two-person choices and private
-collaboration. See the tracker
-for individual unchecked features; a related completed tool does not complete
-these automatically.
+- Inbox, reviewed on-device photo text reading and optional free ISBN lookup.
+- Ranking/opinion history, private record connections, personal field guides and
+  a literal-date revisit/activity calendar.
+- Multiple source photos, separate captions/arrows, keyboard before/after
+  comparison and manually prepared cover collages.
+- Cross-collection boards, independent archiving, and manual trip replay with a
+  complete readable stop list.
 
-Worth remains a web app. Native iOS/Android companions and their widget APIs were
-removed at the user's request. Home-screen integrations will use web/PWA
-shortcuts. Recognition and extraction must stay on-device, without paid external
-AI or processing uploads; these integrations remain pending.
+Remaining work includes reviewed receipt attachment/line mapping, offline reading
+and pending saves, richer routines/aliases/measurements, time capsules, private
+two-person choices and granular collaboration. See the tracker for individual
+unchecked features; a related completed tool does not complete these automatically.
+
+Worth remains a web app. Native iOS/Android companions and widget APIs were
+removed at the user's request. Home-screen access uses web/PWA shortcuts.
+Recognition stays on-device without paid external AI or processing uploads.
+The separate optional book lookup sends only a checked ISBN to Open Library.
 
 Existing exercise history/progress, routines, exports and share images should be
 extended only where the new behavior adds value. Public feeds, streaks and five-star

@@ -47,8 +47,8 @@ framing and layout changes in the original checkout.
 - [x] Related records and an accessible personal constellation view.
 - [x] Same thing across places and linked editions/versions.
 - [x] Replacement chains with a reason for switching.
-- [ ] Cross-collection moments, temporary shortlists, evening boards and trip boards.
-- [ ] Trip replay from explicit dates/locations, with a readable stop list.
+- [x] Cross-collection moments, temporary shortlists, evening boards and trip boards.
+- [x] Trip replay from explicit dates/locations, with a readable stop list.
 - [x] Purchase date, price/currency, return deadline and ownership status.
 - [x] Borrowed/lent records and optional calendar-file return reminders, imported by the user into their calendar.
 - [x] Revisit dates, snooze and an activity calendar.
@@ -656,3 +656,42 @@ changes, 320/430/768px reflow, browser Back, closing focus and measured touch ta
 All 14 final captures were inspected; see [collage QA](../art/ui-qa/cover-collage/README.md).
 Remaining unchecked web features stay unfinished. Work remains local to the separate
 branch, without native code, push, pull request, merge or deployment.
+
+## Twenty-second implementation: private boards and trip replay
+
+Patterns → Boards keeps moments, shortlists, evenings and trips across owned
+collections or visits, plus unlinked entries. Name-only creation remains. Each
+board supports 40 manually ordered entries with separate names, notes, dates,
+times, literal locations and explicit current-cover choices. Records retain their
+content, calls and ranks. Dates never infer visits, geography, travel time,
+completion or automatic archiving. The directory discloses filters so real boards
+remain visible on a phone. Four authored faceless objects distinguish the kinds.
+
+Trip replay has keyboard Previous/Next, a complete index and readable stop list,
+and an explicit finite Play that stops when hidden or unmounted. Reduced motion
+removes arrival animation. Moves retain links; merged or unavailable sources
+leave entered board text readable. Removal affects only the board. Seven-day
+account/device drafts freeze uncertain saves, compare current saved details and
+keep one previous copy with its original revision. Missing boards have a readable
+draft copy; blocked storage, route changes and account changes have explicit
+recovery. No board or photo enters public links.
+
+Migration 0022 adds independent revisions, removal tombstones and atomic 100-board
+capacity. Source ownership/activity and revision checks run in the write batch.
+Existing unavailable references may stay only on their original entry identity.
+Version 6 exports read boards with the records snapshot, preserving missing-link
+text. Restore accepts versions 1–6, remaps board/entry/source IDs, and rolls back
+all data and its receipt on capacity failure. Board-only backups work. A shared
+creation guard also prevents client-chosen board/gallery IDs from colliding with
+other backup record kinds, including Trash. Exact prior retries still work.
+
+The full 181-test core regression passed before the final schema/identity
+additions; all 21 final affected board/gallery/schema checks then passed against
+real D1. The suite now contains 183 tests. Formatting, lint, unused-code checks,
+Worker/TypeScript checks and the production build passed. All 16 desktop/phone
+board journeys passed across the final runs: 14 in the main run, then the two
+desktop cases rerun serially after Chrome timed out during page setup. No test
+assertion or timeout was weakened. Captures and deliberate layout additions are
+in [board QA](../art/ui-qa/memory-boards/README.md). This group is committed locally.
+All other unchecked web features remain unfinished. Work stays on the separate
+branch without native apps, push, pull request, merge, remote CI or deployment.

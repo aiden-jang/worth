@@ -93,6 +93,20 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  boards: () => request<{ boards: import('./shared/memory-boards').BoardSummary[] }>('/boards'),
+  board: (id: string) => request<{ board: import('./shared/memory-boards').BoardView }>(`/boards/${id}`),
+  createBoard: (board: import('./shared/memory-boards').BoardInput, key: string) =>
+    request<{ board: import('./shared/memory-boards').BoardView }>('/boards', {
+      ...json('POST', board),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  updateBoard: (id: string, board: import('./shared/memory-boards').BoardInput, expectedRevision: number) =>
+    request<{ board: import('./shared/memory-boards').BoardView }>(
+      `/boards/${id}`,
+      json('PUT', { board, expectedRevision }),
+    ),
+  removeBoard: (id: string, expectedRevision: number) =>
+    request<void>(`/boards/${id}`, json('DELETE', { expectedRevision })),
   gallery: (kind: 'items' | 'logs', id: string) =>
     request<{ gallery: import('./shared/photo-gallery').PhotoGallery }>(`/${kind}/${id}/photos`),
   changeGallery: (

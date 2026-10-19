@@ -55,6 +55,7 @@ beforeAll(async () => {
     '0019_record_connections.sql',
     '0020_photo_galleries.sql',
     '0021_cover_revisions.sql',
+    '0022_memory_boards.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1005,7 +1006,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(5);
+  expect(exported.schemaVersion).toBe(6);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3206,7 +3207,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(5);
+  expect(exported.schemaVersion).toBe(6);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3426,7 +3427,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(5);
+  expect(exported.schemaVersion).toBe(6);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3893,7 +3894,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(5);
+  expect(backup.schemaVersion).toBe(6);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4102,4 +4103,296 @@ test('a cover write rolls back if its collection is trashed between the owner re
   expect(raced).toBe(true);
   expect(response.status).toBe(409);
   expect(await db.prepare('SELECT 1 FROM list_photos WHERE list_id=?').bind(list.id).first()).toBeNull();
+});
+
+function boardBody(reference?: { kind: 'item' | 'log'; id: string }) {
+  return {
+    kind: 'trip' as const,
+    name: 'My trip',
+    introduction: 'PRIVATE introduction',
+    from: '2026-10-01',
+    until: '2026-10-02',
+    archived: false,
+    entries: [
+      {
+        id: crypto.randomUUID(),
+        name: 'My entered stop',
+        note: 'PRIVATE stop note',
+        day: '2026-10-02',
+        time: '19:00',
+        location: 'Entered location',
+        reference: reference ?? null,
+        referenceMissing: false,
+        photo: false,
+      },
+    ],
+  };
+}
+async function createTestBoard(
+  owner: string,
+  body: unknown,
+  key: string = crypto.randomUUID(),
+  db = platform.env.DB,
+) {
+  return app.request(
+    'https://worth.test/api/boards',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    { ...platform.env, DB: db },
+    platform.ctx,
+  );
+}
+type BoardResult = { board: import('../src/shared/memory-boards').BoardView };
+
+test('boards are owner scoped, exactly retryable and never change linked calls, notes or ranks', async () => {
+  const owner = 'boardowner',
+    list = await archiveCollection(owner, 'Places'),
+    item = await archiveItem(owner, list.id, 'Current source', {
+      note: 'Source private note',
+      decision: 'meh',
+    }),
+    foreignList = await archiveCollection('boardother', 'Other'),
+    foreign = await archiveItem('boardother', foreignList.id, 'Foreign'),
+    body = boardBody({ kind: 'item', id: item.id }),
+    key = crypto.randomUUID();
+  expect((await call('/boards', null)).status).toBe(401);
+  const creates = await Promise.all([createTestBoard(owner, body, key), createTestBoard(owner, body, key)]);
+  expect(creates.map((r) => r.status)).toEqual([201, 201]);
+  const { board } = (await creates[0].json()) as BoardResult;
+  expect(board.entries[0].name).toBe('My entered stop');
+  expect(board.sources).toHaveLength(1);
+  expect(board.sources[0]).toMatchObject({ id: item.id, title: 'Current source', listId: list.id });
+  expect(JSON.stringify(board.sources)).not.toContain('Source private note');
+  expect((await call(`/boards/${key}`, 'boardother')).status).toBe(404);
+  expect(await call('/boards', 'boardother').then((r) => r.json())).toEqual({ boards: [] });
+  expect((await createTestBoard('boardother', body, key)).status).toBe(409);
+  expect((await createTestBoard(owner, { ...body, name: 'Different' }, key)).status).toBe(409);
+  expect((await createTestBoard(owner, boardBody({ kind: 'item', id: foreign.id }))).status).toBe(409);
+  const changed = { ...body, name: 'Reviewed name' };
+  expect((await call(`/boards/${key}`, owner, 'PUT', { board: changed, expectedRevision: 0 })).status).toBe(
+    200,
+  );
+  expect((await call(`/boards/${key}`, owner, 'PUT', { board: body, expectedRevision: 0 })).status).toBe(409);
+  expect((await call(`/boards/${key}`, owner, 'PUT', { board: body, expectedRevision: 500 })).status).toBe(
+    409,
+  );
+  const original = ((await call(`/items/${item.id}`, owner).then((r) => r.json())) as { item: Item }).item;
+  expect(original).toMatchObject({ decision: 'meh', note: 'Source private note' });
+  expect(await call('/boards', owner).then((r) => r.json())).toMatchObject({
+    boards: [{ id: key, revision: 1, name: 'Reviewed name', entryCount: 1, updatedAt: expect.any(Number) }],
+  });
+  expect((await call(`/boards/${key}`, owner, 'DELETE', { expectedRevision: 0 })).status).toBe(409);
+  expect((await call(`/boards/${key}`, owner, 'DELETE', { expectedRevision: 1 })).status).toBe(204);
+  expect((await call(`/boards/${key}`, owner, 'DELETE', { expectedRevision: 1 })).status).toBe(204);
+  expect((await createTestBoard(owner, body, key)).status).toBe(410);
+  expect((await call(`/items/${item.id}`, owner)).status).toBe(200);
+  const visit = (
+    (await call(`/lists/${list.id}/logs`, owner, 'POST', {
+      itemId: item.id,
+      title: 'Entered visit',
+      happenedOn: '2026-10-02',
+      note: 'PRIVATE visit note',
+    }).then((r) => r.json())) as { log: Log }
+  ).log;
+  const visitBoard = (
+    (await (await createTestBoard(owner, boardBody({ kind: 'log', id: visit.id }))).json()) as BoardResult
+  ).board;
+  expect(visitBoard.sources[0]).toMatchObject({
+    kind: 'log',
+    id: visit.id,
+    title: 'Entered visit',
+    listId: list.id,
+  });
+  expect(JSON.stringify(visitBoard.sources)).not.toContain('PRIVATE visit note');
+  expect((await createTestBoard('boardother', boardBody({ kind: 'log', id: visit.id }))).status).toBe(409);
+});
+
+test('boards retain entered stops through source moves and Trash while rejecting new unavailable references', async () => {
+  const owner = 'boardmissing',
+    list = await archiveCollection(owner, 'First'),
+    other = await archiveCollection(owner, 'Second'),
+    item = await archiveItem(owner, list.id, 'Saved source'),
+    body = boardBody({ kind: 'item', id: item.id });
+  const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
+  expect(
+    (await archiveAction(list.id, owner, { action: 'move', itemIds: [item.id], destinationId: other.id }))
+      .status,
+  ).toBe(200);
+  let view = ((await call(`/boards/${board.id}`, owner).then((r) => r.json())) as BoardResult).board;
+  expect(view.sources[0].listId).toBe(other.id);
+  await call(`/items/${item.id}`, owner, 'DELETE');
+  view = ((await call(`/boards/${board.id}`, owner).then((r) => r.json())) as BoardResult).board;
+  expect(view.sources).toEqual([]);
+  expect(view.entries).toEqual(body.entries);
+  expect(
+    (
+      await call(`/boards/${board.id}`, owner, 'PUT', {
+        board: { ...body, introduction: 'Still editable' },
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  expect((await createTestBoard(owner, body)).status).toBe(409);
+  const altered = { ...body, entries: [{ ...body.entries[0], id: crypto.randomUUID() }] };
+  expect(
+    (await call(`/boards/${board.id}`, owner, 'PUT', { board: altered, expectedRevision: 1 })).status,
+  ).toBe(409);
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'item', id: item.id }] })).status,
+  ).toBe(200);
+  expect(
+    ((await call(`/boards/${board.id}`, owner).then((r) => r.json())) as BoardResult).board.sources[0].id,
+  ).toBe(item.id);
+});
+
+test('version six backup remaps boards and row identities and preserves missing-source text and old files', async () => {
+  const owner = 'boardbackup',
+    list = await archiveCollection(owner, 'Board originals'),
+    item = await archiveItem(owner, list.id, 'Linked source'),
+    missing = await archiveItem(owner, list.id, 'Unavailable'),
+    body = boardBody({ kind: 'item', id: item.id });
+  body.entries.push({
+    ...body.entries[0],
+    id: crypto.randomUUID(),
+    name: 'Missing but entered',
+    reference: { kind: 'item', id: missing.id },
+  });
+  const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
+  await call(`/items/${missing.id}`, owner, 'DELETE');
+  const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
+  expect(backup.schemaVersion).toBe(6);
+  expect(archiveFile.safeParse(backup).success).toBe(true);
+  expect(backup.boards[0].entries[1]).toMatchObject({
+    reference: null,
+    referenceMissing: true,
+    name: 'Missing but entered',
+  });
+  const old = { ...backup, schemaVersion: 5, boards: undefined };
+  expect(archiveFile.parse(old).boards).toEqual([]);
+  const invalid = structuredClone(backup);
+  invalid.boards[0].entries[0].reference!.id = crypto.randomUUID();
+  expect(archiveFile.safeParse(invalid).success).toBe(false);
+  const key = crypto.randomUUID();
+  expect((await restoreWithTemplates('boardrestored', backup, key)).status).toBe(201);
+  expect((await restoreWithTemplates('boardrestored', backup, key)).status).toBe(201);
+  const round = (await call('/export/records', 'boardrestored').then((r) => r.json())) as ArchiveFile;
+  expect(round.boards).toHaveLength(1);
+  expect(round.boards[0].id).not.toBe(board.id);
+  expect(round.boards[0].entries[0].id).not.toBe(body.entries[0].id);
+  expect(round.boards[0].entries[0].reference?.id).toBe(round.items[0].id);
+  expect(round.boards[0].revision).toBe(0);
+  expect(round.boards[0].entries[1]).toMatchObject({ reference: null, referenceMissing: true });
+  expect(
+    (
+      await app.request(
+        'https://worth.test/api/data',
+        {
+          method: 'DELETE',
+          headers: {
+            Cookie: 'preview_user=boardrestored',
+            Origin: 'https://worth.test',
+            'X-Worth-Confirmation': 'delete-all-worth-data',
+          },
+        },
+        platform.env,
+        platform.ctx,
+      )
+    ).status,
+  ).toBe(204);
+  expect(await call('/boards', 'boardrestored').then((r) => r.json())).toEqual({ boards: [] });
+});
+
+test('board restore capacity rolls back every record and can retry the same receipt after space is freed', async () => {
+  const owner = 'boardcapacity',
+    db = platform.env.DB,
+    body = boardBody(),
+    now = Date.now();
+  const ids = Array.from({ length: 96 }, () => crypto.randomUUID());
+  await db.batch(
+    ids.map((id) =>
+      db
+        .prepare(
+          'INSERT INTO memory_boards(id,owner_id,body_json,revision,create_hash,created_at,updated_at) VALUES(?,?,?,0,?,?,?)',
+        )
+        .bind(id, owner, JSON.stringify(body), 'capacity', now, now),
+    ),
+  );
+  const source = 'boardcapacitysource';
+  for (let i = 0; i < 5; i++)
+    expect((await createTestBoard(source, { ...body, name: `Restore ${i}` })).status).toBe(201);
+  await archiveCollection(source, 'Atomic collection');
+  const file = (await call('/export/records', source).then((r) => r.json())) as ArchiveFile,
+    key = crypto.randomUUID();
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(409);
+  expect(((await call('/lists', owner).then((r) => r.json())) as { lists: unknown[] }).lists).toHaveLength(0);
+  expect(((await call('/boards', owner).then((r) => r.json())) as { boards: unknown[] }).boards).toHaveLength(
+    96,
+  );
+  await call(`/boards/${ids[0]}`, owner, 'DELETE', { expectedRevision: 0 });
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(201);
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(201);
+  expect(((await call('/boards', owner).then((r) => r.json())) as { boards: unknown[] }).boards).toHaveLength(
+    100,
+  );
+  expect((await createTestBoard(owner, body)).status).toBe(409);
+});
+
+test('board source ownership is rechecked inside the transaction and large Unicode drafts fit the bounded request', async () => {
+  const owner = 'boardrace',
+    list = await archiveCollection(owner, 'Race'),
+    item = await archiveItem(owner, list.id, 'Source'),
+    db = platform.env.DB;
+  let raced = false;
+  const wrapped = new Proxy(db, {
+    get(target, key) {
+      if (key === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          raced = true;
+          await target.prepare('UPDATE items SET trashed_at=1 WHERE id=?').bind(item.id).run();
+          return target.batch(statements);
+        };
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const body = boardBody({ kind: 'item', id: item.id });
+  expect((await createTestBoard(owner, body, crypto.randomUUID(), wrapped)).status).toBe(409);
+  expect(raced).toBe(true);
+  expect(await call('/boards', owner).then((r) => r.json())).toEqual({ boards: [] });
+  const wide = {
+    ...boardBody(),
+    name: '界'.repeat(80),
+    introduction: '界'.repeat(2000),
+    entries: Array.from({ length: 40 }, () => ({
+      ...boardBody().entries[0],
+      name: '界'.repeat(120),
+      note: '界'.repeat(1000),
+      location: '界'.repeat(240),
+    })),
+  };
+  expect((await createTestBoard(owner, wide)).status).toBe(201);
+});
+
+test('client-chosen board and gallery identities cannot collide with other backup records', async () => {
+  const owner = 'boardidentities',
+    list = await archiveCollection(owner, 'Identity'),
+    item = await archiveItem(owner, list.id, 'Kept');
+  expect((await createTestBoard(owner, boardBody(), list.id)).status).toBe(409);
+  expect((await createTestBoard(owner, boardBody(), item.id)).status).toBe(409);
+  expect((await galleryUpload(owner, 'items', item.id, list.id, 0)).status).toBe(409);
+  expect((await galleryUpload(owner, 'items', item.id, item.id, 0)).status).toBe(409);
+  const id = crypto.randomUUID();
+  expect((await galleryUpload(owner, 'items', item.id, id, 0)).status).toBe(200);
+  expect((await createTestBoard(owner, boardBody(), id)).status).toBe(409);
+  expect(archiveFile.safeParse(await call('/export/records', owner).then((r) => r.json())).success).toBe(
+    true,
+  );
 });

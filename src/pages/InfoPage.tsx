@@ -463,6 +463,27 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
+              <h2>Boards and trips</h2>
+              <p>
+                <Link to="/patterns/boards">Boards</Link> in Patterns keeps up to 40 entries from any of your
+                collections or visits, or unlinked entries you type yourself. Start with just a name. Moments,
+                shortlists, evenings and trips stay private; linked records retain their calls, ranks and
+                content. Names, notes, dates and locations on the board remain as you entered them.
+              </p>
+              <p>
+                Trip replay follows your manual order, with Previous, Next and an optional finite Play. It
+                never infers geography, travel time, a visit or completion. The complete readable list stays
+                available. Photos show only when you choose them. Missing links retain your entered text.
+                Dates do not archive a board automatically; archiving is your choice.
+              </p>
+              <p>
+                Keep up to 100 boards including archived boards. Backups include boards and restore fresh
+                links; records-only files retain text without photos. Removing a board leaves its sources
+                intact. Device drafts recover for seven days when storage is available. An uncertain save
+                stays fixed for retry or checking before another review.
+              </p>
+            </section>
+            <section>
               <h2>Ranking and opinion history</h2>
               <p>
                 Workbench → Taste history records future changes to ranks and calls. Earlier changes are
