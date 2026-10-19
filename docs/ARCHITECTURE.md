@@ -1,5 +1,9 @@
 # Architecture
 
+Current analytics: `analytics/` holds the fixed browser/Worker event contract, bounded
+anonymous ingestion and credential-free transport. See [Analytics](ANALYTICS.md) for
+coverage, privacy and dashboard queries. Private app paths are not traffic dimensions.
+
 Worth is one same-origin React application and Cloudflare Worker. D1 holds private
 records and bounded photo BLOBs. Shared Accounts owns authentication.
 

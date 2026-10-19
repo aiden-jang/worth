@@ -123,3 +123,5 @@ Offline preparation is verified against the built local Worker (the same server
 used by browser tests). The development server does not install a persistent
 service-worker cache of development modules. Bookmark the prepared `/offline/`
 page for disconnected reading; the connected app keeps its normal sign-in flow.
+
+Aggregate traffic and feature-event coverage, privacy boundaries and queries: [Analytics](docs/ANALYTICS.md).

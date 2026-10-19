@@ -1,3 +1,5 @@
+import { usePageAnalytics } from './usePageAnalytics';
+import { pageForPath } from '../analytics/schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { ProductLinks } from './components/ProductLinks';
@@ -86,6 +88,8 @@ const authOrigin =
 const pageScrollKey = (location: { pathname: string }) => location.pathname;
 
 export function App() {
+  const { pathname } = useLocation();
+  usePageAnalytics(pageForPath(pathname), pathname);
   return (
     <PageBoundary>
       <ScrollRestoration getKey={pageScrollKey} storageKey="worth:scroll-positions" />

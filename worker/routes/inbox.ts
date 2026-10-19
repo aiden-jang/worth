@@ -1,3 +1,4 @@
+import { writeAnalytics } from '../../analytics/worker';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
 import { ApiError, requireItem, requireList } from '../data';
@@ -61,6 +62,7 @@ export function registerInboxRoutes(api: Hono<AppEnv>) {
       if (saved) return reply(saved);
       inboxChanged(error);
     }
+    writeAnalytics(c.env, { name: 'inbox_saved' });
     return reply(result);
   });
   api.put('/inbox/:id', async (c) => {

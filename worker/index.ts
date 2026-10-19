@@ -1,3 +1,4 @@
+import { handleAnalytics } from '../analytics/worker';
 import { registerOfflineRoutes } from './routes/offline';
 import { registerPrivateSpaceRoutes } from './routes/private-spaces';
 import { registerReceiptRoutes } from './routes/receipts';
@@ -42,6 +43,8 @@ app.use('/api/*', async (c, next) => {
   securityHeaders(headers);
   c.res = new Response(c.res.body, { status: c.res.status, headers });
 });
+
+app.all('/api/analytics', (c) => handleAnalytics(c.req.raw, c.env));
 
 publicApi.get('/health', (c) => c.json({ status: 'ok' }));
 

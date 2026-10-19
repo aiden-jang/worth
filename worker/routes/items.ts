@@ -1,3 +1,4 @@
+import { writeAnalytics } from '../../analytics/worker';
 import type { Hono } from 'hono';
 import { itemInput, itemPatch, itemsBatchInput } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
@@ -47,6 +48,7 @@ export function registerItemRoutes(api: Hono<AppEnv>): void {
     await c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?')
       .bind(now, list.id, c.get('ownerId'))
       .run();
+    writeAnalytics(c.env, { name: 'item_created' });
     return c.json({ item: await requireItem(c.env.DB, c.get('ownerId'), id) }, 201);
   });
 

@@ -118,8 +118,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Hosting and service logs</h2>
               <p>
-                Cloudflare hosts Worth and stores its records and photos in D1. Cloudflare processes requests
-                and operational information such as IP addresses, timestamps and errors to run and protect the
+                Cloudflare hosts Worth and stores its records and photos in D1. Aggregate analytics count
+                fixed page categories and actions, without notes, names, account IDs or private URLs. Browser
+                counts respect Global Privacy Control and Do Not Track. Cloudflare processes requests and
+                operational information such as IP addresses, timestamps and errors to run and protect the
                 service. Server-side save/restore retry metadata prevents duplicate requests and is cleared
                 when you delete all Worth data. Request counters limit excessive saves; old counter windows
                 are cleaned up on subsequent saves. Worker logging is enabled; saved record contents are not

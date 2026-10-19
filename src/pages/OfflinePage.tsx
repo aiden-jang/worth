@@ -1,3 +1,4 @@
+import { reportAnalytics } from '../../analytics/browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
@@ -38,6 +39,9 @@ function Folder() {
   );
 }
 export function OfflinePage() {
+  useEffect(() => {
+    reportAnalytics({ name: 'page_view', page: 'offline' });
+  }, []);
   const online = useConnection(),
     [copies, setCopies] = useState<VaultEnvelope[]>([]),
     [owner, setOwner] = useState(new URLSearchParams(location.search).get('account') ?? ''),

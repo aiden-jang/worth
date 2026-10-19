@@ -1,3 +1,4 @@
+import { writeAnalytics } from '../../analytics/worker';
 import { exportReceiptPhotos, restoreReceiptRows } from '../receipt-portability';
 import { exportCapsulePhotos, prepareCapsuleRestore } from '../capsule-portability';
 import { capsuleFailure } from '../capsules';
@@ -143,6 +144,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         'BACKUP_TOO_LARGE',
         'This backup exceeds 32 MB. Export records separately and contact support.',
       );
+    writeAnalytics(c.env, { name: 'backup_downloaded' });
     return new Response(body, {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',

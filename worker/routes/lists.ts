@@ -1,3 +1,4 @@
+import { writeAnalytics } from '../../analytics/worker';
 import type { Hono } from 'hono';
 import { listCreate, listPatch, rankInput } from '../../src/shared/validation';
 import type { AppEnv } from '../context';
@@ -38,6 +39,7 @@ export function registerListRoutes(api: Hono<AppEnv>): void {
         now,
       )
       .run();
+    writeAnalytics(c.env, { name: 'list_created' });
     return c.json({ list: await requireList(c.env.DB, c.get('ownerId'), id) }, 201);
   });
 
