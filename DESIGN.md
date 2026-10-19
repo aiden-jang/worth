@@ -18,8 +18,10 @@ reworking the app. The reference HTML and running app share `src/cabinet.css`; c
 
 This intentionally replaces the October 9 personality layout: collections now lead the archive;
 a selected collection item has a cream opinion slip alongside the list on desktop and beneath
-its row on mobile. The landing places a large straight opinion card beside the headline, with an open example
-index beneath the introduction. Mobile presents the opinion before the index. The dark olive canvas, warm paper and butter accent form one consistent system.
+its row on mobile. The current signed-out landing uses a centered headline and three illustrated folders;
+its interactive example has an index and opinion slip below the hero. The latest
+illustrated-landing and plainspoken-copy sections of the build contract supersede
+earlier landing compositions. The dark olive canvas, warm paper and butter accent form one consistent system.
 There are no paper textures, fake analytics or mandatory opinions.
 
 Typography is existing DM Sans, mostly 400–500, with DM Mono for small structural labels.
@@ -30,8 +32,8 @@ responsive behavior are in the build contract. Earlier mock sets remain historic
 
 ## Personality and voice
 
-`For the good. And the meh.` states the landing's point. The product line is
-`Keep what you try. Find what’s worth repeating.`. The archive says `The archive.` and
+`Your taste. A place to keep it.` states the landing's point. The product line is
+`Keep what you try. Rank what you like.` / `The meh can stay.`. The archive says `The archive.` and
 `Good finds. Mixed feelings.`. A small deadpan face accompanies `Opinions may vary. Yours, mostly.`.
 
 The opinion slip expresses one actual call with a face and a short caption: `Yes, again.`,
@@ -78,13 +80,13 @@ Use "worth" as a question, not a claim: what was this worth to the person who lo
 
 ## Signed-out landing page
 
-Small wordmark and Sign in; no archive navigation. The open composition pairs a two-line
-headline and signup with a working example index and one cream opinion slip. Tabs switch
-Drinks, Movies and Places while preserving transient edits. The selected item controls the slip.
+Small wordmark and Sign in; no archive navigation. A centered two-line headline and
+signup lead into three illustrated folders. Below, tabs switch Drinks, Midnight snacks
+and Questionable purchases while preserving transient edits in the working example. The selected item controls the slip.
 Name-only capture adds an unranked item with no call. Demo state never writes to the API.
 `EXAMPLE` and the explanatory footnote remain visible; no testimonials or invented statistics.
 
-Mobile puts the headline and signup first, followed by the slip and example index. The slip
+Mobile puts the headline and signup first, then illustrated folders and the example index/slip. The slip
 has no rotation. Footer: `Meh is a complete sentence.` and one concise product scope line.
 
 ## Signed-in home
@@ -127,7 +129,7 @@ Secondary screenshots and interaction checks are in the current QA directory.
 
 ## Data ownership
 
-People can download their lists, items, logs, ranks, and personal calls as JSON. The export is deliberately records-only. Photos remain in Worth and are never represented as a backup.
+People can download records-only JSON or a photo-inclusive backup. Archived collections remain included; Trash is excluded. Restore creates new private records, preserves relationships and never restores public links. Export and sharing previews must state exactly which private content is included.
 
 ## Visual rules
 
@@ -251,3 +253,216 @@ Privacy, Terms and Help are public, use the simple landing wordmark header, and
 keep factual readable copy. Footer links make them available before account creation.
 Existing cabinet screens retain their accepted compositions. The contact destination
 was supplied by the user; shared-account deletion remains clearly separate.
+
+## Unfiled Inbox
+
+Inbox extends the cabinet with a private unfiled directory. It retains the 192px
+rail, 68/50px page title, shared faceless paper empty art, ruled rows and optional
+name-only capture. Navigation opens a native scrolling drawer over the current
+page; a normal `/inbox` link also supports full-page and modified-click navigation.
+The drawer uses 50/42px headings and 22px corners like the existing secondary tools.
+This is a deliberate extension of the current edition references, not a native app.
+
+The editor uses one full-width column for identity, optional call/context and
+explicit filing, preserving a clear phone flow. A cream recovery panel contains
+only the actual uncertain filing snapshot and destination. It never invents a call
+or rank. Filing requires saved details and a deliberate keep-separate choice for
+an exact name/type match. Desktop/phone and narrow reflow verification are recorded
+in `art/ui-qa/inbox/`.
+
+## Neutral activity objects
+
+Empty activity logs now use an authored notebook and pencil in the shared cabinet
+empty-state composition. An empty workout visit uses a smaller bottle and folded
+towel beside its existing first-exercise guidance. These static, faceless objects
+keep the cabinet palette and remain hidden from assistive technology. Activity
+never receives a call, score or implied achievement. Existing headers, filters,
+routine/workout actions and record behavior remain intact. This deliberately
+extends the activity reference with the edition’s existing empty-state spacing;
+phone captures scroll to that section to show the complete illustration and CTA.
+See `art/ui-qa/activity-art/` for desktop/phone verification.
+
+## Photo text review
+
+Read a photo extends the existing capture composition: a dark source panel and
+cream text-review panel share the 68/44px header, 22px corners and 44px controls.
+Below 960px the source precedes review. Read text is editable, a name is chosen
+explicitly, and a private note is folded until requested or already populated.
+Inputs/labels use DM Sans; structural overlines keep DM Mono. Cream labels and
+focus rings use dark ink for contrast. There is no fake source preview, inferred
+opinion, automatic save or external processing. This is a deliberate extension
+of capture and the cabinet’s secondary tools. Captures focus the source/review
+section when the full phone flow exceeds one viewport.
+
+## Barcode and book capture
+
+Read a code deliberately reuses the photo reader’s dark source/cream review
+composition, the existing cabinet rail, 68/44px title rhythm, 22px panels and
+44px controls. A small authored faceless barcode slip accompanies an empty source;
+it identifies the tool without inventing a product or opinion. Metadata uses
+readable ruled/proportional text and stacks at phone widths. Book lookup is an
+optional disclosure; ordinary manual naming remains visible. This is a web-only
+extension of the reader/capture references, not a native camera application.
+
+## Quiet retrospectives
+
+Patterns adds one secondary Look back link beneath its description; the existing
+totals and call composition are retained. The private period page uses the same
+192px rail, 68/44px secondary headings, ruled totals and faceless empty paper.
+A 22px dark form holds explicit dates/list scope. Two readable record groups sit
+side by side on desktop and stack on phone. These are chronological groups, not
+ranked lists or performance cards. No call face is shown because old opinions
+are not known. This deliberate Patterns extension keeps private notes absent
+until requested and leaves long names readable.
+
+## Taste history
+
+Workbench adds a secondary Taste history tool with ruled event rows, explicit
+before-date/changes filters and optional reason editors. Expanded rankings use
+three cream before/after/current columns on desktop, stacked on phones. Missing
+positions remain numbered gaps; no face or call is inferred. Existing sandbox
+preview/apply behavior controls reusing an older order. Nested reason dialogs use
+the standard 22px cabinet form, 44px controls and explicit draft/conflict recovery.
+This deliberately extends the workbench without changing the primary collection
+composition. Verification captures are in `art/ui-qa/taste-history/`.
+
+## Connections
+
+Patterns → Connections deliberately extends the secondary cabinet with a private
+relationship form, a faceless numbered constellation and ruled readable link rows.
+It keeps the 192px rail, 68/44px heading rhythm, shared palette, DM Sans labels,
+22px panels and 44px controls. Desktop pairs source/target choices; phones stack
+them. The cream diagram shows up to 12 actual neighbors, with numbered links and
+complete directional text below. It never infers a call, rank or location. Reason
+and uncertain-save dialogs retain standard drafts, explicit retry and conflicts.
+Patterns adds spaced tool links in its header, using separate 44px rows on phones; the underlying counts/call composition remains. Captures and narrow-width verification live in `art/ui-qa/connections/`.
+
+## Personal field guide
+
+Patterns → Field guide adds a secondary multi-collection editor, using the cabinet
+rail, dark canvas, 68/44px heading rhythm, 22px bordered groups and 44px controls.
+Collection/record choices and inclusion options pair on desktop and stack on phones.
+Selected records use ruled rows with captions and labeled Earlier/Later actions.
+The existing cream booklet preview is shared, with a field-guide cover label and
+no call or rank. This is a deliberate secondary-page addition; the primary cabinet
+and name-only capture are unchanged. Captures are in `art/ui-qa/field-guide/`.
+
+## Activity calendar
+
+Patterns → Activity calendar is a deliberate secondary cabinet addition. It keeps
+the dark canvas, 192px rail, 68/44px title rhythm, DM Sans, bordered 12px controls
+and 44px targets. Desktop dates form a seven-column ordered grid with neutral
+counts; phones use full-width dated rows so dates and counts remain readable at
+320px. The selected day has a ruled linked agenda on both layouts. Plans and real
+logs use distinct plain labels, without streaks, scores or inferred completion.
+Revisit dates live in the existing optional context disclosure; name-only capture
+and the independent revisit queue are unchanged. Captures belong in
+`art/ui-qa/activity-calendar/`.
+
+## Photo galleries
+
+Manage photos opens a secondary native scrolling dialog from the established Photo
+disclosure. It keeps the dark cabinet, 22px corners, DM Sans, 44px controls and the
+existing cream opinion slip in the parent editor. Desktop source previews pair with
+caption/order/cover controls; phones stack them. Source images use their own aspect
+ratio so normalized arrows align with the actual pixels. Arrow labels have a readable
+list and four labeled coordinate sliders, without pointer-only editing. Before/after
+uses explicit choices, a large keyboard range and a full side-by-side alternative.
+Sources, captions and arrays do not infer calls, ranks or dates. Captures and deliberate
+layout verification belong in `art/ui-qa/photo-gallery/`.
+
+## Cover collages
+
+Workbench opens a separate scrolling collage dialog over its existing composition.
+This deliberate secondary tool uses the cabinet palette, DM Sans, 22px corners and
+44px targets. Available photos use a three-column shelf, two on phones; coordinate
+controls pair on desktop and stack on phones. A 1.6-ratio sketch labels layers;
+the separately prepared 1280 × 800 image is the exact save/download preview. No
+pointer-only positioning, inferred crop, call or rank is added. Sources fit inside
+manual frames and remain unchanged. Captures belong in `art/ui-qa/cover-collage/`.
+
+## Private boards and trips
+
+Patterns → Boards extends the secondary-page cabinet: 68px desktop / 44px phone
+headings, a wrapping two-column directory, disclosed filters that keep saved boards
+above the phone fold, four small authored faceless objects,
+dark 22px cards and labeled 44px controls. Moment, shortlist, evening and trip are
+explicit kinds rather than inferred activity. The scrolling native editor uses
+disclosed source choices, literal dates and keyboard Earlier/Later ordering. Source
+calls and ranks stay outside the board.
+
+Trip replay deliberately uses a single cream stop ticket with dark text and
+muted #626456 labels. Previous/Next, a readable full index and the complete entry
+list remain available. Optional Play advances once through the entered sequence;
+it stops when hidden, and reduced motion removes ticket arrival animation. This
+is an intentional supporting composition, not a replacement for the collection
+index/opinion-slip reference. Long names and unavailable-source explanations wrap;
+phone cards and source controls stack. See the board QA captures for verification.
+
+## Reviewed receipts
+
+Receipts extends the on-device photo-text composition with a dark source pane and
+a cream review pane, followed by dark line cards. The cabinet rail, 68px/44px
+headings, DM Sans/Mono, 22px panels and labeled 44px controls remain. Cream controls
+use dark ink and #626456 labels, including hover and keyboard focus. The literal
+line fields and record choices stack at phone widths. This is an intentional
+advanced capture page, while everyday record capture stays name-only.
+
+The prepared image has a distinct heading, exact full-size preview, explicit
+inclusion/readability choices and manual removal. Preparation moves focus to
+that preview; restored drafts do not move focus automatically. The directory's
+small faceless receipt object uses authored SVG rather than an opinion character.
+Saved line text is independent of a current linked title. No inferred spending
+analysis, purchase date or call is added.
+
+## Richer activity plans
+
+The routine shelf, activity header and native editors retain the workout cabinet
+references. Optional target plans extend the existing editor disclosure, with
+separate dark cards for each chosen exercise, two fluid field columns and a single
+column at 320px. Targets are labeled planned and never populate actual result
+fields. Time/distance-only entries use named measurements after removing blank sets.
+A separate saved-plan panel makes conflict comparison deliberate and keeps the
+previous draft readable. No original reference composition is replaced.
+
+Exercise names are managed inside the existing collapsed history directory. Alias
+history displays preferred group names while retaining each recorded name in its
+entry. Literal measurement/unit choices reuse the existing accessible chart; missing
+units leave gaps and negative recorded values extend its axis below zero. No call
+faces, activity scores, unit conversions or automatic completion are introduced.
+
+## Time capsules
+
+Capsules deliberately extend the secondary Boards composition with a faceless,
+repo-native envelope. Keep the rail, dark cabinet, 68px desktop/44px phone titles,
+22px cards and 44px controls. A cream message appears only after explicit opening.
+A short entrance settles once; reduced motion stays still. Source review is a
+native scrolling dialog with named field checkboxes, original photo previews and
+an exact chosen-fields preview. Calls and ranks are independent. The composer
+allows a name/date without sources; optional notes/photos never become implicit.
+Closed cards expose names, dates and counts only. Owner backup scope remains
+visible because opening dates are app-level access rules.
+
+## Private spaces
+
+Shared spaces extend the cabinet's secondary pages: 68px desktop/44px phone
+headings, ruled sections, 22px cards, familiar source picker and native review.
+Two authored flat tickets introduce collaboration without adding a call face.
+Text-only sharing has an exact preview and explicit Share action; notes and
+measurements follow selected source fields, with notes off by default. Invitation
+secrets are displayed for manual copying. Role, copy/revocation consequences and
+shared note conflicts use factual copy. This-or-that uses two labeled choices,
+a separate confirmed Reveal and a factual two-person result. No results or shared
+calls are inferred. Private copies use a readable, disconnected archive view.
+
+## Offline device copy
+
+The standalone `/offline/` page deliberately uses a simple wordmark/back header
+in place of the connected archive rail. Its public shell must open without the
+authenticated application. Keep cabinet canvas/panel/butter tokens, 68px desktop /
+44px phone heading, 12px controls and 22px confirmations. A faceless flat folder
+and lock identify a private device copy. Pending saves, connected/offline state,
+copy date, passphrase scope and unsaved text stay factual and visible. Name-only
+Inbox capture remains possible; notes are optional. Read text through a searchable
+collection/Inbox index, with separate call/rank labels and explicit note queuing.
+No stored records or queued requests are inferred from decorative artwork.

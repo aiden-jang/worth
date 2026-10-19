@@ -1,6 +1,12 @@
-import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-export function RestTimer({ workoutId }: { workoutId: string }) {
+import { useEffect, useState } from 'react';
+export function RestTimer({
+  workoutId,
+  plannedSeconds,
+}: {
+  workoutId: string;
+  plannedSeconds?: number | null;
+}) {
   const owner = useQueryClient().getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
   const key = `worth:rest:${owner}:${workoutId}`;
   const [end, setEnd] = useState(() => {
@@ -14,7 +20,9 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     const sync = () => {
       try {
         setEnd(Number(localStorage.getItem(key)) || 0);
-      } catch {}
+      } catch {
+        /* Device storage may be unavailable or blocked. */
+      }
     };
     window.addEventListener('storage', sync);
     window.addEventListener('worth:rest-changed', sync);
@@ -24,7 +32,7 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     };
   }, [key]);
   const [now, setNow] = useState(Date.now());
-  const [seconds, setSeconds] = useState(60);
+  const [seconds, setSeconds] = useState(plannedSeconds ?? 60);
   useEffect(() => {
     if (!end) return;
     const interval = setInterval(() => setNow(Date.now()), 500);
@@ -37,7 +45,9 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
     try {
       if (value) localStorage.setItem(key, String(value));
       else localStorage.removeItem(key);
-    } catch {}
+    } catch {
+      /* Device storage may be unavailable or blocked. */
+    }
     window.dispatchEvent(new Event('worth:rest-changed'));
   }
   return (
@@ -50,11 +60,23 @@ export function RestTimer({ workoutId }: { workoutId: string }) {
           disabled={remaining > 0}
           onChange={(e) => setSeconds(Number(e.target.value))}
         >
-          {[30, 60, 90, 120, 180].map((n) => (
-            <option value={n} key={n}>
-              {n < 60 ? `${n}s` : `${n / 60} min`}
-            </option>
-          ))}
+          {[
+            ...new Set([
+              30,
+              60,
+              90,
+              120,
+              180,
+              ...(plannedSeconds === undefined || plannedSeconds === null ? [] : [plannedSeconds]),
+            ]),
+          ]
+            .sort((a, b) => a - b)
+            .map((n) => (
+              <option value={n} key={n}>
+                {n < 60 || n % 60 ? `${n}s` : `${n / 60} min`}
+                {n === plannedSeconds ? ' · planned' : ''}
+              </option>
+            ))}
         </select>
       </label>
       <span className="rest-time" aria-label={`${remaining} seconds remaining`}>

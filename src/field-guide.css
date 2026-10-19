@@ -1,0 +1,121 @@
+.field-guide-page .page-head {
+  align-items: start;
+  gap: 24px;
+}
+.field-guide-page .page-head h1 {
+  font-size: 68px;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+}
+.field-guide-page .page-head > a,
+.field-guide-page .button {
+  min-height: 44px;
+  white-space: normal;
+}
+.guide-intro {
+  max-width: 80ch;
+  line-height: 1.6;
+  color: #aaa99b;
+  margin-block: 28px;
+}
+.guide-fields {
+  display: grid;
+  gap: 22px;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  padding: 28px;
+  margin-block: 32px;
+  min-width: 0;
+}
+.guide-fields legend {
+  font:
+    400 22px/1.4 'DM Sans',
+    sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+  padding-inline: 8px;
+}
+.guide-fields label {
+  display: grid;
+  gap: 8px;
+  font:
+    400 14px/1.5 'DM Sans',
+    sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #aaa99b;
+}
+.guide-fields :is(input:not([type='checkbox']), select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 12px;
+  border-radius: 12px;
+  font:
+    400 15px/1.5 'DM Sans',
+    sans-serif;
+}
+.guide-fields textarea {
+  min-height: 100px;
+}
+.guide-fields .guide-check {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 44px;
+  color: #f0ecdf;
+}
+.guide-check input {
+  height: 20px;
+  width: 20px;
+  accent-color: #e8dc9d;
+}
+.guide-fields > .button {
+  justify-self: start;
+}
+.guide-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.guide-selection {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+.guide-selection > li {
+  padding-block: 24px;
+  border-top: 1px solid #38392f;
+  min-width: 0;
+}
+.guide-selection h2 {
+  font-size: 26px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.field-guide-page p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.field-guide-page .data-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 20px;
+}
+.field-guide-page .booklet-preview {
+  margin-top: 40px;
+}
+@media (max-width: 680px) {
+  .field-guide-page .page-head {
+    display: grid;
+  }
+  .field-guide-page .page-head h1 {
+    font-size: 44px;
+  }
+  .guide-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .guide-fields {
+    padding: 22px 18px;
+  }
+}

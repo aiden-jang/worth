@@ -1,5 +1,9 @@
 import { z } from 'zod';
+import { activityMeasurements, routineTargets } from './activity-plans';
+import { collectionFields } from './collection-fields';
+import { visitContext } from './visit-context';
 import { collectionItemTitleLimit } from './collection-capture';
+import { itemContext, emptyItemContext } from './item-context';
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const note = z.string().trim().max(4000);
@@ -14,7 +18,7 @@ const date = z
 
 const artwork = z
   .object({
-    object: z.enum(['cup', 'ticket', 'place', 'car', 'snack', 'bag']),
+    object: z.enum(['cup', 'ticket', 'place', 'car', 'snack', 'bag', 'ramen', 'sneaker', 'plant', 'camera']),
     tone: z.enum(['sage', 'clay', 'butter']),
   })
   .nullable();
@@ -26,18 +30,28 @@ export const listInput = z.object({
   artwork: artwork.default(null),
 });
 
+export const listCreate = listInput
+  .extend({ detailFields: collectionFields.default([]) })
+  .refine(
+    (value) => value.kind === 'collection' || !value.detailFields.length,
+    'Reusable details belong to collections.',
+  );
+
 export const listPatch = listInput
   .pick({ name: true, description: true, artwork: true })
+  .extend({ archived: z.boolean() })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 
 export const itemInput = z
   .object({
+    context: itemContext.default(emptyItemContext),
     title: shortText(collectionItemTitleLimit),
     type: z.string().trim().max(60).default(''),
     note: note.default(''),
     decision: itemDecision.default(null),
     revisitQueued: z.boolean().default(false),
+    wantToTry: z.boolean().default(false),
     startedOn: date.nullable().default(null),
     endedOn: date.nullable().default(null),
   })
@@ -48,17 +62,21 @@ export const itemInput = z
 
 export const itemPatch = z
   .object({
+    context: itemContext.optional(),
+    expectedContextRevision: z.number().int().nonnegative().optional(),
     title: shortText(collectionItemTitleLimit).optional(),
     type: z.string().trim().max(60).optional(),
     note: note.optional(),
     decision: itemDecision.optional(),
     revisitQueued: z.boolean().optional(),
+    wantToTry: z.boolean().optional(),
     startedOn: date.nullable().optional(),
     endedOn: date.nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0);
 
 export const itemsBatchInput = z.object({
+  wantToTry: z.boolean().default(false),
   titles: z
     .array(shortText(collectionItemTitleLimit))
     .min(1)
@@ -76,6 +94,8 @@ const plannedExercises = z
     'Each exercise can only appear once',
   );
 export const routineInput = z.object({
+  targets: routineTargets.optional(),
+  expectedRevision: z.number().int().nonnegative().optional(),
   title: shortText(80),
   exercises: plannedExercises.refine((names) => names.length > 0, 'Add at least one exercise'),
 });
@@ -83,14 +103,24 @@ export const workoutInput = z.object({
   title: z.string().trim().max(80).default(''),
   happenedOn: date,
   routineId: z.string().uuid().optional(),
+  expectedRoutineRevision: z.number().int().nonnegative().optional(),
 });
 export const workoutPatch = workoutInput
-  .omit({ routineId: true })
-  .extend({ status: z.enum(['active', 'finished']), plannedExercises, skippedExercises: plannedExercises })
+  .omit({ routineId: true, expectedRoutineRevision: true })
+  .extend({
+    status: z.enum(['active', 'finished']),
+    plannedExercises,
+    skippedExercises: plannedExercises,
+    targets: routineTargets,
+    expectedRevision: z.number().int().nonnegative(),
+  })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 
 export const logInput = z.object({
+  exercise: z.boolean().default(false),
+  measurements: activityMeasurements.default([]),
+  context: visitContext.default({}),
   workoutId: z.string().uuid().nullable().default(null),
   exerciseSets: z
     .array(
@@ -112,7 +142,10 @@ export const logInput = z.object({
   reps: z.number().int().positive().max(10000).nullable().default(null),
 });
 
-export const logPatch = logInput.partial().refine((value) => Object.keys(value).length > 0);
+export const logPatch = logInput
+  .extend({ expectedRevision: z.number().int().nonnegative().optional() })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0);
 
 export const rankInput = z.object({
   itemIds: z
@@ -123,3 +156,32 @@ export const rankInput = z.object({
 });
 
 export const shareInput = z.object({ limit: z.union([z.literal(5), z.literal(10), z.literal('all')]) });
+
+export const archiveActionInput = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('move'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    destinationId: z.string().uuid(),
+  }),
+  z.object({
+    action: z.literal('merge'),
+    itemIds: z.array(z.string().uuid()).min(2).max(20),
+    targetId: z.string().uuid(),
+  }),
+  z.object({ action: z.literal('trash'), itemIds: z.array(z.string().uuid()).min(1).max(100) }),
+  z.object({
+    action: z.literal('queue'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.boolean(),
+  }),
+  z.object({
+    action: z.literal('want'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.boolean(),
+  }),
+  z.object({
+    action: z.literal('type'),
+    itemIds: z.array(z.string().uuid()).min(1).max(100),
+    value: z.string().trim().max(60),
+  }),
+]);

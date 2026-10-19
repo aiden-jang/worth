@@ -1,0 +1,164 @@
+.spaces-page {
+  max-width: 1140px;
+}
+.spaces-page h1 {
+  font-size: 68px;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+}
+.space-tickets {
+  width: 112px;
+  flex: none;
+}
+.space-create {
+  display: flex;
+  gap: 32px;
+  align-items: start;
+  max-width: 760px;
+  margin: 32px 0;
+}
+.space-create > div {
+  flex: 1;
+  min-width: 0;
+}
+.spaces-page label {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+.spaces-page input,
+.spaces-page textarea,
+.spaces-page select {
+  width: 100%;
+  min-height: 44px;
+}
+.space-note,
+.space-invitations,
+.space-rounds,
+.space-copies {
+  padding: 28px 0;
+  border-top: 1px solid #38392f;
+  margin-top: 28px;
+}
+.space-invitations summary,
+.space-rounds summary,
+.space-copy summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+}
+.space-invitations ul {
+  padding: 0;
+  list-style: none;
+}
+.space-invitations li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #38392f;
+  padding: 18px 0;
+  overflow-wrap: anywhere;
+}
+.space-invitations li > div {
+  min-width: 0;
+}
+.space-rounds > header {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.space-rounds fieldset {
+  border: 0;
+  padding: 0;
+  max-width: 760px;
+}
+.space-round {
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.space-round h3 {
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}
+.space-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.space-options .button {
+  flex: 1;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  min-width: 100px;
+}
+.space-options .button[aria-pressed='true'] {
+  border-color: #e8dc9d;
+  background: #e8dc9d;
+  color: #181915;
+}
+.space-copy {
+  border-bottom: 1px solid #38392f;
+  margin: 18px 0;
+  padding-bottom: 20px;
+}
+.space-copy .capsule-projection {
+  border-top: 1px solid #38392f;
+  padding: 20px 0;
+}
+.space-entries h2 small {
+  color: #aaa99b;
+  font:
+    14px 'DM Mono',
+    monospace;
+}
+.spaces-page .capsule-card .space-tickets {
+  width: 80px;
+}
+.spaces-page .board-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.spaces-page .board-check input {
+  width: 20px;
+  min-height: 20px;
+  flex: none;
+}
+.spaces-page .board-directory-actions .button {
+  max-width: 100%;
+  white-space: normal;
+}
+.space-note > textarea {
+  white-space: pre-wrap;
+}
+@media (max-width: 680px) {
+  .spaces-page h1 {
+    font-size: 44px;
+  }
+  .space-create {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .space-create > div {
+    width: 100%;
+  }
+  .space-rounds > header {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .space-round {
+    padding: 22px 18px;
+  }
+  .space-round h3 {
+    font-size: 26px;
+  }
+  .spaces-page .capsule-card .space-tickets {
+    width: 60px;
+  }
+}

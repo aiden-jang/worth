@@ -66,3 +66,14 @@ test('unfinished sets survive validation while invalid workout references are re
   expect(isLogDraft(draft)).toBe(true);
   expect(isLogDraft({ ...draft, workoutId: 'invalid' })).toBe(false);
 });
+
+test('checkpoint persists the exact retry payload before a request can start', () => {
+  const capture = renderHook(() => useDraft('checkpoint', initial, valid), { wrapper: setup('alice') });
+  act(() => {
+    capture.result.current.checkpoint({ title: 'Frozen payload' });
+    const stored = JSON.parse(localStorage.getItem('worth:draft:v1:alice:checkpoint')!);
+    expect(stored.form).toEqual({ title: 'Frozen payload' });
+    expect(stored.operationId).toBe(capture.result.current.operationId.current);
+  });
+  capture.unmount();
+});

@@ -1,5 +1,5 @@
-import type { ItemDecision } from '../shared/models';
 import { callAsides, decisionLabel, personalCalls } from '../shared/decisions';
+import type { ItemDecision } from '../shared/models';
 
 export function CallFace({
   value,

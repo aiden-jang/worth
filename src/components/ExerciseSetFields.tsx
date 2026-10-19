@@ -17,6 +17,9 @@ export function ExerciseSetFields({
     <fieldset className="exercise-sets">
       <legend>Exercise sets</legend>
       <p className="exercise-helper">Leave weight blank for bodyweight sets.</p>
+      <p className="exercise-helper">
+        For time or distance only, remove blank sets and add named measurements below.
+      </p>
       <label>
         Weight unit
         <select
@@ -120,8 +123,9 @@ export function ExerciseSetFields({
         <Plus size={16} /> {form.exerciseSets?.at(-1)?.reps ? 'Duplicate last set' : 'Add set'}
       </button>
       <p className="exercise-total">
-        {form.exerciseSets?.length ?? 0} {form.exerciseSets?.length === 1 ? 'set' : 'sets'} ·{' '}
-        {(form.exerciseSets ?? []).reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps
+        {form.exerciseSets?.length
+          ? `${form.exerciseSets.length} ${form.exerciseSets.length === 1 ? 'set' : 'sets'} · ${form.exerciseSets.reduce((sum, set) => sum + (set.reps ?? 0), 0)} reps`
+          : 'No individual sets entered.'}
       </p>
     </fieldset>
   );

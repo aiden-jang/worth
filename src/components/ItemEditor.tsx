@@ -1,20 +1,28 @@
-import { OpinionSlip } from './OpinionSlip';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
-import type { Item, Log } from '../shared/models';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
-import { ConfirmDialog } from './ConfirmDialog';
-import { useDraftPhoto } from '../hooks/useDraftPhoto';
 import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
+import { useDraftPhoto } from '../hooks/useDraftPhoto';
 import { isItemDraft } from '../shared/drafts';
-import { DraftPhoto } from './DraftPhoto';
+import type { Item, Log } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
+import { CollectionLogEditor } from './CollectionLogEditor';
+import { ConfirmDialog } from './ConfirmDialog';
+import { DraftPhoto } from './DraftPhoto';
+import { MergedRecords } from './MergedRecords';
+import { OpinionSlip } from './OpinionSlip';
 import { PhotoControl } from './PhotoControl';
+import { ItemContextEditor } from './ItemContextEditor';
+import { VisitContextReadout } from './VisitContext';
+import { emptyItemContext } from '../shared/item-context';
 
 const emptyItem: ItemInput = {
+  context: emptyItemContext,
+  expectedContextRevision: 0,
+  wantToTry: false,
   title: '',
   type: '',
   note: '',
@@ -65,21 +73,23 @@ export function ItemEditor({
   const [logDate, setLogDate] = useState(today());
   const [logNote, setLogNote] = useState('');
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [confirmingContextReload, setConfirmingContextReload] = useState(false);
   const [editingLog, setEditingLog] = useState<Log | null>(null);
   const [handledFocusLogId, setHandledFocusLogId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'item'; title: string } | { kind: 'log'; id: string; title: string } | null
   >(null);
-  const history = logs.filter((log) => log.itemId === item?.id);
+  const history = logs.filter(
+    (log) => log.itemId === item?.id || item?.mergedIds?.includes(log.itemId ?? ''),
+  );
   const typeSuggestions = Array.from(new Set(items.map((entry) => entry.type).filter(Boolean))).sort();
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
   const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim()) || Boolean(photo);
 
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => {
-      dialog.current?.close();
-    };
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   useEffect(() => {
     const nextForm = item ? fromItem(item) : emptyItem;
@@ -90,10 +100,14 @@ export function ItemEditor({
     }
     setSavedForm(nextForm);
     // Save handles the new baseline. Photo/query refreshes must not replace an active draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id]);
   useEffect(() => {
     if (!focusLogId || focusLogId === handledFocusLogId || !item) return;
-    const focusedLog = logs.find((log) => log.id === focusLogId && log.itemId === item.id);
+    const focusedLog = logs.find(
+      (log) =>
+        log.id === focusLogId && (log.itemId === item.id || item.mergedIds?.includes(log.itemId ?? '')),
+    );
     if (focusedLog) {
       setEditingLog(focusedLog);
       setHandledFocusLogId(focusLogId);
@@ -117,6 +131,11 @@ export function ItemEditor({
   const save = useMutation({
     mutationFn: async () => {
       const input = cleanItemInput(form);
+      if (item && JSON.stringify(form.context) === JSON.stringify(savedForm.context)) {
+        delete input.context;
+        delete input.expectedContextRevision;
+      }
+      const photoKey = photoDraft.operationId.current;
       const blob = photo ? await preparePhoto(photo) : null;
       const id = item?.id ?? draft.savedId.current;
       let result = id
@@ -125,8 +144,9 @@ export function ItemEditor({
       draft.rememberSaved(result.item.id);
       if (!id) result = await api.updateItem(result.item.id, input);
       if (blob) {
-        await api.uploadPhoto('items', result.item.id, blob);
-        result.item.hasPhoto = true;
+        const prepared = await photoDraft.freeze(blob, photoKey);
+        const uploaded = await api.uploadPhoto('items', result.item.id, prepared.file, prepared.key);
+        result.item.hasPhoto = uploaded.hasPhoto;
       }
       return result;
     },
@@ -148,6 +168,9 @@ export function ItemEditor({
       void client.invalidateQueries({ queryKey: ['lists'] });
       void client.invalidateQueries({ queryKey: ['overview'] });
       void client.invalidateQueries({ queryKey: ['patterns'] });
+    },
+    onError: () => {
+      void client.invalidateQueries({ queryKey: ['items', listId] });
     },
   });
   const remove = useMutation({
@@ -296,8 +319,16 @@ export function ItemEditor({
             <p className="record-call-hint">Optional. Tap the selected call to clear it.</p>
           </OpinionSlip>
           <div className="record-notes">
+            <label className="capture-want">
+              <input
+                type="checkbox"
+                checked={Boolean(form.wantToTry)}
+                onChange={(e) => setForm({ ...form, wantToTry: e.target.checked })}
+              />
+              Want to try
+            </label>
             <label>
-              Private note <span className="optional">never included in shares</span>
+              Private note <span className="optional">not in public ranking links</span>
               <textarea
                 ref={itemNoteInput}
                 rows={3}
@@ -330,6 +361,24 @@ export function ItemEditor({
                 </label>
               </div>
             </details>
+            <ItemContextEditor
+              listId={listId}
+              value={form.context}
+              onChange={(context) => setForm({ ...form, context })}
+              title={form.title}
+            />
+            {item && (form.expectedContextRevision ?? 0) !== (item.contextRevision ?? 0) && (
+              <div role="alert">
+                <p>Saved context changed elsewhere. Your context draft is still here.</p>
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => setConfirmingContextReload(true)}
+                >
+                  Reload saved context
+                </button>
+              </div>
+            )}
           </div>
           {!item && (
             <div className="record-notes">
@@ -375,15 +424,10 @@ export function ItemEditor({
             <summary>
               Photo <span>optional · private</span>
             </summary>
-            <PhotoControl
-              kind="items"
-              id={item.id}
-              hasPhoto={item.hasPhoto}
-              version={item.updatedAt}
-              listId={listId}
-            />
+            <PhotoControl kind="items" id={item.id} hasPhoto={item.hasPhoto} version={item.updatedAt} />
           </details>
         )}
+        {item && <MergedRecords item={item} />}
         {item && (
           <section className="item-history">
             <div className="panel-title">
@@ -417,7 +461,10 @@ export function ItemEditor({
               {history.map((log) => (
                 <div key={log.id} className="history-row">
                   <span>{formatDate(log.happenedOn)}</span>
-                  <p>{log.note || 'No note'}</p>
+                  <div className="history-note">
+                    <p>{log.note || 'No note'}</p>
+                    <VisitContextReadout value={log.context} />
+                  </div>
                   <div className="history-actions">
                     <button
                       type="button"
@@ -458,8 +505,8 @@ export function ItemEditor({
             title={`Delete ${deleteTarget.title}?`}
             description={
               deleteTarget.kind === 'item'
-                ? 'This permanently removes the item, every log attached to it, and all of their private photos.'
-                : 'This permanently removes this log and its private photo, if it has one.'
+                ? 'This moves the item, merged originals, attached logs and private photos to Trash for 30 days. Restored items return unranked.'
+                : 'This moves the log and its private photo to Trash for 30 days.'
             }
             confirmLabel={deleteTarget.kind === 'item' ? 'Delete item' : 'Delete log'}
             pending={deleteTarget.kind === 'item' ? remove.isPending : deleteLog.isPending}
@@ -495,6 +542,22 @@ export function ItemEditor({
             onClose={() => setConfirmingDiscard(false)}
           />
         )}
+        {confirmingContextReload && item && (
+          <ConfirmDialog
+            title="Replace this context draft?"
+            description="This loads the latest saved context and replaces your local context edits. Your name, note, dates and call edits stay in place."
+            confirmLabel="Reload saved context"
+            onConfirm={() => {
+              setForm({
+                ...form,
+                context: item.context ?? emptyItemContext,
+                expectedContextRevision: item.contextRevision ?? 0,
+              });
+              setConfirmingContextReload(false);
+            }}
+            onClose={() => setConfirmingContextReload(false)}
+          />
+        )}
         {editingLog && (
           <CollectionLogEditor log={editingLog} listId={listId} onClose={() => setEditingLog(null)} />
         )}
@@ -503,131 +566,11 @@ export function ItemEditor({
   );
 }
 
-function CollectionLogEditor({ log, listId, onClose }: { log: Log; listId: string; onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const client = useQueryClient();
-  const [happenedOn, setHappenedOn] = useState(log.happenedOn);
-  const [note, setNote] = useState(log.note);
-  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
-  const cleanNote = note.trim();
-  const hasChanges = happenedOn !== log.happenedOn || cleanNote !== log.note;
-
-  useEffect(() => {
-    dialog.current?.showModal();
-    return () => {
-      dialog.current?.close();
-    };
-  }, []);
-
-  const save = useMutation({
-    mutationFn: () => api.updateLog(log.id, { happenedOn, note: cleanNote }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['logs', listId] });
-      void client.invalidateQueries({ queryKey: ['items', listId] });
-      void client.invalidateQueries({ queryKey: ['list', listId] });
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-      void client.invalidateQueries({ queryKey: ['patterns'] });
-      dialog.current?.close();
-    },
-  });
-
-  function requestClose() {
-    if (hasChanges) {
-      setConfirmingDiscard(true);
-      return;
-    }
-    dialog.current?.close();
-  }
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    save.mutate();
-  }
-
-  return (
-    <dialog
-      className="editor-dialog collection-log-dialog"
-      aria-labelledby="revisit-editor-title"
-      ref={dialog}
-      onClose={(event) => {
-        event.stopPropagation();
-        // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
-        if (!dialog.current?.open) onClose();
-      }}
-      onCancel={(event) => {
-        event.stopPropagation();
-        event.preventDefault();
-        requestClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) requestClose();
-      }}
-    >
-      <div className="editor-inner">
-        <div className="editor-head">
-          <div>
-            <p className="overline">REVISIT DETAIL</p>
-            <h2 id="revisit-editor-title">{formatDate(log.happenedOn)}</h2>
-          </div>
-          <button type="button" className="icon-button" aria-label="Close" onClick={requestClose}>
-            <X size={22} />
-          </button>
-        </div>
-        <PhotoControl
-          kind="logs"
-          id={log.id}
-          hasPhoto={log.hasPhoto}
-          version={log.updatedAt}
-          listId={listId}
-        />
-        <form className="editor-form record-form" onSubmit={submit}>
-          <label>
-            When
-            <input
-              type="date"
-              required
-              autoFocus
-              value={happenedOn}
-              onChange={(event) => setHappenedOn(event.target.value)}
-            />
-          </label>
-          <label>
-            Private note <span className="optional">optional</span>
-            <textarea
-              rows={4}
-              maxLength={4000}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="What stood out this time?"
-            />
-          </label>
-          {save.isError && <p className="form-error">{save.error.message}</p>}
-          <button className="button button-accent" disabled={!happenedOn || !hasChanges || save.isPending}>
-            Save changes
-          </button>
-        </form>
-        {confirmingDiscard && (
-          <ConfirmDialog
-            eyebrow="DISCARD CHANGES"
-            title="Leave without saving?"
-            description="Your changes to this private revisit log will be lost."
-            cancelLabel="Keep editing"
-            confirmLabel="Discard changes"
-            onConfirm={() => {
-              setConfirmingDiscard(false);
-              dialog.current?.close();
-            }}
-            onClose={() => setConfirmingDiscard(false)}
-          />
-        )}
-      </div>
-    </dialog>
-  );
-}
-
 function fromItem(item: Item): ItemInput {
   return {
+    context: item.context ?? emptyItemContext,
+    expectedContextRevision: item.contextRevision ?? 0,
+    wantToTry: item.wantToTry ?? false,
     title: item.title,
     type: item.type,
     note: item.note,

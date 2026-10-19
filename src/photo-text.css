@@ -1,0 +1,177 @@
+.photo-text-intro {
+  max-width: 72ch;
+  color: #aaa99b;
+  line-height: 1.6;
+  margin: 28px 0;
+}
+.photo-text-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  margin: 28px 0;
+  align-items: start;
+}
+.photo-text-source,
+.photo-text-review {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+  padding: 28px;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+}
+.photo-text-source h2,
+.photo-text-review h2 {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+.photo-text-layout p {
+  line-height: 1.6;
+  margin: 0;
+}
+.photo-text-layout label {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+}
+.photo-text-layout input,
+.photo-text-layout textarea,
+.photo-text-layout select {
+  width: 100%;
+  min-width: 0;
+}
+.photo-text-source .file-choice {
+  justify-self: start;
+}
+.photo-text-source figure {
+  margin: 0;
+}
+.photo-text-source img {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  margin: auto;
+  border-radius: 12px;
+}
+.photo-text-source figcaption {
+  color: #aaa99b;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+}
+.photo-text-source .data-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.photo-text-source progress {
+  width: 100%;
+  accent-color: #e8dc9d;
+}
+.photo-text-page .button {
+  min-height: 44px;
+}
+.photo-text-page .page-head > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.photo-text-review {
+  background: #eae5d5;
+  color: #181915;
+  border-color: #eae5d5;
+}
+.photo-text-review p,
+.photo-text-review .optional,
+.photo-text-review .overline {
+  color: #626456;
+}
+.photo-text-review input,
+.photo-text-review textarea,
+.photo-text-review select {
+  color: #181915;
+  background: transparent;
+  border-color: #737566;
+  border-radius: 12px;
+  min-height: 44px;
+}
+.photo-text-review input::placeholder,
+.photo-text-review textarea::placeholder {
+  color: #626456;
+}
+.photo-text-review .button {
+  color: #181915;
+  border-color: #737566;
+  white-space: normal;
+}
+.photo-text-review .button:hover,
+.photo-text-review .button:focus-visible {
+  color: #181915;
+  background: #ded9c8;
+}
+@media (max-width: 960px) {
+  .photo-text-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 680px) {
+  .photo-text-source,
+  .photo-text-review {
+    padding: 22px 20px;
+  }
+  .photo-text-page .page-head {
+    display: grid;
+    gap: 18px;
+  }
+}
+
+.photo-text-review option {
+  background: #eae5d5;
+  color: #181915;
+}
+
+.photo-text-layout label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.photo-text-review label {
+  color: #626456;
+}
+.photo-text-layout :is(input:not([type='file']), textarea, select) {
+  padding: 12px;
+  font:
+    400 15px/1.5 'DM Sans',
+    sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.photo-text-source .file-choice {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #f0ecdf;
+}
+.photo-text-review :is(input, textarea, select, summary):focus-visible {
+  outline: 2px solid #626456;
+  outline-offset: 3px;
+  border-color: #181915;
+}
+.photo-text-review .record-extras {
+  border-color: #cbc9b8;
+}
+.photo-text-review summary {
+  min-height: 44px;
+  padding-block: 12px;
+  color: #181915;
+}
+.photo-text-note label {
+  margin: 18px 0;
+}
+.photo-text-note .button {
+  margin-bottom: 12px;
+}

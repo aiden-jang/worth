@@ -1,26 +1,32 @@
-import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowRight, X } from '@phosphor-icons/react';
-import type { Log, WorkoutSession } from '../shared/models';
+import { useEffect, useId, useRef, useState } from 'react';
+import { formatDate } from '../format';
 import {
   exerciseDirectory,
   exerciseHistory,
   exerciseValue,
+  measurementChoices,
   type ExerciseMetric,
 } from '../shared/exercise-history';
+import type { Log, WorkoutSession } from '../shared/models';
+import type { ExerciseAlias } from '../shared/activity-plans';
 import { formatActivityMetric } from '../shared/workouts';
-import { formatDate } from '../format';
 
 export function ExerciseDirectory({
   logs,
   listId,
   onOpen,
+  aliases = [],
+  onManageAliases,
 }: {
   logs: Log[];
   listId: string;
   onOpen: (title: string) => void;
+  aliases?: ExerciseAlias[];
+  onManageAliases?: () => void;
 }) {
-  const exercises = exerciseDirectory(logs, listId);
-  if (!exercises.length) return null;
+  const exercises = exerciseDirectory(logs, listId, aliases);
+  if (!exercises.length && !onManageAliases) return null;
   return (
     <details className="exercise-directory">
       <summary>
@@ -29,6 +35,14 @@ export function ExerciseDirectory({
           {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'}
         </span>
       </summary>
+      {onManageAliases && (
+        <button type="button" className="button button-outline" onClick={onManageAliases}>
+          Group exercise names
+        </button>
+      )}
+      {!exercises.length && (
+        <p className="exercise-helper">No saved exercise entries yet. Name groups are optional.</p>
+      )}
       <div className="workout-exercises">
         {exercises.map((exercise) => (
           <button
@@ -58,14 +72,17 @@ export function ExerciseHistory({
   listId,
   title,
   onClose,
+  aliases = [],
 }: {
   logs: Log[];
   workouts: WorkoutSession[];
   listId: string;
   title: string;
   onClose: () => void;
+  aliases?: ExerciseAlias[];
 }) {
-  const entries = exerciseHistory(logs, listId, title, workouts);
+  const entries = exerciseHistory(logs, listId, title, workouts, aliases);
+  const measurements = measurementChoices(entries);
   const units = (['kg', 'lb'] as const).filter((unit) =>
     entries.some((log) => exerciseValue(log, unit) !== null),
   );
@@ -73,9 +90,15 @@ export function ExerciseHistory({
     .reverse()
     .find((log) => exerciseValue(log, log.weightUnit ?? 'kg') !== null);
   const [metricChoice, setMetric] = useState<ExerciseMetric>(
-    latestWeighted?.weightUnit ?? (latestWeighted ? 'kg' : 'reps'),
+    latestWeighted?.weightUnit ?? (latestWeighted ? 'kg' : (measurements[0]?.key ?? 'reps')),
   );
-  const metric = metricChoice === 'reps' || units.includes(metricChoice) ? metricChoice : 'reps';
+  const choices = [
+    ...units.map((unit) => ({ key: unit as ExerciseMetric, label: `Top weight · ${unit}`, unit })),
+    { key: 'reps' as ExerciseMetric, label: 'Total reps', unit: 'reps' },
+    ...measurements,
+  ];
+  const active = choices.find((choice) => choice.key === metricChoice) ?? choices[0];
+  const metric = active.key;
   const dialog = useRef<HTMLDialogElement>(null),
     headingId = useId(),
     chartId = useId();
@@ -83,8 +106,9 @@ export function ExerciseHistory({
   const values = entries.map((log) => exerciseValue(log, metric));
   const numeric = values.filter((value): value is number => value !== null);
   const max = Math.max(1, ...numeric);
+  const min = Math.min(0, ...numeric);
   const x = (index: number) => (entries.length === 1 ? 50 : 4 + (index / (entries.length - 1)) * 92);
-  const y = (value: number) => 90 - (value / max) * 80;
+  const y = (value: number) => 90 - ((value - min) / (max - min)) * 80;
   const paths: string[] = [];
   let current: string[] = [];
   values.forEach((value, index) => {
@@ -95,8 +119,9 @@ export function ExerciseHistory({
   });
   if (current.length) paths.push(current.join(' '));
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => dialog.current?.close();
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   function select(log: Log) {
     setSelectedId(log.id);
@@ -109,7 +134,7 @@ export function ExerciseHistory({
       });
     });
   }
-  const metricLabel = metric === 'reps' ? 'Total reps' : `Top weight · ${metric}`;
+  const metricLabel = active.label;
   return (
     <dialog
       ref={dialog}
@@ -156,17 +181,17 @@ export function ExerciseHistory({
               {entries.length > 1 ? ` – ${formatDate(entries[entries.length - 1].happenedOn)}` : ''}
             </p>
             <div className="exercise-metrics" aria-label="Chart measurement">
-              {[...units, 'reps' as const].map((choice) => (
+              {choices.map((choice) => (
                 <button
                   type="button"
-                  key={choice}
-                  aria-pressed={metric === choice}
+                  key={choice.key}
+                  aria-pressed={metric === choice.key}
                   onClick={() => {
-                    setMetric(choice);
+                    setMetric(choice.key);
                     setSelectedId(null);
                   }}
                 >
-                  {choice === 'reps' ? 'Total reps' : `Top weight · ${choice}`}
+                  {choice.label}
                 </button>
               ))}
             </div>
@@ -175,13 +200,15 @@ export function ExerciseHistory({
                 <p className="overline">
                   {metric === 'reps'
                     ? 'TOTAL REPS PER ENTRY'
-                    : `HEAVIEST LOGGED SET · ${metric.toUpperCase()}`}
+                    : metric === 'kg' || metric === 'lb'
+                      ? `HEAVIEST LOGGED SET · ${metric.toUpperCase()}`
+                      : `RECORDED ${metricLabel.toUpperCase()}`}
                 </p>
                 <div className="exercise-chart-grid">
                   <div className="exercise-chart-axis" aria-hidden="true">
                     <span>{Number(max.toFixed(2))}</span>
-                    <span>{Number((max / 2).toFixed(2))}</span>
-                    <span>0</span>
+                    <span>{Number(((max + min) / 2).toFixed(2))}</span>
+                    <span>{Number(min.toFixed(2))}</span>
                   </div>
                   <div className="exercise-chart-plot">
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -200,8 +227,8 @@ export function ExerciseHistory({
                           className="exercise-chart-point"
                           style={{ left: `${x(index)}%`, top: `${y(value)}%` }}
                           aria-pressed={selectedId === entries[index].id}
-                          aria-label={`${formatDate(entries[index].happenedOn)}: ${value} ${metric === 'reps' ? 'reps' : metric}, entry ${index + 1}. View sets.`}
-                          title={`${formatDate(entries[index].happenedOn)} · ${value} ${metric === 'reps' ? 'reps' : metric}`}
+                          aria-label={`${formatDate(entries[index].happenedOn)}: ${value} ${active.unit}, entry ${index + 1}. View entry.`}
+                          title={`${formatDate(entries[index].happenedOn)} · ${value} ${active.unit}`}
                           onClick={() => select(entries[index])}
                         />
                       ) : null,
@@ -213,19 +240,24 @@ export function ExerciseHistory({
                   {entries.length > 1 && <span>{formatDate(entries[entries.length - 1].happenedOn)}</span>}
                 </div>
                 <p className="exercise-helper">
-                  Each point is one logged entry, oldest to newest. Select a point to see its sets.
+                  Each point is one logged entry, oldest to newest. Select a point to see its measurements.
                   {numeric.length === 1 ? ' One point so far; no trend yet.' : ''}
                 </p>
                 {numeric.length < entries.length && (
                   <p className="exercise-helper">
-                    Gaps have no {metric === 'reps' ? 'individual sets' : `logged weight in ${metric}`}. Units
-                    stay as recorded.
+                    Gaps have no{' '}
+                    {metric === 'reps'
+                      ? 'individual sets'
+                      : metric === 'kg' || metric === 'lb'
+                        ? `logged weight in ${metric}`
+                        : `recorded ${metricLabel}`}
+                    . Units stay as recorded.
                   </p>
                 )}
               </section>
             ) : (
               <p className="exercise-helper">
-                No individual sets to chart yet. Earlier measurements are preserved below.
+                No recorded values for {metricLabel}. Measurements stay readable below.
               </p>
             )}
             <div className="exercise-history-entries">
@@ -244,6 +276,7 @@ export function ExerciseHistory({
                       : ''}
                   </p>
                   <p>{formatActivityMetric(log)}</p>
+                  {log.title !== title && <p className="exercise-helper">Recorded as: {log.title}</p>}
                   {log.exerciseSets?.length ? (
                     <ol aria-label={`Sets for ${formatDate(log.happenedOn)}`}>
                       {log.exerciseSets.map((set, index) => (
@@ -257,9 +290,7 @@ export function ExerciseHistory({
                       ))}
                     </ol>
                   ) : (
-                    <p className="exercise-helper">
-                      Earlier measurements. Individual sets were not recorded.
-                    </p>
+                    <p className="exercise-helper">Individual sets were not recorded.</p>
                   )}
                   {log.note && (
                     <details>

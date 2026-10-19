@@ -1,16 +1,35 @@
+import { registerOfflineRoutes } from './routes/offline';
+import { registerPrivateSpaceRoutes } from './routes/private-spaces';
+import { registerReceiptRoutes } from './routes/receipts';
+import { registerCapsuleRoutes } from './routes/capsules';
+import { registerBoardRoutes } from './routes/boards';
+import { registerGalleryRoutes } from './routes/photo-gallery';
+import { registerCalendarRoutes } from './routes/calendar';
+import { registerConnectionRoutes } from './routes/connections';
+import { registerTasteHistoryRoutes } from './routes/taste-history';
+import { registerRetrospectiveRoutes } from './routes/retrospective';
+import { registerInboxRoutes } from './routes/inbox';
+import { registerTemplateRoutes } from './routes/templates';
 import { resolveSession } from '@aidenjang/auth-client';
 import { Hono } from 'hono';
 import type { AppEnv } from './context';
 import { ApiError } from './data';
 import { assertSameOrigin, securityHeaders } from './http';
-import { registerListRoutes } from './routes/lists';
-import { registerRecordRoutes } from './routes/records';
-import { registerShareRoutes, registerPublicShareRoute } from './routes/shares';
-import { registerPhotoRoutes } from './routes/photos';
-import { registerRoutineRoutes } from './routes/routines';
-import { registerWorkoutRoutes } from './routes/workouts';
-import { registerPortabilityRoutes } from './routes/portability';
+import { registerArchiveTools } from './routes/archive-tools';
 import { registerExportRoutes } from './routes/export';
+import { registerItemRoutes } from './routes/items';
+import { registerListRoutes } from './routes/lists';
+import { registerLogRoutes } from './routes/logs';
+import { registerOverviewRoutes } from './routes/overview';
+import { registerPhotoRoutes } from './routes/photos';
+import { registerPortabilityRoutes } from './routes/portability';
+import { registerRoutineRoutes } from './routes/routines';
+import { registerActivityAliasRoutes } from './routes/activity-aliases';
+import { registerSearchRoutes } from './routes/search';
+import { registerPublicShareRoute, registerShareRoutes } from './routes/shares';
+import { registerWorkoutRoutes } from './routes/workouts';
+import { registerWorkspaceRoutes } from './routes/workspace';
+import { registerReviewedCaptureRoutes } from './routes/reviewed-capture';
 
 const app = new Hono<AppEnv>();
 const publicApi = new Hono<AppEnv>();
@@ -40,8 +59,13 @@ privateApi.use('*', async (c, next) => {
   if (session.state === 'unavailable')
     throw new ApiError(503, 'AUTH_UNAVAILABLE', 'Accounts is temporarily unavailable');
   if (session.state === 'signed-out') throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to continue');
+  const expectedAccount = c.req.header('X-Worth-Account');
+  if (expectedAccount && expectedAccount !== session.user.id)
+    throw new ApiError(409, 'ACCOUNT_CHANGED', 'Accounts changed. Reload Worth before continuing.');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method) || c.req.path.endsWith('/export/backup')) {
-    const heavy = /\/api\/(import|data|export\/backup)$/.test(c.req.path);
+    const heavy =
+      /\/api\/(import|data|export\/backup)$/.test(c.req.path) ||
+      /\/api\/lists\/[^/]+\/items\/import$/.test(c.req.path);
     const window = Math.floor(Date.now() / 60000);
     const category = heavy ? 'data' : 'write';
     const row = await c.env.DB.prepare(
@@ -62,14 +86,33 @@ privateApi.use('*', async (c, next) => {
   await next();
 });
 
+registerArchiveTools(privateApi);
+registerWorkspaceRoutes(privateApi);
+registerTemplateRoutes(privateApi);
+registerInboxRoutes(privateApi);
 registerListRoutes(privateApi);
-registerRecordRoutes(privateApi);
+registerItemRoutes(privateApi);
+registerReviewedCaptureRoutes(privateApi);
+registerLogRoutes(privateApi);
+registerOverviewRoutes(privateApi);
+registerRetrospectiveRoutes(privateApi);
+registerCalendarRoutes(privateApi);
+registerBoardRoutes(privateApi);
+registerReceiptRoutes(privateApi);
+registerCapsuleRoutes(privateApi);
+registerPrivateSpaceRoutes(privateApi);
+registerOfflineRoutes(privateApi);
+registerTasteHistoryRoutes(privateApi);
+registerConnectionRoutes(privateApi);
+registerSearchRoutes(privateApi);
 registerShareRoutes(privateApi);
 registerPhotoRoutes(privateApi);
+registerGalleryRoutes(privateApi);
 registerExportRoutes(privateApi);
 registerPortabilityRoutes(privateApi);
 registerWorkoutRoutes(privateApi);
 registerRoutineRoutes(privateApi);
+registerActivityAliasRoutes(privateApi);
 
 app.route('/api', publicApi);
 app.route('/api', privateApi);

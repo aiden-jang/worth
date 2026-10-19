@@ -1,15 +1,20 @@
-import { usePageTitle } from '../hooks/usePageTitle';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
-import type { Log, WorkoutSession } from '../shared/models';
-import { api } from '../api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { api, RequestError } from '../api';
+import { planEditorDraft, exerciseKey, targetSummary } from '../shared/activity-plans';
+import { RoutineTargetsEditor } from './RoutineTargetsEditor';
+import { SavedPlanReview } from './SavedPlanReview';
 import { formatDate, today } from '../format';
-import { formatActivityMetric } from '../shared/workouts';
-import { RestTimer } from './RestTimer';
-import { ExerciseLineup } from './ExerciseLineup';
 import { useDraft } from '../hooks/useDraft';
+import { usePageTitle } from '../hooks/usePageTitle';
+import type { Log, WorkoutSession } from '../shared/models';
+import { formatActivityMetric } from '../shared/workouts';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ExerciseLineup } from './ExerciseLineup';
+import { RestTimer } from './RestTimer';
+import { ActivityIllustration } from './ActivityIllustration';
+import '../activity-illustrations.css';
 
 export function WorkoutSessions({
   listId,
@@ -41,7 +46,10 @@ export function WorkoutSessions({
   const client = useQueryClient();
   const update = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.updateWorkout>[1] }) =>
-      api.updateWorkout(id, patch),
+      api.updateWorkout(id, {
+        ...patch,
+        expectedRevision: workouts.find((workout) => workout.id === id)?.revision ?? 0,
+      }),
     onSuccess: ({ workout }) => {
       client.setQueryData<{ workouts: WorkoutSession[] }>(['workouts', listId], (current) => ({
         workouts: (current?.workouts ?? []).map((value) => (value.id === workout.id ? workout : value)),
@@ -124,8 +132,10 @@ export function WorkoutSessions({
               </button>
             </div>
             <p className="workout-count">
-              {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged · {sets}{' '}
-              {sets === 1 ? 'set' : 'sets'} · {reps} {reps === 1 ? 'rep' : 'reps'}
+              {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged ·{' '}
+              {entries.length && !sets
+                ? 'No individual sets recorded'
+                : `${sets} ${sets === 1 ? 'set' : 'sets'} · ${reps} ${reps === 1 ? 'rep' : 'reps'}`}
               {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
             </p>
             <div className="routine-actions">
@@ -189,6 +199,14 @@ export function WorkoutSessions({
                         <span>
                           <strong>{name}</strong>
                           <small>Not logged</small>
+                          {workout.targets
+                            ?.filter((target) => exerciseKey(target.exercise) === exerciseKey(name))
+                            .map((target) => (
+                              <small key={target.exercise}>
+                                Planned: {targetSummary(target) || 'Note only'}
+                                {target.note ? ` · ${target.note}` : ''}
+                              </small>
+                            ))}
                         </span>
                         <span className="planned-action">
                           Log exercise <ArrowRight size={18} />
@@ -239,7 +257,10 @@ export function WorkoutSessions({
               </div>
             )}
             {!entries.length && !pending.length && (
-              <p className="workout-empty">Add the first exercise to this visit.</p>
+              <div className="workout-empty-state">
+                <ActivityIllustration kind="workout" />
+                <p className="workout-empty">Add the first exercise to this visit.</p>
+              </div>
             )}
             <div className="routine-actions">
               <button
@@ -295,6 +316,9 @@ function WorkoutEditor({
   const dialog = useRef<HTMLDialogElement>(null),
     client = useQueryClient();
   const initial = {
+    targets: workout?.targets ?? [],
+    revision: workout?.revision ?? 0,
+    frozen: false,
     title: workout?.title ?? '',
     happenedOn: workout?.happenedOn ?? today(),
     exercises: (workout?.plannedExercises ?? []).join('\n'),
@@ -302,25 +326,18 @@ function WorkoutEditor({
   const draft = useDraft(
     `workout:${listId}:${workout?.id ?? 'new'}`,
     initial,
-    (value): value is typeof initial =>
-      Boolean(
-        value &&
-        typeof value === 'object' &&
-        'title' in value &&
-        typeof value.title === 'string' &&
-        'exercises' in value &&
-        typeof value.exercises === 'string' &&
-        'happenedOn' in value &&
-        typeof value.happenedOn === 'string',
-      ),
+    (value): value is typeof initial => planEditorDraft.safeParse(value).success,
   );
-  const { form, setForm } = draft;
+  const { form: storedForm, setForm } = draft;
+  const form = { ...initial, ...storedForm };
+  const legacyDraft = !!workout && !('revision' in storedForm);
   const [discard, setDiscard] = useState(false),
     [confirmRemove, setConfirmRemove] = useState(false);
   const changed = JSON.stringify(form) !== JSON.stringify(initial);
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => dialog.current?.close();
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   function refresh() {
     for (const key of [
@@ -334,9 +351,12 @@ function WorkoutEditor({
       void client.invalidateQueries({ queryKey: key });
   }
   const save = useMutation({
-    mutationFn: () =>
-      workout
+    mutationFn: () => {
+      if (!workout) draft.checkpoint({ ...form, frozen: true });
+      return workout
         ? api.updateWorkout(workout.id, {
+            targets: form.targets,
+            expectedRevision: form.revision,
             title: form.title,
             happenedOn: form.happenedOn,
             plannedExercises: form.exercises
@@ -344,7 +364,16 @@ function WorkoutEditor({
               .map((name) => name.trim())
               .filter(Boolean),
           })
-        : api.createWorkout(listId, form),
+        : api.createWorkout(
+            listId,
+            { title: form.title, happenedOn: form.happenedOn },
+            draft.operationId.current,
+          );
+    },
+    onError: (error) => {
+      if (error instanceof RequestError && (error.status === 400 || error.code === 'PLAN_CHANGED'))
+        setForm((current) => ({ ...current, frozen: false }));
+    },
     onSuccess: ({ workout: saved }) => {
       draft.clear();
       refresh();
@@ -353,18 +382,20 @@ function WorkoutEditor({
     },
   });
   const remove = useMutation({
-    mutationFn: () => api.deleteWorkout(workout!.id),
+    mutationFn: () => api.deleteWorkout(workout!.id, form.revision),
     onSuccess: () => {
       refresh();
       dialog.current?.close();
     },
   });
   function close() {
+    if (save.isPending || remove.isPending) return;
     if (changed) setDiscard(true);
     else dialog.current?.close();
   }
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (legacyDraft || save.isPending) return;
     save.mutate();
   }
   return (
@@ -396,54 +427,75 @@ function WorkoutEditor({
           </button>
         </div>
         <form className="editor-form record-form" onSubmit={submit}>
+          {legacyDraft && (
+            <p className="draft-state">
+              This older draft has no saved revision. Check the saved plan before using its current version;
+              your draft stays available for copying.
+            </p>
+          )}
           {draft.status && (
             <p className="draft-state" role="status">
               {draft.status}
             </p>
           )}
-          <label>
-            Name <span className="optional">optional</span>
-            <input
-              autoFocus
-              maxLength={80}
-              placeholder="Push day, Saturday gym…"
-              value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
-            />
-          </label>
-          <label>
-            When
-            <input
-              type="date"
-              required
-              value={form.happenedOn}
-              onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
-            />
-          </label>
-          {workout && (
-            <>
-              <label>
-                This visit’s lineup
-                <textarea
-                  rows={4}
-                  maxLength={5000}
-                  value={form.exercises}
-                  onChange={(event) => setForm({ ...form, exercises: event.target.value })}
-                />
-              </label>
-              <ExerciseLineup
-                value={form.exercises}
-                onChange={(exercises) => setForm({ ...form, exercises })}
+          {form.frozen && (
+            <p className="draft-state">
+              This pending save is fixed. Retry it exactly to avoid creating another workout.
+            </p>
+          )}
+          <fieldset className="plan-editor-fields" disabled={save.isPending || form.frozen}>
+            <label>
+              Name <span className="optional">optional</span>
+              <input
+                autoFocus
+                maxLength={80}
+                placeholder="Push day, Saturday gym…"
+                value={form.title}
+                onChange={(event) => setForm({ ...form, title: event.target.value })}
               />
-              <p className="exercise-helper">
-                One name per line. Swap a name or reorder it here. Your saved routine and logged exercises
-                stay intact.
-              </p>
-            </>
-          )}
-          {workout && (
-            <p className="exercise-helper">Changing the date also moves every exercise in this workout.</p>
-          )}
+            </label>
+            <label>
+              When
+              <input
+                type="date"
+                required
+                value={form.happenedOn}
+                onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
+              />
+            </label>
+            {workout && (
+              <>
+                <label>
+                  This visit’s lineup
+                  <textarea
+                    rows={4}
+                    maxLength={5000}
+                    value={form.exercises}
+                    onChange={(event) => setForm({ ...form, exercises: event.target.value })}
+                  />
+                </label>
+                <ExerciseLineup
+                  value={form.exercises}
+                  onChange={(exercises) => setForm({ ...form, exercises })}
+                />
+                <RoutineTargetsEditor
+                  exercises={form.exercises
+                    .split('\n')
+                    .map((name) => name.trim())
+                    .filter(Boolean)}
+                  value={form.targets}
+                  onChange={(targets) => setForm({ ...form, targets })}
+                />
+                <p className="exercise-helper">
+                  One name per line. Swap a name or reorder it here. Your saved routine and logged exercises
+                  stay intact.
+                </p>
+              </>
+            )}
+            {workout && (
+              <p className="exercise-helper">Changing the date also moves every exercise in this workout.</p>
+            )}
+          </fieldset>
           {save.isError && (
             <p className="form-error" role="alert">
               {save.error.message}
@@ -451,11 +503,35 @@ function WorkoutEditor({
           )}
           <button
             className="button button-accent"
-            disabled={save.isPending || (Boolean(workout) && !changed)}
+            disabled={save.isPending || legacyDraft || (Boolean(workout) && !changed)}
           >
             {save.isPending ? 'Saving…' : workout ? 'Save workout' : 'Create workout'}
           </button>
         </form>
+        {workout && (
+          <SavedPlanReview
+            current={form}
+            disabled={save.isPending || form.frozen}
+            read={async () => {
+              const result = await api.workouts(listId),
+                saved = result.workouts.find((value) => value.id === workout.id);
+              if (!saved)
+                throw new Error('This workout is no longer available. Your draft stays here for copying.');
+              return {
+                title: saved.title,
+                happenedOn: saved.happenedOn,
+                exercises: (saved.plannedExercises ?? []).join('\n'),
+                targets: saved.targets ?? [],
+                revision: saved.revision ?? 0,
+                frozen: false,
+              };
+            }}
+            onUse={(next) => {
+              setForm(next);
+              save.reset();
+            }}
+          />
+        )}
         {workout && (
           <button className="text-danger" type="button" onClick={() => setConfirmRemove(true)}>
             Remove workout grouping

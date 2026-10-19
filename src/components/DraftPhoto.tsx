@@ -3,10 +3,12 @@ export function DraftPhoto({
   file,
   onChange,
   disabled,
+  helper,
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
   disabled: boolean;
+  helper?: string;
 }) {
   const [preview, setPreview] = useState('');
   useEffect(() => {
@@ -55,7 +57,8 @@ export function DraftPhoto({
         )}
       </div>
       <p className="exercise-helper">
-        Uploads with this record. Your photo draft stays on this device until you save or discard it.
+        {helper ??
+          'Uploads with this record. Your photo draft stays on this device until you save or discard it.'}
       </p>
     </details>
   );

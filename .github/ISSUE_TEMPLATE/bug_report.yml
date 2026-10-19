@@ -1,0 +1,26 @@
+name: Bug report
+description: Report something that does not work.
+labels: [bug]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include what you expected. Do not paste private records, share tokens, cookies or backups.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or error message
+      description: Remove personal details first. Report security issues privately using the Security tab.

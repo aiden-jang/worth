@@ -1,25 +1,27 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash, X } from '@phosphor-icons/react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, type LogInput } from '../api';
-import type { Log, WorkoutSession } from '../shared/models';
+import { activityMeasurements, exerciseKey, targetSummary } from '../shared/activity-plans';
+import { ActivityMeasurements, LegacyActivityMeasurements } from './ActivityMeasurements';
+import { ExerciseSetFields } from './ExerciseSetFields';
 import { formatDate, today } from '../format';
-import { formatActivityMetric, previousExercise } from '../shared/workouts';
+import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
 import { useDraftPhoto } from '../hooks/useDraftPhoto';
-import { useConnection } from '../hooks/useConnection';
 import { isLogDraft } from '../shared/drafts';
+import type { Log, WorkoutSession } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
+import { formatActivityMetric, previousExercise } from '../shared/workouts';
 import { ConfirmDialog } from './ConfirmDialog';
-import { ExerciseHistory } from './ExerciseHistory';
-import { RestTimer } from './RestTimer';
 import { DraftPhoto } from './DraftPhoto';
+import { ExerciseHistory } from './ExerciseHistory';
 import { PhotoControl } from './PhotoControl';
-import { ExerciseSetFields } from './ExerciseSetFields';
-import { ActivityMeasurements } from './ActivityMeasurements';
+import { RestTimer } from './RestTimer';
 
 export function ActivityEditor({
   listId,
+  aliases = [],
   log,
   repeatLog,
   existingTitles,
@@ -32,6 +34,7 @@ export function ActivityEditor({
   onNext,
 }: {
   listId: string;
+  aliases?: import('../shared/activity-plans').ExerciseAlias[];
   log: Log | null;
   repeatLog: Log | null;
   existingTitles: string[];
@@ -53,6 +56,7 @@ export function ActivityEditor({
         ? {
             ...emptyLog(),
             title: initialExercise,
+            exercise: true,
             workoutId: initialWorkout.id,
             happenedOn: initialWorkout.happenedOn,
             exerciseSets: [{ reps: null, weight: null }],
@@ -64,6 +68,7 @@ export function ActivityEditor({
     isLogDraft,
   );
   const { form, setForm } = draft;
+  const unversionedDraft = Boolean(log && form.expectedRevision === undefined);
   const photoDraft = useDraftPhoto(
     `log:${listId}:${log?.id ?? `new:${initialWorkout?.id ?? repeatLog?.id ?? 'blank'}:${initialExercise}`}`,
   );
@@ -71,7 +76,7 @@ export function ActivityEditor({
   const setPhoto = photoDraft.change;
   const online = useConnection();
   const [saveNext, setSaveNext] = useState(false);
-  const [exerciseMode, setExerciseMode] = useState(Boolean(form.exerciseSets?.length));
+  const [exerciseMode, setExerciseMode] = useState(Boolean(form.exercise || form.exerciseSets?.length));
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [confirmingPrevious, setConfirmingPrevious] = useState(false);
   const activeWorkout =
@@ -84,8 +89,12 @@ export function ActivityEditor({
     workoutId: form.workoutId,
     beforeCreatedAt: activeWorkout?.createdAt ?? log?.createdAt,
     workouts,
+    aliases,
   });
-  function usePrevious() {
+  const plannedTarget = activeWorkout?.targets?.find(
+    (target) => exerciseKey(target.exercise) === exerciseKey(form.title),
+  );
+  function applyPrevious() {
     if (!previous?.exerciseSets?.length) return;
     setForm({
       ...form,
@@ -100,14 +109,15 @@ export function ActivityEditor({
   const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
   const hasUnsavedChanges = hasLogChanges || Boolean(photo);
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => {
-      dialog.current?.close();
-    };
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
   const save = useMutation({
     mutationFn: async () => {
       const input = cleanLogInput(form);
+      if (log) input.expectedRevision = form.expectedRevision ?? log.revision ?? 0;
+      const photoKey = photoDraft.operationId.current;
       const blob = photo ? await preparePhoto(photo) : null;
       const id = log?.id ?? draft.savedId.current;
       let result = id
@@ -117,8 +127,9 @@ export function ActivityEditor({
       // A lost create response may have saved an older version of this draft.
       if (!id) result = await api.updateLog(result.log.id, input);
       if (blob) {
-        await api.uploadPhoto('logs', result.log.id, blob);
-        result.log.hasPhoto = true;
+        const prepared = await photoDraft.freeze(blob, photoKey);
+        const uploaded = await api.uploadPhoto('logs', result.log.id, prepared.file, prepared.key);
+        result.log.hasPhoto = uploaded.hasPhoto;
       }
       return result;
     },
@@ -165,7 +176,7 @@ export function ActivityEditor({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (save.isPending) return;
+    if (save.isPending || unversionedDraft) return;
     save.mutate();
   }
 
@@ -224,6 +235,12 @@ export function ActivityEditor({
               {draft.status}
             </p>
           )}
+          {unversionedDraft && (
+            <p className="draft-state">
+              This older draft has no saved revision. Copy changes you want to keep, then close and discard
+              this device draft to reload the saved entry.
+            </p>
+          )}
           <div className="activity-mode" aria-label="Log type">
             <button
               type="button"
@@ -233,7 +250,7 @@ export function ActivityEditor({
                   setConfirmingActivity(true);
                   return;
                 }
-                setForm({ ...form, exerciseSets: [], workoutId: null });
+                setForm({ ...form, exercise: false, exerciseSets: [], workoutId: null });
                 setExerciseMode(false);
               }}
             >
@@ -244,8 +261,13 @@ export function ActivityEditor({
               aria-pressed={exerciseMode}
               onClick={() => {
                 setExerciseMode(true);
-                if (!form.exerciseSets?.length)
-                  setForm({ ...form, exerciseSets: [{ reps: null, weight: null }] });
+                setForm({
+                  ...form,
+                  exercise: true,
+                  exerciseSets: form.exerciseSets?.length
+                    ? form.exerciseSets
+                    : [{ reps: null, weight: null }],
+                });
               }}
             >
               Exercise
@@ -351,7 +373,7 @@ export function ActivityEditor({
                             JSON.stringify(form.exerciseSets) !== JSON.stringify(previous.exerciseSets)
                           )
                             setConfirmingPrevious(true);
-                          else usePrevious();
+                          else applyPrevious();
                         }}
                       >
                         Use previous sets
@@ -369,7 +391,21 @@ export function ActivityEditor({
             </section>
           )}
           {exerciseMode && activeWorkout?.status === 'active' && (
-            <RestTimer key={activeWorkout.id} workoutId={activeWorkout.id} />
+            <RestTimer
+              key={`${activeWorkout.id}:${plannedTarget?.restSeconds ?? 'default'}`}
+              workoutId={activeWorkout.id}
+              plannedSeconds={plannedTarget?.restSeconds}
+            />
+          )}
+          {exerciseMode && plannedTarget && (
+            <aside className="previous-exercise" aria-label="Planned target">
+              <p className="overline">PLANNED · NOT LOGGED</p>
+              <p>{targetSummary(plannedTarget) || 'No numeric target entered.'}</p>
+              {plannedTarget.note && <p>{plannedTarget.note}</p>}
+              <p className="exercise-helper">
+                A reference copied when this workout started. Enter actual results below.
+              </p>
+            </aside>
           )}
           {exerciseMode && (
             <ExerciseSetFields
@@ -379,6 +415,11 @@ export function ActivityEditor({
             />
           )}
           <ActivityMeasurements
+            value={form.measurements ?? []}
+            onChange={(measurements) => setForm({ ...form, measurements })}
+            disabled={save.isPending}
+          />
+          <LegacyActivityMeasurements
             form={form}
             setForm={(fields) => setForm({ ...form, ...fields })}
             log={log}
@@ -426,11 +467,16 @@ export function ActivityEditor({
             className="button button-accent"
             disabled={
               !online ||
+              unversionedDraft ||
               !photoDraft.ready ||
               !form.title.trim() ||
               save.isPending ||
               Boolean(log && !hasLogChanges) ||
-              Boolean(exerciseMode && !form.exerciseSets?.length)
+              Boolean(
+                exerciseMode &&
+                !form.exerciseSets?.length &&
+                !(form.measurements?.length && activityMeasurements.safeParse(form.measurements).success),
+              )
             }
           >
             {save.isPending ? 'Saving…' : log ? 'Save changes' : 'Save log'}
@@ -441,13 +487,7 @@ export function ActivityEditor({
             <summary>
               Photo <span>optional · private</span>
             </summary>
-            <PhotoControl
-              kind="logs"
-              id={log.id}
-              hasPhoto={log.hasPhoto}
-              version={log.updatedAt}
-              listId={listId}
-            />
+            <PhotoControl kind="logs" id={log.id} hasPhoto={log.hasPhoto} version={log.updatedAt} />
           </details>
         )}
         {log && (
@@ -464,7 +504,7 @@ export function ActivityEditor({
           <ConfirmDialog
             eyebrow="DELETE LOG"
             title={`Delete ${log.title}?`}
-            description="This permanently removes this activity log and its private photo, if it has one."
+            description="This moves this activity log and its private photo to Trash for 30 days."
             confirmLabel="Delete log"
             pending={remove.isPending}
             error={remove.isError ? remove.error.message : undefined}
@@ -474,6 +514,7 @@ export function ActivityEditor({
         )}
         {historyTitle && (
           <ExerciseHistory
+            aliases={aliases}
             key={historyTitle}
             listId={listId}
             title={historyTitle}
@@ -489,7 +530,7 @@ export function ActivityEditor({
             description="This copies the previous reps, weights and weight unit into this draft. Your workout, date and note stay intact."
             confirmLabel="Use previous sets"
             cancelLabel="Keep editing"
-            onConfirm={usePrevious}
+            onConfirm={applyPrevious}
             onClose={() => setConfirmingPrevious(false)}
           />
         )}
@@ -501,7 +542,7 @@ export function ActivityEditor({
             cancelLabel="Keep editing"
             confirmLabel="Use Activity"
             onConfirm={() => {
-              setForm({ ...form, exerciseSets: [], workoutId: null });
+              setForm({ ...form, exercise: false, exerciseSets: [], workoutId: null });
               setExerciseMode(false);
               setConfirmingActivity(false);
             }}
@@ -531,6 +572,7 @@ export function ActivityEditor({
 
 function emptyLog(title = ''): LogInput {
   return {
+    measurements: [],
     workoutId: null,
     exerciseSets: [],
     weightUnit: 'kg',
@@ -547,6 +589,9 @@ function emptyLog(title = ''): LogInput {
 
 function fromLog(log: Log): LogInput {
   return {
+    expectedRevision: log.revision ?? 0,
+    exercise: log.exercise || Boolean(log.exerciseSets?.length),
+    measurements: (log.measurements ?? []).map((measurement) => ({ ...measurement })),
     workoutId: log.workoutId ?? null,
     exerciseSets: (log.exerciseSets ?? []).map((set) => ({ ...set })),
     weightUnit: log.weightUnit ?? 'kg',
@@ -562,5 +607,13 @@ function fromLog(log: Log): LogInput {
 }
 
 function cleanLogInput(input: LogInput): LogInput {
-  return { ...input, title: input.title.trim(), unit: input.unit.trim(), note: input.note.trim() };
+  const parsed = activityMeasurements.safeParse(input.measurements ?? []);
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Check named measurements.');
+  return {
+    ...input,
+    measurements: parsed.data,
+    title: input.title.trim(),
+    unit: input.unit.trim(),
+    note: input.note.trim(),
+  };
 }

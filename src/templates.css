@@ -1,0 +1,57 @@
+.collection-setup > label,
+.collection-templates label {
+  display: grid;
+  gap: 8px;
+}
+.collection-setup :is(input, textarea, select),
+.collection-templates :is(input, textarea, select) {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 12px;
+}
+.collection-setup textarea {
+  min-height: 120px;
+}
+.collection-setup hr {
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid #38392f;
+}
+.template-preview {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 20px;
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #38392f;
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+}
+.template-preview :is(h3, p) {
+  margin: 0 0 12px;
+}
+.template-preview p {
+  color: #aaa99b;
+}
+.template-preview .collection-artwork {
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+}
+.collection-templates {
+  min-width: 0;
+}
+.collection-templates > p {
+  margin: 12px 0;
+}
+@media (max-width: 680px) {
+  .template-preview {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .template-preview .collection-artwork {
+    width: 100%;
+    height: 160px;
+  }
+}

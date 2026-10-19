@@ -1,19 +1,24 @@
-import { ActivityEditor } from './ActivityEditor';
-import { formatActivityMetric } from '../shared/workouts';
-import { useSearchParams } from 'react-router';
-import { Fragment, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Plus } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
+import { Fragment, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { api } from '../api';
+import type { ExerciseAliases } from '../shared/activity-plans';
+import { ExerciseAliasesEditor } from './ExerciseAliasesEditor';
+import { formatDate, formatElapsedDays, today } from '../format';
+import { useViewPreference } from '../hooks/useViewPreference';
+import type { Log, WorkoutSession } from '../shared/models';
+import { formatActivityMetric } from '../shared/workouts';
+import { ActivityEditor } from './ActivityEditor';
+import { ActivityIllustration } from './ActivityIllustration';
+import { CabinetEmptyState } from './CabinetEmptyState';
 import { ExerciseDirectory, ExerciseHistory } from './ExerciseHistory';
 import { WorkoutRoutines, type RoutineDraft } from './WorkoutRoutines';
 import { WorkoutSessions } from './WorkoutSessions';
-import type { Log, WorkoutSession } from '../shared/models';
-import { api } from '../api';
-import { formatDate, formatElapsedDays, today } from '../format';
-import { useViewPreference } from '../hooks/useViewPreference';
 
 export function ActivityView({
   listId,
+  aliases,
   logs,
   loading,
   error,
@@ -24,6 +29,7 @@ export function ActivityView({
   onNew,
 }: {
   listId: string;
+  aliases: ExerciseAliases;
   logs: Log[];
   loading: boolean;
   error: boolean;
@@ -37,6 +43,7 @@ export function ActivityView({
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
+  const [editingAliases, setEditingAliases] = useState(false);
   const [routineSeed, setRoutineSeed] = useState<RoutineDraft | null>(null);
   const [initialExercise, setInitialExercise] = useState('');
   const [creatingWorkout, setCreatingWorkout] = useState(false);
@@ -86,6 +93,8 @@ export function ActivityView({
     setRepeatLog(null);
     setInitialWorkout(null);
     setInitialExercise('');
+    // Only a list change resets the editor; changing workout/search params must preserve it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listId]);
 
   function clearFilters() {
@@ -115,6 +124,7 @@ export function ActivityView({
         event.metaKey ||
         event.ctrlKey ||
         event.altKey ||
+        document.querySelector('dialog[open]') ||
         event.key.toLocaleLowerCase() !== 'a'
       )
         return;
@@ -174,7 +184,15 @@ export function ActivityView({
         onCloseSeed={() => setRoutineSeed(null)}
         onStarted={clearFilters}
       />
-      {!loading && !error && <ExerciseDirectory logs={logs} listId={listId} onOpen={setHistoryTitle} />}
+      {!loading && !error && (
+        <ExerciseDirectory
+          logs={logs}
+          listId={listId}
+          aliases={aliases.groups}
+          onOpen={setHistoryTitle}
+          onManageAliases={() => setEditingAliases(true)}
+        />
+      )}
       <div className="workout-launch">
         <button
           type="button"
@@ -254,6 +272,7 @@ export function ActivityView({
             const seen = new Set<string>();
             setRoutineSeed({
               title: workout.title,
+              targets: workout.targets ?? [],
               exercises: names.filter((name) => {
                 const key = name.trim().replace(/\s+/g, ' ').toLowerCase();
                 if (seen.has(key)) return false;
@@ -272,13 +291,15 @@ export function ActivityView({
       )}
       {ungrouped.length > 0 && workouts.length > 0 && <p className="activity-month">OTHER LOGS</p>}
       {!visible.length && !workouts.length ? (
-        <div className="empty-list">
-          <h2>{logs.length ? 'Nothing matches.' : 'Nothing here yet.'}</h2>
-          <p>
-            {logs.length
+        <CabinetEmptyState
+          art={!logs.length ? <ActivityIllustration /> : undefined}
+          title={logs.length ? 'Nothing matches.' : 'Nothing here yet.'}
+          description={
+            logs.length
               ? 'Try another search.'
-              : 'Create a routine above to plan your exercises, or start with one log.'}
-          </p>
+              : 'Create a routine above to plan your exercises, or start with one log.'
+          }
+        >
           {!logs.length && (
             <button className="button button-dark" onClick={() => onNew()}>
               <Plus size={17} /> Add first log
@@ -289,7 +310,7 @@ export function ActivityView({
               Clear filters
             </button>
           )}
-        </div>
+        </CabinetEmptyState>
       ) : (
         <div className="activity-rows">
           {ungrouped.map((log, index) => {
@@ -331,6 +352,7 @@ export function ActivityView({
       )}
       {historyTitle && (
         <ExerciseHistory
+          aliases={aliases.groups}
           key={historyTitle}
           listId={listId}
           title={historyTitle}
@@ -341,6 +363,7 @@ export function ActivityView({
       )}
       {(newOpen || selected) && (!routeParams.get('workout') || !workoutsQuery.isPending) && (
         <ActivityEditor
+          aliases={aliases.groups}
           key={selected?.id ?? `new-${repeatLog?.id ?? restoredWorkout?.id ?? 'blank'}-${restoredExercise}`}
           listId={listId}
           log={newOpen ? null : selected}
@@ -362,6 +385,9 @@ export function ActivityView({
             onNew(workout.id, title);
           }}
         />
+      )}
+      {editingAliases && (
+        <ExerciseAliasesEditor listId={listId} current={aliases} onClose={() => setEditingAliases(false)} />
       )}
     </section>
   );

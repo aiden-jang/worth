@@ -13,7 +13,7 @@ export function registerPublicShareRoute(api: Hono<AppEnv>): void {
     const hash = await hashToken(token);
     const row = await c.env.DB.prepare(
       `SELECT payload_json FROM shares
-      WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > ?`,
+      WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > ? AND EXISTS(SELECT 1 FROM active_lists l WHERE l.id = shares.list_id AND l.owner_id = shares.owner_id)`,
     )
       .bind(hash, Date.now())
       .first<{ payload_json: string }>();
@@ -41,10 +41,10 @@ export function registerShareRoutes(api: Hono<AppEnv>): void {
     const token = createShareToken();
     const expiresAt = now + 7 * 24 * 60 * 60 * 1000;
     const id = crypto.randomUUID();
-    await c.env.DB.prepare(
+    const inserted = await c.env.DB.prepare(
       `INSERT INTO shares
       (id, list_id, owner_id, token_hash, title, payload_json, created_at, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS(SELECT 1 FROM active_lists WHERE id = ? AND owner_id = ?)`,
     )
       .bind(
         id,
@@ -55,8 +55,11 @@ export function registerShareRoutes(api: Hono<AppEnv>): void {
         JSON.stringify(snapshot),
         now,
         expiresAt,
+        list.id,
+        c.get('ownerId'),
       )
       .run();
+    if (inserted.meta.changes === 0) throw new ApiError(404, 'NOT_FOUND', 'List no longer available');
     return c.json({ id, token, share: snapshot, expiresAt }, 201);
   });
 

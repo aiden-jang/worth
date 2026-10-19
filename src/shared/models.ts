@@ -1,5 +1,7 @@
+import type { ActivityMeasurement, ExerciseAlias, RoutineTarget } from './activity-plans';
+
 export type CollectionArt = {
-  object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag';
+  object: 'cup' | 'ticket' | 'place' | 'car' | 'snack' | 'bag' | 'ramen' | 'sneaker' | 'plant' | 'camera';
   tone: 'sage' | 'clay' | 'butter';
 };
 export type ExerciseSet = { reps: number | null; weight: number | null };
@@ -16,17 +18,27 @@ export interface ListSummary {
   logCount: number;
   rankedCount: number;
   favoriteCount: number;
+  archived?: boolean;
   artwork?: CollectionArt | null;
   hasCoverPhoto: boolean;
+  coverRevision?: number;
   updatedAt: number;
 }
 
 export interface ListDetail extends ListSummary {
+  exerciseAliases?: ExerciseAlias[];
+  exerciseAliasRevision?: number;
+  workspace?: import('./workspace').CollectionWorkspace;
   rankedIds: string[];
   rankRevision: number;
 }
 
 export interface Item {
+  context?: import('./item-context').ItemContext;
+  contextRevision?: number;
+  wantToTry?: boolean;
+  mergedIntoId?: string | null;
+  mergedIds?: string[];
   revisitQueued?: boolean;
   id: string;
   listId: string;
@@ -44,6 +56,8 @@ export interface Item {
 }
 
 export interface WorkoutRoutine {
+  targets?: RoutineTarget[];
+  revision?: number;
   id: string;
   listId: string;
   title: string;
@@ -53,6 +67,8 @@ export interface WorkoutRoutine {
 }
 
 export interface WorkoutSession {
+  targets?: RoutineTarget[];
+  revision?: number;
   status?: 'active' | 'finished';
   skippedExercises?: string[];
   plannedExercises?: string[];
@@ -65,6 +81,10 @@ export interface WorkoutSession {
 }
 
 export interface Log {
+  exercise?: boolean;
+  measurements?: ActivityMeasurement[];
+  context?: import('./visit-context').VisitContext;
+  revision?: number;
   workoutId?: string | null;
   exerciseSets?: ExerciseSet[];
   weightUnit?: 'kg' | 'lb';
@@ -183,12 +203,23 @@ interface DecisionPick {
 }
 
 export interface SearchResult {
+  listArchived?: boolean;
   id: string;
   listId: string;
   listName: string;
-  kind: 'list' | 'item' | 'log';
+  kind: 'list' | 'item' | 'log' | 'inbox';
   exercise?: boolean;
   itemId: string | null;
   title: string;
   detail: string;
+}
+
+export interface TrashEntry {
+  id: string;
+  kind: 'list' | 'item' | 'log' | 'inbox';
+  title: string;
+  listId: string;
+  listName: string;
+  trashedAt: number;
+  expiresAt: number;
 }

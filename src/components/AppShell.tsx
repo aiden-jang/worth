@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { logoutUrl } from '@aidenjang/auth-client';
 import {
@@ -12,6 +12,7 @@ import {
   MagnifyingGlass,
   Plus,
   Stack,
+  Tray,
   X,
 } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
@@ -23,6 +24,8 @@ import { api } from '../api';
 import { preferredQuickCaptureList } from '../shared/quick-capture';
 import { starterCollectionCover } from '../shared/starter-covers';
 import type { ListSummary } from '../shared/models';
+
+const InboxDrawer = lazy(() => import('./InboxDrawer').then((module) => ({ default: module.InboxDrawer })));
 
 const quickCaptureStorageKey = 'worth:quick-capture-list';
 
@@ -44,14 +47,20 @@ export function AppShell({
   const dialog = useRef<HTMLDialogElement>(null);
   const shortcutsDialog = useRef<HTMLDialogElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
-  const [rememberedListId, setRememberedListId] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : window.localStorage.getItem(quickCaptureStorageKey),
-  );
+  const [rememberedListId, setRememberedListId] = useState<string | null>(() => {
+    try {
+      return window.localStorage.getItem(quickCaptureStorageKey);
+    } catch {
+      return null;
+    }
+  });
   const [pickerQuery, setPickerQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [inboxOpen, setInboxOpen] = useState(false);
   useEffect(() => {
     setMenuOpen(false);
-  }, [location.pathname, location.search]);
+    setInboxOpen(false);
+  }, [location.key]);
   useEffect(() => {
     if (!menuOpen) return;
     const close = (event: KeyboardEvent) => {
@@ -82,7 +91,11 @@ export function AppShell({
   const listScope = new URLSearchParams(location.search).get('kind');
 
   const rememberList = useCallback((listId: string) => {
-    window.localStorage.setItem(quickCaptureStorageKey, listId);
+    try {
+      window.localStorage.setItem(quickCaptureStorageKey, listId);
+    } catch {
+      /* Quick capture still works without device storage. */
+    }
     setRememberedListId(listId);
   }, []);
 
@@ -107,7 +120,7 @@ export function AppShell({
       return;
     }
     if (!lists.data?.lists.length) {
-      navigate('/lists?create=1');
+      navigate('/capture');
       return;
     }
     if (quickCaptureList) {
@@ -146,7 +159,8 @@ export function AppShell({
         target?.closest('button, a, [role="button"]')
       )
         return;
-      if (dialog.current?.open || shortcutsDialog.current?.open) return;
+      if (dialog.current?.open || shortcutsDialog.current?.open || document.querySelector('dialog[open]'))
+        return;
 
       if (event.key === '/') {
         event.preventDefault();
@@ -186,6 +200,25 @@ export function AppShell({
         <nav id="worth-navigation" aria-label="Main navigation" className="main-nav">
           <NavLink end to="/">
             <House size={18} aria-hidden="true" /> Archive
+          </NavLink>
+          <NavLink
+            to="/inbox"
+            onClick={(event) => {
+              if (
+                location.pathname === '/inbox' ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                event.button !== 0
+              )
+                return;
+              event.preventDefault();
+              setMenuOpen(false);
+              setInboxOpen(true);
+            }}
+          >
+            <Tray size={18} aria-hidden="true" /> Inbox
           </NavLink>
           <NavLink
             to="/lists?kind=collection"
@@ -285,6 +318,11 @@ export function AppShell({
           <a href={logoutUrl(authOrigin, window.location.origin)}>Sign out</a>
         </footer>
       </div>
+      {inboxOpen && (
+        <Suspense fallback={<p role="status">Opening Inbox…</p>}>
+          <InboxDrawer onClose={() => setInboxOpen(false)} />
+        </Suspense>
+      )}
       <dialog
         className="add-dialog"
         ref={dialog}
@@ -312,6 +350,9 @@ export function AppShell({
             />
           </label>
         )}
+        <Link className="dialog-create" to="/capture" onClick={() => dialog.current?.close()}>
+          Keep a name in Inbox <ArrowRight size={16} />
+        </Link>
         <div className="add-list-choices">
           {visibleCollectionLists.length > 0 && (
             <ListPickerGroup label="Collections" lists={visibleCollectionLists} onOpen={openList} />
@@ -323,6 +364,9 @@ export function AppShell({
             <p className="add-list-empty">No lists match “{pickerQuery.trim()}”.</p>
           )}
         </div>
+        <Link className="dialog-create" to="/capture" onClick={() => dialog.current?.close()}>
+          Capture from a browser or link <ArrowRight size={16} />
+        </Link>
         <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
           Create a new list <ArrowRight size={16} />
         </Link>
@@ -387,7 +431,7 @@ function ListPickerGroup({
         const cover =
           list.kind === 'collection'
             ? list.hasCoverPhoto
-              ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
+              ? `/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`
               : starterCollectionCover(list.name, list.artwork)
             : null;
         return (

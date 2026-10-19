@@ -8,3 +8,5 @@ test-results/
 *.tsbuildinfo
 worker-configuration.d.ts
 .DS_Store
+
+public/ocr/

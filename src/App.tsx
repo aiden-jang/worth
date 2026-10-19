@@ -1,15 +1,65 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { ProductLinks } from './components/ProductLinks';
 import { InfoPage } from './pages/InfoPage';
 import { Route, Routes, ScrollRestoration, useLocation } from 'react-router';
-import { api } from './api';
+import { api, bindPageAccount } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
-import { Component, Suspense, lazy, useRef, useState, type ReactNode } from 'react';
+import { Component, Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
+import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const SpacesPage = lazy(() => import('./pages/SpacesPage').then((m) => ({ default: m.SpacesPage })));
+const SpacePage = lazy(() => import('./pages/SpacesPage').then((m) => ({ default: m.SpacePage })));
+const SpaceInvitePage = lazy(() =>
+  import('./pages/SpacesPage').then((m) => ({ default: m.SpaceInvitePage })),
+);
+const CapsulesPage = lazy(() => import('./pages/CapsulesPage').then((m) => ({ default: m.CapsulesPage })));
+const CapsulePage = lazy(() => import('./pages/CapsulesPage').then((m) => ({ default: m.CapsulePage })));
+const CapsuleComposePage = lazy(() =>
+  import('./pages/CapsulesPage').then((m) => ({ default: m.CapsuleComposePage })),
+);
+const ReceiptsPage = lazy(() =>
+  import('./pages/ReceiptsPage').then((module) => ({ default: module.ReceiptsPage })),
+);
+const ReceiptPage = lazy(() =>
+  import('./pages/ReceiptsPage').then((module) => ({ default: module.ReceiptPage })),
+);
+const ReceiptCapturePage = lazy(() =>
+  import('./pages/ReceiptCapturePage').then((module) => ({ default: module.ReceiptCapturePage })),
+);
+const BoardsPage = lazy(() =>
+  import('./pages/BoardsPage').then((module) => ({ default: module.BoardsPage })),
+);
+const BoardPage = lazy(() => import('./pages/BoardsPage').then((module) => ({ default: module.BoardPage })));
+const ActivityCalendarPage = lazy(() =>
+  import('./pages/ActivityCalendarPage').then((module) => ({ default: module.ActivityCalendarPage })),
+);
+const FieldGuidePage = lazy(() =>
+  import('./pages/FieldGuidePage').then((module) => ({ default: module.FieldGuidePage })),
+);
+const ConnectionsPage = lazy(() =>
+  import('./pages/ConnectionsPage').then((module) => ({ default: module.ConnectionsPage })),
+);
+const RetrospectivePage = lazy(() =>
+  import('./pages/RetrospectivePage').then((module) => ({ default: module.RetrospectivePage })),
+);
+const CodeCapturePage = lazy(() =>
+  import('./pages/CodeCapturePage').then((module) => ({ default: module.CodeCapturePage })),
+);
+const PhotoTextPage = lazy(() =>
+  import('./pages/PhotoTextPage').then((module) => ({ default: module.PhotoTextPage })),
+);
+const InboxPage = lazy(() => import('./pages/InboxPage').then((module) => ({ default: module.InboxPage })));
+const CapturePage = lazy(() =>
+  import('./pages/CapturePage').then((module) => ({ default: module.CapturePage })),
+);
+const CaptureSignIn = lazy(() =>
+  import('./pages/CapturePage').then((module) => ({ default: module.CaptureSignIn })),
+);
+const QuickPage = lazy(() => import('./pages/QuickPage').then((module) => ({ default: module.QuickPage })));
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })),
 );
@@ -81,12 +131,28 @@ class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean 
 
 function PrivateApp() {
   const location = useLocation();
-  const session = useQuery({ queryKey: ['me'], queryFn: api.me, retry: false });
+  const client = useQueryClient();
+  const session = useQuery({
+    queryKey: ['me'],
+    queryFn: api.me,
+    retry: false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+  useEffect(() => {
+    const refresh = () => {
+      void client.invalidateQueries({ queryKey: ['me'] });
+    };
+    window.addEventListener('worth:account-changed', refresh);
+    return () => window.removeEventListener('worth:account-changed', refresh);
+  }, [client]);
 
   return session.isPending ? (
     <div className="boot-screen">worth</div>
   ) : session.isError ? (
     <AuthProblem onRetry={() => void session.refetch()} />
+  ) : session.data?.user && !bindPageAccount(session.data.user.id) ? (
+    <AccountChanged email={session.data.user.email} />
   ) : session.data?.user ? (
     <AppShell user={session.data.user} authOrigin={authOrigin}>
       <Routes>
@@ -96,15 +162,85 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/boards" element={<BoardsPage />} />
+        <Route path="/patterns/boards/:id" element={<BoardPage />} />
+        <Route path="/patterns/calendar" element={<ActivityCalendarPage />} />
+        <Route path="/patterns/field-guide" element={<FieldGuidePage />} />
+        <Route path="/patterns/connections" element={<ConnectionsPage />} />
+        <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/spaces" element={<SpacesPage />} />
+        <Route path="/spaces/invite/:inviteId" element={<SpaceInvitePage />} />
+        <Route path="/spaces/:id" element={<SpacePage />} />
+        <Route path="/capsules" element={<CapsulesPage />} />
+        <Route path="/capsules/new" element={<CapsuleComposePage />} />
+        <Route path="/capsules/:id" element={<CapsulePage />} />
+        <Route path="/receipts" element={<ReceiptsPage />} />
+        <Route path="/receipts/new" element={<ReceiptCapturePage />} />
+        <Route path="/receipts/:id" element={<ReceiptPage />} />
+        <Route path="/read" element={<PhotoTextPage />} />
+        <Route path="/code" element={<CodeCapturePage />} />
+        <Route path="/inbox" element={<InboxPage />} />
+        <Route path="/capture" element={<CapturePage />} />
+        <Route path="/quick" element={<QuickPage />} />
         <Route path="*" element={<InfoPage kind="missing" />} />
       </Routes>
+      <TrashNotice />
     </AppShell>
-  ) : ['/', '/settings', '/lists', '/search', '/patterns'].includes(location.pathname) ||
-    /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ? (
+  ) : location.pathname === '/capture' ? (
+    <CaptureSignIn authOrigin={authOrigin} />
+  ) : [
+      '/',
+      '/spaces',
+      '/capsules',
+      '/capsules/new',
+      '/receipts',
+      '/receipts/new',
+      '/read',
+      '/code',
+      '/patterns/look-back',
+      '/patterns/connections',
+      '/patterns/field-guide',
+      '/patterns/calendar',
+      '/patterns/boards',
+      '/inbox',
+      '/quick',
+      '/settings',
+      '/lists',
+      '/search',
+      '/patterns',
+    ].includes(location.pathname) ||
+    /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ||
+    /^\/spaces(?:\/invite)?\/[^/]+\/?$/.test(location.pathname) ||
+    /^\/capsules\/[^/]+\/?$/.test(location.pathname) ||
+    /^\/receipts\/[^/]+\/?$/.test(location.pathname) ||
+    /^\/patterns\/boards\/[^/]+\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (
     <InfoPage kind="missing" />
+  );
+}
+
+function AccountChanged({ email }: { email: string }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus(), []);
+  return (
+    <main className="light-page page-width" aria-label="Account changed">
+      <h1 ref={heading} tabIndex={-1}>
+        Accounts changed.
+      </h1>
+      <p>
+        You’re now signed in as {email}. Reload Worth to open that account. Unfinished drafts stay with their
+        original account.
+      </p>
+      <button
+        className="button button-accent"
+        style={{ minHeight: 44 }}
+        onClick={() => window.location.reload()}
+      >
+        Reload Worth
+      </button>
+    </main>
   );
 }
 

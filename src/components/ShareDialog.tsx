@@ -1,10 +1,10 @@
-import { saveRankingImage } from '../shared/ranking-image';
-import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, LinkSimple, X } from '@phosphor-icons/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { api } from '../api';
 import type { Item, ListDetail } from '../shared/models';
 import { rankedItems } from '../shared/ranking';
-import { api } from '../api';
+import { saveRankingImage } from '../shared/ranking-image';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RankingImageShare } from './RankingImageShare';
 
@@ -34,16 +34,19 @@ export function ShareDialog({
   const [copyError, setCopyError] = useState('');
   const [shareToRevoke, setShareToRevoke] = useState<string | null>(null);
   const shares = useQuery({ queryKey: ['shares', list.id], queryFn: () => api.shares(list.id) });
-  const ranked = rankedItems(list, items);
-  const preview = limit === 'all' ? ranked : ranked.slice(0, limit);
+  const ranked = useMemo(() => rankedItems(list, items), [list, items]);
+  const preview = useMemo(() => (limit === 'all' ? ranked : ranked.slice(0, limit)), [limit, ranked]);
+  const imageData = useMemo(
+    () => ({ title: list.name, entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })) }),
+    [list.name, preview],
+  );
   const activeShares = (shares.data?.shares ?? []).filter(
     (share) => !share.revokedAt && share.expiresAt > Date.now(),
   );
   useEffect(() => {
-    dialog.current?.showModal();
-    return () => {
-      dialog.current?.close();
-    };
+    const node = dialog.current;
+    node?.showModal();
+    return () => node?.close();
   }, []);
 
   const create = useMutation({
@@ -82,9 +85,12 @@ export function ShareDialog({
         // Ignore close events queued by Strict Mode cleanup if the dialog reopened.
         if (!dialog.current?.open) onClose();
       }}
-      onCancel={(event) => event.stopPropagation()}
+      onCancel={(event) => {
+        event.stopPropagation();
+        if (create.isPending || revoke.isPending) event.preventDefault();
+      }}
       onClick={(event) => {
-        if (event.target === dialog.current) dialog.current.close();
+        if (!create.isPending && !revoke.isPending && event.target === dialog.current) dialog.current.close();
       }}
     >
       <div className="share-inner">
@@ -93,7 +99,12 @@ export function ShareDialog({
             <p className="overline">SHARE A RANKING</p>
             <h2 id="share-dialog-title">{list.name}</h2>
           </div>
-          <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
+          <button
+            className="icon-button"
+            aria-label="Close"
+            disabled={create.isPending || revoke.isPending}
+            onClick={() => dialog.current?.close()}
+          >
             <X size={22} />
           </button>
         </div>
@@ -104,6 +115,7 @@ export function ShareDialog({
           Include
           <select
             value={limit}
+            disabled={create.isPending}
             onChange={(event) => {
               const value = event.target.value;
               setLimit(value === 'all' ? 'all' : value === '10' ? 10 : 5);
@@ -156,12 +168,7 @@ export function ShareDialog({
           Image: collection name and up to five ranked titles and types. Downloaded images cannot be revoked.
         </p>
         <p role="status">{imageStatus}</p>
-        <RankingImageShare
-          data={{
-            title: list.name,
-            entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
-          }}
-        />
+        <RankingImageShare data={imageData} />
         {link ? (
           <div className="created-link">
             <p>
@@ -194,7 +201,24 @@ export function ShareDialog({
             <LinkSimple size={18} /> Create link
           </button>
         )}
-        {create.isError && <p className="form-error">{create.error.message}</p>}
+        {create.isError && (
+          <p className="form-error" role="alert">
+            {create.error.message}
+          </p>
+        )}
+        {shares.isPending && <p role="status">Opening active links…</p>}
+        {shares.isError && (
+          <div className="form-error" role="alert">
+            <p>Couldn’t open your active links. Try again to review or revoke them.</p>
+            <button
+              className="button button-outline"
+              disabled={shares.isFetching}
+              onClick={() => void shares.refetch()}
+            >
+              Try again
+            </button>
+          </div>
+        )}
         {!!activeShares.length && (
           <div className="active-shares">
             <h3>Active links</h3>
@@ -215,7 +239,11 @@ export function ShareDialog({
             ))}
           </div>
         )}
-        {revoke.isError && <p className="form-error">{revoke.error.message}</p>}
+        {revoke.isError && (
+          <p className="form-error" role="alert">
+            {revoke.error.message}
+          </p>
+        )}
       </div>
       {shareToRevoke && (
         <ConfirmDialog

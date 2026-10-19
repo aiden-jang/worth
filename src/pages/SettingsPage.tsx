@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
-import { cleanDeviceData, draftLifetime } from '../shared/device-data';
+import { TrashPanel } from '../components/TrashTools';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../hooks/useConnection';
+import { cleanDeviceData, draftLifetime } from '../shared/device-data';
+import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
 export function SettingsPage() {
   const client = useQueryClient();
   const owner = client.getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
@@ -65,7 +66,18 @@ export function SettingsPage() {
         throw new Error(
           `Could not read this Worth file: ${parsed.error.issues[0]?.message ?? 'Invalid records'}`,
         );
-      if (!parsed.data.lists.length) throw new Error('This file has no lists to restore.');
+      if (
+        !parsed.data.lists.length &&
+        !parsed.data.collectionTemplates.length &&
+        !parsed.data.inbox.length &&
+        !parsed.data.boards.length &&
+        !parsed.data.receipts.length &&
+        !parsed.data.capsules.length &&
+        !parsed.data.sharedArchives.length
+      )
+        throw new Error(
+          'This file has no lists, Inbox finds, boards, receipts, capsules, shared copies or templates to restore.',
+        );
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -107,12 +119,30 @@ export function SettingsPage() {
           {status}
         </p>
       )}
+      <TrashPanel />
+      <section className="data-section">
+        <h2>Offline copy.</h2>
+        <p>
+          Prepare an encrypted text copy for this browser, queue Inbox captures and note edits, then
+          explicitly sync when connected. Manage or remove offline copies and pending saves on the offline
+          page.
+        </p>
+        <a className="button button-outline" href={`/offline/?account=${encodeURIComponent(owner ?? '')}`}>
+          Open offline copy →
+        </a>
+      </section>
       <section className="data-section">
         <h2>Take a copy.</h2>
-        <p>Download your records, or a full backup with photos. Share links aren’t included.</p>
+        <p>
+          Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
+          capsule backups include unopened contents; keep downloaded files private. Shared spaces and saved
+          private copies restore as disconnected private archives. Invitations and unrevealed choices are
+          excluded.
+        </p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists and 200 photos/covers. Keep downloaded files
+          restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates, 1,000 connections,
+          10,000 history changes (up to 16 MB of history) and 200 photos/covers. Keep downloaded files
           somewhere private.
         </p>
         <div className="data-actions">
@@ -134,7 +164,10 @@ export function SettingsPage() {
       </section>
       <section className="data-section">
         <h2>Bring it back.</h2>
-        <p>Restore a Worth file as new lists. Review it first; your existing archive stays intact.</p>
+        <p>
+          Restore a Worth file as new lists, templates and unfiled Inbox finds. Review it first; your existing
+          archive stays intact.
+        </p>
         <label className="button button-outline file-choice">
           Choose backup
           <input
@@ -151,16 +184,115 @@ export function SettingsPage() {
             <p>
               {file.lists.length} lists · {file.items.length} items · {file.logs.length} logs ·{' '}
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
-              {file.photos.length} photos
+              {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
+              Inbox finds · {file.tasteHistory.length} history changes · {file.connections.length} connections
+              · {file.boards.length} boards · {file.receipts.length} receipts · {file.capsules.length}{' '}
+              capsules · {file.sharedArchives.length} shared copies
             </p>
-            <ul>
-              {file.lists.map((l) => (
-                <li key={l.id}>
-                  {l.name} <span> / {l.kind}</span>
-                </li>
-              ))}
-            </ul>
+            {!!file.capsules.length && (
+              <section aria-label="Capsules to restore">
+                <p>
+                  {file.capsules.length} fixed capsules will restore with fresh IDs and their original opening
+                  dates and opened state. Unopened contents are present in this file.
+                </p>
+                <ul>
+                  {file.capsules.map((c) => (
+                    <li key={c.id}>
+                      {c.name} · {c.openedAt === null ? 'Closed' : 'Opened'} · {c.opening.day} ·{' '}
+                      {c.opening.zone}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!!file.sharedArchives.length && (
+              <section aria-label="Shared copies to restore">
+                <p>
+                  {file.sharedArchives.length} disconnected private copies will restore with fresh IDs. No
+                  invitations, live access or unrevealed choices will be created.
+                </p>
+                <ul>
+                  {file.sharedArchives.map((c) => (
+                    <li key={c.id}>
+                      {c.name} · {c.entries.length} snapshots · {c.outcomes.length} revealed rounds
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!!file.receipts.length && (
+              <section aria-label="Receipts to restore">
+                <p>
+                  {file.receipts.length} private receipts will restore with fresh IDs. Record choices follow
+                  restored records; restoring a receipt does not create extra items.
+                </p>
+                <ul>
+                  {file.receipts.map((receipt) => (
+                    <li key={receipt.id}>
+                      {receipt.name} · {receipt.lines.length} lines
+                      {receipt.attachment ? ' · Attachment metadata' : ''}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!!file.boards.length && (
+              <section aria-label="Boards to restore">
+                <p>
+                  {file.boards.length} private boards will be restored with new IDs. Their source links will
+                  follow restored records.
+                </p>
+                <ul>
+                  {file.boards.map((board) => (
+                    <li key={board.id}>
+                      {board.name} · {board.entries.length} entries
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!!file.lists.length && (
+              <ul>
+                {file.lists.map((l) => (
+                  <li key={l.id}>
+                    {l.name} <span> / {l.kind}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!!file.collectionTemplates.length && (
+              <ul aria-label="Templates to restore">
+                {file.collectionTemplates.map((template) => (
+                  <li key={template.id}>{template.name} / template</li>
+                ))}
+              </ul>
+            )}
+            {!!file.inbox.length && (
+              <div>
+                <p>{file.inbox.length} unfiled Inbox finds will be restored with new private IDs.</p>
+                <details>
+                  <summary>Preview Inbox finds</summary>
+                  <ul aria-label="Inbox finds to restore">
+                    {file.inbox.map((entry) => (
+                      <li key={entry.id}>
+                        {entry.title}
+                        {entry.type ? ` / ${entry.type}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+            )}
             {file.photosExcluded && <p>Photos are not in this file and will not be restored.</p>}
+            {!!file.photoAssets.length && (
+              <p>
+                {file.photoAssets.length} saved photo sources include their captions, order and arrows.{' '}
+                {file.photosExcluded
+                  ? 'The original images are absent; restored galleries will mark them unavailable.'
+                  : 'Only originals present in this file can be restored.'}
+              </p>
+            )}
+
             <p>
               No public share links will be created. Restoring the same file again after a successful restore
               creates another copy.
@@ -176,16 +308,18 @@ export function SettingsPage() {
                     if (retryStorage.current) {
                       try {
                         localStorage.removeItem(retryStorage.current);
-                      } catch {}
+                      } catch {
+                        /* Device storage may be unavailable or blocked. */
+                      }
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} restored. Your existing lists were kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''}${file.capsules.length ? ` and ${file.capsules.length} ${file.capsules.length === 1 ? 'capsule' : 'capsules'}` : ''}${file.sharedArchives.length ? ` and ${file.sharedArchives.length} shared ${file.sharedArchives.length === 1 ? 'copy' : 'copies'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }
               >
-                {busy === 'restore' ? 'Restoring…' : 'Restore as new lists'}
+                {busy === 'restore' ? 'Restoring…' : 'Restore previewed data'}
               </button>
               <button className="button button-outline" disabled={!!busy} onClick={() => setFile(null)}>
                 Cancel restore
@@ -194,10 +328,23 @@ export function SettingsPage() {
           </div>
         )}
       </section>
+      <section className="settings-section">
+        <h2>Within reach.</h2>
+        <p>
+          <Link to="/receipts">Reviewed receipts</Link> keeps checked text, optional image copies and chosen
+          record links. <Link to="/read">Read text from a photo</Link> or{' '}
+          <Link to="/code">capture a barcode or ISBN</Link> on this device. <Link to="/inbox">Inbox</Link>{' '}
+          keeps unfiled finds until you choose a collection. <Link to="/capture">Web capture</Link> reviews a
+          name, source link or shared text before saving.
+          <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
+          or home-screen link.
+        </p>
+      </section>
       <section className="data-section">
         <h2>This device.</h2>
         <p>
           Clear this account’s unfinished drafts, photo drafts and rest timers. Saved records stay in Worth.
+          Encrypted offline copies and their pending saves are managed separately on the offline page.
         </p>
         <button
           className="button button-outline"
@@ -212,7 +359,11 @@ export function SettingsPage() {
       </section>
       <section className="data-section">
         <h2>Delete Worth data.</h2>
-        <p>Remove your lists, records, photos, routines and shared snapshots. Your shared login remains.</p>
+        <p>
+          Remove your lists, Inbox finds, records, photos, routines and shared snapshots. Your shared login
+          remains. Existing downloaded backups and encrypted device copies remain; remove them separately.
+          Owned shared spaces are removed and your memberships end; other people’s independent copies remain.
+        </p>
         <p className="data-hint">
           Download a copy first. This removes live Worth data; provider recovery copies and logs may remain
           under their retention practices.
@@ -247,7 +398,7 @@ export function SettingsPage() {
           title={confirm === 'delete' ? 'Delete all Worth data?' : 'Clear drafts on this device?'}
           description={
             confirm === 'delete'
-              ? 'This permanently removes your active Worth lists, records, photos, workouts, routines and shared links. Your shared login and other apps remain.'
+              ? 'This permanently removes all your Worth lists, records, photos, workouts, routines, shared links and Trash. It cannot be undone. Your shared login and other apps remain.'
               : 'This removes this account’s unfinished text/photo drafts and timers from this device. Saved Worth records and other accounts’ drafts remain.'
           }
           confirmLabel={confirm === 'delete' ? 'Delete all Worth data' : 'Clear device drafts'}

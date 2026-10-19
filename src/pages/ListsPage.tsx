@@ -1,26 +1,34 @@
 import { CoverCrop } from '../components/CoverCrop';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { TemplatePicker } from '../components/CollectionTemplates';
+import { FieldNamesInput } from '../components/CollectionFields';
+import { readFieldNames } from '../shared/collection-fields';
+import type { CollectionTemplate } from '../shared/templates';
+import '../templates.css';
+import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, ImageSquare, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
-import type { ListKind, ListSummary } from '../shared/models';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
-import type { CollectionArt } from '../shared/models';
-import { starterCollectionCover } from '../shared/starter-covers';
-import { preparePhoto } from '../shared/photos';
-import { formatRelativeTimestamp } from '../format';
 import { CollectionArtwork } from '../components/CollectionArtwork';
+import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useViewPreference } from '../hooks/useViewPreference';
+import type { CollectionArt, ListKind } from '../shared/models';
+import { preparePhoto } from '../shared/photos';
+import { starterCollectionCover } from '../shared/starter-covers';
 
-type CollectionOrder = 'recent' | 'name' | 'items' | 'ranked' | 'favorites';
+import { ListDirectory, type CollectionOrder } from '../components/ListDirectory';
 
 const collectionOrderStorageKey = 'worth:collection-order';
 
 function savedCollectionOrder(): CollectionOrder {
   if (typeof window === 'undefined') return 'recent';
-  const value = window.localStorage.getItem(collectionOrderStorageKey);
+  let value: string | null;
+  try {
+    value = window.localStorage.getItem(collectionOrderStorageKey);
+  } catch {
+    return 'recent';
+  }
   return value === 'name' ||
     value === 'items' ||
     value === 'ranked' ||
@@ -70,8 +78,18 @@ export function ListsPage() {
   const [params, setParams] = useSearchParams();
   const creating = params.get('create') === '1';
   const requestedKind = params.get('kind');
+  const showingArchived = params.get('archived') === '1' && requestedKind !== 'activity' && !creating;
+  const archivedLists = useQuery({
+    queryKey: ['lists', 'archived'],
+    queryFn: api.archivedLists,
+    enabled: showingArchived,
+  });
+  const directory = showingArchived ? archivedLists : lists;
   const listScope: ListKind | null =
     requestedKind === 'collection' || requestedKind === 'activity' ? requestedKind : null;
+  const [detailText, setDetailText] = useState('');
+  const [templateToUse, setTemplateToUse] = useState<CollectionTemplate | null>(null);
+  const detailNames = readFieldNames(detailText);
   const [name, setName] = useState('');
   const [kind, setKind] = useState<ListKind>(requestedKind === 'activity' ? 'activity' : 'collection');
   const [description, setDescription] = useState('');
@@ -84,8 +102,8 @@ export function ListsPage() {
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useViewPreference('collection-directory:query', '');
-  const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
-  const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const collectionLists = directory.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const activityLists = directory.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
   const visibleActivityLists = listScope === 'collection' ? [] : activityLists;
   const matchingCollectionLists = visibleCollectionLists.filter((list) => {
@@ -113,13 +131,15 @@ export function ListsPage() {
   const pageTitle =
     listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
   const workoutShortcut = params.get('action') === 'workout';
-  const pageDescription = workoutShortcut
-    ? 'Choose an activity list to start a workout.'
-    : listScope === 'collection'
-      ? 'The good, the meh, and the “not again.”'
-      : listScope === 'activity'
-        ? 'Record what happened and when.'
-        : 'Your collections and activity logs.';
+  const pageDescription = showingArchived
+    ? 'Tucked away. Still yours. Open a collection to unarchive it in settings.'
+    : workoutShortcut
+      ? 'Choose an activity list to start a workout.'
+      : listScope === 'collection'
+        ? 'The good, the meh, and the “not again.”'
+        : listScope === 'activity'
+          ? 'Record what happened and when.'
+          : 'Your collections and activity logs.';
   const create = useMutation({
     mutationFn: async (input: {
       name: string;
@@ -127,11 +147,16 @@ export function ListsPage() {
       description: string;
       coverFile: File | null;
       artwork: CollectionArt | null;
+      detailFields: string[];
     }) => {
       const created = await api.createList(input);
       if (!input.coverFile || input.kind !== 'collection') return { ...created, coverError: '' };
       try {
-        await api.uploadListCover(created.list.id, await preparePhoto(input.coverFile));
+        await api.uploadListCover(
+          created.list.id,
+          await preparePhoto(input.coverFile),
+          created.list.coverRevision ?? 0,
+        );
         return { ...created, coverError: '' };
       } catch (error) {
         return {
@@ -158,7 +183,11 @@ export function ListsPage() {
   }, [requestedKind]);
 
   useEffect(() => {
-    window.localStorage.setItem(collectionOrderStorageKey, collectionOrder);
+    try {
+      window.localStorage.setItem(collectionOrderStorageKey, collectionOrder);
+    } catch {
+      /* Browsing still works when device storage is blocked. */
+    }
   }, [collectionOrder]);
 
   useEffect(() => {
@@ -179,24 +208,36 @@ export function ListsPage() {
     setParams({ create: '1', kind: suggestion.kind });
   }
 
+  function applyTemplate(template: CollectionTemplate) {
+    setName(template.collectionName);
+    setDescription(template.description);
+    setArtwork(template.artwork);
+    setDetailText(template.detailFields.join('\n'));
+    setCoverFile(null);
+    if (coverInput.current) coverInput.current.value = '';
+    setTemplateToUse(null);
+    nameInput.current?.focus();
+  }
+
   function openCreate() {
     setParams(listScope ? { create: '1', kind: listScope } : { create: '1' });
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || (kind === 'collection' && !detailNames.success)) return;
     create.mutate({
       name: name.trim(),
       kind,
       description: description.trim(),
       coverFile,
       artwork: kind === 'collection' ? artwork : null,
+      detailFields: kind === 'collection' && detailNames.success ? detailNames.data : [],
     });
   }
 
   function requestCloseCreate() {
-    if (name.trim() || description.trim() || coverFile || artwork) {
+    if (name.trim() || description.trim() || coverFile || artwork || detailText.trim()) {
       setConfirmingDiscard(true);
       return;
     }
@@ -205,6 +246,7 @@ export function ListsPage() {
 
   function discardDraft() {
     setName('');
+    setDetailText('');
     setArtwork(null);
     setDescription('');
     setCoverFile(null);
@@ -235,6 +277,33 @@ export function ListsPage() {
         )}
       </div>
 
+      {!creating && listScope !== 'activity' && (
+        <div className="collection-status-controls" role="group" aria-label="Collection status">
+          <button
+            className="button button-outline"
+            aria-pressed={!showingArchived}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.delete('archived');
+              setParams(next);
+            }}
+          >
+            Current
+          </button>
+          <button
+            className="button button-outline"
+            aria-pressed={showingArchived}
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.set('archived', '1');
+              setParams(next);
+            }}
+          >
+            Archived
+          </button>
+        </div>
+      )}
+
       {creating && (
         <section className="create-panel cabinet-create" aria-label="Create a list">
           <div className="panel-title">
@@ -254,6 +323,16 @@ export function ListsPage() {
             }
           >
             <form onSubmit={submit} className="create-form">
+              {kind === 'collection' && (
+                <TemplatePicker
+                  disabled={create.isPending}
+                  onUse={(template) => {
+                    if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
+                      setTemplateToUse(template);
+                    else applyTemplate(template);
+                  }}
+                />
+              )}
               <label>
                 Name
                 <input
@@ -306,6 +385,14 @@ export function ListsPage() {
                     Artwork <span className="optional">optional</span>
                   </summary>
                   <CollectionArtworkPicker name={name} value={artwork} onChange={setArtwork} />
+                </details>
+              )}
+              {kind === 'collection' && (
+                <details className="create-extras form-wide">
+                  <summary>
+                    Reusable details <span className="optional">optional</span>
+                  </summary>
+                  <FieldNamesInput value={detailText} onChange={setDetailText} disabled={create.isPending} />
                 </details>
               )}
               <details className="create-extras form-wide">
@@ -361,7 +448,10 @@ export function ListsPage() {
                 )}
               </details>
               {create.isError && <p className="form-error">{create.error.message}</p>}
-              <button className="button button-accent" disabled={create.isPending}>
+              <button
+                className="button button-accent"
+                disabled={create.isPending || (kind === 'collection' && !detailNames.success)}
+              >
                 {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
               </button>
             </form>
@@ -384,6 +474,15 @@ export function ListsPage() {
               onClose={() => setCropFile(null)}
             />
           )}
+          {templateToUse && (
+            <ConfirmDialog
+              title="Replace this collection draft?"
+              description="Copies the template’s name, description, artwork and detail names into this draft, replacing those values and the selected cover. No collection is created until you choose Create collection."
+              confirmLabel="Use template"
+              onClose={() => setTemplateToUse(null)}
+              onConfirm={() => applyTemplate(templateToUse)}
+            />
+          )}
           {confirmingDiscard && (
             <ConfirmDialog
               eyebrow="DISCARD DRAFT"
@@ -399,19 +498,19 @@ export function ListsPage() {
       )}
 
       {!creating &&
-        (lists.isPending ? (
+        (directory.isPending ? (
           <p className="loading-line" role="status">
             Loading your lists…
           </p>
-        ) : lists.isError ? (
+        ) : directory.isError ? (
           <p className="error-banner" role="alert">
-            Couldn't load your lists. <button onClick={() => void lists.refetch()}>Try again</button>
+            Couldn't load your lists. <button onClick={() => void directory.refetch()}>Try again</button>
           </p>
-        ) : lists.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
+        ) : directory.data?.lists.length && (visibleCollectionLists.length || visibleActivityLists.length) ? (
           <div className="list-groups">
             {visibleCollectionLists.length > 0 && (
               <ListDirectory
-                heading="Collections"
+                heading={showingArchived ? 'Archived collections' : 'Collections'}
                 detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
                 lists={orderedCollectionLists}
                 isCollectionDirectory
@@ -430,6 +529,11 @@ export function ListsPage() {
               />
             )}
           </div>
+        ) : showingArchived ? (
+          <section className="collection-directory-empty">
+            <h2>No archived collections.</h2>
+            <p>Archive a collection from its settings when you want it out of the everyday view.</p>
+          </section>
         ) : (
           <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />
         ))}
@@ -450,10 +554,18 @@ function EmptyListScope({
   return (
     <section className="list-suggestions">
       <p className="overline">
-        {scope ? `NO ${scope === 'collection' ? 'COLLECTIONS' : 'ACTIVITIES'} YET` : 'A FEW PLACES TO START'}
+        {scope === 'collection'
+          ? 'NO CURRENT COLLECTIONS'
+          : scope === 'activity'
+            ? 'NO ACTIVITIES YET'
+            : 'A FEW PLACES TO START'}
       </p>
       <p className="starter-intro">
-        {scope === 'activity' ? 'Pick a place to keep track.' : 'An empty archive. Enjoy it while it lasts.'}
+        {scope === 'activity'
+          ? 'Pick a place to keep track.'
+          : scope === 'collection'
+            ? 'Start a collection, or open Archived.'
+            : 'Create a list, or check Archived for older collections.'}
       </p>
       <div>
         {scopedSuggestions.map((suggestion) => (
@@ -478,209 +590,5 @@ function EmptyListScope({
         ))}
       </div>
     </section>
-  );
-}
-
-function ListDirectory({
-  heading,
-  detail,
-  lists,
-  isCollectionDirectory = false,
-  workoutShortcut = false,
-  collectionOrder,
-  onCollectionOrderChange,
-  collectionQuery,
-  onCollectionQueryChange,
-}: {
-  heading: string;
-  detail: string;
-  lists: ListSummary[];
-  isCollectionDirectory?: boolean;
-  workoutShortcut?: boolean;
-  collectionOrder?: CollectionOrder;
-  onCollectionOrderChange?: (order: CollectionOrder) => void;
-  collectionQuery?: string;
-  onCollectionQueryChange?: (query: string) => void;
-}) {
-  return (
-    <section className="list-directory" aria-labelledby={`${heading.toLowerCase()}-heading`}>
-      <header className="list-directory-head">
-        <div>
-          <p className="overline" id={`${heading.toLowerCase()}-heading`}>
-            {heading}
-          </p>
-          <span>{detail}</span>
-        </div>
-        <div className="list-directory-summary">
-          {isCollectionDirectory && collectionOrder && onCollectionOrderChange && onCollectionQueryChange && (
-            <div className="collection-directory-controls">
-              <div className="collection-directory-search">
-                <MagnifyingGlass size={15} aria-hidden="true" />
-                <label className="sr-only" htmlFor="collection-directory-search">
-                  Find a collection
-                </label>
-                <input
-                  id="collection-directory-search"
-                  value={collectionQuery}
-                  onChange={(event) => onCollectionQueryChange(event.target.value)}
-                  placeholder="Find a collection"
-                />
-                {collectionQuery && (
-                  <button
-                    type="button"
-                    aria-label="Clear collection search"
-                    onClick={() => onCollectionQueryChange('')}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-              <label className="collection-directory-order">
-                <span>Order</span>
-                <select
-                  aria-label="Order collections"
-                  value={collectionOrder}
-                  onChange={(event) => onCollectionOrderChange(event.target.value as CollectionOrder)}
-                >
-                  <option value="recent">Recently updated</option>
-                  <option value="name">Name</option>
-                  <option value="items">Most kept</option>
-                  <option value="ranked">Most ranked</option>
-                  <option value="favorites">Most favorites</option>
-                </select>
-              </label>
-            </div>
-          )}
-          <strong>{lists.length}</strong>
-        </div>
-      </header>
-      {isCollectionDirectory ? (
-        lists.length ? (
-          <div className="collection-directory-grid">
-            {lists.map((list, index) => {
-              const cover = list.hasCoverPhoto
-                ? `/api/lists/${list.id}/cover?v=${list.updatedAt}`
-                : starterCollectionCover(list.name, list.artwork);
-              return (
-                <div className="collection-directory-entry" key={list.id}>
-                  <Link to={`/lists/${list.id}`} className="collection-directory-card cabinet-directory-card">
-                    <div className="cabinet-directory-picture">
-                      <CollectionArtwork name={list.name} cover={cover} />
-                      <span className="collection-directory-index">{String(index + 1).padStart(2, '0')}</span>
-                    </div>
-                    <span className="collection-directory-copy">
-                      <strong>{list.name}</strong>
-                      <small>
-                        <span>
-                          {list.itemCount} {list.itemCount === 1 ? 'item' : 'items'}
-                          {list.description ? ` · ${list.description}` : ''}
-                        </span>
-                        {(list.rankedCount > 0 || list.favoriteCount > 0) && (
-                          <span className="collection-directory-signals">
-                            {list.rankedCount > 0 && `${list.rankedCount} ranked`}
-                            {list.rankedCount > 0 && list.favoriteCount > 0 && ' · '}
-                            {list.favoriteCount > 0 &&
-                              `${list.favoriteCount} ${list.favoriteCount === 1 ? 'favorite' : 'favorites'}`}
-                          </span>
-                        )}
-                        <span className="collection-directory-updated">
-                          Updated {formatRelativeTimestamp(list.updatedAt)}
-                        </span>
-                      </small>
-                    </span>
-                    <ArrowRight size={20} aria-hidden="true" />
-                  </Link>
-                  {!cover && <CollectionCoverAction list={list} />}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="collection-directory-empty">
-            <p>No collections match that name.</p>
-            {onCollectionQueryChange && (
-              <button onClick={() => onCollectionQueryChange('')}>Clear search</button>
-            )}
-          </div>
-        )
-      ) : (
-        <div>
-          {lists.map((list, index) => {
-            const count = list.logCount;
-            return (
-              <Link
-                to={`/lists/${list.id}${workoutShortcut && list.kind === 'activity' ? '?newWorkout=1' : ''}`}
-                className="directory-row"
-                key={list.id}
-              >
-                <span className="directory-index">{String(index + 1).padStart(2, '0')}</span>
-                <span className="directory-name">
-                  <strong>{list.name}</strong>
-                  <small>{list.description || 'Activity'}</small>
-                </span>
-                <span className="directory-meta">
-                  <small>
-                    {list.kind} · updated {formatRelativeTimestamp(list.updatedAt)}
-                  </small>
-                  <strong>
-                    {count} {count === 1 ? 'log' : 'logs'}
-                  </strong>
-                </span>
-                <ArrowRight size={20} />
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function CollectionCoverAction({ list }: { list: ListSummary }) {
-  const client = useQueryClient();
-  const [cropFile, setCropFile] = useState<File | null>(null);
-  const input = useRef<HTMLInputElement>(null);
-  const upload = useMutation({
-    mutationFn: async (file: File) => api.uploadListCover(list.id, await preparePhoto(file)),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['list', list.id] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-    },
-  });
-
-  return (
-    <div className="collection-directory-cover-action">
-      <input
-        ref={input}
-        className="sr-only"
-        tabIndex={-1}
-        aria-hidden="true"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = '';
-          if (file) setCropFile(file);
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => input.current?.click()}
-        disabled={upload.isPending}
-        aria-label={`Add a private cover photo to ${list.name}`}
-      >
-        <ImageSquare size={15} />
-        {upload.isPending ? 'Adding…' : 'Add cover'}
-      </button>
-      {cropFile && (
-        <CoverCrop
-          file={cropFile}
-          onSave={(file) => upload.mutateAsync(file)}
-          onClose={() => setCropFile(null)}
-        />
-      )}
-      {upload.isError && <span role="alert">{upload.error.message}</span>}
-    </div>
   );
 }

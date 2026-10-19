@@ -1,0 +1,238 @@
+.web-capture-page,
+.quick-page {
+  max-width: 1080px;
+}
+.capture-panel,
+.incoming-capture,
+.browser-capture-help,
+.quick-panel {
+  padding: 24px;
+  margin: 24px 0;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  overflow-wrap: anywhere;
+}
+.capture-panel form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  gap: 16px;
+}
+.capture-panel form > .button {
+  justify-self: start;
+}
+.capture-panel.has-review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.capture-panel.has-review > :not(form):not(.capture-review) {
+  grid-column: 1 / -1;
+}
+.capture-panel.has-review .capture-review {
+  margin: 0;
+}
+.capture-panel .record-extras {
+  margin: 0;
+}
+.capture-panel label,
+.browser-capture-help label,
+.quick-panel > label {
+  display: grid;
+  gap: 8px;
+}
+.capture-panel :is(input, textarea, select),
+.browser-capture-help textarea,
+.quick-panel select {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 12px;
+}
+.capture-panel .capture-check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: 44px;
+}
+.capture-panel .capture-check input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: #e8dc9d;
+}
+.incoming-preview {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 12px 16px;
+}
+.incoming-preview dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.incoming-preview dt {
+  color: #aaa99b;
+}
+.capture-review {
+  background: #eae5d5;
+  color: #181915;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.capture-review :is(p, dt) {
+  color: #626456;
+}
+.capture-review h2 {
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}
+.capture-review .button {
+  color: #181915;
+  border-color: #626456;
+}
+.capture-review .button-accent {
+  background: #181915;
+  color: #f0ecdf;
+}
+.capture-signin {
+  max-width: 760px;
+  padding-top: 40px;
+}
+.capture-signin h1 {
+  font-size: 56px;
+  line-height: 1.1;
+}
+.browser-capture-help textarea {
+  margin-top: 12px;
+  padding: 12px;
+}
+@media (max-width: 680px) {
+  .capture-panel,
+  .incoming-capture,
+  .browser-capture-help,
+  .quick-panel {
+    padding: 18px;
+  }
+  .incoming-preview {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .incoming-preview dd {
+    margin-bottom: 12px;
+  }
+  .capture-review {
+    padding: 18px;
+  }
+  .capture-signin h1 {
+    font-size: 42px;
+  }
+}
+@media (max-width: 960px) {
+  .capture-panel.has-review {
+    display: block;
+  }
+  .capture-panel.has-review .capture-review {
+    margin: 24px 0;
+  }
+}
+.quick-panel > label {
+  margin: 16px 0;
+}
+.quick-panel .quick-check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.quick-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #e8dc9d;
+}
+.quick-shortlist {
+  padding: 24px;
+  border-radius: 22px;
+  background: #eae5d5;
+  color: #181915;
+  margin: 24px 0;
+  overflow-wrap: anywhere;
+}
+.quick-shortlist :is(p, span) {
+  color: #626456;
+}
+.quick-shortlist h2 {
+  font-size: 32px;
+  font-weight: 500;
+}
+.quick-shortlist ol {
+  padding-left: 24px;
+}
+.quick-shortlist li {
+  padding: 12px 0;
+  border-bottom: 1px solid #b8b6a7;
+}
+.quick-shortlist li a {
+  display: grid;
+  gap: 6px;
+  min-height: 44px;
+  color: #181915;
+}
+.quick-shortlist .button {
+  border-color: #626456;
+  color: #181915;
+}
+@media (max-width: 680px) {
+  .quick-shortlist {
+    padding: 18px;
+  }
+}
+
+.quick-options > summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.web-capture-page .button,
+.quick-page .button,
+.capture-signin .button {
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+}
+
+.capture-review h2,
+.incoming-capture h2,
+.capture-signin h1 {
+  font-weight: 500;
+}
+.capture-panel > .button {
+  justify-self: start;
+}
+.capture-panel summary {
+  min-height: 44px;
+  padding: 12px 0;
+}
+.web-capture-page .capture-review .button-outline:is(:hover, :focus-visible),
+.quick-page .quick-shortlist .button:is(:hover, :focus-visible) {
+  color: #181915;
+  background: #d9d4c2;
+  border-color: #626456;
+}
+.web-capture-page .capture-review .button-accent:is(:hover, :focus-visible) {
+  background: #292a23;
+  color: #f0ecdf;
+}
+.browser-capture-help > summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}

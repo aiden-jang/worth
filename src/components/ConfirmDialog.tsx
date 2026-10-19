@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { X } from '@phosphor-icons/react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 export function ConfirmDialog({
   eyebrow = 'CONFIRM',
@@ -12,6 +12,8 @@ export function ConfirmDialog({
   error,
   onConfirm,
   onClose,
+  children,
+  className,
 }: {
   eyebrow?: string;
   title: string;
@@ -22,6 +24,8 @@ export function ConfirmDialog({
   error?: string;
   onConfirm: () => void;
   onClose: () => void;
+  children?: ReactNode;
+  className?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -36,7 +40,7 @@ export function ConfirmDialog({
 
   return createPortal(
     <dialog
-      className="confirm-dialog"
+      className={className ? `confirm-dialog ${className}` : 'confirm-dialog'}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       ref={dialog}
@@ -69,7 +73,12 @@ export function ConfirmDialog({
           </button>
         </header>
         <p id={descriptionId}>{description}</p>
-        {error && <p className="form-error">{error}</p>}
+        {children}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="confirm-actions">
           <button
             className="button button-outline"

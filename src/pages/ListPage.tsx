@@ -1,17 +1,15 @@
-import { usePageTitle } from '../hooks/usePageTitle';
-import { useEffect, useState, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork, X } from '@phosphor-icons/react';
+import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, RequestError } from '../api';
-import { CollectionView } from '../components/CollectionView';
 import { ActivityView } from '../components/ActivityView';
+import { CollectionView } from '../components/CollectionView';
+import { CollectionWorkbench } from '../components/CollectionWorkbench';
 import { ItemEditor } from '../components/ItemEditor';
+import { ListSettings } from '../components/ListSettings';
 import { ShareDialog } from '../components/ShareDialog';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import type { CollectionArt } from '../shared/models';
-import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
-import { CollectionCoverControl } from '../components/PhotoControl';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export function ListPage() {
   const { listId = '' } = useParams();
@@ -38,6 +36,7 @@ export function ListPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showWorkbench, setShowWorkbench] = useState(false);
   const creating = params.get('new') === '1';
   const focus = params.get('focus');
   const focusLogComposer = params.get('log') === '1';
@@ -48,6 +47,8 @@ export function ListPage() {
   useEffect(() => {
     setSelectedId(focus?.startsWith('item:') ? focus.slice('item:'.length) : null);
     setShowSettings(false);
+    setShowShare(false);
+    setShowWorkbench(false);
   }, [focus, listId]);
 
   function closeEditor() {
@@ -83,7 +84,11 @@ export function ListPage() {
   const focusedLog = focusLogId ? (logs.find((log) => log.id === focusLogId) ?? null) : null;
   const selected =
     items.find((item) => item.id === selectedId) ??
-    (focusedLog?.itemId ? (items.find((item) => item.id === focusedLog.itemId) ?? null) : null);
+    (focusedLog?.itemId
+      ? (items.find(
+          (item) => item.id === focusedLog.itemId || item.mergedIds?.includes(focusedLog.itemId ?? ''),
+        ) ?? null)
+      : null);
   const coverError =
     location.state && typeof location.state === 'object' && 'coverError' in location.state
       ? String(location.state.coverError)
@@ -91,7 +96,7 @@ export function ListPage() {
 
   return (
     <main className={`light-page list-page page-width ${list.kind}-list-page`}>
-      <Link className="back-link" to={`/lists?kind=${list.kind}`}>
+      <Link className="back-link" to={`/lists?kind=${list.kind}${list.archived ? '&archived=1' : ''}`}>
         <ArrowLeft size={16} /> {list.kind === 'collection' ? 'Collections' : 'Activity'}
       </Link>
       <section className="list-page-head">
@@ -99,7 +104,7 @@ export function ListPage() {
           {list.kind === 'collection' && list.hasCoverPhoto && (
             <img
               className="cabinet-personal-cover"
-              src={`/api/lists/${list.id}/cover?v=${list.updatedAt}`}
+              src={`/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`}
               alt=""
             />
           )}
@@ -113,6 +118,17 @@ export function ListPage() {
           {list.description && <p className="list-user-description">{list.description}</p>}
         </div>
         <div className="list-head-actions">
+          {list.kind === 'collection' && (
+            <button
+              className="button button-outline"
+              disabled={
+                itemsQuery.isPending || itemsQuery.isError || logsQuery.isPending || logsQuery.isError
+              }
+              onClick={() => setShowWorkbench(true)}
+            >
+              Workbench
+            </button>
+          )}
           {list.kind === 'collection' && (
             <Link className="button button-outline" to={`/lists/${list.id}/show`}>
               <PresentationChart size={18} /> Show list
@@ -137,6 +153,14 @@ export function ListPage() {
           )}
         </div>
       </section>
+      {list.archived && (
+        <div className="collection-archive-notice" role="status">
+          <span>Archived collection. You can still open and edit its records.</span>
+          <button className="button button-outline" onClick={() => setShowSettings(true)}>
+            Open settings to unarchive
+          </button>
+        </div>
+      )}
       {coverError && (
         <p className="collection-cover-notice" role="status">
           Collection saved. {coverError}
@@ -146,14 +170,30 @@ export function ListPage() {
       {showSettings && (
         <ListSettings
           listId={listId}
+          archived={list.archived ?? false}
           name={list.name}
           description={list.description}
           isCollection={list.kind === 'collection'}
           artwork={list.artwork ?? null}
           hasCoverPhoto={list.hasCoverPhoto}
           updatedAt={list.updatedAt}
+          coverRevision={list.coverRevision}
           onClose={() => setShowSettings(false)}
           onDeleted={() => navigate('/lists')}
+        />
+      )}
+      {showWorkbench && (
+        <CollectionWorkbench
+          key={list.id}
+          list={list}
+          items={items}
+          logs={logs}
+          onClose={() => setShowWorkbench(false)}
+          onOpenItem={setSelectedId}
+          onRevisit={(id) => {
+            setSelectedId(id);
+            setParams({ focus: `item:${id}`, log: '1' });
+          }}
         />
       )}
 
@@ -208,11 +248,14 @@ export function ListPage() {
               }}
             />
           )}
-          {showShare && <ShareDialog list={list} items={items} onClose={() => setShowShare(false)} />}
+          {showShare && (
+            <ShareDialog key={list.id} list={list} items={items} onClose={() => setShowShare(false)} />
+          )}
         </>
       ) : (
         <ActivityView
           listId={listId}
+          aliases={{ groups: list.exerciseAliases ?? [], revision: list.exerciseAliasRevision ?? 0 }}
           logs={logs}
           loading={logsQuery.isPending}
           error={logsQuery.isError}
@@ -226,163 +269,5 @@ export function ListPage() {
         />
       )}
     </main>
-  );
-}
-
-function ListSettings({
-  listId,
-  name,
-  description,
-  isCollection,
-  artwork,
-  hasCoverPhoto,
-  updatedAt,
-  onClose,
-  onDeleted,
-}: {
-  listId: string;
-  name: string;
-  description: string;
-  isCollection: boolean;
-  artwork: CollectionArt | null;
-  hasCoverPhoto: boolean;
-  updatedAt: number;
-  onClose: () => void;
-  onDeleted: () => void;
-}) {
-  const client = useQueryClient();
-  const [nextArtwork, setNextArtwork] = useState(artwork);
-  const [nextName, setNextName] = useState(name);
-  const [nextDescription, setNextDescription] = useState(description);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
-  const cleanName = nextName.trim();
-  const cleanDescription = nextDescription.trim();
-  const hasChanges =
-    cleanName !== name ||
-    cleanDescription !== description ||
-    JSON.stringify(nextArtwork) !== JSON.stringify(artwork);
-  const update = useMutation({
-    mutationFn: () =>
-      api.updateList(listId, { name: cleanName, description: cleanDescription, artwork: nextArtwork }),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['list', listId] });
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-      void client.invalidateQueries({ queryKey: ['patterns'] });
-      onClose();
-    },
-  });
-  const remove = useMutation({
-    mutationFn: () => api.deleteList(listId),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-      void client.invalidateQueries({ queryKey: ['patterns'] });
-      onDeleted();
-    },
-  });
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (cleanName && hasChanges) update.mutate();
-  }
-
-  function requestClose() {
-    if (hasChanges) {
-      setConfirmingDiscard(true);
-      return;
-    }
-    onClose();
-  }
-
-  return (
-    <section className="settings-panel">
-      <div className="panel-title">
-        <div>
-          <p className="overline">LIST SETTINGS</p>
-          <h2>{name}</h2>
-        </div>
-        <button className="icon-button" aria-label="Close settings" onClick={requestClose}>
-          <X size={19} />
-        </button>
-      </div>
-      <form onSubmit={submit} className="settings-form">
-        <label>
-          Name
-          <input
-            required
-            maxLength={80}
-            value={nextName}
-            onChange={(event) => setNextName(event.target.value)}
-            aria-describedby={update.isError ? 'list-settings-error' : undefined}
-          />
-        </label>
-        <label>
-          Description
-          <input
-            maxLength={280}
-            value={nextDescription}
-            onChange={(event) => setNextDescription(event.target.value)}
-          />
-        </label>
-        {isCollection && (
-          <CollectionArtworkPicker name={nextName} value={nextArtwork} onChange={setNextArtwork} />
-        )}
-        {isCollection && hasCoverPhoto && (
-          <p className="muted">Your uploaded cover shows first. Artwork appears when you remove it.</p>
-        )}
-        <button className="button button-accent" disabled={!cleanName || !hasChanges || update.isPending}>
-          Save changes
-        </button>
-        {update.isError && (
-          <p className="form-error" id="list-settings-error" role="alert">
-            {update.error.message}
-          </p>
-        )}
-      </form>
-      {isCollection && (
-        <CollectionCoverControl
-          listId={listId}
-          listName={name}
-          artwork={artwork}
-          hasCoverPhoto={hasCoverPhoto}
-          version={updatedAt}
-        />
-      )}
-      <div className="settings-danger">
-        <span>This removes every item and log in this list.</span>
-        <button className="text-danger" disabled={remove.isPending} onClick={() => setConfirmingDelete(true)}>
-          Delete this list
-        </button>
-      </div>
-      {remove.isError && <p className="form-error">{remove.error.message}</p>}
-      {confirmingDelete && (
-        <ConfirmDialog
-          eyebrow="DELETE LIST"
-          title={`Delete ${name}?`}
-          description="This permanently removes every item, log, rank, note, and private photo in this list."
-          confirmLabel="Delete list"
-          pending={remove.isPending}
-          error={remove.isError ? remove.error.message : undefined}
-          onConfirm={() => remove.mutate()}
-          onClose={() => setConfirmingDelete(false)}
-        />
-      )}
-      {confirmingDiscard && (
-        <ConfirmDialog
-          eyebrow="DISCARD CHANGES"
-          title="Leave list settings?"
-          description="Your changes to this list's name and description will be lost."
-          cancelLabel="Keep editing"
-          confirmLabel="Discard changes"
-          onConfirm={() => {
-            setConfirmingDiscard(false);
-            onClose();
-          }}
-          onClose={() => setConfirmingDiscard(false)}
-        />
-      )}
-    </section>
   );
 }

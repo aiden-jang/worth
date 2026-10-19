@@ -1,0 +1,169 @@
+.offline-page {
+  max-width: 1060px;
+  padding: 32px 40px 48px;
+  margin: auto;
+  color: #f0ecdf;
+  min-height: 100vh;
+}
+.offline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #38392f;
+}
+.offline-header .product-wordmark {
+  font-weight: 700;
+  font-size: 36px;
+  letter-spacing: -0.065em;
+  text-decoration: none;
+}
+.offline-heading {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 48px 0 28px;
+}
+.offline-heading h1 {
+  font-size: 68px;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+  margin: 14px 0;
+}
+.offline-folder {
+  width: 140px;
+  flex: none;
+}
+.offline-page label {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+.offline-page input,
+.offline-page textarea,
+.offline-page select {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+}
+.offline-unlock,
+.offline-summary,
+.offline-pending,
+.offline-capture,
+.offline-browse {
+  border-top: 1px solid #38392f;
+  padding: 28px 0;
+  margin-top: 28px;
+}
+.offline-unlock {
+  max-width: 760px;
+}
+.offline-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 18px 0;
+}
+.offline-page .button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+.offline-record,
+.offline-pending-row {
+  border-bottom: 1px solid #38392f;
+  padding: 14px 0;
+}
+.offline-record summary,
+.offline-pending-row summary {
+  cursor: pointer;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+  padding: 12px 0;
+}
+.offline-record summary strong {
+  font-size: 22px;
+}
+.offline-record summary span {
+  display: block;
+  color: #aaa99b;
+  margin: 10px 0 0 20px;
+}
+.offline-note-editor {
+  border: 1px solid #737566;
+  border-radius: 22px;
+  padding: 24px;
+  margin: 28px 0;
+}
+.offline-note-editor h3 {
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}
+.offline-written {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.offline-filters {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+}
+.offline-status {
+  padding: 18px 22px;
+  border: 1px solid #737566;
+  border-radius: 12px;
+  margin: 24px 0;
+}
+.offline-pending h2 small {
+  font:
+    14px 'DM Mono',
+    monospace;
+  color: #aaa99b;
+}
+.offline-footer {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid #38392f;
+}
+.offline-unlock > .button {
+  margin-right: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 680px) {
+  .offline-page {
+    padding: 24px 20px 32px;
+  }
+  .offline-heading {
+    align-items: start;
+    flex-direction: column;
+    margin-top: 32px;
+    gap: 12px;
+  }
+  .offline-heading h1 {
+    font-size: 44px;
+  }
+  .offline-folder {
+    width: 104px;
+  }
+  .offline-filters {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .offline-note-editor {
+    padding: 22px 18px;
+  }
+  .offline-header .product-wordmark {
+    font-size: 32px;
+  }
+  .offline-unlock > .button {
+    margin-right: 12px;
+  }
+}
