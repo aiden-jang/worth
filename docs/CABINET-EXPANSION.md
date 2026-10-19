@@ -36,7 +36,7 @@ framing and layout changes in the original checkout.
 - [x] Inbox drawer for records awaiting a collection.
 - [x] Reviewed web capture, desktop bookmark code and optional installed-browser text/link Share target, with manual paste fallback.
 - [x] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
-- [ ] Reviewed receipt extraction with attachment and line-to-record mapping.
+- [x] Reviewed receipt extraction with attachment and line-to-record mapping.
 - [ ] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
 - [x] Private web/PWA shortcut entry points for capture, a chosen shortlist and a random saved find, with account-specific remembered choices. Browser/OS menu availability varies.
 
@@ -695,3 +695,37 @@ assertion or timeout was weakened. Captures and deliberate layout additions are
 in [board QA](../art/ui-qa/memory-boards/README.md). This group is committed locally.
 All other unchecked web features remain unfinished. Work stays on the separate
 branch without native apps, push, pull request, merge, remote CI or deployment.
+
+## Twenty-third implementation: reviewed receipts
+
+Capture → Receipts supports on-device English text recognition, manual text,
+up to 30 reviewed lines and an optional exact prepared image. Each line stays
+unlinked, links an owned record, or creates an explicitly named unranked record.
+Amounts stay literal strings; no prices, currency, purchases, dates, calls or ranks
+are inferred. Existing records stay intact. Saved reviews are fixed; removal
+clears their content and image while preserving linked and created records.
+
+The image is re-encoded on-device to strip source metadata, with dimension and
+size bounds. Visible information is not automatically redacted. Inclusion and
+readability are explicit choices. Preview and upload use the same prepared file.
+Seven-day account/device drafts freeze uncertain saves, check saved results,
+verify recovered image hashes, handle missing copies and stop late preparation
+jobs. Blocked storage and account/route changes have explicit recovery states.
+
+Migration 0023 adds atomic owner/source/destination/identity guards, stable hashed
+creation retries, removal tombstones and a 100-review capacity. Version 7 backups
+read reviews with their sources, preserve originally entered record names,
+normalize moved/missing links, restore fresh IDs without extra linked records,
+validate optional image bytes, and roll back the whole restore on capacity failure.
+All-data deletion clears receipts and tombstones. Public snapshots remain unchanged.
+
+The 192-test full core regression passed; 16 final affected receipt/model/restore
+checks passed after original-name preservation was added. All 18 final desktop
+and phone receipt journeys passed, including real local OCR, exact attachment
+bytes/pixels, uncertain-save reload, missing device copies, blocked storage,
+account changes, stopped preparation, missing sources, restore and Axe/reflow.
+Two existing gallery recovery journeys also passed with the shared photo-draft
+hook. Lint, unused-code checks, Worker/TypeScript checks and the production build
+passed. Desktop/phone captures were inspected against the cabinet; deliberate
+extensions are in [receipt QA](../art/ui-qa/receipts/README.md).
+Five unchecked web groups remain. This work stays local on the separate branch.

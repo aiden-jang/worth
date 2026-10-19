@@ -400,7 +400,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 6 for boards, photo galleries, connections and taste history. Restore accepts versions 1–6; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 7 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–7; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -473,8 +473,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 6 backup formats include history in the same read
-batch as records. Restore accepts versions 1–6, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 7 backup formats include history in the same read
+batch as records. Restore accepts versions 1–7, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -505,7 +505,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–6, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–7, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -645,7 +645,7 @@ projection or invitation is added by a board.
 
 Version 6 exports read boards in the same D1 snapshot as records. Unavailable or
 merged source references become explicit missing links while entered text remains.
-Restore accepts versions 1–6 (older files default to no boards), validates source
+Restore accepts versions 1–7 (older files default to no boards), validates source
 references, remaps board/entry/source IDs and resets revisions. Capacity failure
 rolls back the complete restore and receipt, permitting the same retry after space
 is freed. Board text is bounded at 16 MiB within existing backup limits. All-data
@@ -656,3 +656,49 @@ Client-chosen board and gallery identities also check the shared backup record I
 namespace inside their creation transaction, including Trash rows. A valid UUID
 that belongs to a different record kind cannot make the resulting backup invalid.
 Exact existing retries are still resolved before this guard.
+
+## Reviewed receipts
+
+Migration 0023 stores up to 100 private fixed receipt reviews per owner, with a
+trigger-enforced capacity and minimal removal tombstones. Each review holds a
+name, optional merchant/date/note, up to 16,000 characters of reviewed text and
+30 literal lines. Amounts remain strings as entered; recognition never infers
+currency, totals, tax, purchases, calls or dates. A receipt needs reviewed text,
+a line, a note or an explicitly chosen image rather than an empty saved placeholder.
+
+Each line independently stays unlinked, links an owned active record or creates
+an explicitly named unranked record. Source and destination guards run in the same
+D1 batch as the receipt, all created records and its optional image. No other
+record content is copied. New records have default empty context and no call/rank.
+Existing records are unchanged. A shared record-ID guard includes receipts and
+every created record ID, preventing cross-kind collisions and same-request reuse.
+
+The lazy receipt directory, capture and detail pages extend the cabinet's
+secondary layouts. Recognition reuses the self-hosted on-device worker. Photo
+preparation always re-encodes pixels on-device, bounds dimensions before decoding
+and removes source EXIF/XMP without redacting visible content. Inclusion and
+readability require explicit choices. The exact preview and multipart upload use
+the same prepared bytes; source files remain unchanged. Preparation can stop
+without a delayed job replacing the next result.
+
+The multipart body is bounded at 1.2 MB before native parsing, its metadata at
+256 KiB, and one image at 900 KB. Magic/type/dimensions and SHA-256 bind the copy
+to reviewed metadata. Stable IDs and a canonical metadata hash handle concurrent
+and uncertain retries. Removal clears content/bytes but retains the retry boundary.
+Seven-day account/device drafts checkpoint the frozen body and await prepared-file
+storage before a save; blocked storage needs an explicit recovery choice. Resume
+checks a prepared file's type/hash before presenting it as the pending copy or
+resending. Text stays readable if that file is missing. Account changes and route
+changes prevent drafts or late asynchronous jobs from crossing the boundary.
+
+Version 7 backup records include receipts in the same D1 read snapshot as their
+sources. Text is bounded at 100 receipts/16 MiB within existing backup limits.
+Created-record provenance and the originally entered name remain, while stale original destination references
+normalize to live item links; missing sources retain entered line text/amounts.
+Full backup images use a separate receipt photo kind and validate exact bytes.
+Restore accepts versions 1–7, defaults older files to no receipts, gives receipt,
+line and source links fresh IDs, and never creates a second set of linked records.
+Records-only restores mark absent image bytes unavailable. Capacity failure rolls
+back all records and the restore receipt, allowing the same retry after space is
+freed. All-data deletion clears reviews, images and removal tombstones. Public
+title/type snapshots remain unchanged.

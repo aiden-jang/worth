@@ -70,9 +70,10 @@ export function SettingsPage() {
         !parsed.data.lists.length &&
         !parsed.data.collectionTemplates.length &&
         !parsed.data.inbox.length &&
-        !parsed.data.boards.length
+        !parsed.data.boards.length &&
+        !parsed.data.receipts.length
       )
-        throw new Error('This file has no lists, Inbox finds, boards or templates to restore.');
+        throw new Error('This file has no lists, Inbox finds, boards, receipts or templates to restore.');
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -165,8 +166,24 @@ export function SettingsPage() {
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
               {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
               Inbox finds · {file.tasteHistory.length} history changes · {file.connections.length} connections
-              · {file.boards.length} boards
+              · {file.boards.length} boards · {file.receipts.length} receipts
             </p>
+            {!!file.receipts.length && (
+              <section aria-label="Receipts to restore">
+                <p>
+                  {file.receipts.length} private receipts will restore with fresh IDs. Record choices follow
+                  restored records; restoring a receipt does not create extra items.
+                </p>
+                <ul>
+                  {file.receipts.map((receipt) => (
+                    <li key={receipt.id}>
+                      {receipt.name} · {receipt.lines.length} lines
+                      {receipt.attachment ? ' · Attachment metadata' : ''}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {!!file.boards.length && (
               <section aria-label="Boards to restore">
                 <p>
@@ -245,7 +262,7 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''} restored. Existing data was kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }
@@ -262,9 +279,11 @@ export function SettingsPage() {
       <section className="settings-section">
         <h2>Within reach.</h2>
         <p>
-          <Link to="/read">Read text from a photo</Link> or <Link to="/code">capture a barcode or ISBN</Link>{' '}
-          on this device. <Link to="/inbox">Inbox</Link> keeps unfiled finds until you choose a collection.{' '}
-          <Link to="/capture">Web capture</Link> reviews a name, source link or shared text before saving.
+          <Link to="/receipts">Reviewed receipts</Link> keeps checked text, optional image copies and chosen
+          record links. <Link to="/read">Read text from a photo</Link> or{' '}
+          <Link to="/code">capture a barcode or ISBN</Link> on this device. <Link to="/inbox">Inbox</Link>{' '}
+          keeps unfiled finds until you choose a collection. <Link to="/capture">Web capture</Link> reviews a
+          name, source link or shared text before saving.
           <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
           or home-screen link.
         </p>

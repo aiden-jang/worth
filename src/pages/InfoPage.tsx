@@ -31,7 +31,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             ? 'HELP & CONTACT'
             : kind === 'missing'
               ? '404'
-              : 'WORTH / UPDATED OCTOBER 16, 2026'}
+              : 'WORTH / UPDATED OCTOBER 19, 2026'}
         </p>
         <h1>{title}</h1>
         {kind === 'missing' ? (
@@ -60,6 +60,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 exercise measurements, routines, workout visits, and uploaded photos or collection covers.
                 Records are associated with your shared account ID. Worth receives your account identity to
                 check access and display your name; passwords are handled by the account service.
+              </p>
+              <p>
+                Private connections, ranking/opinion history, revisit plans and boards also stay with your
+                account. Reviewed receipts store the text, merchant, date, amounts and record links you
+                choose. An image copy is stored only when you explicitly include it in the reviewed save.
               </p>
             </section>
             <section>
@@ -102,6 +107,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 ISBN from your browser to Open Library, which also receives your IP address. It sends no
                 photos, notes or account credentials. You choose whether to keep the suggested title, details
                 or source link. The shared account service uses its own providers, as described in its policy.
+              </p>
+              <p>
+                Receipt recognition also stays on-device. Choosing a reviewed attachment uploads that copy to
+                Worth for private storage. Preparation re-encodes displayed pixels without the original image
+                metadata; it does not redact visible personal information.
               </p>
             </section>
             <section>
@@ -528,6 +538,31 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 general product lookup. The code and source link are separate choices, shown in the exact
                 capture preview. Nothing is saved until normal capture review and Save. Your account’s text
                 draft can recover on this device for seven days.
+              </p>
+            </section>
+            <section>
+              <h2>Reviewed receipts</h2>
+              <p>
+                <Link to="/receipts">Receipts</Link> keeps checked text, optional image copies and up to 30
+                line choices. Paste or type text, or read a photo on-device. Suggestions only split literal
+                lines; amounts, dates, currency and purchases are not inferred.
+              </p>
+              <p>
+                Each line starts unlinked. Choose an existing record or explicitly enter a name for a new
+                unranked record. Existing records stay unchanged. New records receive no call, rank, photo,
+                amount or purchase date from the receipt. Check the exact attachment copy and its readability
+                before including it.
+              </p>
+              <p>
+                Keep up to 100 receipts. Saved receipts are fixed reviews; removing one permanently clears its
+                text and attachment while linked or created records remain. Minimal retry metadata prevents an
+                old save from recreating a removed receipt. A lost reply keeps the exact save and image for
+                retry or checking, with seven-day account/device recovery when storage is available.
+              </p>
+              <p>
+                Backups include receipts and fresh record links. Full backups retain the included image bytes;
+                records-only restores keep text and clearly mark an absent attachment. Receipts do not enter
+                public ranking links.
               </p>
             </section>
             <section>

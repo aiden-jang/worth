@@ -46,9 +46,11 @@ its verification. The following groups are committed and verified locally on
   comparison and manually prepared cover collages.
 - Cross-collection boards, independent archiving, and manual trip replay with a
   complete readable stop list.
+- Reviewed receipts, on-device extraction, explicit line-to-record choices and
+  optional exact image attachments, with recoverable saves and backups.
 
-Remaining work includes reviewed receipt attachment/line mapping, offline reading
-and pending saves, richer routines/aliases/measurements, time capsules, private
+Remaining work includes offline reading and pending saves,
+richer routines/aliases/measurements, time capsules, private
 two-person choices and granular collaboration. See the tracker for individual
 unchecked features; a related completed tool does not complete these automatically.
 

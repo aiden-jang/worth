@@ -113,6 +113,9 @@ export function PhotoTextPage() {
         Read English printed text from a photo, then check and edit it. Recognition stays in your browser;
         your photo is not uploaded for processing. You can paste text instead.
       </p>
+      <p>
+        For receipt attachments and separate line choices, <Link to="/receipts/new">review a receipt →</Link>
+      </p>
       <div className="photo-text-layout">
         <section className="photo-text-source" aria-labelledby="photo-source-title">
           <p className="overline">01 / PHOTO</p>

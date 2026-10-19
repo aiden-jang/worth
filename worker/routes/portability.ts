@@ -1,3 +1,5 @@
+import { exportReceiptPhotos, restoreReceiptRows } from '../receipt-portability';
+import { receiptFailure } from '../receipts';
 import { photoFingerprint } from '../photo-gallery';
 import { connectionCapacity } from '../connections';
 import { normalizeConnection } from '../../src/shared/connections';
@@ -7,7 +9,7 @@ import { itemInput } from '../../src/shared/validation';
 import { appendTemplates, templateCapacityError } from '../templates';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
-import { archiveFile, archiveByteLimit } from '../../src/shared/portability';
+import { archiveFile, archiveByteLimit, type ArchiveFile } from '../../src/shared/portability';
 import { boardForm, boardPayload } from '../../src/shared/memory-boards';
 import { ApiError, exportRecords } from '../data';
 import { readBytes, photoContentType } from '../http';
@@ -25,7 +27,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.workoutSessions.length +
         records.workoutRoutines.length +
         records.inbox.length +
-        records.boards.length >
+        records.boards.length +
+        records.receipts.length >
         5000
     )
       throw new ApiError(
@@ -33,7 +36,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         'BACKUP_TOO_LARGE',
         'This archive exceeds the restore limit of 5,000 records or 500 lists. Export records and contact support for a full archive transfer.',
       );
-    const photos: { kind: string; id: string; contentType: string; data: string }[] = [];
+    const photos: ArchiveFile['photos'] = [];
     let photoBytes = 0;
     for (const [kind, table, field] of [
       ['list', 'list_photos', 'list_id'],
@@ -83,10 +86,11 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
           let binary = '';
           for (let i = 0; i < bytes.length; i += 8192)
             binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-          photos.push({ kind, id: row.id, contentType: row.content_type, data: btoa(binary) });
+          photos.push({ kind, id: row.id, contentType: photoContentType(bytes), data: btoa(binary) });
         }
       }
     }
+    await exportReceiptPhotos(c.env.DB, owner, records.receipts, photos, photoBytes);
     if (photos.length > 200)
       throw new ApiError(
         413,
@@ -97,6 +101,9 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     const expected = [
       ...records.lists.filter((l) => l.hasCoverPhoto).map((l) => `list:${l.id}`),
       ...records.photoAssets.filter((source) => source.available).map((source) => `asset:${source.id}`),
+      ...records.receipts
+        .filter((receipt) => receipt.attachment?.available)
+        .map((receipt) => `receipt:${receipt.id}`),
     ];
     const keys = new Set(photos.map((p) => `${p.kind}:${p.id}`));
     const coverConsistent = [...records.items, ...records.logs].every(
@@ -137,6 +144,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       c.env.DB.prepare('DELETE FROM collection_template_sets WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM memory_boards WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -174,6 +182,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.inbox,
         ...file.photoAssets,
         ...file.boards,
+        ...file.receipts,
       ].map((r) => [r.id, crypto.randomUUID()]),
     );
     const id = (source: string) => map.get(source)!;
@@ -434,6 +443,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       }),
     );
     rows('memory_boards', restoredBoards);
+    statements.push(...(await restoreReceiptRows(c.env.DB, owner, file, id)));
     const assetPhotos = file.photos.filter((photo) => photo.kind === 'asset');
     for (let at = 0; at < assetPhotos.length; at += 20) {
       const group = assetPhotos.slice(at, at + 20),
@@ -543,6 +553,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         );
       templateCapacityError(error);
       connectionCapacity(error);
+      if (error instanceof Error && error.message.includes('receipt capacity reached')) receiptFailure(error);
       inboxChanged(error);
     }
     return c.json(result, 201);

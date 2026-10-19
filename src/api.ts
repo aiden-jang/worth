@@ -93,6 +93,20 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  receipts: () => request<{ receipts: import('./shared/receipts').ReceiptSummary[] }>('/receipts'),
+  receipt: (id: string) => request<{ receipt: import('./shared/receipts').ReceiptView }>(`/receipts/${id}`),
+  createReceipt: (input: import('./shared/receipts').ReceiptInput, key: string, file: Blob | null) => {
+    const form = new FormData();
+    form.set('receipt', JSON.stringify(input));
+    if (file) form.set('attachment', file, 'receipt-copy');
+    return request<{ receipt: import('./shared/receipts').ReceiptView }>('/receipts', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': key },
+      body: form,
+    });
+  },
+  removeReceipt: (id: string) => request<void>(`/receipts/${id}`, { method: 'DELETE' }),
+
   boards: () => request<{ boards: import('./shared/memory-boards').BoardSummary[] }>('/boards'),
   board: (id: string) => request<{ board: import('./shared/memory-boards').BoardView }>(`/boards/${id}`),
   createBoard: (board: import('./shared/memory-boards').BoardInput, key: string) =>

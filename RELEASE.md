@@ -244,3 +244,15 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   reduced motion, responsive readable stop lists and accessible errors.
 - Check version 6/older backups, fresh-ID reference remapping, all-data deletion and
   capacity rollback with the original restore receipt. Boards do not change public links.
+
+### Reviewed receipts
+
+- Apply additive migration 0023 before serving receipt routes and shared ID guards.
+- Check local reading/manual text, literal suggestions, explicit existing/new
+  record choices, and no automatic calls/ranks/purchase fields.
+- Check the exact prepared image, readability/inclusion choices, stopping a job,
+  missing or changed device copies, lost replies, blocked storage and account changes.
+- Check owner-only image responses, permanent removal leaving records intact,
+  accessible cream controls and 320/430/768px reflow.
+- Check version 7/older and receipt-only backups, exact image bytes, fresh-ID
+  links/provenance, absent images in records-only restores and atomic capacity rollback.

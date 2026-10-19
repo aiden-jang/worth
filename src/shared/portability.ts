@@ -1,3 +1,4 @@
+import { savedReceipt } from './receipts';
 import { savedBoard } from './memory-boards';
 import { galleryEntries, gallerySource } from './photo-gallery';
 import { z } from 'zod';
@@ -22,8 +23,10 @@ export const archiveFile = z
       z.literal(4),
       z.literal(5),
       z.literal(6),
+      z.literal(7),
     ]),
     boards: z.array(savedBoard).max(100).default([]),
+    receipts: z.array(savedReceipt).max(100).default([]),
     photoAssets: z.array(gallerySource).max(5000).default([]),
     connections: z.array(recordConnection).max(1000).default([]),
     tasteHistory: z.array(tasteEvent).max(10000).default([]),
@@ -113,7 +116,7 @@ export const archiveFile = z
     photos: z
       .array(
         z.object({
-          kind: z.enum(['list', 'item', 'log', 'asset']),
+          kind: z.enum(['list', 'item', 'log', 'asset', 'receipt']),
           id,
           contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
           data: z
@@ -135,6 +138,7 @@ export const archiveFile = z
       ...file.workoutRoutines,
       ...file.inbox,
       ...file.boards,
+      ...file.receipts,
     ];
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
     if (new Set(records.map((r) => r.id)).size !== records.length)
@@ -143,6 +147,18 @@ export const archiveFile = z
     const items = new Map(file.items.map((i) => [i.id, i]));
     const workouts = new Map(file.workoutSessions.map((w) => [w.id, w]));
     const logsForBoards = new Set(file.logs.map((log) => log.id));
+    const receipts = new Map(file.receipts.map((receipt) => [receipt.id, receipt]));
+    if (file.schemaVersion < 7 && file.receipts.length) bad('Receipts require backup version 7');
+    if (new TextEncoder().encode(JSON.stringify(file.receipts)).length > 16777216)
+      bad('Restore up to 16 MB of receipt text.');
+    for (const receipt of file.receipts)
+      for (const line of receipt.lines)
+        if (
+          line.mapping.mode !== 'none' &&
+          (!items.has(line.mapping.itemId) || !!items.get(line.mapping.itemId)?.mergedIntoId)
+        )
+          bad('A receipt has an unavailable record reference.');
+
     if (file.schemaVersion < 6 && file.boards.length) bad('Boards require backup version 6');
     if (new TextEncoder().encode(JSON.stringify(file.boards)).length > 16777216)
       bad('Restore up to 16 MB of board text.');
@@ -314,7 +330,9 @@ export const archiveFile = z
             ? items.has(p.id)
             : p.kind === 'asset'
               ? sources.has(p.id)
-              : file.logs.some((g) => g.id === p.id))
+              : p.kind === 'receipt'
+                ? receipts.has(p.id)
+                : file.logs.some((g) => g.id === p.id))
       )
         bad('A photo has an invalid record');
     }
@@ -324,6 +342,12 @@ export const archiveFile = z
         (photo.kind === 'log' && file.logs.find((g) => g.id === photo.id)?.gallery.length)
       )
         bad('A gallery cannot also contain a legacy cover photo');
+      if (
+        photo.kind === 'receipt' &&
+        (!receipts.get(photo.id)?.attachment?.available ||
+          receipts.get(photo.id)?.attachment?.contentType !== photo.contentType)
+      )
+        bad('A receipt attachment has an invalid type or availability.');
       if (photo.kind === 'asset' && !sources.get(photo.id)?.available)
         bad('A photo source is marked unavailable');
       if (photo.kind === 'asset' && sources.get(photo.id)?.contentType !== photo.contentType)
@@ -334,6 +358,13 @@ export const archiveFile = z
       file.photoAssets.some((source) => source.available && !photoKeys.has(`asset:${source.id}`))
     )
       bad('A photo source is missing its original');
+    if (
+      !file.photosExcluded &&
+      file.receipts.some(
+        (receipt) => receipt.attachment?.available && !photoKeys.has(`receipt:${receipt.id}`),
+      )
+    )
+      bad('A receipt is missing its attachment copy.');
     if (file.photosExcluded && file.photos.length) bad('A records-only file cannot contain photos');
   });
 export type ArchiveFile = z.infer<typeof archiveFile>;

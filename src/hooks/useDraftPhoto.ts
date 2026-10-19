@@ -88,7 +88,10 @@ export function useDraftPhoto(name: string) {
           setStatus('Photo draft could not be saved on this device. Keep this page open.');
       });
   }
-  async function freeze(blob: Blob, expectedId = operationId.current): Promise<{ file: File; key: string }> {
+  async function freeze(
+    blob: Blob,
+    expectedId = operationId.current,
+  ): Promise<{ file: File; key: string; stored: boolean }> {
     if (expectedId !== operationId.current)
       throw new Error('The selected photo changed. Review it before uploading.');
     const prepared =
@@ -97,17 +100,19 @@ export function useDraftPhoto(name: string) {
     const current = revision.current,
       requestId = operationId.current;
     setFile(prepared);
+    let stored = false;
     if (key) {
       writes.current = writes.current.catch(() => {}).then(() => access(key, 'write', prepared, requestId));
       try {
         await writes.current;
+        stored = true;
         if (current === revision.current) setStatus('Photo draft saved on this device.');
       } catch {
         if (current === revision.current)
           setStatus('Photo draft could not be saved on this device. Keep this page open.');
       }
     }
-    return { file: prepared, key: requestId };
+    return { file: prepared, key: requestId, stored };
   }
   return { file, change, freeze, operationId, ready, status, clear: () => change(null) };
 }

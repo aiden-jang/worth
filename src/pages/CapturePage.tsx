@@ -466,6 +466,7 @@ export function CapturePage() {
         </button>
       </section>
       <p>
+        <Link to="/receipts">Review a receipt and choose its record links →</Link>
         <Link to="/read">Read text from a photo on this device →</Link>
       </p>
       <p>

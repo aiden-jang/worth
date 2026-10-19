@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { receiptInput, emptyReceipt, receiptLineSuggestions, receiptDigest } from '../src/shared/receipts';
 import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
@@ -56,6 +57,7 @@ beforeAll(async () => {
     '0020_photo_galleries.sql',
     '0021_cover_revisions.sql',
     '0022_memory_boards.sql',
+    '0023_receipts.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1006,7 +1008,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(6);
+  expect(exported.schemaVersion).toBe(7);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3207,7 +3209,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(6);
+  expect(exported.schemaVersion).toBe(7);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3427,7 +3429,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(6);
+  expect(exported.schemaVersion).toBe(7);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3894,7 +3896,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(6);
+  expect(backup.schemaVersion).toBe(7);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4268,7 +4270,7 @@ test('version six backup remaps boards and row identities and preserves missing-
   const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
   await call(`/items/${missing.id}`, owner, 'DELETE');
   const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
-  expect(backup.schemaVersion).toBe(6);
+  expect(backup.schemaVersion).toBe(7);
   expect(archiveFile.safeParse(backup).success).toBe(true);
   expect(backup.boards[0].entries[1]).toMatchObject({
     reference: null,
@@ -4395,4 +4397,291 @@ test('client-chosen board and gallery identities cannot collide with other backu
   expect(archiveFile.safeParse(await call('/export/records', owner).then((r) => r.json())).success).toBe(
     true,
   );
+});
+
+// Add receiptInput, emptyReceipt, receiptLineSuggestions, receiptDigest imports from shared/receipts.
+function receiptBodyForTest() {
+  return receiptInput.parse({
+    ...emptyReceipt().current,
+    name: 'Reviewed receipt',
+    day: '2026-10-01',
+    lines: receiptLineSuggestions('Coffee 4.00\nA book 18.00'),
+  });
+}
+async function receiptPost(
+  owner: string,
+  input: unknown,
+  key: string = crypto.randomUUID(),
+  file: File | null = null,
+  db = platform.env.DB,
+) {
+  const form = new FormData();
+  form.set('receipt', JSON.stringify(input));
+  if (file) form.set('attachment', file);
+  return app.request(
+    'https://worth.test/api/receipts',
+    {
+      method: 'POST',
+      headers: { Cookie: `preview_user=${owner}`, Origin: 'https://worth.test', 'Idempotency-Key': key },
+      body: form,
+    },
+    { ...platform.env, DB: db },
+    platform.ctx,
+  );
+}
+const receiptTestImage = () =>
+  new File(
+    [
+      Uint8Array.from(
+        atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD/UAAAAASUVORK5CYII='),
+        (c) => c.charCodeAt(0),
+      ),
+    ],
+    'reviewed.png',
+    { type: 'image/png' },
+  );
+type ReceiptResult = { receipt: import('../src/shared/receipts').ReceiptView };
+
+test('receipt reviews atomically link existing records and create only explicitly named unranked records, with exact concurrent retries', async () => {
+  const owner = 'receiptowner',
+    list = await archiveCollection(owner, 'Kept'),
+    existing = await archiveItem(owner, list.id, 'Existing', {
+      decision: 'meh',
+      note: 'PRIVATE source note',
+    }),
+    input = receiptBodyForTest(),
+    created = crypto.randomUUID(),
+    key = crypto.randomUUID(),
+    file = receiptTestImage();
+  input.lines[0].mapping = { mode: 'existing', itemId: existing.id };
+  input.lines[0].amount = '$4.00 as written';
+  input.lines[1].mapping = {
+    mode: 'create',
+    itemId: created,
+    listId: list.id,
+    title: 'My entered book name',
+  };
+  input.attachment = { contentType: 'image/png', digest: await receiptDigest(file), available: true };
+  const responses = await Promise.all([
+    receiptPost(owner, input, key, file),
+    receiptPost(owner, input, key, file),
+  ]);
+  expect(responses.map((r) => r.status)).toEqual([201, 201]);
+  const { receipt } = (await responses[0].json()) as ReceiptResult;
+  expect(receipt.id).toBe(key);
+  expect(receipt.sources).toHaveLength(2);
+  expect(JSON.stringify(receipt.sources)).not.toContain('PRIVATE source note');
+  expect(receipt.lines[0].amount).toBe('$4.00 as written');
+  const item = ((await call(`/items/${created}`, owner).then((r) => r.json())) as { item: Item }).item;
+  expect(item).toMatchObject({
+    title: 'My entered book name',
+    decision: null,
+    note: '',
+    type: '',
+    hasPhoto: false,
+  });
+  expect(
+    ((await call(`/lists/${list.id}`, owner).then((r) => r.json())) as { list: ListDetail }).list.rankedIds,
+  ).toEqual([]);
+  expect(
+    ((await call(`/items/${existing.id}`, owner).then((r) => r.json())) as { item: Item }).item,
+  ).toMatchObject({ decision: 'meh', note: 'PRIVATE source note' });
+  const attachment = await call(`/receipts/${key}/attachment`, owner);
+  expect(attachment.status).toBe(200);
+  expect(new Uint8Array(await attachment.arrayBuffer())).toEqual(new Uint8Array(await file.arrayBuffer()));
+  expect((await receiptPost(owner, { ...input, name: 'Changed metadata' }, key, file)).status).toBe(409);
+  expect((await receiptPost('receiptother', input, key, file)).status).toBe(409);
+  expect((await call(`/receipts/${key}`, 'receiptother')).status).toBe(404);
+  expect((await call(`/receipts/${key}/attachment`, 'receiptother')).status).toBe(404);
+  expect(await call('/receipts', 'receiptother').then((r) => r.json())).toEqual({ receipts: [] });
+  expect((await call(`/receipts/${key}`, owner, 'DELETE')).status).toBe(204);
+  expect((await call(`/receipts/${key}`, owner, 'DELETE')).status).toBe(204);
+  expect((await receiptPost(owner, input, key, file)).status).toBe(410);
+  expect((await call(`/items/${created}`, owner)).status).toBe(200);
+  expect((await call(`/items/${existing.id}`, owner)).status).toBe(200);
+});
+
+test('receipt uploads reject unreviewed, changed, oversized and invalid image copies and unavailable record choices', async () => {
+  const owner = 'receiptvalidation',
+    other = await archiveCollection('receiptforeign', 'Foreign'),
+    foreign = await archiveItem('receiptforeign', other.id, 'Foreign'),
+    input = receiptBodyForTest(),
+    file = receiptTestImage();
+  expect((await receiptPost(owner, input, crypto.randomUUID(), file)).status).toBe(400);
+  input.attachment = { contentType: 'image/png', digest: '0'.repeat(64), available: true };
+  expect((await receiptPost(owner, input, crypto.randomUUID(), file)).status).toBe(400);
+  input.attachment.digest = await receiptDigest(file);
+  expect((await receiptPost(owner, input)).status).toBe(400);
+  input.attachment.available = false;
+  expect((await receiptPost(owner, input, crypto.randomUUID(), file)).status).toBe(400);
+  input.attachment = null;
+  input.lines[0].mapping = { mode: 'existing', itemId: foreign.id };
+  expect((await receiptPost(owner, input)).status).toBe(409);
+  input.lines[0].mapping = {
+    mode: 'create',
+    itemId: crypto.randomUUID(),
+    listId: other.id,
+    title: 'Wrong owner',
+  };
+  expect((await receiptPost(owner, input)).status).toBe(409);
+  const own = await archiveCollection(owner, 'Own');
+  input.lines[0].mapping = {
+    mode: 'create',
+    itemId: crypto.randomUUID(),
+    listId: own.id,
+    title: 'No inferred dates',
+  };
+  await call(`/lists/${own.id}`, owner, 'PATCH', { archived: true });
+  expect((await receiptPost(owner, input)).status).toBe(409);
+  const identity = receiptBodyForTest();
+  expect((await receiptPost(owner, identity, own.id)).status).toBe(409);
+  const key = crypto.randomUUID();
+  identity.lines[0].mapping = {
+    mode: 'create',
+    itemId: key,
+    listId: own.id,
+    title: 'Duplicate cross-kind identity',
+  };
+  expect((await receiptPost(owner, identity, key)).status).toBe(409);
+  const huge = new File([new Uint8Array(900001)], 'too-large.png', { type: 'image/png' }),
+    big = receiptBodyForTest();
+  big.attachment = { contentType: 'image/png', digest: await receiptDigest(huge), available: true };
+  expect((await receiptPost(owner, big, crypto.randomUUID(), huge)).status).toBe(400);
+  expect(await call('/receipts', owner).then((r) => r.json())).toEqual({ receipts: [] });
+});
+
+test('receipt source checks share the transaction with every created record and attachment', async () => {
+  const owner = 'receiptrace',
+    list = await archiveCollection(owner, 'Race'),
+    existing = await archiveItem(owner, list.id, 'Existing'),
+    input = receiptBodyForTest(),
+    created = crypto.randomUUID(),
+    db = platform.env.DB;
+  input.lines[0].mapping = { mode: 'existing', itemId: existing.id };
+  input.lines[1].mapping = { mode: 'create', itemId: created, listId: list.id, title: 'Must roll back' };
+  let raced = false;
+  const wrapped = new Proxy(db, {
+    get(target, key) {
+      if (key === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          if (!raced) {
+            raced = true;
+            await target.prepare('UPDATE items SET trashed_at=1 WHERE id=?').bind(existing.id).run();
+          }
+          return target.batch(statements);
+        };
+      const value = Reflect.get(target, key);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  expect((await receiptPost(owner, input, crypto.randomUUID(), null, wrapped)).status).toBe(409);
+  expect(raced).toBe(true);
+  expect(await db.prepare('SELECT id FROM items WHERE id=?').bind(created).first()).toBeNull();
+  expect(await call('/receipts', owner).then((r) => r.json())).toEqual({ receipts: [] });
+});
+
+test('version seven receipt backups preserve exact attachments, creation provenance and moved or missing source text', async () => {
+  const owner = 'receiptbackup',
+    list = await archiveCollection(owner, 'Original destination'),
+    target = await archiveCollection(owner, 'Current destination'),
+    input = receiptBodyForTest(),
+    created = crypto.randomUUID(),
+    missing = await archiveItem(owner, list.id, 'Later unavailable'),
+    file = receiptTestImage();
+  input.lines[0].mapping = { mode: 'create', itemId: created, listId: list.id, title: 'Created from review' };
+  input.lines[1].mapping = { mode: 'existing', itemId: missing.id };
+  input.attachment = { contentType: 'image/png', digest: await receiptDigest(file), available: true };
+  const { receipt } = (await (
+    await receiptPost(owner, input, crypto.randomUUID(), file)
+  ).json()) as ReceiptResult;
+  await archiveAction(list.id, owner, { action: 'move', itemIds: [created], destinationId: target.id });
+  await call(`/items/${created}`, owner, 'PATCH', { title: 'Renamed after the receipt review' });
+  await call(`/items/${missing.id}`, owner, 'DELETE');
+  await call(`/lists/${list.id}`, owner, 'DELETE');
+  const backup = archiveFile.parse(await call('/export/backup', owner).then((r) => r.json()));
+  expect(backup.schemaVersion).toBe(7);
+  expect(backup.photos.filter((p) => p.kind === 'receipt')).toHaveLength(1);
+  expect(backup.receipts[0].lines[0]).toMatchObject({
+    createdHere: true,
+    createdName: 'Created from review',
+    mapping: { mode: 'existing', itemId: created },
+  });
+  expect(backup.receipts[0].lines[1]).toMatchObject({
+    referenceMissing: true,
+    mapping: { mode: 'none' },
+    label: 'A book 18.00',
+  });
+  const key = crypto.randomUUID();
+  expect((await restoreWithTemplates('receiptrestored', backup, key)).status).toBe(201);
+  expect((await restoreWithTemplates('receiptrestored', backup, key)).status).toBe(201);
+  const round = archiveFile.parse(await call('/export/backup', 'receiptrestored').then((r) => r.json()));
+  expect(round.receipts).toHaveLength(1);
+  expect(round.receipts[0].id).not.toBe(receipt.id);
+  expect(round.receipts[0].lines[0].id).not.toBe(input.lines[0].id);
+  expect(round.receipts[0].lines[0].mapping).toEqual({ mode: 'existing', itemId: round.items[0].id });
+  expect(round.receipts[0].lines[0].createdHere).toBe(true);
+  expect(round.receipts[0].lines[0].createdName).toBe('Created from review');
+  expect(round.items[0].title).toBe('Renamed after the receipt review');
+  expect(round.photos.find((p) => p.kind === 'receipt')?.data).toBe(
+    backup.photos.find((p) => p.kind === 'receipt')?.data,
+  );
+  const records = archiveFile.parse(await call('/export/records', owner).then((r) => r.json()));
+  expect((await restoreWithTemplates('receipttextrestore', records)).status).toBe(201);
+  const textOnly = archiveFile.parse(
+    await call('/export/records', 'receipttextrestore').then((r) => r.json()),
+  );
+  expect(textOnly.receipts[0].attachment?.available).toBe(false);
+  expect(textOnly.receipts[0].lines[1].referenceMissing).toBe(true);
+  expect((await call(`/receipts/${textOnly.receipts[0].id}/attachment`, 'receipttextrestore')).status).toBe(
+    404,
+  );
+  const old = { ...records, schemaVersion: 6, receipts: undefined };
+  expect(archiveFile.parse(old).receipts).toEqual([]);
+  expect(archiveFile.safeParse({ ...records, schemaVersion: 6 }).success).toBe(false);
+});
+
+test('receipt capacity rolls back a whole restore and its receipt, allowing the same retry after removal', async () => {
+  const owner = 'receiptcapacity',
+    db = platform.env.DB,
+    input = receiptBodyForTest(),
+    ids = Array.from({ length: 96 }, () => crypto.randomUUID());
+  await db.batch(
+    ids.map((id) =>
+      db
+        .prepare('INSERT INTO receipts(id,owner_id,body_json,creation_hash,created_at) VALUES(?,?,?,?,1)')
+        .bind(id, owner, JSON.stringify(input), 'capacity'),
+    ),
+  );
+  const source = 'receiptcapacitysource';
+  for (let i = 0; i < 5; i++)
+    expect((await receiptPost(source, { ...input, name: `Copy ${i}` })).status).toBe(201);
+  await archiveCollection(source, 'Atomic collection');
+  const file = archiveFile.parse(await call('/export/records', source).then((r) => r.json())),
+    key = crypto.randomUUID();
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(409);
+  expect(((await call('/lists', owner).then((r) => r.json())) as { lists: unknown[] }).lists).toHaveLength(0);
+  await call(`/receipts/${ids[0]}`, owner, 'DELETE');
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(201);
+  expect((await restoreWithTemplates(owner, file, key)).status).toBe(201);
+  expect(
+    ((await call('/receipts', owner).then((r) => r.json())) as { receipts: unknown[] }).receipts,
+  ).toHaveLength(100);
+  expect(
+    (
+      await app.request(
+        'https://worth.test/api/data',
+        {
+          method: 'DELETE',
+          headers: {
+            Cookie: `preview_user=${owner}`,
+            Origin: 'https://worth.test',
+            'X-Worth-Confirmation': 'delete-all-worth-data',
+          },
+        },
+        platform.env,
+        platform.ctx,
+      )
+    ).status,
+  ).toBe(204);
+  expect(await call('/receipts', owner).then((r) => r.json())).toEqual({ receipts: [] });
 });

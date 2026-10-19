@@ -1,3 +1,4 @@
+import { registerReceiptRoutes } from './routes/receipts';
 import { registerBoardRoutes } from './routes/boards';
 import { registerGalleryRoutes } from './routes/photo-gallery';
 import { registerCalendarRoutes } from './routes/calendar';
@@ -93,6 +94,7 @@ registerOverviewRoutes(privateApi);
 registerRetrospectiveRoutes(privateApi);
 registerCalendarRoutes(privateApi);
 registerBoardRoutes(privateApi);
+registerReceiptRoutes(privateApi);
 registerTasteHistoryRoutes(privateApi);
 registerConnectionRoutes(privateApi);
 registerSearchRoutes(privateApi);

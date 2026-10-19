@@ -398,3 +398,19 @@ it stops when hidden, and reduced motion removes ticket arrival animation. This
 is an intentional supporting composition, not a replacement for the collection
 index/opinion-slip reference. Long names and unavailable-source explanations wrap;
 phone cards and source controls stack. See the board QA captures for verification.
+
+## Reviewed receipts
+
+Receipts extends the on-device photo-text composition with a dark source pane and
+a cream review pane, followed by dark line cards. The cabinet rail, 68px/44px
+headings, DM Sans/Mono, 22px panels and labeled 44px controls remain. Cream controls
+use dark ink and #626456 labels, including hover and keyboard focus. The literal
+line fields and record choices stack at phone widths. This is an intentional
+advanced capture page, while everyday record capture stays name-only.
+
+The prepared image has a distinct heading, exact full-size preview, explicit
+inclusion/readability choices and manual removal. Preparation moves focus to
+that preview; restored drafts do not move focus automatically. The directory's
+small faceless receipt object uses authored SVG rather than an opinion character.
+Saved line text is independent of a current linked title. No inferred spending
+analysis, purchase date or call is added.

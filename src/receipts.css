@@ -1,0 +1,273 @@
+:is(.receipt-capture-page, .receipts-page, .receipt-page) p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+:is(.receipt-capture-page, .receipts-page, .receipt-page) label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin-block: 20px;
+  font:
+    400 14px/1.5 'DM Sans',
+    sans-serif;
+  color: #aaa99b;
+  text-transform: none;
+  letter-spacing: normal;
+}
+:is(.receipt-capture-page, .receipts-page, .receipt-page) :is(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font:
+    400 15px/1.5 'DM Sans',
+    sans-serif;
+}
+:is(.receipt-capture-page, .receipts-page, .receipt-page, .receipt-confirm) :is(.button, .icon-button) {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+}
+.receipt-capture-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  margin-block: 32px;
+  align-items: start;
+}
+.receipt-source,
+.receipt-review {
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  padding: 28px;
+  min-width: 0;
+}
+.receipt-review {
+  background: #eae5d5;
+  color: #181915;
+}
+.receipt-review :is(label, .overline) {
+  color: #626456;
+}
+.receipt-review :is(input, select, textarea) {
+  color: #181915;
+  background: transparent;
+  border: 1px solid #626456;
+}
+.receipt-review .button-outline {
+  color: #181915;
+  border-color: #626456;
+}
+.receipt-review fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+:is(.receipt-source, .receipt-review) :is(h2, h3) {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.receipt-source h3 {
+  font-size: 24px;
+  margin-top: 32px;
+}
+.receipt-source img,
+.receipt-attachment img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  border-radius: 16px;
+  filter: none;
+  border: 0;
+  margin-block: 20px;
+}
+.receipt-source > a {
+  display: block;
+  margin-top: 20px;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.receipt-capture-page label.receipt-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: #f0ecdf;
+}
+.receipt-check input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+  accent-color: #e8dc9d;
+}
+.receipt-section-head {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: 32px;
+}
+.receipt-lines > ol,
+.receipt-saved-lines,
+.receipt-directory {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.receipt-lines > ol > li,
+.receipt-saved-lines > li {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+}
+.receipt-lines h3,
+.receipt-saved-lines h2,
+.receipt-save h2 {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.receipt-line-mapping {
+  border-block: 1px solid #38392f;
+  padding-block: 8px;
+  margin-block: 24px;
+}
+.receipt-save {
+  border-block: 1px solid #38392f;
+  margin-block: 32px;
+  padding-block: 28px;
+}
+.receipt-note,
+.receipt-original-text p,
+.receipt-draft-readout p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.receipt-original-text summary,
+.receipt-draft-readout summary {
+  min-height: 44px;
+  padding-block: 12px;
+  cursor: pointer;
+}
+.receipt-directory a {
+  display: block;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #38392f;
+  border-radius: 22px;
+  color: #f0ecdf;
+}
+.receipt-directory a:hover,
+.receipt-directory a:focus-visible {
+  background: #20211c;
+  border-color: #e8dc9d;
+}
+.receipt-directory h2 {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.receipt-empty {
+  margin-block: 36px;
+  border-top: 1px solid #38392f;
+  padding-top: 28px;
+}
+.receipt-empty svg {
+  width: 120px;
+  height: 110px;
+}
+.receipt-empty h2 {
+  font-size: 32px;
+  font-weight: 400;
+}
+.receipt-attachment {
+  max-width: 900px;
+  border-block: 1px solid #38392f;
+  padding-block: 24px;
+  margin-block: 28px;
+}
+.receipt-draft-readout {
+  margin-block: 28px;
+  border-top: 1px solid #38392f;
+  padding-top: 20px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 960px) {
+  .receipt-capture-layout,
+  .receipt-lines > ol,
+  .receipt-saved-lines,
+  .receipt-directory {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 680px) {
+  .receipt-source,
+  .receipt-review,
+  .receipt-lines > ol > li,
+  .receipt-saved-lines > li,
+  .receipt-directory a {
+    padding: 22px 18px;
+  }
+}
+.receipt-review p,
+.receipt-review input::placeholder,
+.receipt-review textarea::placeholder {
+  color: #626456;
+}
+.receipt-review h2 {
+  color: #181915;
+}
+.receipt-review option {
+  background: #eae5d5;
+  color: #181915;
+}
+.receipt-review .button-outline:hover:not(:disabled),
+.receipt-review .button-outline:focus-visible {
+  color: #181915;
+  border-color: #626456;
+  background: #ded9c8;
+}
+.receipt-review :is(input, select, textarea, button):focus-visible {
+  outline: 2px solid #626456;
+  outline-offset: 3px;
+}
+.receipt-copy-preview {
+  border-top: 1px solid #38392f;
+  margin-top: 28px;
+  padding-top: 24px;
+}
+.receipt-copy-preview > a {
+  display: block;
+  min-height: 44px;
+}
+.receipt-copy-preview > h3:focus {
+  outline: 2px solid #e8dc9d;
+  outline-offset: 4px;
+}
+.receipt-line-details {
+  margin-block: 20px;
+  border-top: 1px solid #38392f;
+}
+.receipt-line-details summary {
+  min-height: 44px;
+  padding-block: 12px;
+  color: #aaa99b;
+  cursor: pointer;
+  font-size: 14px;
+}
+.receipt-line-details textarea {
+  display: block;
+  margin-block: 8px 16px;
+}

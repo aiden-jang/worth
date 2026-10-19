@@ -11,6 +11,15 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const ReceiptsPage = lazy(() =>
+  import('./pages/ReceiptsPage').then((module) => ({ default: module.ReceiptsPage })),
+);
+const ReceiptPage = lazy(() =>
+  import('./pages/ReceiptsPage').then((module) => ({ default: module.ReceiptPage })),
+);
+const ReceiptCapturePage = lazy(() =>
+  import('./pages/ReceiptCapturePage').then((module) => ({ default: module.ReceiptCapturePage })),
+);
 const BoardsPage = lazy(() =>
   import('./pages/BoardsPage').then((module) => ({ default: module.BoardsPage })),
 );
@@ -150,6 +159,9 @@ function PrivateApp() {
         <Route path="/patterns/connections" element={<ConnectionsPage />} />
         <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/receipts" element={<ReceiptsPage />} />
+        <Route path="/receipts/new" element={<ReceiptCapturePage />} />
+        <Route path="/receipts/:id" element={<ReceiptPage />} />
         <Route path="/read" element={<PhotoTextPage />} />
         <Route path="/code" element={<CodeCapturePage />} />
         <Route path="/inbox" element={<InboxPage />} />
@@ -163,6 +175,8 @@ function PrivateApp() {
     <CaptureSignIn authOrigin={authOrigin} />
   ) : [
       '/',
+      '/receipts',
+      '/receipts/new',
       '/read',
       '/code',
       '/patterns/look-back',
@@ -178,6 +192,7 @@ function PrivateApp() {
       '/patterns',
     ].includes(location.pathname) ||
     /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ||
+    /^\/receipts\/[^/]+\/?$/.test(location.pathname) ||
     /^\/patterns\/boards\/[^/]+\/?$/.test(location.pathname) ? (
     <Welcome authOrigin={authOrigin} />
   ) : (

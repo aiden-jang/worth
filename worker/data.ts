@@ -1,3 +1,5 @@
+import { mapReceipt, type ReceiptRow } from './receipt-data';
+import { exportReceiptReferences, type SavedReceipt } from '../src/shared/receipts';
 import { mapBoard, type BoardRow } from './board-data';
 import { exportBoardReferences, type SavedBoard } from '../src/shared/memory-boards';
 import { galleryEntries, type GalleryEntry, type GallerySource } from '../src/shared/photo-gallery';
@@ -27,7 +29,8 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 6;
+  schemaVersion: 7;
+  receipts: SavedReceipt[];
   boards: SavedBoard[];
   photoAssets: GallerySource[];
   connections: RecordConnection[];
@@ -336,6 +339,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     photoAssetResult,
     boardResult,
     boardSizeResult,
+    receiptResult,
+    receiptSizeResult,
   ] = await db.batch([
     db.prepare(`${listQuery} WHERE l.owner_id = ? ORDER BY l.created_at ASC`).bind(ownerId),
     db.prepare(`${itemQuery} WHERE i.owner_id = ? ORDER BY i.created_at ASC`).bind(ownerId),
@@ -389,8 +394,27 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       .prepare(
         'SELECT COUNT(*) AS n,COALESCE(SUM(length(CAST(body_json AS BLOB))),0) AS bytes FROM memory_boards WHERE owner_id=? AND removed_at IS NULL',
       )
+
+      .bind(ownerId),
+    db
+      .prepare(
+        `SELECT id,owner_id,body_json,creation_hash,created_at,removed_at FROM receipts WHERE owner_id=? AND removed_at IS NULL AND
+      (SELECT COALESCE(SUM(length(CAST(body_json AS BLOB))),0) FROM receipts WHERE owner_id=? AND removed_at IS NULL)<=16777216 ORDER BY created_at,id LIMIT 101`,
+      )
+      .bind(ownerId, ownerId),
+    db
+      .prepare(
+        'SELECT COUNT(*) AS n,COALESCE(SUM(length(CAST(body_json AS BLOB))),0) AS bytes FROM receipts WHERE owner_id=? AND removed_at IS NULL',
+      )
       .bind(ownerId),
   ]);
+  const receiptBounds = receiptSizeResult.results[0] as { n: number; bytes: number };
+  if (receiptBounds.n > 100 || receiptBounds.bytes > 16777216)
+    throw new ApiError(
+      413,
+      'BACKUP_TOO_LARGE',
+      'Receipt text exceeds the backup limit of 100 receipts or 16 MB. No receipts were omitted.',
+    );
   const boardBounds = boardSizeResult.results[0] as { n: number; bytes: number };
   if (boardBounds.n > 100 || boardBounds.bytes > 16777216)
     throw new ApiError(
@@ -424,9 +448,12 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject new backup kinds instead of silently discarding them.
-    schemaVersion: 6,
+    schemaVersion: 7,
     boards: (boardResult.results as BoardRow[]).map((row) =>
       exportBoardReferences(mapBoard(row), boardItemIds, exportedLogIds),
+    ),
+    receipts: (receiptResult.results as ReceiptRow[]).map((row) =>
+      exportReceiptReferences(mapReceipt(row), boardItemIds),
     ),
     photoAssets: (
       photoAssetResult.results as (Omit<GallerySource, 'available'> & { available: number })[]
