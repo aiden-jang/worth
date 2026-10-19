@@ -1,3 +1,4 @@
+import { sharedArchive } from './private-spaces';
 import { savedReceipt } from './receipts';
 import { savedCapsule } from './capsules';
 import { exerciseAliases, routineTargets, validRoutineTargets } from './activity-plans';
@@ -28,9 +29,11 @@ export const archiveFile = z
       z.literal(7),
       z.literal(8),
       z.literal(9),
+      z.literal(10),
     ]),
     boards: z.array(savedBoard).max(100).default([]),
     receipts: z.array(savedReceipt).max(100).default([]),
+    sharedArchives: z.array(sharedArchive).max(50).default([]),
     capsules: z.array(savedCapsule).max(25).default([]),
     photoAssets: z.array(gallerySource).max(5000).default([]),
     connections: z.array(recordConnection).max(1000).default([]),
@@ -156,9 +159,14 @@ export const archiveFile = z
       ...file.inbox,
       ...file.boards,
       ...file.receipts,
+      ...file.sharedArchives,
+      ...file.sharedArchives.flatMap((copy) => copy.entries),
       ...file.capsules,
       ...file.capsules.flatMap((capsule) => capsule.entries.flatMap((entry) => entry.photos)),
     ];
+    if (file.schemaVersion < 10 && file.sharedArchives.length) bad('Shared copies require backup version 10');
+    if (new TextEncoder().encode(JSON.stringify(file.sharedArchives)).length > 8 * 1024 * 1024)
+      bad('Shared copies exceed the 8 MB text limit');
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
     if (new Set(records.map((r) => r.id)).size !== records.length)
       bad('The file contains duplicate record IDs');

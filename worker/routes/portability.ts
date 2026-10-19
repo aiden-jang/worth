@@ -31,6 +31,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.inbox.length +
         records.boards.length +
         records.receipts.length +
+        records.sharedArchives.length +
+        records.sharedArchives.reduce((n, copy) => n + copy.entries.length, 0) +
         records.capsules.length +
         records.capsules.reduce(
           (sum, capsule) => sum + capsule.entries.reduce((count, entry) => count + entry.photos.length, 0),
@@ -159,6 +161,16 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       c.env.DB.prepare('DELETE FROM memory_boards WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM receipts WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM time_capsules WHERE owner_id = ?').bind(c.get('ownerId')),
+      c.env.DB.prepare(
+        'UPDATE private_spaces SET revision=revision+1 WHERE id IN(SELECT space_id FROM space_entries WHERE author_id=?)',
+      ).bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM space_entries WHERE author_id=?').bind(c.get('ownerId')),
+      c.env.DB.prepare('UPDATE space_members SET revoked_at=? WHERE account_id=?').bind(
+        Date.now(),
+        c.get('ownerId'),
+      ),
+      c.env.DB.prepare('DELETE FROM private_spaces WHERE owner_id=?').bind(c.get('ownerId')),
+      c.env.DB.prepare('DELETE FROM shared_archives WHERE owner_id=?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM lists WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM capture_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM archive_operations WHERE owner_id = ?').bind(c.get('ownerId')),
@@ -197,6 +209,8 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.photoAssets,
         ...file.boards,
         ...file.receipts,
+        ...file.sharedArchives,
+        ...file.sharedArchives.flatMap((copy) => copy.entries),
         ...file.capsules,
         ...file.capsules.flatMap((capsule) => capsule.entries.flatMap((entry) => entry.photos)),
       ].map((r) => [r.id, crypto.randomUUID()]),
@@ -468,6 +482,18 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     rows('memory_boards', restoredBoards);
     statements.push(...(await restoreReceiptRows(c.env.DB, owner, file, id)));
     const capsules = await prepareCapsuleRestore(c.env.DB, owner, file, id);
+    rows(
+      'shared_archives',
+      file.sharedArchives.map((copy) => ({
+        id: id(copy.id),
+        owner_id: owner,
+        body_json: JSON.stringify({
+          ...copy,
+          id: id(copy.id),
+          entries: copy.entries.map((entry) => ({ ...entry, id: id(entry.id) })),
+        }),
+      })),
+    );
     rows('time_capsules', capsules.capsules);
     rows('capsule_photos', capsules.photos);
     statements.push(...capsules.statements);
@@ -577,6 +603,12 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
           409,
           'BOARD_LIMIT',
           'Restoring these boards would exceed 100 boards. Remove a board, then retry this same restore.',
+        );
+      if (error instanceof Error && error.message.includes('shared archive capacity reached'))
+        throw new ApiError(
+          409,
+          'SHARED_COPY_LIMIT',
+          'Restoring these shared copies would exceed 50 private copies. Remove a copy, then retry this same restore.',
         );
       templateCapacityError(error);
       connectionCapacity(error);

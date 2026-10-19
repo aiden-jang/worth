@@ -71,9 +71,13 @@ export function SettingsPage() {
         !parsed.data.collectionTemplates.length &&
         !parsed.data.inbox.length &&
         !parsed.data.boards.length &&
-        !parsed.data.receipts.length
+        !parsed.data.receipts.length &&
+        !parsed.data.capsules.length &&
+        !parsed.data.sharedArchives.length
       )
-        throw new Error('This file has no lists, Inbox finds, boards, receipts or templates to restore.');
+        throw new Error(
+          'This file has no lists, Inbox finds, boards, receipts, capsules, shared copies or templates to restore.',
+        );
       setFile(parsed.data);
       setFileName(selected.name);
       const digest = await crypto.subtle.digest(
@@ -120,7 +124,9 @@ export function SettingsPage() {
         <h2>Take a copy.</h2>
         <p>
           Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
-          capsule backups include unopened contents; keep downloaded files private.
+          capsule backups include unopened contents; keep downloaded files private. Shared spaces and saved
+          private copies restore as disconnected private archives. Invitations and unrevealed choices are
+          excluded.
         </p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
@@ -169,8 +175,40 @@ export function SettingsPage() {
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
               {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
               Inbox finds · {file.tasteHistory.length} history changes · {file.connections.length} connections
-              · {file.boards.length} boards · {file.receipts.length} receipts
+              · {file.boards.length} boards · {file.receipts.length} receipts · {file.capsules.length}{' '}
+              capsules · {file.sharedArchives.length} shared copies
             </p>
+            {!!file.capsules.length && (
+              <section aria-label="Capsules to restore">
+                <p>
+                  {file.capsules.length} fixed capsules will restore with fresh IDs and their original opening
+                  dates and opened state. Unopened contents are present in this file.
+                </p>
+                <ul>
+                  {file.capsules.map((c) => (
+                    <li key={c.id}>
+                      {c.name} · {c.openedAt === null ? 'Closed' : 'Opened'} · {c.opening.day} ·{' '}
+                      {c.opening.zone}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {!!file.sharedArchives.length && (
+              <section aria-label="Shared copies to restore">
+                <p>
+                  {file.sharedArchives.length} disconnected private copies will restore with fresh IDs. No
+                  invitations, live access or unrevealed choices will be created.
+                </p>
+                <ul>
+                  {file.sharedArchives.map((c) => (
+                    <li key={c.id}>
+                      {c.name} · {c.entries.length} snapshots · {c.outcomes.length} revealed rounds
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {!!file.receipts.length && (
               <section aria-label="Receipts to restore">
                 <p>
@@ -265,7 +303,7 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''} restored. Existing data was kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''}${file.capsules.length ? ` and ${file.capsules.length} ${file.capsules.length === 1 ? 'capsule' : 'capsules'}` : ''}${file.sharedArchives.length ? ` and ${file.sharedArchives.length} shared ${file.sharedArchives.length === 1 ? 'copy' : 'copies'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }
@@ -311,7 +349,8 @@ export function SettingsPage() {
         <h2>Delete Worth data.</h2>
         <p>
           Remove your lists, Inbox finds, records, photos, routines and shared snapshots. Your shared login
-          remains.
+          remains. Owned shared spaces are removed and your memberships end; other people’s independent copies
+          remain.
         </p>
         <p className="data-hint">
           Download a copy first. This removes live Worth data; provider recovery copies and logs may remain

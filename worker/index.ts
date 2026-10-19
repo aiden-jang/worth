@@ -1,3 +1,4 @@
+import { registerPrivateSpaceRoutes } from './routes/private-spaces';
 import { registerReceiptRoutes } from './routes/receipts';
 import { registerCapsuleRoutes } from './routes/capsules';
 import { registerBoardRoutes } from './routes/boards';
@@ -98,6 +99,7 @@ registerCalendarRoutes(privateApi);
 registerBoardRoutes(privateApi);
 registerReceiptRoutes(privateApi);
 registerCapsuleRoutes(privateApi);
+registerPrivateSpaceRoutes(privateApi);
 registerTasteHistoryRoutes(privateApi);
 registerConnectionRoutes(privateApi);
 registerSearchRoutes(privateApi);

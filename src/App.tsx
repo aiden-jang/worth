@@ -11,6 +11,11 @@ import type { ItemDecision } from './shared/models';
 import { TrashNotice } from './components/TrashTools';
 import { AppShell } from './components/AppShell';
 import { AppUpdate } from './AppUpdate';
+const SpacesPage = lazy(() => import('./pages/SpacesPage').then((m) => ({ default: m.SpacesPage })));
+const SpacePage = lazy(() => import('./pages/SpacesPage').then((m) => ({ default: m.SpacePage })));
+const SpaceInvitePage = lazy(() =>
+  import('./pages/SpacesPage').then((m) => ({ default: m.SpaceInvitePage })),
+);
 const CapsulesPage = lazy(() => import('./pages/CapsulesPage').then((m) => ({ default: m.CapsulesPage })));
 const CapsulePage = lazy(() => import('./pages/CapsulesPage').then((m) => ({ default: m.CapsulePage })));
 const CapsuleComposePage = lazy(() =>
@@ -164,6 +169,9 @@ function PrivateApp() {
         <Route path="/patterns/connections" element={<ConnectionsPage />} />
         <Route path="/patterns/look-back" element={<RetrospectivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/spaces" element={<SpacesPage />} />
+        <Route path="/spaces/invite/:inviteId" element={<SpaceInvitePage />} />
+        <Route path="/spaces/:id" element={<SpacePage />} />
         <Route path="/capsules" element={<CapsulesPage />} />
         <Route path="/capsules/new" element={<CapsuleComposePage />} />
         <Route path="/capsules/:id" element={<CapsulePage />} />
@@ -183,6 +191,7 @@ function PrivateApp() {
     <CaptureSignIn authOrigin={authOrigin} />
   ) : [
       '/',
+      '/spaces',
       '/capsules',
       '/capsules/new',
       '/receipts',
@@ -202,6 +211,7 @@ function PrivateApp() {
       '/patterns',
     ].includes(location.pathname) ||
     /^\/lists\/[^/]+(?:\/show)?\/?$/.test(location.pathname) ||
+    /^\/spaces(?:\/invite)?\/[^/]+\/?$/.test(location.pathname) ||
     /^\/capsules\/[^/]+\/?$/.test(location.pathname) ||
     /^\/receipts\/[^/]+\/?$/.test(location.pathname) ||
     /^\/patterns\/boards\/[^/]+\/?$/.test(location.pathname) ? (

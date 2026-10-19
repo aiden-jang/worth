@@ -1,3 +1,4 @@
+import type { SpaceSummary } from './shared/private-spaces';
 import type { HistoryPage } from './shared/taste-history';
 import type { AuthUser } from '@aidenjang/auth-client';
 import type {
@@ -93,6 +94,89 @@ async function trashRecord(kind: TrashReference['kind'], id: string, path: strin
   announceTrash([{ kind, id }]);
 }
 export const api = {
+  spaces: () => request<{ spaces: SpaceSummary[] }>('/spaces'),
+  space: (id: string) => request<import('./shared/private-spaces').SpaceView>(`/spaces/${id}`),
+  createSpace: (name: string, key: string) =>
+    request<import('./shared/private-spaces').SpaceView>('/spaces', {
+      ...json('POST', { name }),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  spaceNote: (id: string, note: string, expectedRevision: number) =>
+    request<import('./shared/private-spaces').SpaceView>(
+      `/spaces/${id}/note`,
+      json('PUT', { note, expectedRevision }),
+    ),
+  spaceInvite: (
+    id: string,
+    email: string,
+    role: 'viewer' | 'editor',
+    expectedRevision: number,
+    key: string,
+  ) =>
+    request<{ link: string; inviteId: string; space: import('./shared/private-spaces').SpaceView }>(
+      `/spaces/${id}/invites`,
+      {
+        ...json('POST', { email, role, expectedRevision }),
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+      },
+    ),
+  acceptSpace: (id: string, token: string) =>
+    request<import('./shared/private-spaces').SpaceView>(
+      `/spaces/invites/${id}/accept`,
+      json('POST', { token }),
+    ),
+  revokeSpaceMember: (id: string, memberId: string, expectedRevision: number) =>
+    request<import('./shared/private-spaces').SpaceView>(
+      `/spaces/${id}/members/${memberId}`,
+      json('DELETE', { expectedRevision }),
+    ),
+  shareSnapshot: (
+    id: string,
+    preview: import('./shared/record-snapshots').SourcePreview,
+    expectedRevision: number,
+    key: string,
+  ) =>
+    request<import('./shared/private-spaces').SpaceView>(`/spaces/${id}/entries`, {
+      ...json('POST', { selection: preview.selection, hash: preview.hash, expectedRevision }),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  removeSharedSnapshot: (id: string, entryId: string, expectedRevision: number) =>
+    request<import('./shared/private-spaces').SpaceView>(
+      `/spaces/${id}/entries/${entryId}`,
+      json('DELETE', { expectedRevision }),
+    ),
+  removeSpace: (id: string, expectedRevision: number) =>
+    request<void>(`/spaces/${id}`, json('DELETE', { expectedRevision })),
+  spaceArchives: () =>
+    request<{ archives: import('./shared/private-spaces').SharedArchive[] }>('/spaces/archives'),
+  saveSpaceCopy: (id: string, key: string) =>
+    request<{ archive: import('./shared/private-spaces').SharedArchive }>(`/spaces/${id}/archive`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': key },
+    }),
+  removeSpaceCopy: (id: string) => request<void>(`/spaces/archives/${id}`, { method: 'DELETE' }),
+  pairs: (id: string) =>
+    request<{ pairs: import('./shared/private-spaces').PairView[] }>(`/spaces/${id}/pairs`),
+  createPair: (
+    id: string,
+    input: import('zod').infer<typeof import('./shared/private-spaces').pairInput>,
+    key: string,
+  ) =>
+    request<import('./shared/private-spaces').PairView>(`/spaces/${id}/pairs`, {
+      ...json('POST', input),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
+  pairChoice: (id: string, choice: number, expectedRevision: number) =>
+    request<import('./shared/private-spaces').PairView>(
+      `/pairs/${id}/choice`,
+      json('PUT', { choice, expectedRevision }),
+    ),
+  revealPair: (id: string, choice: number, expectedRevision: number) =>
+    request<import('./shared/private-spaces').PairView>(
+      `/pairs/${id}/reveal`,
+      json('POST', { choice, expectedRevision }),
+    ),
+
   capsules: () => request<{ capsules: import('./shared/capsules').CapsuleSummary[] }>('/capsules'),
   capsule: (id: string) => request<import('./shared/capsules').CapsuleView>(`/capsules/${id}`),
   capsulePreview: (selection: import('./shared/record-snapshots').SourceSelection) =>

@@ -1,3 +1,5 @@
+import { exportSharedArchives } from './shared-portability';
+import type { SharedArchive } from '../src/shared/private-spaces';
 import { mapReceipt, type ReceiptRow } from './receipt-data';
 import { mapCapsule, type CapsuleRow } from './capsule-data';
 import { normalizeCapsuleReferences, type SavedCapsule } from '../src/shared/capsules';
@@ -32,8 +34,9 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 9;
+  schemaVersion: 10;
   capsules: SavedCapsule[];
+  sharedArchives: SharedArchive[];
   receipts: SavedReceipt[];
   boards: SavedBoard[];
   photoAssets: GallerySource[];
@@ -479,7 +482,8 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject new backup kinds instead of silently discarding them.
-    schemaVersion: 9,
+    schemaVersion: 10,
+    sharedArchives: await exportSharedArchives(db, ownerId),
     capsules: (capsuleResult.results as CapsuleRow[]).map((row) =>
       normalizeCapsuleReferences(
         mapCapsule(row),

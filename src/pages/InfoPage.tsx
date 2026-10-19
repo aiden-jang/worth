@@ -72,6 +72,14 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Private records and shared links</h2>
               <p>
+                Private spaces store invitation emails, accepted account access, shared notes and chosen text
+                snapshots. Contributors review what they share; photos and later private edits stay private.
+                Members may keep independent copies that revocation cannot erase. Two-person choices stay
+                hidden from the partner until both reveal. Backups save current shared text and revealed
+                participant outcomes as disconnected copies; restore never restores live access or
+                invitations.
+              </p>
+              <p>
                 Your archive and photos require your account. Creating a share link publishes only a snapshot
                 of ranked titles and types with the collection name. Anyone with that link can read it until
                 it expires after seven days or you revoke it. Notes, photos, dates and history aren’t in that

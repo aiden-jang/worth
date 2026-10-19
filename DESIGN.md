@@ -442,3 +442,15 @@ an exact chosen-fields preview. Calls and ranks are independent. The composer
 allows a name/date without sources; optional notes/photos never become implicit.
 Closed cards expose names, dates and counts only. Owner backup scope remains
 visible because opening dates are app-level access rules.
+
+## Private spaces
+
+Shared spaces extend the cabinet's secondary pages: 68px desktop/44px phone
+headings, ruled sections, 22px cards, familiar source picker and native review.
+Two authored flat tickets introduce collaboration without adding a call face.
+Text-only sharing has an exact preview and explicit Share action; notes and
+measurements follow selected source fields, with notes off by default. Invitation
+secrets are displayed for manual copying. Role, copy/revocation consequences and
+shared note conflicts use factual copy. This-or-that uses two labeled choices,
+a separate confirmed Reveal and a factual two-person result. No results or shared
+calls are inferred. Private copies use a readable, disconnected archive view.

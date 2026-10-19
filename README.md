@@ -39,6 +39,7 @@ labeled and never writes to a private archive.
 - Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo
   options. Download an offline HTML copy or print/save a PDF. Prepare an individual recommendation
   card as a PNG with your own message and a preview of exactly what leaves Worth.
+- Collaborate in private spaces with verified-email invitations, viewer/editor access, selected text snapshots and shared notes. Make two-person choices privately and reveal them together; preserve disconnected private copies.
 - Seal private time capsules with a message, opening date/timezone and explicitly reviewed record/photo snapshots; compare them with current sources after opening. Owner backups include unopened contents.
 - Assemble a personal field guide across collections, with explicit note/location/photo choices, captions, an exact preview and an offline HTML or printable copy.
 - Link related finds, editions, the same thing across places and reasoned replacement chains in Patterns → Connections, with a readable constellation view.

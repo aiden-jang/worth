@@ -22,7 +22,15 @@ vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
     const userId = request.headers.get('cookie')?.match(/preview_user=([a-z]+)/)?.[1];
     return userId
-      ? { state: 'signed-in', user: { id: userId, email: `${userId}@example.test`, displayName: userId } }
+      ? {
+          state: 'signed-in',
+          user: {
+            id: userId,
+            email: `${userId}@example.test`,
+            displayName: userId,
+            emailVerified: !request.headers.has('x-test-unverified'),
+          },
+        }
       : { state: 'signed-out' };
   },
 }));
@@ -60,6 +68,7 @@ beforeAll(async () => {
     '0023_receipts.sql',
     '0024_activity_plans.sql',
     '0025_time_capsules.sql',
+    '0026_private_spaces.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1010,7 +1019,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(9);
+  expect(exported.schemaVersion).toBe(10);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3203,7 +3212,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(9);
+  expect(exported.schemaVersion).toBe(10);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3423,7 +3432,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(9);
+  expect(exported.schemaVersion).toBe(10);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3890,7 +3899,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(9);
+  expect(backup.schemaVersion).toBe(10);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4264,7 +4273,7 @@ test('version six backup remaps boards and row identities and preserves missing-
   const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
   await call(`/items/${missing.id}`, owner, 'DELETE');
   const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
-  expect(backup.schemaVersion).toBe(9);
+  expect(backup.schemaVersion).toBe(10);
   expect(archiveFile.safeParse(backup).success).toBe(true);
   expect(backup.boards[0].entries[1]).toMatchObject({
     reference: null,
@@ -4593,7 +4602,7 @@ test('version seven receipt backups preserve exact attachments, creation provena
   await call(`/items/${missing.id}`, owner, 'DELETE');
   await call(`/lists/${list.id}`, owner, 'DELETE');
   const backup = archiveFile.parse(await call('/export/backup', owner).then((r) => r.json()));
-  expect(backup.schemaVersion).toBe(9);
+  expect(backup.schemaVersion).toBe(10);
   expect(backup.photos.filter((p) => p.kind === 'receipt')).toHaveLength(1);
   expect(backup.receipts[0].lines[0]).toMatchObject({
     createdHere: true,
@@ -4915,7 +4924,7 @@ test('activity plans and aliases survive fresh-ID restore with literal measureme
   });
   expect(logResponse.status).toBe(201);
   const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
-  expect(backup.schemaVersion).toBe(9);
+  expect(backup.schemaVersion).toBe(10);
   expect(backup.lists[0].exerciseAliases).toEqual([group]);
   expect(backup.logs[0].measurements).toEqual(measurements);
   const restoreKey = crypto.randomUUID(),
@@ -5102,7 +5111,7 @@ test('capsules keep closed contents and photos private until an explicit server-
       .status,
   ).toBe(409);
   const backup = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(backup.schemaVersion).toBe(9);
+  expect(backup.schemaVersion).toBe(10);
   expect(backup.capsules[0].message).toBe(input.message);
   expect(backup.capsules[0].openedAt).toBeNull();
   await call(`/items/${item.id}`, owner, 'PATCH', {
@@ -5451,4 +5460,391 @@ test('capsules compare the original identity after moves, keep call and rank ind
   expect(visit.data.title).toBe('Visit name');
   await call(`/items/${parent.id}`, owner, 'PATCH', { title: 'Changed fallback name' });
   expect((await planCreate('/capsules', owner, capsuleRequest([visit]))).status).toBe(409);
+});
+
+async function spaceCreate(owner: string) {
+  const r = await planCreate('/spaces', owner, { name: 'An evening' });
+  expect(r.status).toBe(201);
+  return (await r.json()) as import('../src/shared/private-spaces').SpaceView;
+}
+async function inviteMember(
+  owner: string,
+  spaceId: string,
+  member: string,
+  role: 'viewer' | 'editor' = 'editor',
+) {
+  const space = (await (
+    await call(`/spaces/${spaceId}`, owner)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  const response = await planCreate(`/spaces/${spaceId}/invites`, owner, {
+    email: `${member}@example.test`,
+    role,
+    expectedRevision: space.revision,
+  });
+  expect(response.status).toBe(201);
+  const invite = (await response.json()) as { inviteId: string; link: string };
+  const token = invite.link.split('#')[1];
+  return { ...invite, token };
+}
+test('private spaces bind verified invitations, keep frozen granular copies and revoke access', async () => {
+  const owner = 'spaceowner',
+    member = 'spacemember',
+    outsider = 'spaceoutsider',
+    space = await spaceCreate(owner),
+    invite = await inviteMember(owner, space.id, member);
+  expect((await call(`/spaces/${space.id}`, member)).status).toBe(404);
+  expect(
+    (await call(`/spaces/invites/${invite.inviteId}/accept`, outsider, 'POST', { token: invite.token }))
+      .status,
+  ).toBe(404);
+  const unverified = await app.request(
+    `https://worth.test/api/spaces/invites/${invite.inviteId}/accept`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${member}`,
+        'Content-Type': 'application/json',
+        'x-test-unverified': '1',
+      },
+      body: JSON.stringify({ token: invite.token }),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(unverified.status).toBe(403);
+  const accepted = await call(`/spaces/invites/${invite.inviteId}/accept`, member, 'POST', {
+    token: invite.token,
+  });
+  expect(accepted.status).toBe(200);
+  const list = await archiveCollection(owner, 'Private coffee'),
+    item = await archiveItem(owner, list.id, 'Espresso', { note: 'KEEP PRIVATE', decision: null });
+  const selection = {
+    kind: 'item' as const,
+    id: item.id,
+    fields: ['decision', 'rank'] as ('decision' | 'rank')[],
+    photoIds: [],
+  };
+  const preview = await capsuleSource(owner, selection.kind, selection.id, selection.fields);
+  let current = (await (
+    await call(`/spaces/${space.id}`, owner)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  const input = { selection, hash: preview.hash, expectedRevision: current.revision },
+    key = crypto.randomUUID();
+  const posted = await planCreate(`/spaces/${space.id}/entries`, owner, input, key);
+  expect(posted.status).toBe(201);
+  const shared = (await (
+    await call(`/spaces/${space.id}`, member)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  expect(JSON.stringify(shared)).not.toContain('KEEP PRIVATE');
+  expect(shared.entries[0].data).toEqual({ title: 'Espresso', decision: null, rank: null });
+  expect(JSON.stringify(shared)).not.toContain(item.id);
+  await call(`/items/${item.id}`, owner, 'PATCH', { title: 'New name', note: 'Later private text' });
+  expect((await planCreate(`/spaces/${space.id}/entries`, owner, input, key)).status).toBe(201);
+  expect(
+    ((await (await call(`/spaces/${space.id}`, member)).json()) as typeof shared).entries[0].data.title,
+  ).toBe('Espresso');
+  expect(
+    (
+      await call(`/spaces/${space.id}/note`, outsider, 'PUT', {
+        note: 'bad',
+        expectedRevision: shared.revision,
+      })
+    ).status,
+  ).toBe(404);
+  const note = await call(`/spaces/${space.id}/note`, member, 'PUT', {
+    note: 'Our note',
+    expectedRevision: shared.revision,
+  });
+  expect(note.status).toBe(200);
+  expect(
+    (
+      await call(`/spaces/${space.id}/note`, owner, 'PUT', {
+        note: 'stale',
+        expectedRevision: shared.revision,
+      })
+    ).status,
+  ).toBe(409);
+  const copy = await planCreate(`/spaces/${space.id}/archive`, member, {});
+  expect(copy.status).toBe(201);
+  current = (await (await call(`/spaces/${space.id}`, owner)).json()) as typeof shared;
+  expect(
+    (
+      await call(`/spaces/${space.id}/members/${invite.inviteId}`, owner, 'DELETE', {
+        expectedRevision: current.revision,
+      })
+    ).status,
+  ).toBe(200);
+  expect((await call(`/spaces/${space.id}`, member)).status).toBe(404);
+  expect(
+    (
+      await call(`/spaces/${space.id}/note`, member, 'PUT', {
+        note: 'late',
+        expectedRevision: current.revision + 1,
+      })
+    ).status,
+  ).toBe(404);
+  expect(
+    (await call(`/spaces/invites/${invite.inviteId}/accept`, member, 'POST', { token: invite.token })).status,
+  ).toBe(404);
+  const archives = (await (await call('/spaces/archives', member)).json()) as {
+    archives: import('../src/shared/private-spaces').SharedArchive[];
+  };
+  expect(archives.archives[0].note).toBe('Our note');
+  expect(archives.archives[0].entries[0].data.title).toBe('Espresso');
+});
+test('two-person choices are private until both reveal and sealed choices cannot change', async () => {
+  const owner = 'pairfirst',
+    member = 'pairsecond',
+    other = 'pairthird',
+    space = await spaceCreate(owner);
+  for (const who of [member, other]) {
+    const invite = await inviteMember(owner, space.id, who);
+    expect(
+      (await call(`/spaces/invites/${invite.inviteId}/accept`, who, 'POST', { token: invite.token })).status,
+    ).toBe(200);
+  }
+  const saved = (await (
+    await call(`/spaces/${space.id}`, owner)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  const created = await planCreate(`/spaces/${space.id}/pairs`, owner, {
+    title: 'Tonight',
+    partnerId: member,
+    options: ['Tea', 'Coffee'],
+    expectedRevision: saved.revision,
+  });
+  expect(created.status).toBe(201);
+  const pair = (await created.json()) as import('../src/shared/private-spaces').PairView;
+  expect(
+    (await call(`/pairs/${pair.id}/choice`, other, 'PUT', { choice: 0, expectedRevision: 0 })).status,
+  ).toBe(404);
+  expect(
+    (await call(`/pairs/${pair.id}/choice`, owner, 'PUT', { choice: 0, expectedRevision: 0 })).status,
+  ).toBe(200);
+  let second = (await (await call(`/spaces/${space.id}/pairs`, member)).json()) as { pairs: (typeof pair)[] };
+  expect(second.pairs[0]).toMatchObject({
+    ownChoice: null,
+    ownRevision: 0,
+    partnerRevealed: false,
+    result: null,
+  });
+  expect(
+    (await call(`/pairs/${pair.id}/reveal`, owner, 'POST', { choice: 0, expectedRevision: 1 })).status,
+  ).toBe(200);
+  second = (await (await call(`/spaces/${space.id}/pairs`, member)).json()) as { pairs: (typeof pair)[] };
+  expect(second.pairs[0].result).toBeNull();
+  expect(second.pairs[0].ownChoice).toBeNull();
+  const before = (await (await call('/export/records', member)).json()) as ArchiveFile;
+  expect(before.sharedArchives.flatMap((s) => s.outcomes)).toEqual([]);
+  expect(JSON.stringify(await (await call(`/spaces/${space.id}`, member)).json())).not.toContain('ownChoice');
+  expect(
+    (await call(`/pairs/${pair.id}/choice`, owner, 'PUT', { choice: 1, expectedRevision: 1 })).status,
+  ).toBe(409);
+  expect(
+    (await call(`/pairs/${pair.id}/choice`, member, 'PUT', { choice: 1, expectedRevision: 0 })).status,
+  ).toBe(200);
+  expect(
+    (await call(`/pairs/${pair.id}/reveal`, member, 'POST', { choice: 0, expectedRevision: 1 })).status,
+  ).toBe(409);
+  const revealed = await call(`/pairs/${pair.id}/reveal`, member, 'POST', { choice: 1, expectedRevision: 1 });
+  expect(revealed.status).toBe(200);
+  expect(((await revealed.json()) as typeof pair).result).toEqual([
+    { name: owner, choice: 0 },
+    { name: member, choice: 1 },
+  ]);
+  const backup = (await (await call('/export/records', member)).json()) as ArchiveFile;
+  expect(archiveFile.safeParse(backup).success).toBe(true);
+  expect(backup.sharedArchives[0].outcomes).toHaveLength(1);
+  const restored = await restoreWithTemplates('pairrestore', backup);
+  expect(restored.status).toBe(201);
+  expect(((await (await call('/spaces', 'pairrestore')).json()) as { spaces: unknown[] }).spaces).toEqual([]);
+  const archives = (await (await call('/spaces/archives', 'pairrestore')).json()) as {
+    archives: import('../src/shared/private-spaces').SharedArchive[];
+  };
+  expect(archives.archives[0].id).not.toBe(backup.sharedArchives[0].id);
+  expect(archives.archives[0].outcomes[0].result).toHaveLength(2);
+});
+test('viewer grants cannot edit and space removal or reset preserves only independent private copies', async () => {
+  const owner = 'viewowner',
+    member = 'viewmember',
+    space = await spaceCreate(owner),
+    invite = await inviteMember(owner, space.id, member, 'viewer');
+  await call(`/spaces/invites/${invite.inviteId}/accept`, member, 'POST', { token: invite.token });
+  let current = (await (
+    await call(`/spaces/${space.id}`, member)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  expect(current.role).toBe('viewer');
+  expect(
+    (
+      await call(`/spaces/${space.id}/note`, member, 'PUT', {
+        note: 'no',
+        expectedRevision: current.revision,
+      })
+    ).status,
+  ).toBe(403);
+  expect((await planCreate(`/spaces/${space.id}/archive`, member, {})).status).toBe(201);
+  current = (await (await call(`/spaces/${space.id}`, owner)).json()) as typeof current;
+  expect(
+    (await call(`/spaces/${space.id}`, owner, 'DELETE', { expectedRevision: current.revision })).status,
+  ).toBe(204);
+  expect((await call(`/spaces/${space.id}`, member)).status).toBe(404);
+  expect(
+    ((await (await call('/spaces/archives', member)).json()) as { archives: unknown[] }).archives,
+  ).toHaveLength(1);
+  const reset = await app.request(
+    'https://worth.test/api/data',
+    {
+      method: 'DELETE',
+      headers: { Cookie: `preview_user=${owner}`, 'X-Worth-Confirmation': 'delete-all-worth-data' },
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(reset.status).toBe(204);
+  expect(
+    ((await (await call('/spaces/archives', member)).json()) as { archives: unknown[] }).archives,
+  ).toHaveLength(1);
+});
+
+test('shared snapshot tombstones prevent resurrection and access is checked inside the write batch', async () => {
+  const owner = 'spaceraceowner',
+    member = 'spaceracemember',
+    space = await spaceCreate(owner),
+    invite = await inviteMember(owner, space.id, member);
+  await call(`/spaces/invites/${invite.inviteId}/accept`, member, 'POST', { token: invite.token });
+  const list = await archiveCollection(member, 'Member originals'),
+    item = await archiveItem(member, list.id, 'Do not publish newer text', { note: 'Reviewed' }),
+    preview = await capsuleSource(member, 'item', item.id, ['note']);
+  let current = (await (
+    await call(`/spaces/${space.id}`, member)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  const key = crypto.randomUUID(),
+    input = { selection: preview.selection, hash: preview.hash, expectedRevision: current.revision };
+  const posted = await planCreate(`/spaces/${space.id}/entries`, member, input, key);
+  expect(posted.status).toBe(201);
+  current = (await posted.json()) as typeof current;
+  const entry = current.entries[0];
+  expect(
+    (
+      await call(`/spaces/${space.id}/entries/${entry.id}`, member, 'DELETE', {
+        expectedRevision: current.revision,
+      })
+    ).status,
+  ).toBe(200);
+  expect((await planCreate(`/spaces/${space.id}/entries`, member, input, key)).status).toBe(410);
+  current = (await (await call(`/spaces/${space.id}`, member)).json()) as typeof current;
+  let batches = 0,
+    raced = false;
+  const db = platform.env.DB,
+    wrapped = new Proxy(db, {
+      get(target, property) {
+        if (property === 'batch')
+          return async (statements: D1PreparedStatement[]) => {
+            batches++;
+            if (batches === 1 && !raced) {
+              raced = true;
+              await db
+                .prepare('UPDATE space_members SET revoked_at=? WHERE id=?')
+                .bind(Date.now(), invite.inviteId)
+                .run();
+            }
+            return target.batch(statements);
+          };
+        const value = Reflect.get(target, property, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+  const response = await app.request(
+    `https://worth.test/api/spaces/${space.id}/note`,
+    {
+      method: 'PUT',
+      headers: { Cookie: `preview_user=${member}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: 'Must not save after revocation', expectedRevision: current.revision }),
+    },
+    { ...platform.env, DB: wrapped },
+    platform.ctx,
+  );
+  expect(raced).toBe(true);
+  expect(response.status).toBe(409);
+  expect(
+    (await db.prepare('SELECT note FROM private_spaces WHERE id=?').bind(space.id).first<{ note: string }>())!
+      .note,
+  ).toBe('');
+});
+
+test('revoked pair grants stay invalid after reinviting and private copies use distinct restore identities', async () => {
+  const owner = 'rejoinowner',
+    member = 'rejoinmember',
+    space = await spaceCreate(owner);
+  const invite = await inviteMember(owner, space.id, member);
+  await call(`/spaces/invites/${invite.inviteId}/accept`, member, 'POST', { token: invite.token });
+  let current = (await (
+    await call(`/spaces/${space.id}`, owner)
+  ).json()) as import('../src/shared/private-spaces').SpaceView;
+  const pairResponse = await planCreate(`/spaces/${space.id}/pairs`, owner, {
+    title: 'Before access ended',
+    partnerId: member,
+    options: ['One', 'Two'],
+    expectedRevision: current.revision,
+  });
+  expect(pairResponse.status).toBe(201);
+  const pair = (await pairResponse.json()) as import('../src/shared/private-spaces').PairView;
+  current = (await (await call(`/spaces/${space.id}`, owner)).json()) as typeof current;
+  await call(`/spaces/${space.id}/members/${invite.inviteId}`, owner, 'DELETE', {
+    expectedRevision: current.revision,
+  });
+  const again = await inviteMember(owner, space.id, member);
+  await call(`/spaces/invites/${again.inviteId}/accept`, member, 'POST', { token: again.token });
+  expect(
+    (await call(`/pairs/${pair.id}/choice`, member, 'PUT', { choice: 0, expectedRevision: 0 })).status,
+  ).toBe(404);
+  expect(
+    ((await (await call(`/spaces/${space.id}/pairs`, member)).json()) as { pairs: unknown[] }).pairs,
+  ).toEqual([]);
+  const list = await archiveCollection(owner, 'Copy originals'),
+    item = await archiveItem(owner, list.id, 'Keep this'),
+    preview = await capsuleSource(owner, 'item', item.id, []);
+  current = (await (await call(`/spaces/${space.id}`, owner)).json()) as typeof current;
+  expect(
+    (
+      await planCreate(`/spaces/${space.id}/entries`, owner, {
+        selection: preview.selection,
+        hash: preview.hash,
+        expectedRevision: current.revision,
+      })
+    ).status,
+  ).toBe(201);
+  for (let i = 0; i < 2; i++)
+    expect((await planCreate(`/spaces/${space.id}/archive`, member, {})).status).toBe(201);
+  const backup = (await (await call('/export/records', member)).json()) as ArchiveFile;
+  expect(archiveFile.safeParse(backup).success).toBe(true);
+  expect(new Set(backup.sharedArchives.flatMap((c) => c.entries.map((e) => e.id))).size).toBe(3);
+});
+test('a shared-copy capacity failure rolls back the entire restore and exact retry works after freeing space', async () => {
+  const donor = 'sharedbackup',
+    target = 'sharedfull',
+    space = await spaceCreate(donor);
+  const file = (await (await call('/export/records', donor)).json()) as ArchiveFile;
+  const list = await archiveCollection(donor, 'Also restored');
+  const fullFile = (await (await call('/export/records', donor)).json()) as ArchiveFile;
+  expect(fullFile.lists[0].id).toBe(list.id);
+  const db = platform.env.DB;
+  await db.batch(
+    Array.from({ length: 50 }, () => {
+      const id = crypto.randomUUID();
+      return db
+        .prepare('INSERT INTO shared_archives(id,owner_id,body_json) VALUES(?,?,?)')
+        .bind(id, target, JSON.stringify({ ...file.sharedArchives[0], id }));
+    }),
+  );
+  const key = crypto.randomUUID();
+  const failed = await restoreWithTemplates(target, fullFile, key);
+  expect(failed.status).toBe(409);
+  expect(((await (await call('/lists', target)).json()) as { lists: unknown[] }).lists).toEqual([]);
+  await db
+    .prepare('DELETE FROM shared_archives WHERE id=(SELECT id FROM shared_archives WHERE owner_id=? LIMIT 1)')
+    .bind(target)
+    .run();
+  expect((await restoreWithTemplates(target, fullFile, key)).status).toBe(201);
+  expect(((await (await call('/lists', target)).json()) as { lists: unknown[] }).lists).toHaveLength(1);
+  expect(space.id).toBeTruthy();
 });

@@ -74,8 +74,8 @@ framing and layout changes in the original checkout.
 - [x] Collection booklet/mini zine with exact content preview and downloadable output.
 - [x] Personal field guide with selected records, notes and explicit locations.
 - [x] Individual recommendation card with a user-written reason and exact preview.
-- [ ] Private two-person this-or-that with separate choices and a deliberate reveal.
-- [ ] Private collaboration and explicit granular sharing controls.
+- [x] Private two-person this-or-that with separate choices and a deliberate reveal.
+- [x] Private collaboration and explicit granular sharing controls.
 - [x] On-device recognition/extraction assistance with reviewed output; no external AI provider.
 
 Existing seven-day public snapshots keep their original fixed title/type-only
@@ -788,3 +788,23 @@ and blocked-storage journeys. The single skipped phone case repeats the desktop
 320/430/768px sweep. Desktop/phone and narrow/tablet captures were inspected in
 `art/ui-qa/capsules`. Private collaboration, two-person choices and full offline
 reading/sync remain the three unchecked groups.
+
+## Private collaboration and two-person choices
+
+Migration 0026 adds verified-email invitations bound to Accounts IDs, viewer/editor
+roles, revision-checked shared notes and explicitly reviewed text snapshots.
+Private originals/photos/later edits remain private. Members can keep disconnected
+copies. Revocation is checked inside writes and permanently invalidates rounds
+tied to that grant; reinvitation does not revive them. Two-person rounds fix two
+options and participants; exact individual Reveal seals each choice. Partner
+choices stay absent from responses and exports until both reveal.
+
+Format 10 preserves current authorized shared text, private copies and revealed
+participant outcomes as inactive archives with fresh IDs. Invitations, live access
+and unrevealed choices do not restore. Capsule-only and shared-copy-only files have
+explicit previews. See `art/ui-qa/private-spaces` for verification and scope.
+
+Collaboration verification completed: the full 215-test suite passed, followed by
+two targeted real-D1 regression checks. Ten private-space browser journeys and
+two capsule-picker regression journeys passed on desktop/phone. Nine captures
+were inspected. Offline reading and pending sync remain the only unchecked group.

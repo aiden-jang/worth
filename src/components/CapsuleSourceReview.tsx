@@ -22,12 +22,14 @@ const names: Record<SnapshotField, string> = {
 };
 export function CapsuleSourceReview({
   reference,
+  mode = 'capsule',
   initial,
   maxPhotos,
   onUse,
   onClose,
 }: {
   reference: { kind: 'item' | 'log'; id: string };
+  mode?: 'capsule' | 'share';
   initial?: SourcePreview;
   maxPhotos: number;
   onUse: (preview: SourcePreview) => void;
@@ -46,6 +48,7 @@ export function CapsuleSourceReview({
   const kind = reference.kind === 'item' ? 'items' : 'logs';
   const gallery = useQuery({
     queryKey: ['capsule-source-gallery', owner, kind, reference.id],
+    enabled: mode === 'capsule',
     queryFn: () => api.gallery(kind, reference.id),
   });
   useEffect(() => {
@@ -113,8 +116,8 @@ export function CapsuleSourceReview({
           </button>
         </div>
         <p>
-          Names are always copied. Choose the other fields and photos to keep. Your original record stays
-          unchanged.
+          Names are always copied. Choose the other fields to copy. Your original record stays unchanged.
+          {mode === 'share' && ' Only these selected text fields will be shared. Photos stay private.'}
         </p>
         <fieldset className="capsule-field-choices" disabled={review.isPending}>
           <legend>Snapshot fields</legend>
@@ -134,77 +137,83 @@ export function CapsuleSourceReview({
             </label>
           ))}
         </fieldset>
-        <details className="record-extras">
-          <summary>
-            Source photos <span>optional</span>
-          </summary>
-          <p>
-            Choose up to {maxPhotos} here. A capsule keeps up to four photo copies across all its snapshots.
-            Captions and arrows are copied too.
-          </p>
-          {gallery.isPending && <p role="status">Loading source photos…</p>}
-          {gallery.isError && (
-            <p role="alert" className="error-banner">
-              {gallery.error.message}
-              <button type="button" className="button button-outline" onClick={() => void gallery.refetch()}>
-                Retry source photos
-              </button>
-            </p>
-          )}
-          {gallery.data?.gallery.entries.length === 0 && <p>This record has no photos.</p>}
-          <div className="capsule-photo-choices">
-            {gallery.data?.gallery.entries.map((entry, index) => (
-              <section key={entry.id}>
-                <label className="capsule-check">
-                  <input
-                    type="checkbox"
-                    checked={selection.photoIds.includes(entry.id)}
-                    disabled={
-                      review.isPending ||
-                      !entry.source.available ||
-                      (!selection.photoIds.includes(entry.id) && selection.photoIds.length >= maxPhotos)
-                    }
-                    onChange={(event) =>
-                      setSelection({
-                        ...selection,
-                        photoIds: event.target.checked
-                          ? [...selection.photoIds, entry.id]
-                          : selection.photoIds.filter((id) => id !== entry.id),
-                      })
-                    }
-                  />
-                  Include source photo {index + 1}
-                </label>
-                {entry.source.available ? (
-                  <AnnotatedPhoto
-                    src={`/api/${kind}/${reference.id}/photos/${entry.id}`}
-                    entry={entry}
-                    number={index + 1}
-                    showCaption
-                  />
-                ) : (
-                  <p>Original image unavailable. Its caption and arrows remain in your archive.</p>
-                )}
-              </section>
-            ))}
-          </div>
-          {!!selection.photoIds.length && (
-            <button
-              type="button"
-              className="button button-outline"
-              disabled={review.isPending}
-              onClick={() => setSelection({ ...selection, photoIds: [] })}
-            >
-              Keep this snapshot without photos
-            </button>
-          )}
-          {gallery.data && selection.photoIds.some((id) => !available.has(id)) && (
+        {mode === 'capsule' && (
+          <details className="record-extras">
+            <summary>
+              Source photos <span>optional</span>
+            </summary>
             <p>
-              A chosen original is no longer available. Choose this snapshot without photos, or review the
-              source in your archive.
+              Choose up to {maxPhotos} here. A capsule keeps up to four photo copies across all its snapshots.
+              Captions and arrows are copied too.
             </p>
-          )}
-        </details>
+            {gallery.isPending && <p role="status">Loading source photos…</p>}
+            {gallery.isError && (
+              <p role="alert" className="error-banner">
+                {gallery.error.message}
+                <button
+                  type="button"
+                  className="button button-outline"
+                  onClick={() => void gallery.refetch()}
+                >
+                  Retry source photos
+                </button>
+              </p>
+            )}
+            {gallery.data?.gallery.entries.length === 0 && <p>This record has no photos.</p>}
+            <div className="capsule-photo-choices">
+              {gallery.data?.gallery.entries.map((entry, index) => (
+                <section key={entry.id}>
+                  <label className="capsule-check">
+                    <input
+                      type="checkbox"
+                      checked={selection.photoIds.includes(entry.id)}
+                      disabled={
+                        review.isPending ||
+                        !entry.source.available ||
+                        (!selection.photoIds.includes(entry.id) && selection.photoIds.length >= maxPhotos)
+                      }
+                      onChange={(event) =>
+                        setSelection({
+                          ...selection,
+                          photoIds: event.target.checked
+                            ? [...selection.photoIds, entry.id]
+                            : selection.photoIds.filter((id) => id !== entry.id),
+                        })
+                      }
+                    />
+                    Include source photo {index + 1}
+                  </label>
+                  {entry.source.available ? (
+                    <AnnotatedPhoto
+                      src={`/api/${kind}/${reference.id}/photos/${entry.id}`}
+                      entry={entry}
+                      number={index + 1}
+                      showCaption
+                    />
+                  ) : (
+                    <p>Original image unavailable. Its caption and arrows remain in your archive.</p>
+                  )}
+                </section>
+              ))}
+            </div>
+            {!!selection.photoIds.length && (
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={review.isPending}
+                onClick={() => setSelection({ ...selection, photoIds: [] })}
+              >
+                Keep this snapshot without photos
+              </button>
+            )}
+            {gallery.data && selection.photoIds.some((id) => !available.has(id)) && (
+              <p>
+                A chosen original is no longer available. Choose this snapshot without photos, or review the
+                source in your archive.
+              </p>
+            )}
+          </details>
+        )}
         <button
           type="button"
           className="button button-outline"

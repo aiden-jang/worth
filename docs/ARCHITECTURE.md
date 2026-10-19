@@ -400,7 +400,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 8 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–8; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 10 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–10; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -473,8 +473,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 8 backup formats include history in the same read
-batch as records. Restore accepts versions 1–8, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 10 backup formats include history in the same read
+batch as records. Restore accepts versions 1–10, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -505,7 +505,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–8, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–10, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -645,7 +645,7 @@ projection or invitation is added by a board.
 
 Version 6 exports read boards in the same D1 snapshot as records. Unavailable or
 merged source references become explicit missing links while entered text remains.
-Restore accepts versions 1–8 (older files default to no boards), validates source
+Restore accepts versions 1–10 (older files default to no boards), validates source
 references, remaps board/entry/source IDs and resets revisions. Capacity failure
 rolls back the complete restore and receipt, permitting the same retry after space
 is freed. Board text is bounded at 16 MiB within existing backup limits. All-data
@@ -696,7 +696,7 @@ sources. Text is bounded at 100 receipts/16 MiB within existing backup limits.
 Created-record provenance and the originally entered name remain, while stale original destination references
 normalize to live item links; missing sources retain entered line text/amounts.
 Full backup images use a separate receipt photo kind and validate exact bytes.
-Restore accepts versions 1–8, defaults older files to no receipts, gives receipt,
+Restore accepts versions 1–10, defaults older files to no receipts, gives receipt,
 line and source links fresh IDs, and never creates a second set of linked records.
 Records-only restores mark absent image bytes unavailable. Capacity failure rolls
 back all records and the restore receipt, allowing the same retry after space is
@@ -747,7 +747,7 @@ unit mixing, averaging, score or inferred set is added. Missing values leave gap
 the chart supports negative values and a readable original-name entry index.
 
 Version 8 includes aliases, future plans and recorded measurements in the same
-records snapshot. Restore accepts versions 1–8, validates target names and activity
+records snapshot. Restore accepts versions 1–10, validates target names and activity
 ownership, remaps alias-group and record IDs and preserves independent snapshots.
 Earlier versions default to empty additions. Restore never recreates
 creation receipts; all-data deletion removes them through their list relationship.
@@ -776,3 +776,32 @@ explicit; independent copied bytes survive original removal. Records-only restor
 retains captions/arrows with an unavailable-image state. Twenty-five capsules,
 six sources and four photos per capsule bound storage and review. Capsule content
 must never enter the separate offline-reading projection.
+
+## Private spaces and two-person choices
+
+Migration 0026 separates collaboration from personal records and old public
+snapshots. An owner invites a verified email using a manually shared, seven-day
+link. Only its hash is stored; acceptance binds the trusted Accounts ID. Email
+normalization matches Accounts (trim/lowercase). Role and active membership are
+checked inside each mutation batch. Viewers read/copy; editors also change the
+shared note and contribute explicitly reviewed text projections. Only the author
+or owner removes a projection; future private edits never auto-publish. Photos
+and private source identifiers stay out of shared spaces. Source equality guards
+and a nonce receipt prevent stale reviews and resurrection after removal.
+
+Shared notes use revision comparison and retain conflicting device drafts. Reads
+are private/no-store. Revoking a grant ends access and rounds tied to that exact
+grant, including after a later reinvitation. Already downloaded/private copies
+remain independent. Space removal deletes live entries/rounds and revokes access;
+Worth reset also revokes memberships and removes the resetting user's live
+contributions. It never deletes someone else's independent saved copy.
+
+Two-person rounds fix two named options and two account IDs. Choice writes compare
+an individual revision; Reveal checks the exact chosen option/revision and seals
+that person's choice. Partner choice values are omitted from responses until both
+reveals. Third members cannot participate. Shared-space and backup readers never
+select unrevealed choices. Format 10 backs up current authorized shared text and
+revealed participant outcomes as disconnected archives; restore creates fresh IDs
+and never invitations, secrets or live grants. Bounds: 20 owned spaces, eight
+active invitations each, 30 entries/rounds, 50 private copies and 8 MB shared text
+per backup. Older backup formats remain supported.
