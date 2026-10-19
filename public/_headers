@@ -40,3 +40,12 @@
 
 /patterns/calendar
   X-Robots-Tag: noindex, nofollow
+
+/capsules*
+  X-Robots-Tag: noindex, nofollow
+/spaces*
+  X-Robots-Tag: noindex, nofollow
+/offline/*
+  X-Robots-Tag: noindex, nofollow
+/offline/sw.js
+  Cache-Control: no-cache

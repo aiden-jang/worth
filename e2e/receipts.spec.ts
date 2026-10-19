@@ -430,7 +430,10 @@ test('blocked device recovery needs a deliberate save and navigation choice, and
   await expect(leaving).toBeVisible();
   for (const button of await leaving.getByRole('button').all()) {
     const box = await button.boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
+    // Browser rectangles can differ from a 44px CSS target by a fraction of a device pixel.
+    expect(box?.height ?? 0, '44px touch target with 0.01px rounding tolerance').toBeGreaterThanOrEqual(
+      43.99,
+    );
   }
   await capture(page, 'navigation', info.project.name);
   await leaving.getByRole('button', { name: 'Cancel', exact: true }).last().click();

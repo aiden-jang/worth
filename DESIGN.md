@@ -454,3 +454,15 @@ secrets are displayed for manual copying. Role, copy/revocation consequences and
 shared note conflicts use factual copy. This-or-that uses two labeled choices,
 a separate confirmed Reveal and a factual two-person result. No results or shared
 calls are inferred. Private copies use a readable, disconnected archive view.
+
+## Offline device copy
+
+The standalone `/offline/` page deliberately uses a simple wordmark/back header
+in place of the connected archive rail. Its public shell must open without the
+authenticated application. Keep cabinet canvas/panel/butter tokens, 68px desktop /
+44px phone heading, 12px controls and 22px confirmations. A faceless flat folder
+and lock identify a private device copy. Pending saves, connected/offline state,
+copy date, passphrase scope and unsaved text stay factual and visible. Name-only
+Inbox capture remains possible; notes are optional. Read text through a searchable
+collection/Inbox index, with separate call/rank labels and explicit note queuing.
+No stored records or queued requests are inferred from decorative artwork.

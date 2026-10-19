@@ -51,7 +51,7 @@ its verification. The following groups are committed and verified locally on
 - Routine target snapshots, explicit named measurements and exercise aliases that
   group history while preserving original entries and units.
 
-Remaining work includes offline reading and pending saves. See the tracker for the remaining unchecked feature and its verification requirements.
+The approved web expansion is complete within the documented scopes, including private capsules, granular text collaboration, two-person reveals and encrypted offline text with explicit pending sync. See the feature tracker for verification and limits.
 
 Worth remains a web app. Native iOS/Android companions and widget APIs were
 removed at the user's request. Home-screen access uses web/PWA shortcuts.

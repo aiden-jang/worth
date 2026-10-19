@@ -28,8 +28,10 @@ the client persists an immutable destination/payload and retry key. A lost reply
 can be retried after reload without another record. That endpoint enforces owner,
 parent availability, payload fingerprint and one atomic creation receipt. A later
 move/merge/Trash state is reported instead of silently recreating the record.
-Offline drafts remain editable on an already loaded page, but no background save
-or offline archive reading is implied. Those larger offline features are pending.
+Offline drafts remain editable on an already loaded capture page. The separate
+encrypted Offline copy, opened from Settings, reads selected saved text and queues
+Inbox captures/note edits for explicit sync. Web capture does not save in the
+background or silently move its drafts into that queue.
 
 ## Getting to capture
 

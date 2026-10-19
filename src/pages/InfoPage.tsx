@@ -95,6 +95,18 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>On this device</h2>
               <p>
+                Offline text copies and pending saves use a separate passphrase and encrypted browser storage.
+                The offline page can unlock a prepared copy without signing in; syncing checks its original
+                account. Worth cannot recover that passphrase. Only the offline page’s public files are
+                cached, never private API responses or images. Copies and their pending saves persist until
+                removed on that device; Clear device drafts does not remove them.
+              </p>
+              <p>
+                Deleting connected Worth data keeps a random account reset marker so old pending requests
+                cannot recreate deleted records. It does not erase previously downloaded backups or encrypted
+                device copies. Remove those separately.
+              </p>
+              <p>
                 Worth uses browser storage for unfinished text and photo drafts, retry identifiers, rest
                 timers, CSV data and mappings, pending import requests, export settings and your last capture
                 choice. Drafts and saved restore retry identifiers older than seven days are removed when you

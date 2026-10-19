@@ -1,0 +1,12 @@
+import { createRoot } from 'react-dom/client';
+import { OfflinePage } from './pages/OfflinePage';
+import '@fontsource/dm-sans/latin-400.css';
+import '@fontsource/dm-sans/latin-500.css';
+import '@fontsource/dm-sans/latin-600.css';
+import '@fontsource/dm-mono/latin-400.css';
+import './styles.css';
+import './product.css';
+import './cabinet.css';
+import './details.css';
+import './offline.css';
+createRoot(document.getElementById('root')!).render(<OfflinePage />);

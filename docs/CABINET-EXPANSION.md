@@ -37,7 +37,7 @@ framing and layout changes in the original checkout.
 - [x] Reviewed web capture, desktop bookmark code and optional installed-browser text/link Share target, with manual paste fallback.
 - [x] Barcode/ISBN capture with reviewed external lookup and a manual fallback.
 - [x] Reviewed receipt extraction with attachment and line-to-record mapping.
-- [ ] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
+- [x] Offline reading and pending saves, account isolation, visible sync state and conflict recovery.
 - [x] Private web/PWA shortcut entry points for capture, a chosen shortlist and a random saved find, with account-specific remembered choices. Browser/OS menu availability varies.
 
 ## Memories and relationships
@@ -808,3 +808,31 @@ Collaboration verification completed: the full 215-test suite passed, followed b
 two targeted real-D1 regression checks. Ten private-space browser journeys and
 two capsule-picker regression journeys passed on desktop/phone. Nine captures
 were inspected. Offline reading and pending sync remain the only unchecked group.
+
+## Offline text completion and final validation
+
+The separate bookmarked Offline page stores an encrypted account-bound text copy
+and up to 100 explicit pending Inbox captures/note edits. It reloads disconnected,
+uses a separate unrecoverable passphrase, and checks account/reset/source state
+inside atomic server writes. It never caches private API/media responses. Quota
+failures, competing tabs, wrong passphrases, tampering, stale notes and uncertain
+replies retain useful recovery. Static cache eviction can be repaired explicitly.
+Locked-copy removal requires the actual signed-in owner.
+
+Scope is names, notes, recorded dates, calls and ranks; images, receipts, capsules,
+collaboration and extended context/measurements stay in connected Worth. Initial
+copies support 2,000 records, 500 collections and 4 MB text. No automatic syncing,
+rebase, native companion, home-screen widget or paid AI provider was added.
+
+Final local verification: 223 core tests across 47 files passed. The complete
+browser run covered 329 cases: 326 passed, one deliberate phone skip repeats the
+desktop narrow/tablet sweep, and two test-only assertions needed correction.
+Both corrected cases then passed on desktop and phone (four targeted passes):
+a duplicate Cancel-button locator and a 0.00002px rectangle rounding difference.
+All 328 applicable browser cases are verified. Formatting, lint, unused-code
+checks, types and production build passed. Nine offline captures were inspected.
+
+Browser CI now splits all cases once into disjoint 165/164-case shards. The
+existing required browser-check gate still requires every shard to succeed.
+These are local branch changes; no PR, push, merge or deployment occurred. The
+approved web expansion checklist is complete within the documented scopes.

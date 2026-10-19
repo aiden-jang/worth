@@ -69,6 +69,7 @@ beforeAll(async () => {
     '0024_activity_plans.sql',
     '0025_time_capsules.sql',
     '0026_private_spaces.sql',
+    '0027_offline_queue.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -5847,4 +5848,214 @@ test('a shared-copy capacity failure rolls back the entire restore and exact ret
   expect((await restoreWithTemplates(target, fullFile, key)).status).toBe(201);
   expect(((await (await call('/lists', target)).json()) as { lists: unknown[] }).lists).toHaveLength(1);
   expect(space.id).toBeTruthy();
+});
+
+async function offlineCopy(owner: string) {
+  const response = await call('/offline/snapshot', owner);
+  expect(response.status).toBe(200);
+  return (await response.json()) as import('../src/shared/offline').OfflineSnapshot;
+}
+function offlineCapture(epoch: string, title = 'Offline picnic') {
+  return {
+    id: crypto.randomUUID(),
+    epoch,
+    kind: 'capture' as const,
+    recordKind: null,
+    recordId: null,
+    title,
+    note: 'A private pending note',
+    expectedNote: null,
+    expectedUpdatedAt: null,
+  };
+}
+test('offline snapshots expose only owned text and exact capture retries cannot duplicate or cross accounts', async () => {
+  const owner = 'offlinecapture',
+    other = 'offlineother',
+    list = await archiveCollection(owner, 'Offline collection'),
+    item = await archiveItem(owner, list.id, 'Offline coffee', { note: 'Owned note', decision: null });
+  await platform.env.DB.prepare('UPDATE lists SET ranked_ids=? WHERE id=?')
+    .bind(JSON.stringify([item.id]), list.id)
+    .run();
+  const capsule = capsuleRequest([], Date.parse('2099-01-01T00:00:00Z'));
+  expect((await planCreate('/capsules', owner, capsule)).status).toBe(201);
+  const snapshot = await offlineCopy(owner);
+  expect(snapshot.records).toMatchObject([{ id: item.id, note: 'Owned note', rank: 1, decision: null }]);
+  expect(JSON.stringify(snapshot)).not.toContain('PRIVATE CAPSULE LETTER');
+  expect(Object.keys(snapshot).sort()).toEqual(['epoch', 'lists', 'owner', 'records', 'savedAt']);
+  expect((await offlineCopy(other)).records).toEqual([]);
+  const op = offlineCapture(snapshot.epoch),
+    responses = await Promise.all([
+      call('/offline/sync', owner, 'POST', op),
+      call('/offline/sync', owner, 'POST', op),
+    ]);
+  expect(responses.map((r) => r.status)).toEqual([200, 200]);
+  expect(
+    (await platform.env.DB.prepare('SELECT COUNT(*) AS n FROM inbox_entries WHERE owner_id=?')
+      .bind(owner)
+      .first<{ n: number }>())!.n,
+  ).toBe(1);
+  expect((await call('/offline/sync', owner, 'POST', { ...op, note: 'Different request' })).status).toBe(409);
+  const otherCopy = await offlineCopy(other);
+  expect((await call('/offline/sync', other, 'POST', { ...op, epoch: otherCopy.epoch })).status).toBe(409);
+  const mismatch = await app.request(
+    'https://worth.test/api/offline/sync',
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        'X-Worth-Account': other,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(op),
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(mismatch.status).toBe(409);
+  const receipt = await platform.env.DB.prepare('SELECT result_json FROM offline_operations WHERE id=?')
+    .bind(op.id)
+    .first<{ result_json: string }>();
+  expect(receipt!.result_json).not.toContain(op.title);
+  expect(receipt!.result_json).not.toContain(op.note);
+});
+test('offline note edits change only their note, reject stale text and keep known retries stable', async () => {
+  const owner = 'offlinenote',
+    list = await archiveCollection(owner, 'Note originals'),
+    item = await archiveItem(owner, list.id, 'Original title', {
+      type: 'Drink',
+      note: 'Original note',
+      decision: 'meh',
+    }),
+    snapshot = await offlineCopy(owner),
+    record = snapshot.records[0];
+  const op = {
+    ...offlineCapture(snapshot.epoch),
+    kind: 'note' as const,
+    recordKind: 'item' as const,
+    recordId: item.id,
+    title: item.title,
+    note: 'Changed offline',
+    expectedNote: record.note,
+    expectedUpdatedAt: record.updatedAt,
+  };
+  expect((await call('/offline/sync', owner, 'POST', op)).status).toBe(200);
+  const saved = ((await (await call(`/lists/${list.id}/items`, owner)).json()) as { items: Item[] }).items[0];
+  expect(saved).toMatchObject({ title: item.title, type: 'Drink', decision: 'meh', note: 'Changed offline' });
+  expect(saved.updatedAt).toBeGreaterThan(item.updatedAt);
+  expect((await call('/offline/sync', owner, 'POST', op)).status).toBe(200);
+  expect(
+    (
+      await call('/offline/sync', owner, 'POST', {
+        ...op,
+        id: crypto.randomUUID(),
+        note: 'Stale different note',
+      })
+    ).status,
+  ).toBe(409);
+});
+test('offline source and reset guards run inside the same write batch, including known retries', async () => {
+  const owner = 'offlinerace',
+    list = await archiveCollection(owner, 'Race originals'),
+    item = await archiveItem(owner, list.id, 'Before change', { note: 'Before' }),
+    snapshot = await offlineCopy(owner),
+    record = snapshot.records[0],
+    db = platform.env.DB;
+  async function racedRequest(
+    op: import('../src/shared/offline').OfflineOperation,
+    at: number,
+    mutate: () => Promise<unknown>,
+  ) {
+    let batches = 0,
+      raced = false;
+    const wrapped = new Proxy(db, {
+      get(target, property) {
+        if (property === 'batch')
+          return async (statements: D1PreparedStatement[]) => {
+            batches++;
+            if (batches === at) {
+              raced = true;
+              await mutate();
+            }
+            return target.batch(statements);
+          };
+        const value = Reflect.get(target, property, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+    const r = await app.request(
+      'https://worth.test/api/offline/sync',
+      {
+        method: 'POST',
+        headers: { Cookie: `preview_user=${owner}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(op),
+      },
+      { ...platform.env, DB: wrapped },
+      platform.ctx,
+    );
+    expect(raced).toBe(true);
+    return r;
+  }
+  const noteOp = {
+    ...offlineCapture(snapshot.epoch),
+    kind: 'note' as const,
+    recordKind: 'item' as const,
+    recordId: item.id,
+    title: item.title,
+    note: 'Do not overwrite',
+    expectedNote: record.note,
+    expectedUpdatedAt: record.updatedAt,
+  };
+  expect(
+    (
+      await racedRequest(noteOp, 2, () =>
+        db.prepare('UPDATE items SET note=? WHERE id=?').bind('Concurrent note', item.id).run(),
+      )
+    ).status,
+  ).toBe(409);
+  expect(
+    (await db.prepare('SELECT note FROM items WHERE id=?').bind(item.id).first<{ note: string }>())!.note,
+  ).toBe('Concurrent note');
+  const capture = offlineCapture(snapshot.epoch);
+  const failed = await racedRequest(capture, 2, () =>
+    db.prepare('UPDATE offline_epochs SET epoch=? WHERE owner_id=?').bind(crypto.randomUUID(), owner).run(),
+  );
+  expect(failed.status).toBe(409);
+  expect(await failed.json()).toMatchObject({ error: 'OFFLINE_RESET' });
+  expect(await db.prepare('SELECT id FROM inbox_entries WHERE id=?').bind(capture.id).first()).toBeNull();
+  const next = await offlineCopy(owner),
+    known = offlineCapture(next.epoch);
+  expect((await call('/offline/sync', owner, 'POST', known)).status).toBe(200);
+  const oldRetry = await racedRequest(known, 1, () =>
+    db.prepare('UPDATE offline_epochs SET epoch=? WHERE owner_id=?').bind(crypto.randomUUID(), owner).run(),
+  );
+  expect(oldRetry.status).toBe(409);
+  expect(await oldRetry.json()).toMatchObject({ error: 'OFFLINE_RESET' });
+  const current = await offlineCopy(owner),
+    late = offlineCapture(current.epoch);
+  const reset = await app.request(
+    'https://worth.test/api/data',
+    {
+      method: 'DELETE',
+      headers: { Cookie: `preview_user=${owner}`, 'X-Worth-Confirmation': 'delete-all-worth-data' },
+    },
+    platform.env,
+    platform.ctx,
+  );
+  expect(reset.status).toBe(204);
+  expect((await call('/offline/sync', owner, 'POST', late)).status).toBe(409);
+  expect((await offlineCopy(owner)).records).toEqual([]);
+  expect((await offlineCopy(owner)).epoch).not.toBe(current.epoch);
+});
+test('offline copies reject oversized archives without returning a partial snapshot', async () => {
+  const owner = 'offlinebounds',
+    list = await archiveCollection(owner, 'Many records');
+  const ids = Array.from({ length: 2001 }, () => crypto.randomUUID());
+  await platform.env.DB.prepare(
+    "INSERT INTO items(id,list_id,owner_id,title,created_at,updated_at) SELECT value,?,?,'A saved name',1,1 FROM json_each(?)",
+  )
+    .bind(list.id, owner, JSON.stringify(ids))
+    .run();
+  const response = await call('/offline/snapshot', owner);
+  expect(response.status).toBe(413);
+  expect(await response.json()).toMatchObject({ error: 'OFFLINE_TOO_LARGE' });
 });

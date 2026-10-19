@@ -165,7 +165,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Verify Workbench → Taste history, before/after/current comparison and explicit
   sandbox preview/apply; moved/merged/trashed records must retain appropriate gaps.
 - Check optional private reasons/visits, stale revision recovery and device drafts.
-- Taste history introduced version 3. Current exports use version 5; restore accepts versions 1–5 and remaps history
+- Taste history introduced version 3. Current exports use version 10; restore accepts versions 1–10 and remaps history
   references without creating extra change events. Future versions beyond the current reader fail.
 - Restore supports 10,000 history changes and 16 MB of history within the existing 32 MB/batch limits.
   No automatic review reminders, new public projection or native code is included.
@@ -179,7 +179,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   fail without partial writes. The diagram has a complete readable alternative.
 - Verify uncertain-save retry/check, stale reason reload, removal confirmation,
   archived labels and links retained through moves/merge/Trash recovery.
-- Connections introduced version 4; current gallery exports use version 5. Restore accepts versions 1–5 and rejects 6.
+- Connections introduced version 4; current exports use version 10. Restore accepts versions 1–10 and rejects later formats.
   Connections restore with fresh IDs and canonicalized pairs. A capacity error
   rolls back the entire restore and can retry after freeing space.
 
@@ -215,7 +215,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Test Manage photos, caption/arrow saves, explicit cover clearing/selection,
   ordering, upload retry after a lost response, and confirmed original removal.
   A late retry of a removed upload must never recreate it.
-- Current exports use version 5; restore accepts 1–5. Check all originals and their
+- Current exports use version 10; restore accepts 1–10. Check all originals and their
   metadata round-trip, selected caches rebuild, old single-photo files still work,
   and records-only restores preserve metadata with unavailable original states.
 - Check keyboard comparison and side-by-side views, narrow dialogs, blocked storage,
@@ -273,3 +273,38 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   independent routine/workout snapshots. All-data deletion clears retry receipts.
 - Inspect target, actual-result, comparison, pending-start and alias/history states
   on desktop and phone; test keyboard access, long names and 320/430/768px reflow.
+
+## Capsules, private spaces and offline text
+
+- Apply additive migrations 0025–0027 before serving these routes. Format 10
+  accepts 1–10, preserves fixed capsule contents/photos/opening state and restores
+  collaboration only as disconnected private copies. Unopened capsule contents
+  are intentionally included in owner backups. Invitations/hidden choices never
+  restore. Check capsule-only and shared-copy-only restore previews.
+- Verify server-clock manual capsule opening, independent photo copies, stale
+  source reviews, exact retries and removal tombstones.
+- Verify two verified Accounts identities, viewer/editor boundaries, explicit
+  selected-text sharing, note conflicts and revocation. Reinvitation must not
+  reactivate a round tied to its revoked grant. Choices appear only after both
+  exact deliberate reveals, including in exports.
+- `pnpm build` now creates a separate offline HTML entry and generates its
+  static-only service worker after Vite. Preserve the complete `dist/client`
+  output when transferring a build. The worker is scoped to `/offline/`; private
+  APIs/media must remain absent from CacheStorage.
+- Prepare an encrypted text copy, disconnect and reload the bookmarked offline
+  page. Test wrong passphrase/tampering, competing tabs, unavailable storage,
+  pending note conflicts, actual account changes, lost replies and cache repair.
+  Offline copies exclude images, receipts, capsules, live shared spaces and
+  extended context/measurement detail. Sync is explicit; no background saves.
+- Reset Worth data while an old queue exists. The rotated owner epoch must block
+  both new old-epoch writes and known retries. Never remove reset markers during
+  ordinary cleanup or downgrade to a Worker that bypasses these guards.
+- Browser copies/downloads remain independent after server reset. Clear device
+  drafts and Remove offline copy are separate controls. A locked copy can be
+  removed only by its actual connected account. No native applications or
+  home-screen widgets are involved.
+
+Browser CI runs two independent Playwright shards against the same verified build
+artifact. The required `browser-check` job succeeds only if every shard succeeds;
+failed or skipped shards block deployment. Failure artifacts identify their shard.
+The local `pnpm check` still runs the full core/build/browser sequence.

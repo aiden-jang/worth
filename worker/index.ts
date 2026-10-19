@@ -1,3 +1,4 @@
+import { registerOfflineRoutes } from './routes/offline';
 import { registerPrivateSpaceRoutes } from './routes/private-spaces';
 import { registerReceiptRoutes } from './routes/receipts';
 import { registerCapsuleRoutes } from './routes/capsules';
@@ -100,6 +101,7 @@ registerBoardRoutes(privateApi);
 registerReceiptRoutes(privateApi);
 registerCapsuleRoutes(privateApi);
 registerPrivateSpaceRoutes(privateApi);
+registerOfflineRoutes(privateApi);
 registerTasteHistoryRoutes(privateApi);
 registerConnectionRoutes(privateApi);
 registerSearchRoutes(privateApi);

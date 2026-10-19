@@ -121,6 +121,17 @@ export function SettingsPage() {
       )}
       <TrashPanel />
       <section className="data-section">
+        <h2>Offline copy.</h2>
+        <p>
+          Prepare an encrypted text copy for this browser, queue Inbox captures and note edits, then
+          explicitly sync when connected. Manage or remove offline copies and pending saves on the offline
+          page.
+        </p>
+        <a className="button button-outline" href={`/offline/?account=${encodeURIComponent(owner ?? '')}`}>
+          Open offline copy →
+        </a>
+      </section>
+      <section className="data-section">
         <h2>Take a copy.</h2>
         <p>
           Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
@@ -333,6 +344,7 @@ export function SettingsPage() {
         <h2>This device.</h2>
         <p>
           Clear this account’s unfinished drafts, photo drafts and rest timers. Saved records stay in Worth.
+          Encrypted offline copies and their pending saves are managed separately on the offline page.
         </p>
         <button
           className="button button-outline"
@@ -349,8 +361,8 @@ export function SettingsPage() {
         <h2>Delete Worth data.</h2>
         <p>
           Remove your lists, Inbox finds, records, photos, routines and shared snapshots. Your shared login
-          remains. Owned shared spaces are removed and your memberships end; other people’s independent copies
-          remain.
+          remains. Existing downloaded backups and encrypted device copies remain; remove them separately.
+          Owned shared spaces are removed and your memberships end; other people’s independent copies remain.
         </p>
         <p className="data-hint">
           Download a copy first. This removes live Worth data; provider recovery copies and logs may remain

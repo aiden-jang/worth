@@ -39,6 +39,7 @@ labeled and never writes to a private archive.
 - Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo
   options. Download an offline HTML copy or print/save a PDF. Prepare an individual recommendation
   card as a PNG with your own message and a preview of exactly what leaves Worth.
+- Prepare a passphrase-protected offline text copy, queue Inbox captures or note edits, and explicitly sync with account/reset/conflict checks. Bookmark the separate offline page; images and extended detail remain in connected Worth.
 - Collaborate in private spaces with verified-email invitations, viewer/editor access, selected text snapshots and shared notes. Make two-person choices privately and reveal them together; preserve disconnected private copies.
 - Seal private time capsules with a message, opening date/timezone and explicitly reviewed record/photo snapshots; compare them with current sources after opening. Owner backups include unopened contents.
 - Assemble a personal field guide across collections, with explicit note/location/photo choices, captions, an exact preview and an offline HTML or printable copy.
@@ -113,3 +114,8 @@ capture or the workout chooser. Manifest previews live in `public/screenshots/`.
 
 Merging to `main` triggers CI and the existing automatic deployment. See [DEPLOY.md](DEPLOY.md)
 before using any manual release or remote database command.
+
+Offline preparation is verified against the built local Worker (the same server
+used by browser tests). The development server does not install a persistent
+service-worker cache of development modules. Bookmark the prepared `/offline/`
+page for disconnected reading; the connected app keeps its normal sign-in flow.

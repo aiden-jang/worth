@@ -154,6 +154,10 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     if (c.req.header('X-Worth-Confirmation') !== 'delete-all-worth-data')
       throw new ApiError(400, 'CONFIRM_REQUIRED', 'Confirm deletion of all Worth data');
     await c.env.DB.batch([
+      c.env.DB.prepare(
+        'INSERT INTO offline_epochs(owner_id,epoch) VALUES(?,?) ON CONFLICT(owner_id) DO UPDATE SET epoch=excluded.epoch',
+      ).bind(c.get('ownerId'), crypto.randomUUID()),
+      c.env.DB.prepare('DELETE FROM offline_operations WHERE owner_id=?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM inbox_entries WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM inbox_operations WHERE owner_id = ?').bind(c.get('ownerId')),
       c.env.DB.prepare('DELETE FROM collection_template_sets WHERE owner_id = ?').bind(c.get('ownerId')),

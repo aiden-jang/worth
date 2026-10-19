@@ -73,9 +73,11 @@ Records-only export excludes them; photo-inclusive backup includes them. Restore
 and atomically creates fresh private records, preserves relationships and never restores
 public shares. See [release/recovery](../RELEASE.md) for import limits and deletion scope.
 
-No browser service worker is registered in this revision. Full offline reading
-and queued saves remain pending; future cache work must not cache private API
-responses without account isolation or invent offline write success. Private and shared routes have no-index headers.
+The separate `/offline/` browser page has an explicitly prepared service worker
+scoped to that page. It caches only its public HTML and hashed scripts/styles/fonts.
+Private API/media responses never enter CacheStorage. Private and shared routes
+have no-index headers. Account text and pending requests are encrypted in IndexedDB;
+they are never presented as server saves before explicit sync confirmation.
 Fonts are bundled locally. Static CSP/security headers live in `public/_headers`; API
 headers are applied by the Worker. No mock archive is bundled into production.
 
@@ -575,7 +577,7 @@ capacity, including missing originals retained by records-only restore.
 Version 5 backups read metadata and all owned active source references in the
 records snapshot, with optional immutable source bytes read separately. Expected
 sources/fingerprints are checked and missing bytes fail the backup rather than
-being omitted. Selected cover bytes are not exported twice. Restore accepts 1–5,
+being omitted. Selected cover bytes are not exported twice. The current reader accepts 1–10,
 remaps parent/source/arrow IDs, preserves captions/order/cover and reconstructs cover
 caches from available sources. Old single-photo files create compatible source
 metadata and caches within the same restore transaction. Records-only files restore
@@ -805,3 +807,51 @@ revealed participant outcomes as disconnected archives; restore creates fresh ID
 and never invitations, secrets or live grants. Bounds: 20 owned spaces, eight
 active invitations each, 30 entries/rounds, 50 private copies and 8 MB shared text
 per backup. Older backup formats remain supported.
+
+## Encrypted offline text and pending saves
+
+Migration 0027 adds durable owner reset epochs and minimal operation receipts.
+`/offline/snapshot` reads the epoch and bounded owned text in one D1 batch. It
+includes collection/Inbox names, notes, dates, calls and collection ranks; photos,
+receipts, capsules, collaboration and extended context/measurement detail stay
+in the connected app. Initial copies are limited to 2,000 records / 500 lists /
+4 MB text, and reject excessive data without returning a partial copy.
+
+The standalone Vite browser entry can reload without the authentication shell.
+Preparing it explicitly registers `/offline/sw.js` at `/offline/`. The post-build
+script generates a versioned allowlist of public static files. API/media URLs
+are never cached. A prepare/refresh handshake verifies/repopulates the static
+shell, including after cache eviction. Navigation queries reuse only the public
+offline HTML. This supports bookmarking the offline page, not offline navigation
+through the entire connected app.
+
+The device copy uses PBKDF2-SHA256 (600,000 iterations, random 16-byte salt) to
+derive a nonextractable AES-GCM key from a separate 12–200 character passphrase.
+Every save has a new IV and generation stamp; authenticated metadata includes
+owner, salt, stamp and saved time. Only ciphertext enters IndexedDB. Keys and
+plaintext remain in memory and are cleared on lock/reload/page exit. Idle locking
+skips unqueued form text to avoid losing it; explicit Lock confirms its discard.
+The device store compares and writes stamps in one IndexedDB transaction, so
+quota failures, tampering, wrong passphrases and competing tabs retain prior
+ciphertext and useful form text. Reopening reads the latest stored envelope.
+
+Up to 100 immutable requests queue explicitly: name/note Inbox captures or
+note-only edits against the exact original text and update timestamp. Sync
+checks the actual signed-in account and sends its expected account header. Each
+write guards epoch, source equality and identity inside the same batch as its
+receipt. Lost replies can retry exactly. Receipt rows contain IDs/timestamps and
+a fingerprint, without duplicate plaintext notes. Queue removal happens only
+after the server confirmation is stored in a new encrypted envelope; failed
+device persistence keeps the old request for safe retry. Conflicts retain text
+for comparison/copying; there is no automatic rebase.
+
+Worth reset rotates the epoch inside its deletion batch and never deletes that
+minimal owner/reset marker. Old queued writes and known retries cannot recreate
+deleted data. Existing downloaded/device copies remain independent. Removing a
+locked copy requires the actual signed-in owner; an unlocked passphrase-protected
+copy can be removed locally.
+
+Implementation references: [Web Crypto deriveKey](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey),
+[AES-GCM encryption](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt),
+[service workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)
+and [IndexedDB transactions](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction).

@@ -17,6 +17,10 @@ export default defineConfig(({ mode, command }) => ({
                 : undefined,
           }),
         ],
+  // HTML entries belong only to the browser; Worker builds keep their own entry.
+  environments: {
+    client: { build: { rollupOptions: { input: { main: 'index.html', offline: 'offline/index.html' } } } },
+  },
   server: { port: 34300 },
   test: {
     environment: 'jsdom',

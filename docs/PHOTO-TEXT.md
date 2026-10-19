@@ -42,8 +42,9 @@ nested worker, allowing cancellation even during initialization. Cancellation,
 unmount, account change, result, failure and a two-minute timeout terminate worker
 resources. A generation guard prevents late preparation/results from starting
 another job or overwriting a newer draft. Failed assets and unsupported capabilities
-leave manual review available. Full offline archive reading/sync are separate,
-unfinished features; this page may need a connection to obtain reading files.
+leave manual review available. This page may need a connection to obtain reading
+files. The separate encrypted Offline copy reads selected saved text and queues
+Inbox captures/note edits; it does not prepare OCR models or photos.
 
 ## Build and browser policy
 
