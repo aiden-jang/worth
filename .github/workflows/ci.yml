@@ -65,20 +65,8 @@ jobs:
             test-results/
           retention-days: 7
 
-  # Preserve the required check name while every shard must succeed.
-  browser-check:
-    needs: browser_tests
-    if: always()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    steps:
-      - name: Require every browser shard
-        run: test "$BROWSER_RESULT" = success
-        env:
-          BROWSER_RESULT: ${{ needs.browser_tests.result }}
-
   deploy:
-    needs: [check, browser-check]
+    needs: [check, browser_tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10

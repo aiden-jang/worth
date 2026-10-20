@@ -305,6 +305,6 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   home-screen widgets are involved.
 
 Browser CI runs two independent Playwright shards against the same verified build
-artifact. The required `browser-check` job succeeds only if every shard succeeds;
+artifact. Deployment depends directly on the core check and every browser shard;
 failed or skipped shards block deployment. Failure artifacts identify their shard.
 The local `pnpm check` still runs the full core/build/browser sequence.
