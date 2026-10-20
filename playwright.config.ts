@@ -32,7 +32,7 @@ export default defineConfig({
     command:
       'pnpm exec wrangler dev --config dist/worth/wrangler.json --local --ip 127.0.0.1 --port 34320 --persist-to .wrangler/browser-state',
     url: 'http://127.0.0.1:34320/api/health',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

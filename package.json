@@ -23,9 +23,10 @@
     "deploy:only": "pnpm build && pnpm release:built",
     "lint": "eslint . --max-warnings 0",
     "deadcode": "knip",
-    "check:core": "pnpm format:check && pnpm lint && pnpm deadcode && pnpm test && pnpm build",
+    "check:core": "pnpm run security:check && pnpm format:check && pnpm lint && pnpm deadcode && pnpm test && pnpm build",
     "e2e": "playwright test",
-    "release:built": "pnpm db:migrate:remote && wrangler deploy --config dist/worth/wrangler.json"
+    "release:built": "pnpm db:migrate:remote && wrangler deploy --config dist/worth/wrangler.json",
+    "security:check": "pnpm audit --audit-level=low"
   },
   "dependencies": {
     "@aidenjang/auth-client": "^0.2.0",

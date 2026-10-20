@@ -31,6 +31,7 @@ export function ConfirmDialog({
   const titleId = useId();
   const descriptionId = useId();
 
+  // The owner unmounts to close: a deferred router reset must not leave a mounted, hidden prompt.
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
@@ -51,10 +52,11 @@ export function ConfirmDialog({
       }}
       onCancel={(event) => {
         event.stopPropagation();
-        if (pending) event.preventDefault();
+        event.preventDefault();
+        if (!pending) onClose();
       }}
       onClick={(event) => {
-        if (!pending && event.target === dialog.current) dialog.current.close();
+        if (!pending && event.target === dialog.current) onClose();
       }}
     >
       <div className="confirm-inner">
@@ -63,12 +65,7 @@ export function ConfirmDialog({
             <p className="overline">{eyebrow}</p>
             <h2 id={titleId}>{title}</h2>
           </div>
-          <button
-            disabled={pending}
-            className="icon-button"
-            aria-label="Cancel"
-            onClick={() => dialog.current?.close()}
-          >
+          <button disabled={pending} className="icon-button" aria-label="Cancel" onClick={onClose}>
             <X size={20} />
           </button>
         </header>
@@ -80,12 +77,7 @@ export function ConfirmDialog({
           </p>
         )}
         <div className="confirm-actions">
-          <button
-            className="button button-outline"
-            onClick={() => dialog.current?.close()}
-            disabled={pending}
-            autoFocus
-          >
+          <button className="button button-outline" onClick={onClose} disabled={pending} autoFocus>
             {cancelLabel}
           </button>
           <button className="button button-danger" onClick={onConfirm} disabled={pending}>

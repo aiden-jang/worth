@@ -19,18 +19,18 @@ choose, never comes from rank, and never automatically applies to an unranked re
 
 ## Copy in the current product
 
-| Location                  | Exact copy                                      |
-| ------------------------- | ----------------------------------------------- |
-| Landing headline          | For the good. And the meh.                      |
-| Product line              | Keep what you try. Find what’s worth repeating. |
-| Signup action             | Start your archive →                            |
-| Personal calls            | Favorite / Meh / Not again                      |
-| Neutral aside             | It was a thing.                                 |
-| Collection capture helper | Rank later. No rush.                            |
-| Capture action            | Keep it                                         |
-| Selected-row actions      | Rank / Note / Revisit / Details →               |
-| Archive heading           | The archive.                                    |
-| Landing footer            | Meh is a complete sentence.                     |
+| Location                  | Exact copy                                                 |
+| ------------------------- | ---------------------------------------------------------- |
+| Landing headline          | Your taste. A place to keep it.                            |
+| Product line              | Keep what you try. Rank what you like. / The meh can stay. |
+| Signup action             | Start your archive →                                       |
+| Personal calls            | Favorite / Meh / Not again                                 |
+| Neutral aside             | It was a thing.                                            |
+| Collection capture helper | Rank later. No rush.                                       |
+| Capture action            | Keep it                                                    |
+| Selected-row actions      | Rank / Note / Revisit / Details →                          |
+| Archive heading           | The archive.                                               |
+| Landing footer            | Meh is a complete sentence.                                |
 
 Use the neutral aside sparingly. It is interface copy, not a note to save on the person's
 record. Remove the earlier character-development pitch, Research. Allegedly. description,
@@ -63,7 +63,7 @@ The user's latest direction removes the repeated `Private by default.` tagline. 
 footer contains useful account and legal links. Explain visibility where someone shares,
 exports, or uploads a photo; do not repeat privacy as a marketing slogan. The product
 line above describes what someone can keep and why they would return to it.
-The latest taste cabinet pass uses `For the good. And the meh.` and `Meh is a complete sentence.`
+The latest taste cabinet pass uses `Your taste. A place to keep it.` and `Meh is a complete sentence.`
 on the landing. Selected call captions are `Yes, again.`, `It was a thing.`, and `Once was plenty.`.
 They are interface copy only, never notes saved onto a person's record. Show one caption for
 the active call; avoid turning every row into a joke.

@@ -20,17 +20,17 @@ Before opening a pull request:
 
 ## Useful checks
 
-| Command           | Purpose                                                             |
-| ----------------- | ------------------------------------------------------------------- |
-| `pnpm format`     | Apply repository formatting                                         |
-| `pnpm lint`       | Check source, hooks, tests and configuration                        |
-| `pnpm deadcode`   | Find unused files, exports and dependencies                         |
-| `pnpm test`       | Run unit/component tests and isolated migrated-D1 API tests         |
-| `pnpm build`      | Generate Worker types, check TypeScript and build production assets |
-| `pnpm e2e`        | Test the existing production build on desktop and phone Chromium    |
-| `pnpm check:core` | Formatting, lint, unused-code checks, tests and build               |
-| `pnpm check`      | All core checks followed by browser checks                          |
-| `pnpm audit`      | Check the installed dependency graph for known advisories           |
+| Command                   | Purpose                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `pnpm format`             | Apply repository formatting                                             |
+| `pnpm lint`               | Check source, hooks, tests and configuration                            |
+| `pnpm deadcode`           | Find unused files, exports and dependencies                             |
+| `pnpm test`               | Run unit/component tests and isolated migrated-D1 API tests             |
+| `pnpm build`              | Generate Worker types, check TypeScript and build production assets     |
+| `pnpm e2e`                | Test the existing production build on desktop and phone Chromium        |
+| `pnpm check:core`         | Dependency audit, formatting, lint, unused-code checks, tests and build |
+| `pnpm check`              | All core checks followed by browser checks                              |
+| `pnpm run security:check` | Check the full dependency graph and fail on known advisories            |
 
 Browser checks use port 34320 and intercepted APIs; the ordinary dev server uses
 34300 and local auth uses 34100. They never sign in to a production account. A failed
