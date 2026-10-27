@@ -120,7 +120,7 @@ test('preferences link to their full supporting records and memory filters keep 
           {
             listId: list.id,
             listName: 'My drinks',
-            kind: 'type',
+            kind: 'collection',
             basis: 'records',
             name: 'Coffee',
             favorite: 6,

@@ -13,7 +13,7 @@ export function PreferenceInsights() {
         <h2 id="preference-heading">A little more your type.</h2>
         <p>
           Overall calls and visit reactions, kept separate. Up to 12 groups with the most recorded calls, by
-          type and personal label.
+          collection, type and personal label.
         </p>
       </header>
       {query.isPending && <p role="status">Reading your preferences…</p>}
@@ -36,7 +36,7 @@ export function PreferenceInsights() {
                     {group.listName} · {group.kind} ·{' '}
                     {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
                   </p>
-                  <h3>{group.name}</h3>
+                  <h3>{group.kind === 'collection' ? 'Across this collection' : group.name}</h3>
                   <p>
                     <strong>
                       {group.favorite} of {rated}
@@ -63,7 +63,7 @@ export function PreferenceInsights() {
                         : 'Based on your current calls, not inferred from rankings.'}
                   </p>
                   <Link
-                    to={`/patterns/remember?${new URLSearchParams({ mode: group.basis === 'visits' ? 'visits' : 'saved', list: group.listId, [group.kind]: group.name })}`}
+                    to={`/patterns/remember?${new URLSearchParams({ mode: group.basis === 'visits' ? 'visits' : 'saved', list: group.listId, ...(group.kind === 'collection' ? {} : { [group.kind]: group.name }) })}`}
                   >
                     See supporting records →
                   </Link>
@@ -73,8 +73,8 @@ export function PreferenceInsights() {
           </div>
           {!query.data.groups.length && (
             <p>
-              Add optional types or personal labels and a few calls or visit reactions to see grouped
-              preferences here. Unrated records stay unrated.
+              A few overall calls or visit reactions will appear here. Types and labels can add detail later.
+              Unrated records stay unrated.
             </p>
           )}
           {!!query.data.returns.length && (

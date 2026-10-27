@@ -20,7 +20,8 @@ Deliberate extensions to those references:
 - Mobile selected slips use a smaller character alongside the call. Desktop and
   landing opinion cards retain their existing scale and composition.
 - Patterns leads with evidence-backed preference groups, retaining its original
-  statistics and cream call breakdown below. Remember, Look back and Calendar
+  statistics and cream call breakdown below. Collection groups include untagged
+  experiences, while optional types/labels add detail. Remember, Look back and Calendar
   remain visible; other optional tools move into More tools.
 - Remember uses the cabinet heading, native inputs, dark timeline, factual visit
   reactions and original photos. Date/archive filters open when requested or
@@ -52,7 +53,9 @@ The complete local browser run passed 346 cases with one existing intentional
 phone width-matrix skip. The final refinement passed 18 focused Chromium cases
 and nine touch-enabled WebKit cases. Core checks passed 260 unit/component/API
 cases; the four final database cases (including the added resurfacing case) passed
-after separating overall and visit preferences. Formatting, lint, unused-code,
+after separating overall and visit preferences. Two further D1 checks and both
+desktop/phone evidence-link cases passed for the untagged collection refinement.
+Formatting, lint, unused-code,
 TypeScript, dependency audit and production builds passed.
 
 The database checks exercise atomic new-name/visit saves, fixed retries, changed

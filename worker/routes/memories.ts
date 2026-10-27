@@ -74,13 +74,13 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
       c.env.DB.prepare(
         `WITH records AS (
           SELECT i.*,l.name AS listName FROM active_items i JOIN active_lists l ON l.id=i.list_id AND l.owner_id=i.owner_id WHERE i.owner_id=? AND l.archived=0
-        ), visits AS (
-          SELECT i.*,json_extract(g.context_json,'$.reaction') AS reaction FROM records i JOIN record_items original ON COALESCE(original.merged_into_id,original.id)=i.id AND original.owner_id=i.owner_id JOIN active_logs g ON g.item_id=original.id AND g.owner_id=i.owner_id AND g.list_id=i.list_id
+        ), facts AS (
+          SELECT list_id,listName,type,context_json,'records' AS basis,decision FROM records
+          UNION ALL SELECT i.list_id,i.listName,i.type,i.context_json,'visits',json_extract(g.context_json,'$.reaction') FROM records i JOIN record_items original ON COALESCE(original.merged_into_id,original.id)=i.id AND original.owner_id=i.owner_id JOIN active_logs g ON g.item_id=original.id AND g.owner_id=i.owner_id AND g.list_id=i.list_id
         ), groups AS (
-          SELECT list_id AS listId,listName,'type' AS kind,'records' AS basis,type AS name,decision FROM records WHERE type<>''
-          UNION ALL SELECT i.list_id,i.listName,'label','records',label.value,i.decision FROM records i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
-          UNION ALL SELECT list_id,listName,'type','visits',type,reaction FROM visits WHERE type<>''
-          UNION ALL SELECT i.list_id,i.listName,'label','visits',label.value,i.reaction FROM visits i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
+          SELECT list_id AS listId,listName,'collection' AS kind,basis,listName AS name,decision FROM facts
+          UNION ALL SELECT list_id,listName,'type',basis,type,decision FROM facts WHERE type<>''
+          UNION ALL SELECT i.list_id,i.listName,'label',i.basis,label.value,i.decision FROM facts i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
         ) SELECT listId,listName,kind,basis,name,SUM(decision='favorite') AS favorite,SUM(decision='meh') AS meh,SUM(decision='would_not_again') AS notAgain,SUM(decision IS NULL) AS unrated FROM groups GROUP BY listId,listName,kind,basis,name HAVING COUNT(decision)>0 ORDER BY COUNT(decision) DESC,listName,kind,basis,name LIMIT 12`,
       ).bind(owner),
       c.env.DB.prepare(

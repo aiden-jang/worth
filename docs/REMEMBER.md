@@ -43,8 +43,9 @@ The card counts entries, so several exercise entries may belong to one workout.
 
 ## Read your preferences
 
-Patterns shows up to 12 collection/type or collection/label groups with the most
-recorded calls. Overall-call groups count records; visit-reaction groups count
+Patterns shows up to 12 collection, collection/type or collection/label groups with the most
+recorded calls. Collection summaries work without types or labels, including
+name-only entries with an explicit visit reaction. Overall-call groups count records; visit-reaction groups count
 explicit visits and are labeled separately. Both use current types and labels.
 Favorite counts use only rated records or visits in that group as the denominator;
 no call stays separate from Meh. Small samples are explicitly identified. Each

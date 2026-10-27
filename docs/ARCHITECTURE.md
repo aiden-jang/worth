@@ -889,7 +889,7 @@ Reads use active owner-scoped views and exclude archived lists unless explicitly
 requested. Recall separates actual log dates from original saved-name dates (UTC),
 never item update times. Counts and page rows share a D1 read batch. Preferences
 aggregate current overall calls and recorded visit reactions in separate
-collection/type or label groups, exclude unreviewed rows from rated denominators
+collection, collection/type or collection/label groups, exclude unreviewed rows from rated denominators
 and provide filters to all supporting records. Repeat-visit counts remain
 independent of enjoyment. Results are not sent to traffic analytics or external AI.
 

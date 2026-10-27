@@ -51,7 +51,7 @@ export interface MemoryPage {
 export interface PreferenceGroup {
   listId: string;
   listName: string;
-  kind: 'type' | 'label';
+  kind: 'collection' | 'type' | 'label';
   basis: 'records' | 'visits';
   name: string;
   favorite: number;

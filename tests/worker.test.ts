@@ -6191,6 +6191,12 @@ test('preference evidence excludes unrated entries from denominators, counts lab
     happenedOn: '2026-10-02',
     context: { reaction: 'meh' },
   });
+  await saveExperience(owner, list.id, {
+    itemId: null,
+    title: 'Name only',
+    happenedOn: '2026-10-03',
+    context: { reaction: 'favorite' },
+  });
   const response = await call('/preferences', owner);
   expect(response.status).toBe(200);
   const data = (await response.json()) as {
@@ -6219,6 +6225,17 @@ test('preference evidence excludes unrated entries from denominators, counts lab
       basis: 'visits',
       name: 'Place',
       favorite: 1,
+      meh: 1,
+      notAgain: 0,
+      unrated: 0,
+    }),
+  );
+  expect(data.groups).toContainEqual(
+    expect.objectContaining({
+      listId: list.id,
+      kind: 'collection',
+      basis: 'visits',
+      favorite: 2,
       meh: 1,
       notAgain: 0,
       unrated: 0,
