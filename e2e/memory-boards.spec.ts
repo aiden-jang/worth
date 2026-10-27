@@ -376,9 +376,11 @@ test('blocked storage asks before leaving and account changes remove private boa
   await page.evaluate(() => history.back());
   const confirm = page.getByRole('dialog', { name: 'Leave this page?', exact: true });
   await expect(confirm).toBeVisible();
+  await expect(confirm).toHaveCSS('opacity', '1');
   for (const button of await confirm.getByRole('button').all()) {
-    const box = await button.boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
+    // Read the settled DOM rectangle; protocol quads can round translated 44px controls below 44.
+    const height = await button.evaluate((node) => node.getBoundingClientRect().height);
+    expect(height).toBeGreaterThanOrEqual(44);
   }
   await capture(page, 'navigation', info.project.name);
   await confirm.getByRole('button', { name: 'Cancel', exact: true }).last().click();

@@ -22,5 +22,6 @@
     "native share sheet",
     "production account recovery",
     "provider recovery/alerts"
-  ]
+  ],
+  "repeatedTouchTargetChecks": 40
 }

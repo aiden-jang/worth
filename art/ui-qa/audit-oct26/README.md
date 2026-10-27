@@ -73,6 +73,10 @@ data, recovery and deletion disclosures.
 - The new navigation, sparse-patch and rest-timer tests were observed failing
   before their fixes. Updated Axe checks reproduced the calendar label finding;
   the corrected DOM passes the same rule without excluding it.
+- CI also exposed a subpixel touch-target measurement during the confirmation
+  entrance. The check now waits for the settled dialog and reads its native DOM
+  rectangle, retaining the strict 44px minimum. All 40 repeated desktop/phone
+  cases passed after the correction.
 - Current root/documentation links were checked: no missing local targets.
   Historical QA images stay unchanged during ordinary browser checks.
 - GitHub inspection found main’s linear-history/admin safeguards active, with
