@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest';
 import type { Log } from '../src/shared/models';
-import { exerciseDirectory, exerciseHistory, exerciseValue } from '../src/shared/exercise-history';
+import {
+  exerciseDirectory,
+  exerciseHistory,
+  exerciseValue,
+  exerciseRepRecords,
+  exerciseImprovement,
+} from '../src/shared/exercise-history';
 const entry = (id: string, extra: Partial<Log> = {}): Log => ({
   id,
   listId: 'gym',
@@ -21,6 +27,39 @@ const entry = (id: string, extra: Partial<Log> = {}): Log => ({
   ],
   weightUnit: 'kg',
   ...extra,
+});
+
+test('volume requires complete weighted sets and never treats bodyweight or missing reps as zero', () => {
+  expect(exerciseValue(entry('a'), 'volume:kg')).toBe(760);
+  expect(exerciseValue(entry('a'), 'volume:lb')).toBeNull();
+  expect(
+    exerciseValue(
+      entry('a', {
+        exerciseSets: [
+          { weight: null, reps: 8 },
+          { weight: 40, reps: 8 },
+        ],
+      }),
+      'volume:kg',
+    ),
+  ).toBeNull();
+  expect(exerciseValue(entry('a', { exerciseSets: [{ weight: 0, reps: 8 }] }), 'volume:kg')).toBe(0);
+});
+
+test('rep records preserve units and recognize more reps at the same weight without estimated lifts', () => {
+  const logs = [
+    entry('earlier', { exerciseSets: [{ weight: 40, reps: 8 }] }),
+    entry('other-unit', { weightUnit: 'lb', exerciseSets: [{ weight: 40, reps: 30 }] }),
+    entry('later', { exerciseSets: [{ weight: 40, reps: 10 }] }),
+  ];
+  expect(exerciseImprovement(logs)).toEqual({ weight: 40, reps: 10, previous: 8, unit: 'kg' });
+  expect(exerciseImprovement([logs[2]])).toBeNull();
+  expect(exerciseRepRecords(logs, 'kg').map((r) => [r.reps, r.weight, r.logId])).toEqual([
+    [8, 40, 'earlier'],
+    [10, 40, 'later'],
+  ]);
+  expect(exerciseRepRecords(logs, 'lb')).toHaveLength(1);
+  expect(exerciseImprovement([logs[2], logs[0]])).toBeNull();
 });
 
 test('history groups normalized names only within the current list and orders separate visits', () => {

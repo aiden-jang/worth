@@ -1,3 +1,4 @@
+import { PreferenceInsights } from '../components/PreferenceInsights';
 import { usePageTitle } from '../hooks/usePageTitle';
 import '../retrospective.css';
 import { useQuery } from '@tanstack/react-query';
@@ -35,27 +36,36 @@ export function PatternsPage() {
         <p className="overline">YOUR ARCHIVE</p>
         <h1>Patterns</h1>
         <p>Your taste has a paper trail.</p>
+        <Link className="retro-entry" to="/patterns/remember">
+          Remember an experience →
+        </Link>
         <Link className="retro-entry" to="/patterns/look-back">
           Look back over a period →
-        </Link>
-        <Link className="retro-entry connection-entry" to="/patterns/connections">
-          Connections →
         </Link>
         <Link className="retro-entry" to="/patterns/calendar">
           Activity calendar →
         </Link>
-        <Link className="retro-entry" to="/patterns/boards">
-          Boards &amp; trips →
-        </Link>
-        <Link className="retro-entry" to="/spaces">
-          Shared spaces &amp; two-person choices →
-        </Link>
-        <Link className="retro-entry" to="/capsules">
-          Time capsules →
-        </Link>
-        <Link className="retro-entry" to="/patterns/field-guide">
-          Make a field guide →
-        </Link>
+        <details className="pattern-more-tools">
+          <summary>More tools</summary>
+          <div>
+            <Link className="retro-entry connection-entry" to="/patterns/connections">
+              Connections →
+            </Link>
+
+            <Link className="retro-entry" to="/patterns/boards">
+              Boards &amp; trips →
+            </Link>
+            <Link className="retro-entry" to="/spaces">
+              Shared spaces &amp; two-person choices →
+            </Link>
+            <Link className="retro-entry" to="/capsules">
+              Time capsules →
+            </Link>
+            <Link className="retro-entry" to="/patterns/field-guide">
+              Make a field guide →
+            </Link>
+          </div>
+        </details>
       </header>
       {data.totalRecords === 0 ? (
         <CabinetEmptyState
@@ -68,28 +78,29 @@ export function PatternsPage() {
         </CabinetEmptyState>
       ) : (
         <>
+          <PreferenceInsights />
           <section className="pattern-stat-grid" aria-label="Archive patterns">
             <PatternStat label="Records" value={data.totalRecords} detail="Items and activity logs" />
             <PatternStat label="Ranked" value={data.rankedItemCount} detail="Items placed in order" />
-            <PatternStat label="Revisits" value={data.revisitCount} detail="Returns to a collection item" />
+            <PatternStat label="Visits" value={data.revisitCount} detail="Dated collection experiences" />
           </section>
           <CallDistribution
             counts={{ favorite: data.favoriteCount, meh: data.mehCount, would_not_again: data.notAgainCount }}
           />
           <section className="pattern-notes">
             <article>
-              <p className="overline">MOST RETURNED TO</p>
+              <p className="overline">MOST VISITS LOGGED</p>
               {data.mostReturned ? (
                 <Link to={`/lists/${data.mostReturned.listId}?focus=item:${data.mostReturned.itemId}`}>
                   <strong>{data.mostReturned.title}</strong>
                   <span>
                     {data.mostReturned.listName} · {data.mostReturned.count}{' '}
-                    {data.mostReturned.count === 1 ? 'return' : 'returns'}
+                    {data.mostReturned.count === 1 ? 'visit' : 'visits'}
                   </span>
                   <ArrowRight size={18} />
                 </Link>
               ) : (
-                <p>No revisits logged yet.</p>
+                <p>No visits logged yet.</p>
               )}
             </article>
             <article>

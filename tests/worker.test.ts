@@ -6059,3 +6059,209 @@ test('offline copies reject oversized archives without returning a partial snaps
   expect(response.status).toBe(413);
   expect(await response.json()).toMatchObject({ error: 'OFFLINE_TOO_LARGE' });
 });
+
+async function saveExperience(owner: string, listId: string, body: unknown, key = crypto.randomUUID()) {
+  return app.request(
+    `https://worth.test/api/lists/${listId}/experiences`,
+    {
+      method: 'POST',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'application/json',
+        'Idempotency-Key': key,
+      },
+      body: JSON.stringify(body),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+
+test('experiences atomically create dated visits and retry without duplicate names or changed calls', async () => {
+  const owner = 'experienced',
+    list = await archiveCollection(owner, 'Places');
+  const input = {
+    itemId: null,
+    title: 'Corner ramen',
+    type: 'Ramen',
+    happenedOn: '2026-09-15',
+    note: 'Less salt next time',
+    context: { location: 'Brooklyn', order: 'Miso', reaction: 'favorite' },
+  };
+  const key = crypto.randomUUID();
+  const response = await saveExperience(owner, list.id, input, key);
+  expect(response.status).toBe(201);
+  const first = (await response.json()) as { item: Item; log: Log };
+  expect(first.item.decision).toBeNull();
+  expect(first.item.logCount).toBe(1);
+  expect(first.log.context).toMatchObject({ order: 'Miso', reaction: 'favorite' });
+  const retry = await saveExperience(owner, list.id, input, key);
+  expect(await retry.json()).toEqual(first);
+  expect((await saveExperience(owner, list.id, { ...input, note: 'Changed retry' }, key)).status).toBe(409);
+  expect(
+    ((await call(`/lists/${list.id}/items`, owner).then((r) => r.json())) as { items: Item[] }).items,
+  ).toHaveLength(1);
+  await call(`/items/${first.item.id}`, owner, 'PATCH', { decision: 'meh' });
+  expect(
+    (await saveExperience(owner, list.id, { ...input, itemId: first.item.id, happenedOn: '2026-10-15' }))
+      .status,
+  ).toBe(201);
+  expect(
+    ((await call(`/items/${first.item.id}`, owner).then((r) => r.json())) as { item: Item }).item.decision,
+  ).toBe('meh');
+  const other = await archiveCollection('foreignexperience', 'Other');
+  expect(
+    (await saveExperience('foreignexperience', other.id, { ...input, itemId: first.item.id })).status,
+  ).toBe(404);
+  expect((await saveExperience(owner, list.id, { ...input, happenedOn: '2026-02-30' })).status).toBe(400);
+});
+
+test('memory recall uses actual dates, literal search, pagination, archive scope and owner isolation', async () => {
+  const owner = 'memories',
+    list = await archiveCollection(owner, 'Cafés');
+  const first = (await saveExperience(owner, list.id, {
+    itemId: null,
+    title: '100% café',
+    type: 'Coffee',
+    happenedOn: '2025-01-02',
+    note: 'Old memory',
+    context: { location: 'Brooklyn', order: 'Oat latte', reaction: 'favorite' },
+  }).then((r) => r.json())) as { item: Item; log: Log };
+  await call(`/items/${first.item.id}`, owner, 'PATCH', { note: 'Edited today' });
+  const read = async (query: string, user = owner) =>
+    (await call(`/memories?${query}`, user).then((r) => r.json())) as {
+      total: number;
+      nextOffset: number | null;
+      records: { id: string; date: string; kind: string }[];
+    };
+  expect((await read('from=2025-01-01&to=2025-01-31&q=Brooklyn')).records[0]).toMatchObject({
+    id: first.log.id,
+    date: '2025-01-02',
+    kind: 'visit',
+  });
+  expect((await read('q=%25')).total).toBe(1);
+  expect((await read('q=%5F')).total).toBe(0);
+  expect((await read('q=Oat')).total).toBe(1);
+  expect((await read('from=2026-01-01')).total).toBe(0);
+  expect((await read('mode=saved&type=Coffee')).total).toBe(1);
+  expect((await read('', 'foreignmemory')).total).toBe(0);
+  expect((await call(`/memories?list=${list.id}`, 'foreignmemory')).status).toBe(404);
+  expect((await call('/memories?from=2026-02-30', owner)).status).toBe(400);
+  const now = Date.now();
+  await platform.env.DB.batch(
+    Array.from({ length: 51 }, (_, i) =>
+      platform.env.DB.prepare(
+        'INSERT INTO logs(id,list_id,item_id,owner_id,title,happened_on,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
+      ).bind(crypto.randomUUID(), list.id, first.item.id, owner, '', '2025-01-03', now + i, now + i),
+    ),
+  );
+  const page1 = await read('');
+  const page2 = await read(`offset=${page1.nextOffset}`);
+  expect(page1.total).toBe(52);
+  expect(page1.records).toHaveLength(50);
+  expect(page2.records).toHaveLength(2);
+  expect(new Set([...page1.records, ...page2.records].map((r) => r.id)).size).toBe(52);
+  await call(`/lists/${list.id}`, owner, 'PATCH', { archived: true });
+  expect((await read('')).total).toBe(0);
+  expect((await read('archived=1')).total).toBe(52);
+  await call(`/items/${first.item.id}`, owner, 'DELETE');
+  expect((await read('archived=1')).total).toBe(0);
+});
+
+test('preference evidence excludes unrated entries from denominators, counts labels and separates visit reactions', async () => {
+  const owner = 'preferences',
+    list = await archiveCollection(owner, 'Drinks');
+  for (const decision of ['favorite', 'meh', null] as const)
+    await archiveItem(owner, list.id, `Coffee ${decision}`, {
+      type: 'Coffee',
+      decision,
+      context: itemContext.parse({ labels: ['comfort'] }),
+    });
+  const created = (await saveExperience(owner, list.id, {
+    itemId: null,
+    title: 'Cafe',
+    type: 'Place',
+    happenedOn: '2026-10-01',
+    context: { reaction: 'favorite' },
+  }).then((r) => r.json())) as { item: Item };
+  await saveExperience(owner, list.id, {
+    itemId: created.item.id,
+    title: 'Cafe',
+    happenedOn: '2026-10-02',
+    context: { reaction: 'meh' },
+  });
+  const response = await call('/preferences', owner);
+  expect(response.status).toBe(200);
+  const data = (await response.json()) as {
+    groups: {
+      listId: string;
+      kind: string;
+      name: string;
+      favorite: number;
+      meh: number;
+      notAgain: number;
+      unrated: number;
+    }[];
+    returns: { visits: number; favorites: number }[];
+  };
+  for (const [kind, name] of [
+    ['type', 'Coffee'],
+    ['label', 'comfort'],
+  ])
+    expect(data.groups).toContainEqual(
+      expect.objectContaining({ listId: list.id, kind, name, favorite: 1, meh: 1, notAgain: 0, unrated: 1 }),
+    );
+  expect(data.groups).toContainEqual(
+    expect.objectContaining({
+      listId: list.id,
+      kind: 'type',
+      basis: 'visits',
+      name: 'Place',
+      favorite: 1,
+      meh: 1,
+      notAgain: 0,
+      unrated: 0,
+    }),
+  );
+  expect(data.returns[0]).toMatchObject({ visits: 2, favorites: 1 });
+  expect(
+    ((await call('/preferences', 'foreignpreferences').then((r) => r.json())) as { groups: unknown[] })
+      .groups,
+  ).toEqual([]);
+});
+
+test('old favorites resurface only with explicit past visits and merged visits remain attributable', async () => {
+  const owner = 'rediscovery',
+    list = await archiveCollection(owner, 'Places');
+  const old = (await saveExperience(owner, list.id, {
+    itemId: null,
+    title: 'Old cafe',
+    happenedOn: '2020-01-01',
+  }).then((r) => r.json())) as { item: Item; log: Log };
+  const target = await archiveItem(owner, list.id, 'Cafe', { decision: 'favorite' });
+  await archiveItem(owner, list.id, 'Never visited', { decision: 'favorite' });
+  expect(
+    (
+      await archiveAction(list.id, owner, {
+        action: 'merge',
+        targetId: target.id,
+        itemIds: [old.item.id, target.id],
+      })
+    ).status,
+  ).toBe(200);
+  const memories = (await call('/memories', owner).then((r) => r.json())) as {
+    records: { itemId: string; title: string }[];
+  };
+  expect(memories.records[0]).toMatchObject({ itemId: target.id, title: 'Cafe' });
+  const preferences = (await call('/preferences', owner).then((r) => r.json())) as {
+    rediscover: { itemId: string; lastDate: string }[];
+  };
+  expect(preferences.rediscover).toEqual([
+    expect.objectContaining({ itemId: target.id, lastDate: '2020-01-01' }),
+  ]);
+  await call(`/items/${target.id}`, owner, 'DELETE');
+  expect(
+    ((await call('/preferences', owner).then((r) => r.json())) as { rediscover: unknown[] }).rediscover,
+  ).toEqual([]);
+});

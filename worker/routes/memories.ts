@@ -1,0 +1,104 @@
+import type { Hono } from 'hono';
+import type { AppEnv } from '../context';
+import { ApiError, requireList } from '../data';
+import { memoryFilter, type MemoryRecord, type PreferenceGroup } from '../../src/shared/memories';
+
+export function registerMemoryRoutes(api: Hono<AppEnv>) {
+  api.get('/memories', async (c) => {
+    const parsed = memoryFilter.safeParse(c.req.query());
+    if (!parsed.success)
+      throw new ApiError(400, 'INVALID_FILTER', 'Choose real dates and a valid memory filter.');
+    const f = parsed.data,
+      owner = c.get('ownerId');
+    if (f.list) await requireList(c.env.DB, owner, f.list);
+    const source =
+      f.mode === 'saved'
+        ? `SELECT i.id,i.id AS itemId,i.list_id AS listId,l.name AS listName,i.title,i.note,date(i.created_at/1000,'unixepoch') AS date,'saved' AS kind,json_extract(i.context_json,'$.location') AS location,'' AS "order",i.decision AS reaction,EXISTS(SELECT 1 FROM item_photos p WHERE p.item_id=i.id) AS hasPhoto,i.type,i.context_json,i.created_at AS sortTime FROM active_items i JOIN active_lists l ON l.id=i.list_id AND l.owner_id=i.owner_id WHERE i.owner_id=? AND (?='1' OR l.archived=0)`
+        : `SELECT g.id,i.id AS itemId,g.list_id AS listId,l.name AS listName,COALESCE(i.title,NULLIF(g.title,''),'Untitled visit') AS title,g.note,g.happened_on AS date,CASE WHEN l.kind='collection' THEN 'visit' ELSE 'activity' END AS kind,json_extract(g.context_json,'$.location') AS location,json_extract(g.context_json,'$.order') AS "order",json_extract(g.context_json,'$.reaction') AS reaction,EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id=g.id) AS hasPhoto,COALESCE(i.type,'') AS type,COALESCE(i.context_json,'{}') AS context_json,g.created_at AS sortTime FROM active_logs g JOIN active_lists l ON l.id=g.list_id AND l.owner_id=g.owner_id LEFT JOIN record_items original ON original.id=g.item_id AND original.owner_id=g.owner_id LEFT JOIN active_items i ON i.id=COALESCE(original.merged_into_id,original.id) AND i.owner_id=g.owner_id AND i.list_id=g.list_id WHERE g.owner_id=? AND (?='1' OR l.archived=0)`;
+    const pattern = `%${f.q.replace(/[\\%_]/g, '\\$&')}%`;
+    const sql = `WITH memories AS (${source}) SELECT * FROM memories WHERE (?='' OR listId=?) AND (?='' OR date>=?) AND (?='' OR date<=?) AND (?='' OR type=?) AND (?='' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value=?)) AND (?='' OR title LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\' OR "order" LIKE ? ESCAPE '\\')`;
+    const args = [
+      owner,
+      f.archived,
+      f.list,
+      f.list,
+      f.from,
+      f.from,
+      f.to,
+      f.to,
+      f.type,
+      f.type,
+      f.label,
+      f.label,
+      f.q,
+      pattern,
+      pattern,
+      pattern,
+      pattern,
+    ];
+    const [count, rows] = await c.env.DB.batch([
+      c.env.DB.prepare(`SELECT COUNT(*) AS total FROM (${sql})`).bind(...args),
+      c.env.DB.prepare(`${sql} ORDER BY date DESC,sortTime DESC,id DESC LIMIT 50 OFFSET ?`).bind(
+        ...args,
+        f.offset,
+      ),
+    ]);
+    const total = (count.results[0] as { total: number }).total;
+    return c.json({
+      total,
+      nextOffset: f.offset + rows.results.length < total ? f.offset + rows.results.length : null,
+      records: (rows.results as (Omit<MemoryRecord, 'hasPhoto'> & { hasPhoto: number })[]).map(
+        (row) =>
+          ({
+            id: row.id,
+            itemId: row.itemId,
+            listId: row.listId,
+            listName: row.listName,
+            title: row.title,
+            note: row.note,
+            date: row.date,
+            kind: row.kind,
+            location: row.location ?? '',
+            order: row.order ?? '',
+            reaction: row.reaction ?? null,
+            hasPhoto: !!row.hasPhoto,
+          }) as MemoryRecord,
+      ),
+    });
+  });
+
+  api.get('/preferences', async (c) => {
+    const owner = c.get('ownerId');
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    const [groups, returns, rediscover] = await c.env.DB.batch([
+      c.env.DB.prepare(
+        `WITH records AS (
+          SELECT i.*,l.name AS listName FROM active_items i JOIN active_lists l ON l.id=i.list_id AND l.owner_id=i.owner_id WHERE i.owner_id=? AND l.archived=0
+        ), visits AS (
+          SELECT i.*,json_extract(g.context_json,'$.reaction') AS reaction FROM records i JOIN record_items original ON COALESCE(original.merged_into_id,original.id)=i.id AND original.owner_id=i.owner_id JOIN active_logs g ON g.item_id=original.id AND g.owner_id=i.owner_id AND g.list_id=i.list_id
+        ), groups AS (
+          SELECT list_id AS listId,listName,'type' AS kind,'records' AS basis,type AS name,decision FROM records WHERE type<>''
+          UNION ALL SELECT i.list_id,i.listName,'label','records',label.value,i.decision FROM records i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
+          UNION ALL SELECT list_id,listName,'type','visits',type,reaction FROM visits WHERE type<>''
+          UNION ALL SELECT i.list_id,i.listName,'label','visits',label.value,i.reaction FROM visits i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
+        ) SELECT listId,listName,kind,basis,name,SUM(decision='favorite') AS favorite,SUM(decision='meh') AS meh,SUM(decision='would_not_again') AS notAgain,SUM(decision IS NULL) AS unrated FROM groups GROUP BY listId,listName,kind,basis,name HAVING COUNT(decision)>0 ORDER BY COUNT(decision) DESC,listName,kind,basis,name LIMIT 12`,
+      ).bind(owner),
+      c.env.DB.prepare(
+        `SELECT i.id AS itemId,i.list_id AS listId,i.title,COUNT(*) AS visits,COALESCE(SUM(json_extract(g.context_json,'$.reaction')='favorite'),0) AS favorites,MAX(g.happened_on) AS lastDate FROM active_logs g JOIN record_items original ON original.id=g.item_id AND original.owner_id=g.owner_id JOIN active_items i ON i.id=COALESCE(original.merged_into_id,original.id) AND i.owner_id=g.owner_id AND i.list_id=g.list_id JOIN active_lists l ON l.id=g.list_id AND l.owner_id=g.owner_id WHERE g.owner_id=? AND l.archived=0 GROUP BY i.id HAVING COUNT(*)>=2 ORDER BY COUNT(*) DESC,lastDate DESC,i.id LIMIT 6`,
+      ).bind(owner),
+      c.env.DB.prepare(
+        `SELECT i.id AS itemId,i.list_id AS listId,i.title,MAX(g.happened_on) AS lastDate FROM active_items i JOIN active_lists l ON l.id=i.list_id AND l.owner_id=i.owner_id JOIN record_items original ON COALESCE(original.merged_into_id,original.id)=i.id AND original.owner_id=i.owner_id JOIN active_logs g ON g.item_id=original.id AND g.owner_id=i.owner_id AND g.list_id=i.list_id WHERE i.owner_id=? AND l.archived=0 AND i.decision='favorite' GROUP BY i.id HAVING MAX(g.happened_on)<? ORDER BY lastDate DESC,i.id LIMIT 3`,
+      ).bind(owner, cutoff),
+    ]);
+    return c.json({
+      groups: (groups.results as PreferenceGroup[]).map((row) => ({
+        ...row,
+        favorite: row.favorite ?? 0,
+        meh: row.meh ?? 0,
+        notAgain: row.notAgain ?? 0,
+      })),
+      returns: returns.results,
+      rediscover: rediscover.results,
+    });
+  });
+}

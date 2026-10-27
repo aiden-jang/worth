@@ -125,6 +125,7 @@ test('a cross-collection field guide exposes only chosen fields and prints the p
 }, info) => {
   await setup(page, archive);
   await page.goto('/patterns');
+  await page.locator('.pattern-more-tools > summary').click();
   await page.getByRole('link', { name: 'Make a field guide →', exact: true }).click();
   await capture(page, 'overview', info.project.name);
   await add(page, list.id, a);

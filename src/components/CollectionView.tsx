@@ -1,3 +1,5 @@
+import { ExperienceEditor } from './ExperienceEditor';
+import '../memories.css';
 import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -57,6 +59,7 @@ export function CollectionView({
   onLogRevisit: (id: string) => void;
 }) {
   const client = useQueryClient();
+  const [experienceOpen, setExperienceOpen] = useState(false);
   const captureRef = useRef<HTMLInputElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
@@ -463,6 +466,19 @@ export function CollectionView({
             />
             Want to try
           </label>
+          <button
+            type="button"
+            className="button button-outline experience-entry"
+            onClick={(event) => {
+              event.currentTarget.focus();
+              setExperienceOpen(true);
+            }}
+          >
+            Log an experience
+          </button>
+          {experienceOpen && (
+            <ExperienceEditor listId={list.id} items={items} onClose={() => setExperienceOpen(false)} />
+          )}
           {captureDraft.status && (title || batchTitles) && (
             <p className="draft-state" role="status">
               {captureDraft.status}

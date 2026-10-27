@@ -1,3 +1,5 @@
+import { registerExperienceRoutes } from './routes/experiences';
+import { registerMemoryRoutes } from './routes/memories';
 import { handleAnalytics } from '../analytics/worker';
 import { registerOfflineRoutes } from './routes/offline';
 import { registerPrivateSpaceRoutes } from './routes/private-spaces';
@@ -97,6 +99,8 @@ registerListRoutes(privateApi);
 registerItemRoutes(privateApi);
 registerReviewedCaptureRoutes(privateApi);
 registerLogRoutes(privateApi);
+registerExperienceRoutes(privateApi);
+registerMemoryRoutes(privateApi);
 registerOverviewRoutes(privateApi);
 registerRetrospectiveRoutes(privateApi);
 registerCalendarRoutes(privateApi);

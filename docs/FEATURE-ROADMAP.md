@@ -61,3 +61,11 @@ The separate optional book lookup sends only a checked ISBN to Open Library.
 Existing exercise history/progress, routines, exports and share images should be
 extended only where the new behavior adds value. Public feeds, streaks and five-star
 scores remain low priority. Future work needs its own concrete design and verification.
+
+## Everyday memory and progress
+
+This product pass adds explicitly dated experience capture, private paginated
+recall with date/place/record filters, explainable type/label preference groups,
+a factual monthly memory card, finished-session frequency, complete exercise
+volume and rep-specific records. Existing name-only capture and cabinet design
+remain. See [behavior and limits](REMEMBER.md).

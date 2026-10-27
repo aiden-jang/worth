@@ -368,6 +368,7 @@ test('blocked storage asks before leaving and account changes remove private boa
     };
   });
   await page.goto('/patterns');
+  await page.locator('.pattern-more-tools > summary').click();
   await page.getByRole('link', { name: 'Boards & trips →', exact: true }).click();
   await page.getByRole('button', { name: 'New board', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'New board', exact: true });

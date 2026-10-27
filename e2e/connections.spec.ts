@@ -125,6 +125,7 @@ test('reviewed connections preserve records and their constellation has a readab
   const data = await model(page, archive);
   await page.goto('/patterns');
   await capture(page, 'patterns-entry', info.project.name, '.patterns-head');
+  await page.locator('.pattern-more-tools > summary').click();
   await page.getByRole('link', { name: 'Connections →', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Connections', exact: true })).toBeVisible();
   await capture(page, 'overview', info.project.name);

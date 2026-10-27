@@ -224,7 +224,11 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <aside ref={rail} className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}>
+      <aside
+        ref={rail}
+        aria-label="Archive navigation"
+        className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}
+      >
         <Link to="/" className="brand" aria-label="Worth, archive home">
           worth
         </Link>

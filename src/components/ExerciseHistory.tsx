@@ -1,8 +1,10 @@
 import { ArrowRight, X } from '@phosphor-icons/react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { formatDate } from '../format';
+import { formatDate, today } from '../format';
 import {
   exerciseDirectory,
+  exerciseRepRecords,
+  exerciseImprovement,
   exerciseHistory,
   exerciseValue,
   measurementChoices,
@@ -81,7 +83,14 @@ export function ExerciseHistory({
   onClose: () => void;
   aliases?: ExerciseAlias[];
 }) {
-  const entries = exerciseHistory(logs, listId, title, workouts, aliases);
+  const allEntries = exerciseHistory(logs, listId, title, workouts, aliases);
+  const [period, setPeriod] = useState(0);
+  const end = today();
+  const start = period
+    ? new Date(Date.parse(`${end}T00:00:00Z`) - (period - 1) * 86400000).toISOString().slice(0, 10)
+    : null;
+  const entries = allEntries.filter((log) => !start || (log.happenedOn >= start && log.happenedOn <= end));
+  const improvement = exerciseImprovement(entries);
   const measurements = measurementChoices(entries);
   const units = (['kg', 'lb'] as const).filter((unit) =>
     entries.some((log) => exerciseValue(log, unit) !== null),
@@ -95,6 +104,11 @@ export function ExerciseHistory({
   const choices = [
     ...units.map((unit) => ({ key: unit as ExerciseMetric, label: `Top weight · ${unit}`, unit })),
     { key: 'reps' as ExerciseMetric, label: 'Total reps', unit: 'reps' },
+    ...units.map((unit) => ({
+      key: `volume:${unit}` as ExerciseMetric,
+      label: `Volume · ${unit}`,
+      unit: `${unit} × reps`,
+    })),
     ...measurements,
   ];
   const active = choices.find((choice) => choice.key === metricChoice) ?? choices[0];
@@ -169,9 +183,24 @@ export function ExerciseHistory({
             <X size={22} />
           </button>
         </div>
+        <label className="exercise-period">
+          History period
+          <select
+            value={period}
+            onChange={(event) => {
+              setPeriod(Number(event.target.value));
+              setSelectedId(null);
+            }}
+          >
+            <option value={0}>All recorded entries</option>
+            <option value={28}>Last 4 weeks</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+        </label>
         {!entries.length ? (
           <p className="exercise-helper">
-            No saved exercise entries for this name yet. Save your first sets to start its history.
+            No saved exercise entries for this name in this period. Choose a wider period or save your first
+            sets.
           </p>
         ) : (
           <>
@@ -180,6 +209,12 @@ export function ExerciseHistory({
               {formatDate(entries[0].happenedOn)}
               {entries.length > 1 ? ` – ${formatDate(entries[entries.length - 1].happenedOn)}` : ''}
             </p>
+            {improvement && (
+              <p className="exercise-improvement" role="status">
+                {improvement.weight} {improvement.unit} × {improvement.reps} reps in your latest entry.
+                Previous best at this weight in this period: {improvement.previous} reps.
+              </p>
+            )}
             <div className="exercise-metrics" aria-label="Chart measurement">
               {choices.map((choice) => (
                 <button
@@ -259,6 +294,32 @@ export function ExerciseHistory({
               <p className="exercise-helper">
                 No recorded values for {metricLabel}. Measurements stay readable below.
               </p>
+            )}
+            {!!units.length && (
+              <details className="exercise-records">
+                <summary>Best recorded sets by rep count</summary>
+                <p>
+                  Actual sets in this period. Units stay separate; only comparable exercise names should be
+                  grouped.
+                </p>
+                {units.map((unit) => (
+                  <section key={unit} aria-label={`Best sets in ${unit}`}>
+                    <h3>{unit}</h3>
+                    <ol>
+                      {exerciseRepRecords(entries, unit).map((record) => (
+                        <li key={record.reps}>
+                          <button
+                            type="button"
+                            onClick={() => select(entries.find((log) => log.id === record.logId)!)}
+                          >
+                            {record.reps} reps · {record.weight} {unit} · {formatDate(record.date)}
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                ))}
+              </details>
             )}
             <div className="exercise-history-entries">
               {[...entries].reverse().map((log) => (

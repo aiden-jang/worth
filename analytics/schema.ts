@@ -58,6 +58,7 @@ const exact: Record<string, Page> = {
   '/patterns/connections': 'connections',
   '/patterns/field-guide': 'field_guide',
   '/patterns/look-back': 'look_back',
+  '/patterns/remember': 'look_back',
   '/settings': 'settings',
   '/offline': 'offline',
   '/privacy': 'privacy',

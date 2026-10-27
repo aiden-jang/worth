@@ -1,3 +1,4 @@
+import type { ExperienceInput, MemoryFilter, MemoryPage, Preferences } from './shared/memories';
 import type { SpaceSummary } from './shared/private-spaces';
 import type { HistoryPage } from './shared/taste-history';
 import type { AuthUser } from '@aidenjang/auth-client';
@@ -349,6 +350,17 @@ export const api = {
   me: () => request<{ user: AuthUser | null }>('/me'),
   overview: () => request<Overview>('/overview'),
   patterns: () => request<ArchivePatterns>('/patterns'),
+  preferences: () => request<Preferences>('/preferences'),
+  memories: (filter: MemoryFilter, signal?: AbortSignal) =>
+    request<MemoryPage>(
+      `/memories?${new URLSearchParams(Object.entries(filter).map(([key, value]) => [key, String(value)]))}`,
+      { signal },
+    ),
+  createExperience: (listId: string, body: ExperienceInput, key: string) =>
+    request<{ item: Item; log: Log }>(`/lists/${listId}/experiences`, {
+      ...json('POST', body),
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    }),
   lists: () => request<{ lists: ListSummary[] }>('/lists'),
   archivedLists: () => request<{ lists: ListSummary[] }>('/lists?archived=1'),
   list: (id: string) => request<{ list: ListDetail }>(`/lists/${id}`),

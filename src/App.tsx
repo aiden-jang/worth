@@ -77,6 +77,7 @@ const ShowPage = lazy(() => import('./pages/ShowPage').then((module) => ({ defau
 const PublicSharePage = lazy(() =>
   import('./pages/PublicSharePage').then((module) => ({ default: module.PublicSharePage })),
 );
+const MemoryPage = lazy(() => import('./pages/MemoryPage').then((m) => ({ default: m.MemoryPage })));
 const PatternsPage = lazy(() =>
   import('./pages/PatternsPage').then((module) => ({ default: module.PatternsPage })),
 );
@@ -166,6 +167,7 @@ function PrivateApp() {
         <Route path="/lists/:listId/show" element={<ShowPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/patterns" element={<PatternsPage />} />
+        <Route path="/patterns/remember" element={<MemoryPage />} />
         <Route path="/patterns/boards" element={<BoardsPage />} />
         <Route path="/patterns/boards/:id" element={<BoardPage />} />
         <Route path="/patterns/calendar" element={<ActivityCalendarPage />} />
@@ -203,6 +205,7 @@ function PrivateApp() {
       '/read',
       '/code',
       '/patterns/look-back',
+      '/patterns/remember',
       '/patterns/connections',
       '/patterns/field-guide',
       '/patterns/calendar',

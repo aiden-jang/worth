@@ -875,3 +875,26 @@ Implementation references: [Web Crypto deriveKey](https://developer.mozilla.org/
 [AES-GCM encryption](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt),
 [service workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)
 and [IndexedDB transactions](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction).
+
+## Experiences and personal summaries
+
+`worker/routes/experiences.ts` saves a new name and its explicitly dated visit in
+one D1 batch. Existing-name capture uses the same batch with a scoped target guard.
+The existing `archive_operations` receipt stores an operation fingerprint including
+its namespace, list and normalized input; retries cannot change their body or owner.
+No schema migration is required. Existing calls, ranks and queue flags remain independent.
+
+`worker/routes/memories.ts` supplies private paginated recall and preference summaries.
+Reads use active owner-scoped views and exclude archived lists unless explicitly
+requested. Recall separates actual log dates from original saved-name dates (UTC),
+never item update times. Counts and page rows share a D1 read batch. Preferences
+aggregate current overall calls and recorded visit reactions in separate
+collection/type or label groups, exclude unreviewed rows from rated denominators
+and provide filters to all supporting records. Repeat-visit counts remain
+independent of enjoyment. Results are not sent to traffic analytics or external AI.
+
+`src/shared/exercise-history.ts` derives complete weighted volume and exact
+rep-count records from saved sets; units and missing values remain explicit.
+`WorkoutProgress` counts finished sessions, while `MonthMemory` summarizes dated
+entries in the current local-calendar month. Both are read-only views. See
+[product behavior and limitations](REMEMBER.md).

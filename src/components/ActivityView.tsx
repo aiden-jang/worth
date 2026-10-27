@@ -1,3 +1,4 @@
+import { WorkoutProgress } from './WorkoutProgress';
 import { ArrowRight, Plus } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { Fragment, useEffect, useState } from 'react';
@@ -185,13 +186,16 @@ export function ActivityView({
         onStarted={clearFilters}
       />
       {!loading && !error && (
-        <ExerciseDirectory
-          logs={logs}
-          listId={listId}
-          aliases={aliases.groups}
-          onOpen={setHistoryTitle}
-          onManageAliases={() => setEditingAliases(true)}
-        />
+        <>
+          <WorkoutProgress workouts={workouts} />
+          <ExerciseDirectory
+            logs={logs}
+            listId={listId}
+            aliases={aliases.groups}
+            onOpen={setHistoryTitle}
+            onManageAliases={() => setEditingAliases(true)}
+          />
+        </>
       )}
       <div className="workout-launch">
         <button

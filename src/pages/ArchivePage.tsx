@@ -1,3 +1,4 @@
+import { MonthMemory } from '../components/MonthMemory';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { CallBadge, CallFace } from '../components/PersonalCall';
 import { useQuery } from '@tanstack/react-query';
@@ -66,6 +67,9 @@ export function ArchivePage() {
           <p className="overline">{date}</p>
           <h1>The archive.</h1>
           <p>Good finds. Mixed feelings.</p>
+          <Link className="retro-entry" to="/patterns/remember">
+            Remember where you went →
+          </Link>
         </div>
         <div className="cabinet-wink">
           <CallFace value="meh" />
@@ -119,6 +123,7 @@ export function ArchivePage() {
           })}
         </ol>
       </section>
+      <MonthMemory />
       <div className="cabinet-home-lower">
         <section className="cabinet-recent" aria-labelledby="recent-heading">
           <header className="cabinet-section-head">
@@ -162,7 +167,7 @@ export function ArchivePage() {
             <p className="workspace-empty">Nothing filed yet. Add a name to get started.</p>
           )}
         </section>
-        <aside>
+        <aside aria-label="Selected records">
           {pick ? (
             <Link className="cabinet-pick" to={`/lists/${pick.listId}?focus=item:${pick.itemId}`}>
               <p className="overline">TOP OF THE LIST</p>
