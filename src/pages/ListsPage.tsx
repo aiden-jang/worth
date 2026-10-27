@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { CoverCrop } from '../components/CoverCrop';
 import { TemplatePicker } from '../components/CollectionTemplates';
 import { FieldNamesInput } from '../components/CollectionFields';
@@ -78,6 +79,15 @@ export function ListsPage() {
   const [params, setParams] = useSearchParams();
   const creating = params.get('create') === '1';
   const requestedKind = params.get('kind');
+  usePageTitle(
+    creating
+      ? 'New list'
+      : requestedKind === 'collection'
+        ? 'Collections'
+        : requestedKind === 'activity'
+          ? 'Activity'
+          : 'Lists',
+  );
   const showingArchived = params.get('archived') === '1' && requestedKind !== 'activity' && !creating;
   const archivedLists = useQuery({
     queryKey: ['lists', 'archived'],

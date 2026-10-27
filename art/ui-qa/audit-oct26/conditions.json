@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-26",
+  "startingCommit": "57f2782",
+  "node": "22.22.2",
+  "pnpm": "9.15.0",
+  "playwright": "1.64.1",
+  "build": "production Worker/browser output",
+  "data": "synthetic intercepted APIs; no production writes",
+  "browserMatrix": ["desktop Chromium", "touch-enabled phone Chromium", "supplemental touch-enabled WebKit"],
+  "widths": [320, 390, 430, 768, 1440],
+  "primaryViewports": [
+    [1440, 900],
+    [390, 780]
+  ],
+  "reducedMotion": "enabled for responsive captures",
+  "localCoreTests": 255,
+  "finalFocusedBrowserTests": 35,
+  "supplementalWebKitTests": 15,
+  "limits": [
+    "physical phones",
+    "spoken screen-reader output",
+    "native share sheet",
+    "production account recovery",
+    "provider recovery/alerts"
+  ]
+}

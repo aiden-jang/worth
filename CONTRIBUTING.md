@@ -1,9 +1,9 @@
 # Contributing
 
-Use Node 22 (see `.nvmrc`) and pnpm 9.15.0. Install with
+Use Node 22.22.2 (see `.nvmrc`) and pnpm 9.15.0. Install with
 `pnpm install --frozen-lockfile`. See [README](README.md) for local database/auth setup.
 
-Before opening a pull request:
+Before committing:
 
 1. Read [architecture](docs/ARCHITECTURE.md). For UI work, also read [AGENTS.md](AGENTS.md),
    [DESIGN.md](DESIGN.md), [VOICE.md](VOICE.md) and the latest [build contract](art/ui-mocks/BUILD-CONTRACT.md).
@@ -16,7 +16,9 @@ Before opening a pull request:
    For UI work, capture desktop/phone views with synthetic data and inspect narrow
    layouts, keyboard access, empty/error states and reduced motion.
 5. Use Conventional Commits without a scope: `fix: explain failed share lookups`.
-   Open a PR against `main`; wait for required checks before merging.
+   The maintainer’s current workflow is verified direct commits to `main`, without
+   a PR. Push only after the local checks pass; follow that exact commit through
+   GitHub CI and automatic deployment. Contributors without write access can use a PR.
 
 ## Useful checks
 
@@ -40,3 +42,6 @@ Run `pnpm exec playwright show-report` or `pnpm exec playwright show-trace <trac
 Keep comments for non-obvious invariants, recovery or tradeoffs. Avoid comments that
 repeat the code. Historical design/QA artifacts remain under `art/`; they are not
 production fixtures. Never commit `.dev.vars`, credentials, private exports or real QA records.
+
+See [quality and visitor review](docs/QUALITY.md) for the review matrix, fixture
+boundaries and checks that require a real device.

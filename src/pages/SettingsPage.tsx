@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
@@ -8,6 +9,7 @@ import { useConnection } from '../hooks/useConnection';
 import { cleanDeviceData, draftLifetime } from '../shared/device-data';
 import { archiveByteLimit, archiveFile, type ArchiveFile } from '../shared/portability';
 export function SettingsPage() {
+  usePageTitle('Settings');
   const client = useQueryClient();
   const owner = client.getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
   const online = useConnection();

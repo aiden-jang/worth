@@ -148,8 +148,10 @@ async function source(page: Page) {
   return dialog;
 }
 async function shot(page: Page, name: string) {
-  await mkdir('art/ui-qa/capsules', { recursive: true });
-  await page.screenshot({ path: `art/ui-qa/capsules/${name}.png`, fullPage: true });
+  if (!process.env.WORTH_CAPTURE_UI) return;
+  const directory = `${process.env.WORTH_CAPTURE_UI}/capsules`;
+  await mkdir(directory, { recursive: true });
+  await page.screenshot({ path: `${directory}/${name}.png`, fullPage: true });
 }
 test('capsule reviews keep calls independent, hide closed contents and compare only after opening', async ({
   page,

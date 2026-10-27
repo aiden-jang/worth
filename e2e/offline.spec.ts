@@ -136,8 +136,10 @@ async function disk(page: Page) {
   );
 }
 async function shot(page: Page, name: string) {
-  await mkdir('art/ui-qa/offline', { recursive: true });
-  await page.screenshot({ path: `art/ui-qa/offline/${name}.png`, fullPage: true });
+  if (!process.env.WORTH_CAPTURE_UI) return;
+  const directory = `${process.env.WORTH_CAPTURE_UI}/offline`;
+  await mkdir(directory, { recursive: true });
+  await page.screenshot({ path: `${directory}/${name}.png`, fullPage: true });
 }
 test('encrypted text survives a real offline reload and exact lost replies sync once', async ({
   page,

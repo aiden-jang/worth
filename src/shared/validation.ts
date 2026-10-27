@@ -39,7 +39,11 @@ export const listCreate = listInput
 
 export const listPatch = listInput
   .pick({ name: true, description: true, artwork: true })
-  .extend({ archived: z.boolean() })
+  .extend({
+    description: listInput.shape.description.unwrap(),
+    artwork: listInput.shape.artwork.unwrap(),
+    archived: z.boolean(),
+  })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 
@@ -108,6 +112,7 @@ export const workoutInput = z.object({
 export const workoutPatch = workoutInput
   .omit({ routineId: true, expectedRoutineRevision: true })
   .extend({
+    title: workoutInput.shape.title.unwrap(),
     status: z.enum(['active', 'finished']),
     plannedExercises,
     skippedExercises: plannedExercises,
@@ -120,7 +125,7 @@ export const workoutPatch = workoutInput
 export const logInput = z.object({
   exercise: z.boolean().default(false),
   measurements: activityMeasurements.default([]),
-  context: visitContext.default({}),
+  context: visitContext.prefault({}),
   workoutId: z.string().uuid().nullable().default(null),
   exerciseSets: z
     .array(
@@ -143,7 +148,23 @@ export const logInput = z.object({
 });
 
 export const logPatch = logInput
-  .extend({ expectedRevision: z.number().int().nonnegative().optional() })
+  // Creation defaults must not turn omitted patch fields into overwrites.
+  .extend({
+    exercise: logInput.shape.exercise.unwrap(),
+    measurements: logInput.shape.measurements.unwrap(),
+    context: logInput.shape.context.unwrap(),
+    workoutId: logInput.shape.workoutId.unwrap(),
+    exerciseSets: logInput.shape.exerciseSets.unwrap(),
+    weightUnit: logInput.shape.weightUnit.unwrap(),
+    itemId: logInput.shape.itemId.unwrap(),
+    title: logInput.shape.title.unwrap(),
+    note: logInput.shape.note.unwrap(),
+    amount: logInput.shape.amount.unwrap(),
+    unit: logInput.shape.unit.unwrap(),
+    sets: logInput.shape.sets.unwrap(),
+    reps: logInput.shape.reps.unwrap(),
+    expectedRevision: z.number().int().nonnegative().optional(),
+  })
   .partial()
   .refine((value) => Object.keys(value).length > 0);
 

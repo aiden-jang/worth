@@ -135,7 +135,14 @@ export function ListPage() {
             </Link>
           )}
           {list.kind === 'collection' && (
-            <button className="button button-outline" onClick={() => setShowShare(true)}>
+            <button
+              className="button button-outline"
+              onClick={(event) => {
+                // Safari does not focus a button on pointer activation; the dialog needs its return target.
+                event.currentTarget.focus();
+                setShowShare(true);
+              }}
+            >
               <ShareNetwork size={18} /> Share
             </button>
           )}

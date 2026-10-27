@@ -40,6 +40,20 @@ activity editor owns drafts, photos, workout selection and one save operation.
 `ExerciseSetFields`, `LegacyActivityMeasurements` and `ActivityMeasurements` are controlled
 field components; they receive only their section of the draft and do not persist it.
 
+`AppShell` owns the repeated navigation, keyboard shortcuts, named Add/Shortcuts
+dialogs and a keyboard skip link. Mobile navigation is a disclosure in normal
+flow: Escape restores the toggle, leaving the rail closes it, and crossing to a
+desktop layout clears its open state. It is not a modal focus trap. Page-owned
+titles identify the core directories as well as individual records.
+
+Validation uses Zod 4. Creation defaults and patch semantics are separate:
+omitted patch properties must stay absent, never reset stored values. Nested
+creation context uses pre-parse defaults; unfinished local drafts deliberately
+omit cross-field save requirements. Saved galleries and capsules inherit their
+refinements through `safeExtend`; backup schemas retain literal text and perform
+their relationship checks at the archive boundary. Compatibility tests cover
+sparse patches, no-call defaults and incomplete drafts alongside API round trips.
+
 ## Data invariants
 
 - A collection contains items and dated revisits. An activity contains dated logs,
@@ -136,7 +150,7 @@ Reads omit absent/trashed/merged/moved items from context orders. Export include
 workspace state only for active lists and remaps context item IDs on restore; old
 backups default to empty tools. Deleting all data cascades through the containing
 lists. Public snapshots retain their fixed title/type-only payload. See the
-[expansion tracker](CABINET-EXPANSION.md) for the larger unfinished scope.
+[expansion tracker](CABINET-EXPANSION.md) for the integrated web scope and dated implementation notes.
 
 ## Private item context
 
@@ -425,7 +439,8 @@ handoff and the existing capture review/save flow; no image, price, date, call o
 with it. Manual entry remains available after unsupported capabilities or failed
 asset downloads. Limits, generated-asset/licensing rules, CSP and tested recovery
 boundaries are detailed in [photo text](PHOTO-TEXT.md). Receipt attachment and
-multi-line record mapping remain separate pending work.
+multi-line record mapping are implemented separately in the reviewed-receipts
+flow described below; the photo-text page does not infer them.
 
 ## Barcode and ISBN web capture
 

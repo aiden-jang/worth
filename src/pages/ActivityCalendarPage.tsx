@@ -168,14 +168,14 @@ export function ActivityCalendarPage() {
                         } else pendingDay.current = day;
                       }}
                     >
-                      <time dateTime={day}>{day.slice(-2)}</time>
+                      <time dateTime={day}>{day.slice(-2)}</time>{' '}
                       <span className="calendar-day-summary">
-                        {count?.planned ? <span>{count.planned} planned</span> : null}
+                        {count?.planned ? <span>{count.planned} planned</span> : null}{' '}
                         {count?.visits ? (
                           <span>
                             {count.visits} {count.visits === 1 ? 'visit' : 'visits'}
                           </span>
-                        ) : null}
+                        ) : null}{' '}
                         {count?.activities ? (
                           <span>
                             {count.activities} {count.activities === 1 ? 'activity' : 'activities'}

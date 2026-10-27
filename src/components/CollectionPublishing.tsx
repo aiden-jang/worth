@@ -15,7 +15,7 @@ const publishingDraft = z
     title: z.string().max(120),
     dedication: z.string().max(280),
     ids: z.array(z.string().max(100)).max(12),
-    captions: z.record(z.string().max(300)).refine((value) => Object.keys(value).length <= 500),
+    captions: z.record(z.string(), z.string().max(300)).refine((value) => Object.keys(value).length <= 500),
     ranks: z.boolean(),
     calls: z.boolean(),
     notes: z.boolean(),

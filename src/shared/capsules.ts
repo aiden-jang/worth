@@ -118,17 +118,9 @@ export const capsuleInput = z
   });
 export type CapsuleInput = z.infer<typeof capsuleInput>;
 export const savedCapsule = capsuleBody
-  .innerType()
-  .extend({ id, createdAt: timestamp, openedAt: timestamp.nullable() })
+  .safeExtend({ id, createdAt: timestamp, openedAt: timestamp.nullable() })
   .strict()
   .superRefine((value, context) => {
-    const body = capsuleBody.safeParse({
-      name: value.name,
-      message: value.message,
-      opening: value.opening,
-      entries: value.entries,
-    });
-    if (!body.success) context.addIssue({ code: 'custom', message: body.error.issues[0].message });
     if (
       value.openedAt !== null &&
       (value.openedAt < value.opening.opensAt || value.openedAt < value.createdAt)

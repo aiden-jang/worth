@@ -14,12 +14,12 @@ See [behavior and limits](ARCHIVE-TOOLS.md) and [visual verification](../art/ui-
 - Bulk queue, Want to try, type, move, merge and Trash actions.
 - Immediate deletion Undo and 30-day Trash recovery for lists, items and logs.
 
-## Expansion in progress
+## Web expansion on main
 
 The user approved the expanded feature set on October 15. The detailed
 [cabinet expansion tracker](CABINET-EXPANSION.md) records the complete scope and
-its verification. The following groups are committed and verified locally on
-`feat/worth-cabinet-tools`, without a push, pull request or deployment:
+its verification. The expansion was integrated into main in `cefcf56`
+(`feat: complete web app expansion`). The following groups are implemented:
 
 - Ranking sandbox, blind head-to-head placement, saved views/context rankings,
   private comparisons, decision draws and more authored collection artwork.

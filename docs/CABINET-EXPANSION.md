@@ -6,9 +6,10 @@ claim. Each feature needs working persistence where applicable, recovery/error
 states, owner-boundary checks, export/restore support, accessible controls and
 desktop/phone visual verification before being marked complete.
 
-Current work is isolated on `feat/worth-cabinet-tools`, at the user's request.
-Do not create a pull request unless requested. Preserve the other session's cover
-framing and layout changes in the original checkout.
+The web expansion was integrated into main in `cefcf56`. The checked inventory
+below records its implemented scope; dated implementation/verification sections
+are historical notes from that work, including its former feature branch.
+Current maintenance uses verified direct commits to main, without a PR.
 
 ## Ranking and choosing
 
@@ -86,7 +87,7 @@ integration and validation; do not replace them with decorative controls.
 
 The user clarified on October 16 that Worth must remain a web app. Native iOS and
 Android companions, widget-specific approvals/APIs, migration and CI have been
-removed from this branch. Home-screen access will use web/PWA shortcuts instead.
+removed before integration. Home-screen access uses web/PWA shortcuts instead.
 Recognition and extraction must stay on-device, without paid external AI or
 processing uploads.
 

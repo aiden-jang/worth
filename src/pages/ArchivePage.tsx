@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { CallBadge, CallFace } from '../components/PersonalCall';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, ArrowUpRight } from '@phosphor-icons/react';
@@ -30,6 +31,7 @@ function activityDetail(entry: {
 }
 
 export function ArchivePage() {
+  usePageTitle('Archive');
   const overview = useQuery({ queryKey: ['overview'], queryFn: api.overview });
   const data = overview.data;
   const date = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' })

@@ -58,7 +58,7 @@ export const archiveFile = z
       .max(500),
     items: z
       .array(
-        itemInput.innerType().extend({
+        z.object(itemInput.shape).extend({
           title: title(120),
           type: text(60),
           note: text(4000),
@@ -108,8 +108,8 @@ export const archiveFile = z
       .default([]),
     workoutSessions: z
       .array(
-        workoutPatch
-          .innerType()
+        z
+          .object(workoutPatch.shape)
           .omit({ expectedRevision: true })
           .required()
           .extend({

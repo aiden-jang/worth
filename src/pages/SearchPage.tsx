@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MagnifyingGlass, ArrowUpRight, X } from '@phosphor-icons/react';
@@ -19,6 +20,7 @@ function searchScope(value: string | null): SearchScope {
 }
 
 export function SearchPage() {
+  usePageTitle('Search');
   const [params, setParams] = useSearchParams();
   const routeQuery = params.get('q') ?? '';
   const scope = searchScope(params.get('scope'));

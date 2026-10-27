@@ -3,8 +3,8 @@
 ## Automatic release
 
 Pushes to main run formatting, ESLint/hooks, unused-code detection, unit/component/API
-tests, type checks, a production build and desktop/phone browser tests. Both check jobs
-must pass before CI applies D1 migrations and deploys the verified build artifact. The user confirmed the GitHub repository's Cloudflare token
+tests, type checks, a production build and desktop/phone browser tests. The core job
+and both browser shards must pass before CI applies D1 migrations and deploys the verified build artifact. The user confirmed the GitHub repository's Cloudflare token
 is configured. `scripts/verify-live.mjs` then checks health, signed-out account state,
 private-export access, browser assets, policy route availability, static HTML
 security headers, and no-index headers on public share URLs. A failed smoke check
@@ -90,12 +90,13 @@ Use disposable staging records for retention cleanup and permanent account-data 
 
 ## Cabinet expansion migrations
 
-The isolated cabinet expansion branch adds additive migrations `0012` (collection
+The web expansion added additive migrations `0012` (collection
 workspace/revision), `0013` (private item context/revision) and `0014` (collection
 archive flag). Apply all pending migrations before deploying its Worker. Archiving
 keeps the existing non-Trash read views and does not revoke public links. The
-feature tracker records local verification; it does not assert that these branch
-changes have been merged, passed GitHub CI or been deployed.
+feature tracker preserves dated local verification from the former feature branch.
+That web expansion was integrated into main in `cefcf56`; verify current CI and
+deployment against the release commit rather than those historical notes.
 Migration `0015` adds private visit context and log revisions; older logs default
 to empty context and no earlier reactions are inferred.
 

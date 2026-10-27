@@ -56,6 +56,9 @@ export function AppShell({
   });
   const [pickerQuery, setPickerQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuToggle = useRef<HTMLButtonElement>(null);
+  const rail = useRef<HTMLElement>(null);
+  const content = useRef<HTMLDivElement>(null);
   const [inboxOpen, setInboxOpen] = useState(false);
   useEffect(() => {
     setMenuOpen(false);
@@ -64,10 +67,27 @@ export function AppShell({
   useEffect(() => {
     if (!menuOpen) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('dialog[open]')) return;
+      setMenuOpen(false);
+      menuToggle.current?.focus();
+    };
+    const outside = (event: Event) => {
+      if (event.target instanceof Node && !rail.current?.contains(event.target)) setMenuOpen(false);
+    };
+    const desktop = window.matchMedia('(min-width: 681px)');
+    const resize = () => {
+      if (desktop.matches) setMenuOpen(false);
     };
     window.addEventListener('keydown', close);
-    return () => window.removeEventListener('keydown', close);
+    window.addEventListener('pointerdown', outside);
+    window.addEventListener('focusin', outside);
+    desktop.addEventListener('change', resize);
+    return () => {
+      window.removeEventListener('keydown', close);
+      window.removeEventListener('pointerdown', outside);
+      window.removeEventListener('focusin', outside);
+      desktop.removeEventListener('change', resize);
+    };
   }, [menuOpen]);
 
   const quickCaptureList = preferredQuickCaptureList(
@@ -89,6 +109,13 @@ export function AppShell({
       )
     : activityLists;
   const listScope = new URLSearchParams(location.search).get('kind');
+
+  function restoreMobileFocus() {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body && active.getClientRects().length) return;
+    // Opening a modal closes the disclosure, hiding its original trigger.
+    if (menuToggle.current?.getClientRects().length) menuToggle.current.focus();
+  }
 
   const rememberList = useCallback((listId: string) => {
     try {
@@ -183,16 +210,31 @@ export function AppShell({
 
   return (
     <div className="app-shell app-shell-dark">
-      <aside className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}>
+      <a
+        className="skip-link"
+        href="#worth-content"
+        onClick={(event) => {
+          const main = content.current?.querySelector('main');
+          if (!main) return;
+          event.preventDefault();
+          main.tabIndex = -1;
+          main.focus();
+          main.scrollIntoView({ block: 'start' });
+        }}
+      >
+        Skip to content
+      </a>
+      <aside ref={rail} className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}>
         <Link to="/" className="brand" aria-label="Worth, archive home">
           worth
         </Link>
         <button
           type="button"
+          ref={menuToggle}
           className="mobile-menu-toggle icon-button"
           aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={menuOpen}
-          aria-controls="worth-navigation"
+          aria-controls="worth-navigation worth-rail-actions"
           onClick={() => setMenuOpen((current) => !current)}
         >
           {menuOpen ? <X size={24} /> : <List size={24} />}
@@ -261,7 +303,7 @@ export function AppShell({
             {collectionLists.length > 8 && <Link to="/lists">All lists</Link>}
           </nav>
         )}
-        <div className="rail-actions">
+        <div className="rail-actions" id="worth-rail-actions">
           <a
             className="account-link"
             href={new URL('/account', authOrigin).toString()}
@@ -305,7 +347,7 @@ export function AppShell({
           </div>
         </div>
       </aside>
-      <div className="app-content">
+      <div className="app-content" id="worth-content" ref={content}>
         {!online && (
           <p className="connection-state" role="status">
             You’re offline. Record drafts stay on this device. Reconnect to save to your archive.
@@ -325,7 +367,9 @@ export function AppShell({
       )}
       <dialog
         className="add-dialog"
+        aria-labelledby="worth-add-title"
         ref={dialog}
+        onClose={restoreMobileFocus}
         onClick={(event) => {
           if (event.target === dialog.current) dialog.current.close();
         }}
@@ -333,7 +377,7 @@ export function AppShell({
         <div className="dialog-head">
           <div>
             <p className="overline">ADD TO</p>
-            <h2>Pick a list.</h2>
+            <h2 id="worth-add-title">Pick a list.</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
             <X size={20} />
@@ -373,7 +417,9 @@ export function AppShell({
       </dialog>
       <dialog
         className="add-dialog shortcut-dialog"
+        aria-labelledby="worth-shortcuts-title"
         ref={shortcutsDialog}
+        onClose={restoreMobileFocus}
         onClick={(event) => {
           if (event.target === shortcutsDialog.current) shortcutsDialog.current.close();
         }}
@@ -381,7 +427,7 @@ export function AppShell({
         <div className="dialog-head">
           <div>
             <p className="overline">KEYBOARD</p>
-            <h2>Less clicking.</h2>
+            <h2 id="worth-shortcuts-title">Less clicking.</h2>
           </div>
           <button
             className="icon-button"

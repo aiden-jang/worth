@@ -19,9 +19,9 @@ const labels = (max: number, length: number) =>
       'Use each label once',
     )
     .default([]);
-export const itemContext = z
+const itemContextFields = z
   .object({
-    revisit: z.object({ on: day, snoozedUntil: day }).strict().default({}),
+    revisit: z.object({ on: day, snoozedUntil: day }).strict().prefault({}),
     sourceUrl: text(1000).refine((value) => {
       if (!value) return true;
       try {
@@ -59,7 +59,7 @@ export const itemContext = z
         status: z.enum(['unspecified', 'using', 'stored', 'passed_on', 'returned']).default('unspecified'),
       })
       .strict()
-      .default({}),
+      .prefault({}),
     loan: z
       .object({
         direction: z.enum(['none', 'borrowed', 'lent']).default('none'),
@@ -69,27 +69,23 @@ export const itemContext = z
         returnedOn: day,
       })
       .strict()
-      .default({}),
+      .prefault({}),
   })
-  .strict()
-  .superRefine((value, context) => {
-    const bad = (path: (string | number)[], message: string) =>
-      context.addIssue({ code: 'custom', path, message });
-    if (value.revisit.snoozedUntil && (!value.revisit.on || value.revisit.snoozedUntil < value.revisit.on))
-      bad(['revisit', 'snoozedUntil'], 'Choose a revisit date first and snooze to that day or later');
-    if (value.purchase.price !== null && !value.purchase.currency)
-      bad(['purchase', 'currency'], 'Add a currency for this price');
-    if (
-      value.purchase.boughtOn &&
-      value.purchase.returnBy &&
-      value.purchase.returnBy < value.purchase.boughtOn
-    )
-      bad(['purchase', 'returnBy'], 'Return deadline must follow the purchase date');
-    if (value.loan.startedOn && value.loan.returnedOn && value.loan.returnedOn < value.loan.startedOn)
-      bad(['loan', 'returnedOn'], 'Returned date must follow the loan date');
-    if (value.loan.startedOn && value.loan.returnBy && value.loan.returnBy < value.loan.startedOn)
-      bad(['loan', 'returnBy'], 'Return deadline must follow the loan date');
-  });
+  .strict();
+export const itemContext = itemContextFields.superRefine((value, context) => {
+  const bad = (path: (string | number)[], message: string) =>
+    context.addIssue({ code: 'custom', path, message });
+  if (value.revisit.snoozedUntil && (!value.revisit.on || value.revisit.snoozedUntil < value.revisit.on))
+    bad(['revisit', 'snoozedUntil'], 'Choose a revisit date first and snooze to that day or later');
+  if (value.purchase.price !== null && !value.purchase.currency)
+    bad(['purchase', 'currency'], 'Add a currency for this price');
+  if (value.purchase.boughtOn && value.purchase.returnBy && value.purchase.returnBy < value.purchase.boughtOn)
+    bad(['purchase', 'returnBy'], 'Return deadline must follow the purchase date');
+  if (value.loan.startedOn && value.loan.returnedOn && value.loan.returnedOn < value.loan.startedOn)
+    bad(['loan', 'returnedOn'], 'Returned date must follow the loan date');
+  if (value.loan.startedOn && value.loan.returnBy && value.loan.returnBy < value.loan.startedOn)
+    bad(['loan', 'returnBy'], 'Return deadline must follow the loan date');
+});
 export type ItemContext = z.infer<typeof itemContext>;
 export const emptyItemContext: ItemContext = itemContext.parse({});
 export function contextSearchText(value: ItemContext | undefined): string {
@@ -119,12 +115,11 @@ export function contextSearchText(value: ItemContext | undefined): string {
     .filter(Boolean)
     .join(' ');
 }
-export const itemContextDraft = itemContext.innerType().extend({
+export const itemContextDraft = itemContextFields.extend({
   sourceUrl: z.string().max(1000),
   fields: z.array(z.object({ name: z.string().max(40), value: z.string().max(240) })).max(12),
-  purchase: itemContext
-    .innerType()
-    .shape.purchase.removeDefault()
+  purchase: itemContextFields.shape.purchase
+    .unwrap()
     .extend({ currency: z.string().max(3), price: z.number().finite().nullable() }),
 });
 

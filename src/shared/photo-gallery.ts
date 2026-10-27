@@ -1,7 +1,7 @@
 import { z } from 'zod';
 const id = z.string().uuid();
 const point = z.number().finite().min(0).max(1);
-export const photoArrow = z
+const photoArrowFields = z
   .object({
     id,
     fromX: point,
@@ -10,11 +10,11 @@ export const photoArrow = z
     toY: point,
     label: z.string().max(120),
   })
-  .strict()
-  .refine(
-    (arrow) => arrow.fromX !== arrow.toX || arrow.fromY !== arrow.toY,
-    'Give this arrow a start and an end',
-  );
+  .strict();
+export const photoArrow = photoArrowFields.refine(
+  (arrow) => arrow.fromX !== arrow.toX || arrow.fromY !== arrow.toY,
+  'Give this arrow a start and an end',
+);
 export const galleryEntries = z
   .array(
     z
@@ -42,13 +42,8 @@ export const galleryChoices = z
     'Choose a cover from these photos',
   );
 export const galleryPatch = galleryChoices
-  .innerType()
-  .extend({ expectedRevision: z.number().int().nonnegative() })
-  .strict()
-  .superRefine((value, context) => {
-    const parsed = galleryChoices.safeParse({ entries: value.entries, coverId: value.coverId });
-    if (!parsed.success) context.addIssue({ code: 'custom', message: parsed.error.issues[0].message });
-  });
+  .safeExtend({ expectedRevision: z.number().int().nonnegative() })
+  .strict();
 export const gallerySource = z
   .object({
     id,
@@ -73,7 +68,7 @@ export type PhotoGallery = {
   entries: (GalleryEntry & { source: GallerySource })[];
 };
 
-const draftArrow = photoArrow.innerType();
+const draftArrow = photoArrowFields;
 const draftMetadata = z
   .object({
     entries: z

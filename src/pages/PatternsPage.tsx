@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../retrospective.css';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from '@phosphor-icons/react';
@@ -9,6 +10,7 @@ import { decisionLabel, callAsides } from '../shared/decisions';
 import type { ItemDecision } from '../shared/models';
 
 export function PatternsPage() {
+  usePageTitle('Patterns');
   const patterns = useQuery({ queryKey: ['patterns'], queryFn: api.patterns });
 
   if (patterns.isPending)

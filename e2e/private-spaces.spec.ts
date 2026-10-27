@@ -243,8 +243,10 @@ async function review(page: Page) {
   await expect(page.getByRole('region', { name: 'Sharing preview' })).toBeVisible();
 }
 async function capture(page: Page, name: string) {
-  await mkdir('art/ui-qa/private-spaces', { recursive: true });
-  await page.screenshot({ path: `art/ui-qa/private-spaces/${name}.png`, fullPage: true });
+  if (!process.env.WORTH_CAPTURE_UI) return;
+  const directory = `${process.env.WORTH_CAPTURE_UI}/private-spaces`;
+  await mkdir(directory, { recursive: true });
+  await page.screenshot({ path: `${directory}/${name}.png`, fullPage: true });
 }
 test('two accounts collaborate with explicit snapshots and reveal only after both seal', async ({
   page,

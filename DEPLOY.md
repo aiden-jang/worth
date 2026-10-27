@@ -16,7 +16,7 @@ The auth service already allows HTTPS return URLs under `*.aidenjang.com` and sh
 
 ## Routine deploys
 
-Merging a checked PR to `main` is the normal release path. CI runs core checks,
+Pushing a verified commit to `main` is the normal release path. CI runs core checks,
 builds once, browser-tests that artifact, then applies pending migrations and deploys
 the same complete `dist/` output. The deploy job is serialized and runs a read-only
 live smoke check afterward. A failed check blocks deployment.
@@ -37,7 +37,7 @@ Do not store the token in the repo.
 
 ## Data and privacy
 
-The production D1 database is the source of truth. D1 photos are private BLOBs capped at 900 KB each, not public assets. Public links contain ranked names and types only, expire after seven days, and can be revoked. Back up D1 before destructive schema changes. Deleting a list removes its items, logs, photos, and shares through database foreign keys.
+The production D1 database is the source of truth. D1 photos are private BLOBs capped at 900 KB each, not public assets. Public links contain ranked names and types only, expire after seven days, and can be revoked. Back up D1 before destructive schema changes. Deleting a list first moves it to 30-day Trash. Permanent list removal cascades to its items, logs, photos, and shares through database foreign keys.
 
 Do not switch this to R2 just to make uploads easier without revisiting the $0 requirement. R2 requires a subscription setup and can bill overages even though it has a free allowance. If the D1 free limits become too small, make an explicit storage and budget decision rather than letting the app drift into paid usage.
 

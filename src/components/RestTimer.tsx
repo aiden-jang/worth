@@ -1,5 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+
+function savedDeadline(key: string) {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return Number.isFinite(value) && value > 0 && value <= 8640000000000000 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
 export function RestTimer({
   workoutId,
   plannedSeconds,
@@ -9,20 +18,10 @@ export function RestTimer({
 }) {
   const owner = useQueryClient().getQueryData<{ user?: { id: string } }>(['me'])?.user?.id;
   const key = `worth:rest:${owner}:${workoutId}`;
-  const [end, setEnd] = useState(() => {
-    try {
-      return Number(localStorage.getItem(key)) || 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [end, setEnd] = useState(() => savedDeadline(key));
   useEffect(() => {
     const sync = () => {
-      try {
-        setEnd(Number(localStorage.getItem(key)) || 0);
-      } catch {
-        /* Device storage may be unavailable or blocked. */
-      }
+      setEnd(savedDeadline(key));
     };
     window.addEventListener('storage', sync);
     window.addEventListener('worth:rest-changed', sync);
@@ -33,11 +32,12 @@ export function RestTimer({
   }, [key]);
   const [now, setNow] = useState(Date.now());
   const [seconds, setSeconds] = useState(plannedSeconds ?? 60);
+  const running = end > now;
   useEffect(() => {
-    if (!end) return;
+    if (!running) return;
     const interval = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(interval);
-  }, [end]);
+  }, [end, running]);
   const remaining = Math.max(0, Math.ceil((end - now) / 1000));
   function change(value: number) {
     setEnd(value);
