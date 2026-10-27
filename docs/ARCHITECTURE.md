@@ -884,6 +884,14 @@ The existing `archive_operations` receipt stores an operation fingerprint includ
 its namespace, list and normalized input; retries cannot change their body or owner.
 No schema migration is required. Existing calls, ranks and queue flags remain independent.
 
+The experience composer defaults to today and needs only a name. Saved-name
+selection and optional context disclose on demand; visit reactions reuse the
+reversible call buttons. The fixed pending payload disables all editable controls,
+including those buttons. Draft dismissal considers date, reaction and context
+changes as well as name/note edits. Activity logging similarly discloses date/workout
+selection and optional measurements/notes, retaining an explicit copy action for
+previous exercise sets. These are presentation changes over the same APIs.
+
 `worker/routes/memories.ts` supplies private paginated recall and preference summaries.
 Reads use active owner-scoped views and exclude archived lists unless explicitly
 requested. Recall separates actual log dates from original saved-name dates (UTC),

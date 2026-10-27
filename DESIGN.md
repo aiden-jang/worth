@@ -60,6 +60,14 @@ revisit history are optional layers of context, never requirements for creating 
 Every primary screen should preserve this low-effort path. Detail views can invite richer reflection without
 making the archive feel like a journal that needs to be filled out.
 
+The October 27 logging simplification keeps the dated experience composer name-first:
+today's date is visible in a compact disclosure, and three optional one-tap reaction
+choices reuse the cabinet capsule. Saved-name selection and extra context open on
+demand. Activity date/workout selection and blank notes also disclose; the selected
+date and workout remain readable in the summary. Saved or restored notes stay open.
+These intentionally shorten the original editor reference without adding required
+fields, inferring opinions, or changing name-only collection capture.
+
 ## Core idea
 
 The central interaction is a personal measure of value. A person can rank a wine, a movie, a restaurant, a car, or any other collection item without pretending those rankings are objective.

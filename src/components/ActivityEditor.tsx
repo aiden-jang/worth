@@ -68,6 +68,12 @@ export function ActivityEditor({
     isLogDraft,
   );
   const { form, setForm } = draft;
+  const [contextOpen, setContextOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(
+    Boolean(
+      form.note || form.measurements?.length || form.amount !== null || form.unit || form.sets || form.reps,
+    ),
+  );
   const unversionedDraft = Boolean(log && form.expectedRevision === undefined);
   const photoDraft = useDraftPhoto(
     `log:${listId}:${log?.id ?? `new:${initialWorkout?.id ?? repeatLog?.id ?? 'blank'}:${initialExercise}`}`,
@@ -111,6 +117,7 @@ export function ActivityEditor({
   useEffect(() => {
     const node = dialog.current;
     node?.showModal();
+    node?.querySelector<HTMLInputElement>('input[list]')?.focus();
     return () => node?.close();
   }, []);
   const save = useMutation({
@@ -304,45 +311,61 @@ export function ActivityEditor({
               View exercise history
             </button>
           )}
-          <label>
-            When
-            <input
-              type="date"
-              disabled={Boolean(form.workoutId)}
-              required
-              value={form.happenedOn}
-              onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
-            />
-          </label>
-          {exerciseMode && (
-            <label>
-              Workout <span className="optional">optional</span>
-              <select
-                value={form.workoutId ?? ''}
-                disabled={workoutsLoading}
-                onChange={(event) => {
-                  const chosen = workouts.find((workout) => workout.id === event.target.value);
-                  setForm({
-                    ...form,
-                    workoutId: chosen?.id ?? null,
-                    happenedOn: chosen?.happenedOn ?? form.happenedOn,
-                  });
-                }}
-              >
-                <option value="">No workout</option>
-                {workouts.map((workout) => (
-                  <option key={workout.id} value={workout.id}>
-                    {workout.title} · {formatDate(workout.happenedOn)}
-                  </option>
-                ))}
-              </select>
-              {form.workoutId && (
-                <span className="exercise-helper">
-                  Date follows this workout. Edit its date from the workout card.
-                </span>
+          <details
+            className="record-extras activity-context"
+            open={contextOpen}
+            onToggle={(event) => setContextOpen(event.currentTarget.open)}
+          >
+            <summary>
+              {exerciseMode ? 'Date and workout' : 'Date'}
+              <span>
+                {form.happenedOn === today() ? 'Today' : formatDate(form.happenedOn)}
+                {activeWorkout ? ` · ${activeWorkout.title}` : ''}
+              </span>
+            </summary>
+            <div className="activity-context-fields">
+              <label>
+                When
+                <input
+                  type="date"
+                  disabled={Boolean(form.workoutId)}
+                  required
+                  value={form.happenedOn}
+                  onInvalid={() => setContextOpen(true)}
+                  onChange={(event) => setForm({ ...form, happenedOn: event.target.value })}
+                />
+              </label>
+              {exerciseMode && (
+                <label>
+                  Workout <span className="optional">optional</span>
+                  <select
+                    value={form.workoutId ?? ''}
+                    disabled={workoutsLoading}
+                    onChange={(event) => {
+                      const chosen = workouts.find((workout) => workout.id === event.target.value);
+                      setForm({
+                        ...form,
+                        workoutId: chosen?.id ?? null,
+                        happenedOn: chosen?.happenedOn ?? form.happenedOn,
+                      });
+                    }}
+                  >
+                    <option value="">No workout</option>
+                    {workouts.map((workout) => (
+                      <option key={workout.id} value={workout.id}>
+                        {workout.title} · {formatDate(workout.happenedOn)}
+                      </option>
+                    ))}
+                  </select>
+                  {form.workoutId && (
+                    <span className="exercise-helper">
+                      Date follows this workout. Edit its date from the workout card.
+                    </span>
+                  )}
+                </label>
               )}
-            </label>
-          )}
+            </div>
+          </details>
           {exerciseMode && (
             <section className="previous-exercise" aria-label="Previous exercise">
               <p className="overline">LAST TIME{previous ? ` · ${formatDate(previous.happenedOn)}` : ''}</p>
@@ -414,27 +437,38 @@ export function ActivityEditor({
               previous={previous}
             />
           )}
-          <ActivityMeasurements
-            value={form.measurements ?? []}
-            onChange={(measurements) => setForm({ ...form, measurements })}
-            disabled={save.isPending}
-          />
-          <LegacyActivityMeasurements
-            form={form}
-            setForm={(fields) => setForm({ ...form, ...fields })}
-            log={log}
-            exerciseMode={exerciseMode}
-          />
-          <label>
-            Private note <span className="optional">optional</span>
-            <textarea
-              rows={3}
-              maxLength={4000}
-              value={form.note}
-              onChange={(event) => setForm({ ...form, note: event.target.value })}
-              placeholder="Anything you want to remember"
-            />
-          </label>
+          <details
+            className="record-extras"
+            open={detailsOpen}
+            onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
+          >
+            <summary>
+              More details <span>optional</span>
+            </summary>
+            <div className="activity-context-fields">
+              <ActivityMeasurements
+                value={form.measurements ?? []}
+                onChange={(measurements) => setForm({ ...form, measurements })}
+                disabled={save.isPending}
+              />
+              <LegacyActivityMeasurements
+                form={form}
+                setForm={(fields) => setForm({ ...form, ...fields })}
+                log={log}
+                exerciseMode={exerciseMode}
+              />
+              <label>
+                Private note <span className="optional">optional</span>
+                <textarea
+                  rows={3}
+                  maxLength={4000}
+                  value={form.note}
+                  onChange={(event) => setForm({ ...form, note: event.target.value })}
+                  placeholder="Anything you want to remember"
+                />
+              </label>
+            </div>
+          </details>
           {!log && (
             <>
               <DraftPhoto file={photo} onChange={setPhoto} disabled={save.isPending} />

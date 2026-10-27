@@ -296,9 +296,33 @@
   min-height: 44px;
   padding: 12px 0;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 .experience-extras > .experience-fields {
   margin-top: 16px;
+}
+.experience-reaction > p {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.experience-reaction .call-choices {
+  gap: 4px;
+  padding: 4px;
+  background: #292a23;
+  border-radius: 28px;
+}
+.experience-reaction .call-choices button {
+  min-height: 44px;
+  padding: 8px 4px;
+  border-radius: 24px;
+  font-size: 13px;
+}
+.experience-reaction .call-choices button.active {
+  background: #e8dc9d;
+  color: #181915;
+}
+.experience-reaction .call-face {
+  display: none;
 }
 
 .memory-check {

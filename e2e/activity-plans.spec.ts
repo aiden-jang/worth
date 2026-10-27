@@ -260,6 +260,7 @@ test('routine targets copy into future workouts while recorded measurements rema
   await expect(exercise.getByRole('spinbutton', { name: 'Set 1 reps', exact: true })).toHaveValue('');
   await expect(exercise.getByLabel('Planned target', { exact: true })).toContainText('600s duration');
   await exercise.getByRole('button', { name: 'Remove set 1', exact: true }).click();
+  await exercise.locator('summary').filter({ hasText: 'More details' }).click();
   await exercise.locator('summary').filter({ hasText: 'Named measurements' }).click();
   await exercise.getByRole('button', { name: 'Add named measurement', exact: true }).click();
   await exercise.getByLabel('Measurement 1 name', { exact: true }).fill('Duration');

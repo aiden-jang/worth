@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { api } from '../api';
@@ -8,6 +9,7 @@ import { experienceInput } from '../shared/memories';
 import { emptyVisitContext } from '../shared/visit-context';
 import type { Item } from '../shared/models';
 import { ConfirmDialog } from './ConfirmDialog';
+import { CallChoices } from './PersonalCall';
 
 const draftSchema = experienceInput.extend({
   title: z.string().max(120),
@@ -25,6 +27,8 @@ export function ExperienceEditor({
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
+    nameInput = useRef<HTMLInputElement>(null),
+    savedName = useRef<HTMLSelectElement>(null),
     client = useQueryClient();
   const initial: Draft = {
     itemId: null,
@@ -41,7 +45,17 @@ export function ExperienceEditor({
     (v): v is Draft => draftSchema.safeParse(v).success,
   );
   const { form, setForm } = draft;
+  const hasChanges = JSON.stringify(form) !== JSON.stringify(initial);
   const [discard, setDiscard] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(
+    Boolean(
+      form.happenedOn !== today() ||
+      (!form.itemId && form.type) ||
+      form.context.location ||
+      form.context.order ||
+      form.note,
+    ),
+  );
   const logs = useQuery({
     queryKey: ['logs', listId],
     queryFn: () => api.logs(listId),
@@ -58,6 +72,7 @@ export function ExperienceEditor({
   useEffect(() => {
     const node = dialog.current;
     node?.showModal();
+    (nameInput.current ?? savedName.current)?.focus();
     return () => node?.close();
   }, []);
   const save = useMutation({
@@ -91,7 +106,7 @@ export function ExperienceEditor({
   });
   function close() {
     if (save.isPending) return;
-    if (form.title || form.note || form.pending) setDiscard(true);
+    if (hasChanges) setDiscard(true);
     else dialog.current?.close();
   }
   function submit(e: FormEvent) {
@@ -101,7 +116,7 @@ export function ExperienceEditor({
   return (
     <dialog
       ref={dialog}
-      className="editor-dialog"
+      className="editor-dialog experience-editor-dialog"
       aria-labelledby="experience-title"
       onClose={(e) => {
         e.stopPropagation();
@@ -120,57 +135,52 @@ export function ExperienceEditor({
             <h2 id="experience-title">What did you try?</h2>
           </div>
           <button className="icon-button" aria-label="Close experience" onClick={close}>
-            ×
+            <X size={22} />
           </button>
         </div>
-        <p>Save a dated visit. Your overall call and ranking stay separate.</p>
         <form className="editor-form" onSubmit={submit}>
           <fieldset className="experience-fields" disabled={save.isPending || !!form.pending}>
-            <label>
-              Record
-              <select
-                value={form.itemId ?? ''}
-                onChange={(e) => {
-                  const item = items.find((v) => v.id === e.target.value);
-                  setForm({
-                    ...form,
-                    itemId: item?.id ?? null,
-                    title: item?.title ?? '',
-                    type: item?.type ?? '',
-                  });
-                }}
-              >
-                <option value="">Something new</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </label>
             {!form.itemId && (
-              <>
-                <label>
-                  Name
-                  <input
-                    required
-                    autoFocus
-                    maxLength={120}
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  />
-                </label>
-              </>
+              <label>
+                Name
+                <input
+                  ref={nameInput}
+                  required
+                  autoFocus
+                  maxLength={120}
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+              </label>
             )}
-            <label>
-              When
-              <input
-                type="date"
-                required
-                value={form.happenedOn}
-                onChange={(e) => setForm({ ...form, happenedOn: e.target.value })}
-              />
-            </label>
+            {(items.length > 0 || form.itemId) && (
+              <details className="experience-extras" open={Boolean(form.itemId)}>
+                <summary>{form.itemId ? form.title : 'Use a saved name'}</summary>
+                <label>
+                  Record
+                  <select
+                    ref={savedName}
+                    value={form.itemId ?? ''}
+                    onChange={(e) => {
+                      const item = items.find((v) => v.id === e.target.value);
+                      setForm({
+                        ...form,
+                        itemId: item?.id ?? null,
+                        title: item?.title ?? '',
+                        type: item?.type ?? '',
+                      });
+                    }}
+                  >
+                    <option value="">Something new</option>
+                    {items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </details>
+            )}
             {last && (
               <aside className="experience-last" aria-label="Previous visit">
                 <p className="overline">LAST LOGGED · {formatDate(last.happenedOn)}</p>
@@ -186,34 +196,41 @@ export function ExperienceEditor({
                 </button>
               </p>
             )}
-            <label>
-              This time
-              <select
-                value={form.context.reaction ?? ''}
-                onChange={(e) =>
+            <div className="experience-reaction">
+              <p>
+                This time <span className="optional">optional</span>
+              </p>
+              <CallChoices
+                label="This time"
+                value={form.context.reaction}
+                disabled={save.isPending || !!form.pending}
+                onChange={(reaction) =>
                   setForm({
                     ...form,
-                    context: {
-                      ...form.context,
-                      reaction: (e.target.value || null) as Draft['context']['reaction'],
-                    },
+                    context: { ...form.context, reaction },
                   })
                 }
-              >
-                <option value="">No reaction</option>
-                <option value="favorite">Favorite</option>
-                <option value="meh">Meh</option>
-                <option value="would_not_again">Not again</option>
-              </select>
-            </label>
+              />
+            </div>
             <details
               className="experience-extras"
-              open={Boolean(form.type || form.context.location || form.context.order || form.note)}
+              open={detailsOpen}
+              onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
             >
               <summary>
-                Place, order and notes <span className="optional">optional</span>
+                {form.happenedOn === today() ? 'Today' : formatDate(form.happenedOn)} · Date and details
               </summary>
               <div className="experience-fields">
+                <label>
+                  When
+                  <input
+                    type="date"
+                    required
+                    value={form.happenedOn}
+                    onInvalid={() => setDetailsOpen(true)}
+                    onChange={(e) => setForm({ ...form, happenedOn: e.target.value })}
+                  />
+                </label>
                 <label>
                   Place or neighborhood <span className="optional">optional</span>
                   <input

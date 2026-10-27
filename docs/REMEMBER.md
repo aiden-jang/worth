@@ -7,9 +7,11 @@ native companion.
 
 ## Log an experience
 
-Open a collection and choose **Log an experience**. Select an existing record,
-or enter a new name and optional type. Choose the actual date; place, order,
-reaction and note are optional. For an existing record, the latest visit on or
+Open a collection and choose **Log an experience**. Enter a name and save; the
+date starts at today. Favorite, Meh and Not again are optional one-tap reactions;
+tap the selected reaction again to clear it. **Use a saved name** opens existing
+records. **Date and details** opens the date, place, order, note and optional type.
+For an existing record, the latest visit on or
 before that date shows its saved order and note for reference. Nothing is copied
 into the new visit automatically.
 
@@ -63,6 +65,13 @@ not predictions or historical population estimates. Removing or changing records
 changes the summary.
 
 ## See workout progress
+
+Quick activity logging needs only a name. Date starts at today; **Date** opens
+the date field, and **More details** opens optional measurements and notes. In Exercise mode, **Date and
+workout** shows the selected visit and date in its summary. The previous sets
+remain an explicit **Use previous sets** action, followed by editable actual
+results. Copied sets are not saved until you save the log. Existing or restored
+notes open automatically.
 
 Within an activity, **Workout progress** counts explicitly finished sessions in
 four- or twelve-week periods and compares the preceding period of equal length.

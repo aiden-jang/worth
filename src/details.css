@@ -204,6 +204,17 @@
 .record-extras .metric-row + .metric-row {
   margin-top: 20px;
 }
+.activity-context-fields {
+  display: grid;
+  gap: 20px;
+  padding-top: 12px;
+}
+.activity-context > summary {
+  overflow-wrap: anywhere;
+}
+:is(.experience-editor-dialog, .activity-editor-dialog) .button {
+  min-height: 44px;
+}
 .record-photo {
   margin-top: 24px;
 }

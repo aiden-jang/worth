@@ -13,8 +13,7 @@ async function capture(page: Page, name: string, project: string) {
     fullPage: (await page.locator('dialog[open]').count()) === 0,
   });
 }
-async function experienceFixture(page: Page, archive: State) {
-  let lost = true;
+async function experienceFixture(page: Page, archive: State, lost = true) {
   const receipts = new Map<string, unknown>();
   await page.route('**/api/lists/*/experiences', async (route) => {
     const req = route.request(),
@@ -79,16 +78,20 @@ test('dated experiences recover a fixed save without duplicate records or inferr
   let dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
   await capture(page, 'experience-quick', info.project.name);
   await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('Corner ramen');
+  await dialog.locator('.experience-extras > summary').filter({ hasText: 'Date and details' }).click();
   await dialog.getByLabel('When', { exact: true }).fill('2025-10-12');
-  await dialog.locator('.experience-extras > summary').click();
   await dialog.getByRole('textbox', { name: 'Place or neighborhood' }).fill('Brooklyn');
   await dialog.getByRole('textbox', { name: 'What you ordered or tried' }).fill('Miso ramen');
-  await dialog.getByRole('combobox', { name: 'This time', exact: true }).selectOption('favorite');
+  await dialog
+    .getByRole('group', { name: 'This time', exact: true })
+    .getByRole('button', { name: 'Favorite', exact: true })
+    .click();
   await capture(page, 'experience', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await dialog.getByRole('button', { name: 'Save experience', exact: true }).click();
   await expect(dialog.getByRole('alert')).toContainText('Connection interrupted');
   await expect(dialog.getByRole('textbox', { name: 'Name', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Favorite', exact: true })).toBeDisabled();
   await page.reload();
   await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
   dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
@@ -108,6 +111,137 @@ test('dated experiences recover a fixed save without duplicate records or inferr
   await expect(page.getByRole('button', { name: 'Log an experience', exact: true })).toBeFocused();
   await page.locator('.collection-index-row button').first().click();
   await capture(page, 'collection-compact', info.project.name);
+});
+
+test('an experience needs only a name and reactions can be cleared with one tap', async ({
+  page,
+  archive,
+}, info) => {
+  await experienceFixture(page, archive, false);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`/lists/${list.id}`);
+  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
+  const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
+  await expect(name).toBeFocused();
+  await expect(dialog.getByLabel('When', { exact: true })).toBeHidden();
+  await expect(dialog.getByRole('combobox', { name: 'Record', exact: true })).toBeHidden();
+  await expect(dialog.getByRole('textbox', { name: 'Note', exact: true })).toBeHidden();
+  const favorite = dialog
+    .getByRole('group', { name: 'This time', exact: true })
+    .getByRole('button', { name: 'Favorite', exact: true });
+  await favorite.click();
+  await expect(favorite).toHaveAttribute('aria-pressed', 'true');
+  await favorite.click();
+  await expect(favorite).toHaveAttribute('aria-pressed', 'false');
+  await name.fill('Corner ramen');
+  expect(
+    (await dialog.getByRole('button', { name: 'Save experience', exact: true }).boundingBox())!.height,
+  ).toBeGreaterThanOrEqual(44);
+  await capture(page, 'simple-experience', info.project.name);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  for (const width of [320, 430, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  }
+  await name.press('Enter');
+  await expect(dialog).toHaveCount(0);
+  expect(archive.logs).toHaveLength(1);
+  expect(archive.logs[0]).toMatchObject({
+    title: 'Corner ramen',
+    happenedOn: today(),
+    note: '',
+    context: { reaction: null, location: '', order: '' },
+  });
+  expect(archive.items.at(-1)?.decision).toBeNull();
+});
+
+test('a quick visit to a saved name preserves its overall call and protects reaction-only drafts', async ({
+  page,
+  archive,
+}) => {
+  const existingId = crypto.randomUUID();
+  archive.items[0].id = existingId;
+  archive.list.rankedIds = [existingId];
+  await experienceFixture(page, archive, false);
+  await page.goto(`/lists/${list.id}`);
+  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
+  await dialog.getByRole('button', { name: 'Meh', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Close experience', exact: true }).click();
+  const confirm = page.getByRole('dialog', { name: 'Leave this experience?', exact: true });
+  await expect(confirm).toBeVisible();
+  await confirm.getByRole('button', { name: 'Cancel', exact: true }).last().click();
+  await dialog.getByText('Use a saved name', { exact: true }).click();
+  await dialog.getByRole('combobox', { name: 'Record', exact: true }).selectOption(existingId);
+  await expect(dialog.getByLabel('When', { exact: true })).toBeHidden();
+  await dialog.getByRole('button', { name: 'Save experience', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(archive.items).toHaveLength(2);
+  expect(archive.items[0].decision).toBe('favorite');
+  expect(archive.logs[0]).toMatchObject({ itemId: existingId, context: { reaction: 'meh' } });
+});
+
+test('quick activity logging keeps details optional and previous exercise sets stay an explicit choice', async ({
+  page,
+  archive,
+}, info) => {
+  archive.list.kind = 'activity';
+  archive.list.name = 'Gym';
+  archive.items = [];
+  await page.route('**/api/lists/*/routines', (route) => route.fulfill({ json: { routines: [] } }));
+  await page.route('**/api/lists/*/workouts', (route) => route.fulfill({ json: { workouts: [] } }));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`/lists/${list.id}`);
+  await page.getByRole('button', { name: 'Add log', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: 'What happened?', exact: true });
+  await expect(dialog.getByLabel('What', { exact: true })).toBeFocused();
+  await expect(dialog.getByLabel('When', { exact: true })).toBeHidden();
+  await expect(dialog.getByRole('textbox', { name: 'Private note optional', exact: true })).toBeHidden();
+  await dialog.getByRole('textbox', { name: 'What', exact: true }).fill('Evening walk');
+  expect(
+    (await dialog.getByRole('button', { name: 'Save log', exact: true }).boundingBox())!.height,
+  ).toBeGreaterThanOrEqual(44);
+  await capture(page, 'simple-activity', info.project.name);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await dialog.getByRole('button', { name: 'Save log', exact: true }).click();
+  await expect(page.locator('.activity-editor-dialog')).toHaveCount(0);
+  expect(archive.logs[0]).toMatchObject({ title: 'Evening walk', happenedOn: today(), note: '' });
+  archive.logs.push({
+    ...archive.logs[0],
+    id: crypto.randomUUID(),
+    title: 'Bench press',
+    happenedOn: '2026-01-01',
+    exercise: true,
+    exerciseSets: [{ reps: 8, weight: 40 }],
+    weightUnit: 'kg',
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Add log', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: 'What happened?', exact: true });
+  await dialog.getByRole('button', { name: 'Exercise', exact: true }).click();
+  await dialog.getByLabel('Exercise', { exact: true }).fill('Bench press');
+  await expect(dialog.getByRole('spinbutton', { name: 'Set 1 reps', exact: true })).toHaveValue('');
+  await dialog.getByRole('button', { name: 'Use previous sets', exact: true }).click();
+  await expect(dialog.getByRole('spinbutton', { name: 'Set 1 reps', exact: true })).toHaveValue('8');
+  await expect(dialog.getByRole('spinbutton', { name: 'Set 1 weight in kg', exact: true })).toHaveValue('40');
+  await capture(page, 'simple-exercise', info.project.name);
+  for (const width of [320, 430, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  }
+  await dialog.locator('.activity-context > summary').click();
+  await dialog.getByLabel('When', { exact: true }).fill('2026-10-01');
+  await dialog.locator('.activity-context > summary').click();
+  await expect(dialog.locator('.activity-context > summary')).toContainText('Oct 1, 2026');
+  await dialog.getByRole('button', { name: 'Save log', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(archive.logs.at(-1)).toMatchObject({
+    title: 'Bench press',
+    happenedOn: '2026-10-01',
+    exerciseSets: [{ reps: 8, weight: 40 }],
+    weightUnit: 'kg',
+  });
 });
 
 test('preferences link to their full supporting records and memory filters keep explicit dates', async ({
