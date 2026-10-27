@@ -65,7 +65,8 @@ labeled and never writes to a private archive.
 - Arrange saved photos into a private cover collage, with keyboard positioning,
   optional captions, exact preview, local download and reviewed cover replacement.
 - Save reusable collection detail names and private setup templates for new, empty collections.
-- Export records or a photo-inclusive backup; preview a validated restore as new lists.
+- Pull a saved name or past entry from the memory shelf, with its original note, photo or reaction.
+- Export readable Excel sheets, records-only JSON or a photo-inclusive JSON backup; preview a validated JSON restore as new lists.
   Worth-only data deletion leaves the shared account and other apps alone.
 
 ## Local development

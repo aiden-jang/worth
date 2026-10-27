@@ -96,7 +96,7 @@ test('account outages recover and public snapshots never expose private notes', 
 test('settings export downloads and invalid restore files are explained', async ({ page }) => {
   await page.goto('/settings');
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Export records', exact: true }).click();
+  await page.getByRole('button', { name: 'Export JSON (.json)', exact: true }).click();
   expect((await download).suggestedFilename()).toMatch(/^worth-records-.*\.json$/);
   await page
     .locator('input[type=file]')

@@ -190,6 +190,7 @@
 .month-memory h2 {
   font-size: 28px;
   max-width: 600px;
+  overflow-wrap: anywhere;
 }
 .month-memory .overline {
   color: #626456;
@@ -210,10 +211,70 @@
   height: 100px;
   flex-shrink: 0;
 }
-.memory-month-mark {
-  font-family: 'DM Mono', monospace;
-  font-size: 60px;
+.month-memory > .memory-blank-slips {
+  width: 100px;
+  flex-shrink: 0;
+  color: #34382d;
+}
+.month-memory .memory-source,
+.month-memory .memory-month-footer {
   color: #626456;
+  font-size: 13px;
+}
+.memory-keepsake-note {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.memory-draw-actions {
+  display: flex;
+  gap: 12px 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.month-memory .memory-draw-actions .button {
+  background: #181915;
+  border-color: #181915;
+  color: #f0ecdf;
+  min-height: 44px;
+  padding: 10px 16px;
+}
+.month-memory .memory-draw-actions .button:hover {
+  background: #34382d;
+  color: #f0ecdf;
+}
+.memory-draw-actions .button[aria-disabled='true'] {
+  cursor: wait;
+  opacity: 0.7;
+}
+.month-memory a {
+  color: #34382d;
+}
+.month-memory a:hover {
+  color: #181915;
+}
+.month-memory .memory-month-footer a {
+  padding: 0;
+  min-height: 44px;
+  align-content: center;
+}
+.memory-draw-title {
+  animation: memory-unfold 200ms ease-out both;
+}
+@keyframes memory-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-draw-title {
+    animation: none;
+  }
 }
 .exercise-period {
   display: grid;
@@ -282,8 +343,8 @@
     width: 64px;
     height: 64px;
   }
-  .memory-month-mark {
-    font-size: 40px;
+  .month-memory > .memory-blank-slips {
+    width: 64px;
   }
 }
 

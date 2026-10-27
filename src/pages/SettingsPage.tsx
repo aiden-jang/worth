@@ -33,19 +33,27 @@ export function SettingsPage() {
       setBusy('');
     }
   }
-  async function download(photos: boolean) {
-    await run(photos ? 'backup' : 'export', async () => {
+  async function download(format: 'json' | 'photos' | 'excel') {
+    const photos = format === 'photos';
+    await run(format === 'excel' ? 'excel' : photos ? 'backup' : 'export', async () => {
       const archive = await api.exportArchive(photos);
-      const url = URL.createObjectURL(new Blob([JSON.stringify(archive)], { type: 'application/json' }));
+      let blob: Blob;
+      if (format === 'excel') {
+        const { archiveSpreadsheet, spreadsheetMime } = await import('../shared/archive-spreadsheet');
+        blob = new Blob([archiveSpreadsheet(archiveFile.parse(archive))], { type: spreadsheetMime });
+      } else blob = new Blob([JSON.stringify(archive)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `worth-${photos ? 'backup' : 'records'}-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `worth-${photos ? 'backup' : 'records'}-${new Date().toISOString().slice(0, 10)}.${format === 'excel' ? 'xlsx' : 'json'}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       setStatus(
-        photos
-          ? 'Backup download started, including photos.'
-          : 'Records download started. Photos are not included.',
+        format === 'excel'
+          ? 'Excel download started. Use JSON for restoring your archive.'
+          : photos
+            ? 'Backup download started, including photos.'
+            : 'Records download started. Photos are not included.',
       );
     });
   }
@@ -136,6 +144,10 @@ export function SettingsPage() {
       <section className="data-section">
         <h2>Take a copy.</h2>
         <p>
+          Excel opens your collections, saved things, experiences, workouts, sets, measurements, routines and
+          Inbox in separate sheets. JSON is the full archive format for restoring Worth.
+        </p>
+        <p>
           Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
           capsule backups include unopened contents; keep downloaded files private. Shared spaces and saved
           private copies restore as disconnected private archives. Invitations and unrevealed choices are
@@ -151,14 +163,21 @@ export function SettingsPage() {
           <button
             className="button button-accent"
             disabled={!!busy || !online}
-            onClick={() => void download(false)}
+            onClick={() => void download('json')}
           >
-            {busy === 'export' ? 'Preparing records…' : 'Export records'}
+            {busy === 'export' ? 'Preparing JSON…' : 'Export JSON (.json)'}
           </button>
           <button
             className="button button-outline"
             disabled={!!busy || !online}
-            onClick={() => void download(true)}
+            onClick={() => void download('excel')}
+          >
+            {busy === 'excel' ? 'Preparing Excel…' : 'Export Excel (.xlsx)'}
+          </button>
+          <button
+            className="button button-outline"
+            disabled={!!busy || !online}
+            onClick={() => void download('photos')}
           >
             {busy === 'backup' ? 'Preparing backup…' : 'Back up with photos'}
           </button>

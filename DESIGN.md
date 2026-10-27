@@ -60,6 +60,13 @@ revisit history are optional layers of context, never requirements for creating 
 Every primary screen should preserve this low-effort path. Detail views can invite richer reflection without
 making the archive feel like a journal that needs to be filled out.
 
+The memory shelf adds a small reason to browse: a real entry, its original details
+and a Pull a memory action. The month count is secondary to the thing remembered.
+Faceless slips introduce an empty shelf; an actual reaction or photo belongs only
+to its source. This deliberately extends the archive reference's cream cards.
+One brief reveal settles immediately with reduced motion. Sparse entries remain
+complete; there are no streaks, missing-field prompts or completion scores.
+
 The October 27 logging simplification keeps the dated experience composer name-first:
 today's date is visible in a compact disclosure, and three optional one-tap reaction
 choices reuse the cabinet capsule. Saved-name selection and extra context open on

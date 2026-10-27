@@ -1,4 +1,4 @@
-import { MonthMemory } from '../components/MonthMemory';
+import { MemoryShelf } from '../components/MemoryShelf';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { CallBadge, CallFace } from '../components/PersonalCall';
 import { useQuery } from '@tanstack/react-query';
@@ -123,7 +123,7 @@ export function ArchivePage() {
           })}
         </ol>
       </section>
-      <MonthMemory />
+      <MemoryShelf />
       <div className="cabinet-home-lower">
         <section className="cabinet-recent" aria-labelledby="recent-heading">
           <header className="cabinet-section-head">

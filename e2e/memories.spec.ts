@@ -454,9 +454,9 @@ test('the monthly keepsake uses dated entries and a recorded reaction', async ({
     }),
   );
   await page.goto('/');
-  const card = page.getByRole('region', { name: 'This month’s memories' });
-  await expect(card).toContainText('3 dated entries to look back on.');
-  await expect(card).toContainText('Most recent: Morning coffee');
+  const card = page.getByRole('region', { name: 'Memory shelf' });
+  await expect(card).toContainText('3 dated entries this month.');
+  await expect(card.getByRole('heading', { name: 'Morning coffee', exact: true })).toBeVisible();
   await capture(page, 'monthly-memory', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await card.getByRole('link', { name: 'Open this month →' }).click();

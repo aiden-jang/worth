@@ -38,10 +38,38 @@ claim those dates are visits. Updating an old note does not change that saved da
 Supporting links from preferences retain their exact collection and type/label
 filter; clear filters to browse the full archive.
 
-Archive's monthly card counts dated entries whose experience date falls in the
-current device-calendar month through today. Its photo or reaction belongs to
-its most recent entry. No data, memory or opinion is invented for an empty month.
-The card counts entries, so several exercise entries may belong to one workout.
+Archive's memory shelf opens with the most recent dated entry this month, when
+available. Its original note, order, place, photo and actual reaction stay attached
+to that source. **Pull a memory** draws from active saved names and explicitly
+dated entries through today, including records beyond the first page. A draw
+avoids an immediate repeat when another source is available. **Open memory**
+opens the original record. Saved-name dates are labeled Saved and UTC; they are
+never presented as visits. A no-call source stays faceless.
+
+The quiet month count covers dated entries in the current device-calendar month
+through today. Several exercise entries may belong to one workout. Empty archives
+offer an invitation rather than an invented memory. Draws are read-only, exclude
+archived lists and Trash, and never add logs, calls or ranks. The brief reveal
+respects reduced motion. There are no quotas or completion requirements.
+
+## Download your data
+
+Open **Settings & data → Take a copy**:
+
+- **Export JSON (.json)** keeps the full supported text archive for restoring Worth.
+- **Export Excel (.xlsx)** creates readable sheets for saved things, experiences,
+  individual sets, named measurements, workouts, routine lineups, collections and
+  Inbox. Dates and measurements are typed; blank, zero and original units stay
+  distinct. Actual calls and visit reactions remain separate. Archived collections
+  are included. An About sheet explains scope.
+- **Back up with photos** creates an image-inclusive JSON backup within the existing
+  backup limits.
+
+Excel is a readable export, not a Worth restore file. It excludes photos and the
+advanced data retained by JSON: boards, receipts, capsules, shared copies,
+templates, connections and history. JSON may include unopened capsule contents,
+as explained in Settings. Keep all downloads private. Excel generation runs in
+the browser on request; it does not send records to a spreadsheet service.
 
 ## Read your preferences
 

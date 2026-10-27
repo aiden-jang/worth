@@ -878,6 +878,21 @@ and [IndexedDB transactions](https://developer.mozilla.org/en-US/docs/Web/API/ID
 
 ## Experiences and personal summaries
 
+The archive's memory shelf draws on demand from both existing `/memories` modes.
+Counts select an offset across the full retained pool; sources beyond page one are
+read with existing pagination. Past dated entries and saved-name dates remain
+distinct. The last card survives a pending/failed draw, the action keeps keyboard
+focus, and draws never write to the archive. No service or schema is added.
+
+`src/shared/archive-spreadsheet.ts` loads only when someone exports Excel. It
+packages typed, literal SpreadsheetML cells with `fflate`; source text never
+becomes a formula or external workbook link. Dates, zero, missing weights and units
+retain their meaning. Frozen headers/names, filters, widths and fitted row heights
+support browsing. Excel limits fail explicitly with a JSON fallback rather than
+silently truncating values. The existing owner-scoped records export supplies the
+data. Excel covers everyday collection/activity/Inbox data; JSON remains the full
+restore format, with photos only in the separate photo backup.
+
 `worker/routes/experiences.ts` saves a new name and its explicitly dated visit in
 one D1 batch. Existing-name capture uses the same batch with a scoped target guard.
 The existing `archive_operations` receipt stores an operation fingerprint including
@@ -903,6 +918,6 @@ independent of enjoyment. Results are not sent to traffic analytics or external 
 
 `src/shared/exercise-history.ts` derives complete weighted volume and exact
 rep-count records from saved sets; units and missing values remain explicit.
-`WorkoutProgress` counts finished sessions, while `MonthMemory` summarizes dated
+`WorkoutProgress` counts finished sessions, while `MemoryShelf` initially summarizes dated
 entries in the current local-calendar month. Both are read-only views. See
 [product behavior and limitations](REMEMBER.md).
