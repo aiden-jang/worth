@@ -54,7 +54,13 @@ jobs:
         with:
           name: worth-build
           path: dist/
-      - run: pnpm exec playwright install --with-deps chromium
+      - name: Prepare Chromium
+        run: |
+          # Avoid long font-download retries from the hosted runner's Azure mirror.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -E -i 's#https?://azure\.archive\.ubuntu\.com/ubuntu#https://archive.ubuntu.com/ubuntu#g' /etc/apt/apt-mirrors.txt
+          fi
+          pnpm exec playwright install --with-deps chromium
       - run: pnpm run e2e --shard=${{ matrix.shard }}/2
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()

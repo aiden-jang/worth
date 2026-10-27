@@ -6,6 +6,12 @@ TypeScript, the production build, and the browser journeys. Node and pnpm versio
 are pinned in `.nvmrc` and `package.json`.
 
 CI builds once and passes that artifact to two browser shards and deployment.
+Browser preparation points the hosted runner’s Azure Ubuntu mirror entry to the
+[main Ubuntu archive](https://documentation.ubuntu.com/project/how-ubuntu-is-made/concepts/package-archive/)
+before installing the same Playwright dependencies. This avoids observed multi-minute
+font-download retries; package signature verification remains enabled. The edit is
+conditional on the runner’s mirror-list file existing.
+
 There is no extra browser-status job. CodeQL runs separately through GitHub’s
 configured scanning. Inspect the results for the pushed commit, rather than a
 previous green run. Failure artifacts last seven days; deployment finishes with
