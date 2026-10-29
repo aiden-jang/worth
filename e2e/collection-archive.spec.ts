@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -18,6 +19,7 @@ test('collections archive and unarchive without changing records or calls', asyn
 }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
+  await collectionOptions(page);
   await page.getByRole('button', { name: 'List settings', exact: true }).click();
   const settings = page.getByRole('region', { name: 'Archive collection', exact: true });
   await settings.scrollIntoViewIfNeeded();
@@ -60,6 +62,7 @@ test('unsaved settings block archive and a failed archive keeps the current coll
   archive,
 }) => {
   await page.goto(`/lists/${list.id}`);
+  await collectionOptions(page);
   await page.getByRole('button', { name: 'List settings', exact: true }).click();
   const archiveButton = page.getByRole('button', { name: 'Archive collection', exact: true });
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Unfinished name');
@@ -67,6 +70,7 @@ test('unsaved settings block archive and a failed archive keeps the current coll
   await page.getByRole('button', { name: 'Close settings', exact: true }).click();
   await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
   expect(archive.writes).toEqual([]);
+  await collectionOptions(page);
   await page.getByRole('button', { name: 'List settings', exact: true }).click();
   await page.route(`**/api/lists/${list.id}`, async (route) => {
     if (route.request().method() === 'PATCH')

@@ -1,10 +1,12 @@
+import { collectionOptions, entryOptions } from './navigation';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
 
 test('a stale sandbox refreshes the current ranking and never overwrites it', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByText('Add unranked items to the draft', { exact: true }).click();
   await page.getByRole('button', { name: 'Add Tea', exact: true }).click();
   archive.list.rankedIds = ['tea'];
@@ -35,17 +37,20 @@ test('saved views and context orders survive reload without changing the main ra
   archive.items[1].wantToTry = true;
   archive.list.rankedIds = [archive.items[0].id];
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Want to try', exact: false }).first().click();
+  await entryOptions(page);
+  await page.getByRole('combobox', { name: 'Browse collection' }).selectOption('want');
   await page.getByText('Saved views', { exact: true }).click();
   await page.getByRole('textbox', { name: 'View name', exact: true }).fill('Next weekend');
   await page.getByRole('button', { name: 'Save current view', exact: true }).click();
   await expect(page.getByText('View saved.', { exact: true })).toBeVisible();
   await page.reload();
+  await entryOptions(page);
   await page.getByText('Saved views · 1', { exact: true }).click();
   await page.getByRole('button', { name: 'Next weekend', exact: true }).click();
   await expect(page.locator('.collection-index')).toContainText('Tea');
   await expect(page.locator('.collection-index')).not.toContainText('Coffee');
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByText('Context rankings', { exact: true }).click();
   await page.getByRole('textbox', { name: 'Context name', exact: true }).fill('Best value');
   await page.getByRole('button', { name: 'Save this draft as context ranking', exact: true }).click();
@@ -62,7 +67,8 @@ test('saved views and context orders survive reload without changing the main ra
 
 test('sandbox rankings recover, preview before applying, and preserve calls', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByText('Add unranked items to the draft', { exact: true }).click();
   await page.getByRole('button', { name: 'Add Tea', exact: true }).click();
   await page.getByRole('button', { name: 'Move Tea up', exact: true }).click();
@@ -77,7 +83,8 @@ test('sandbox rankings recover, preview before applying, and preserve calls', as
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
   await page.getByRole('button', { name: 'Keep draft and close', exact: true }).click();
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await expect(page.getByRole('list', { name: 'Draft order' }).getByRole('listitem').first()).toContainText(
     'Tea',
   );
@@ -97,7 +104,8 @@ test('blind comparisons hide saved order, support undo, and need an explicit rev
   archive,
 }) => {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Start head-to-head', exact: true }).click();
   await expect(page.getByRole('list', { name: 'Draft order' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Preview ranking change', exact: true })).toBeHidden();
@@ -126,7 +134,8 @@ test('comparison notes stay private and the decision draw only uses eligible rec
     stamps: ['worth the detour'],
   };
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Coffee', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Tea', exact: true }).check();
@@ -167,6 +176,7 @@ test('comparison notes stay private and the decision draw only uses eligible rec
 
 test('collection artwork offers the new objects without inserting records', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
+  await collectionOptions(page);
   await page.getByRole('button', { name: 'List settings', exact: true }).click();
   for (const label of ['Ramen', 'Sneaker', 'Plant', 'Camera']) {
     await page.getByRole('button', { name: label, exact: true }).click();

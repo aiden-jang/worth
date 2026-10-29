@@ -8,7 +8,7 @@ import '../templates.css';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { CollectionArtwork } from '../components/CollectionArtwork';
 import { CollectionArtworkPicker } from '../components/CollectionArtworkPicker';
@@ -86,7 +86,7 @@ export function ListsPage() {
         ? 'Collections'
         : requestedKind === 'activity'
           ? 'Activity'
-          : 'Lists',
+          : 'Collections',
   );
   const showingArchived = params.get('archived') === '1' && requestedKind !== 'activity' && !creating;
   const archivedLists = useQuery({
@@ -138,8 +138,7 @@ export function ListsPage() {
       );
     return right.updatedAt - left.updatedAt;
   });
-  const pageTitle =
-    listScope === 'collection' ? 'Collections' : listScope === 'activity' ? 'Activity' : 'Lists';
+  const pageTitle = listScope === 'activity' ? 'Activity' : 'Collections';
   const workoutShortcut = params.get('action') === 'workout';
   const pageDescription = showingArchived
     ? 'Tucked away. Still yours. Open a collection to unarchive it in settings.'
@@ -230,7 +229,7 @@ export function ListsPage() {
   }
 
   function openCreate() {
-    setParams(listScope ? { create: '1', kind: listScope } : { create: '1' });
+    setParams({ create: '1', kind: listScope ?? 'collection' });
   }
 
   function submit(event: FormEvent) {
@@ -281,8 +280,13 @@ export function ListsPage() {
                 ? 'New activity'
                 : listScope === 'collection'
                   ? 'New collection'
-                  : 'New list'}
+                  : 'New collection'}
             </button>
+            {listScope !== 'activity' && (
+              <Link className="button button-outline" to="/lists?create=1&kind=activity">
+                New activity
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -333,16 +337,6 @@ export function ListsPage() {
             }
           >
             <form onSubmit={submit} className="create-form">
-              {kind === 'collection' && (
-                <TemplatePicker
-                  disabled={create.isPending}
-                  onUse={(template) => {
-                    if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
-                      setTemplateToUse(template);
-                    else applyTemplate(template);
-                  }}
-                />
-              )}
               <label>
                 Name
                 <input
@@ -373,7 +367,17 @@ export function ListsPage() {
                   ),
                 )}
               </div>
-              {!listScope && (
+              {kind === 'collection' && (
+                <TemplatePicker
+                  disabled={create.isPending}
+                  onUse={(template) => {
+                    if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
+                      setTemplateToUse(template);
+                    else applyTemplate(template);
+                  }}
+                />
+              )}
+              {requestedKind === null && (
                 <label>
                   Type
                   <select

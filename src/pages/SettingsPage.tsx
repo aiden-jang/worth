@@ -86,7 +86,7 @@ export function SettingsPage() {
         !parsed.data.sharedArchives.length
       )
         throw new Error(
-          'This file has no lists, Inbox finds, boards, receipts, capsules, shared copies or templates to restore.',
+          'This file has no lists, Unfiled finds, boards, receipts, capsules, shared copies or templates to restore.',
         );
       setFile(parsed.data);
       setFileName(selected.name);
@@ -133,7 +133,7 @@ export function SettingsPage() {
       <section className="data-section">
         <h2>Offline copy.</h2>
         <p>
-          Prepare an encrypted text copy for this browser, queue Inbox captures and note edits, then
+          Prepare an encrypted text copy for this browser, queue Unfiled captures and note edits, then
           explicitly sync when connected. Manage or remove offline copies and pending saves on the offline
           page.
         </p>
@@ -145,7 +145,7 @@ export function SettingsPage() {
         <h2>Take a copy.</h2>
         <p>
           Excel opens your collections, saved things, experiences, workouts, sets, measurements, routines and
-          Inbox in separate sheets. JSON is the full archive format for restoring Worth.
+          Unfiled (the Inbox sheet) in separate sheets. JSON is the full archive format for restoring Worth.
         </p>
         <p>
           Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
@@ -155,7 +155,7 @@ export function SettingsPage() {
         </p>
         <p className="data-hint">
           Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists, 500 Inbox finds, 50 templates, 1,000 connections,
+          restore supports up to 5,000 records, 500 lists, 500 Unfiled finds, 50 templates, 1,000 connections,
           10,000 history changes (up to 16 MB of history) and 200 photos/covers. Keep downloaded files
           somewhere private.
         </p>
@@ -186,8 +186,8 @@ export function SettingsPage() {
       <section className="data-section">
         <h2>Bring it back.</h2>
         <p>
-          Restore a Worth file as new lists, templates and unfiled Inbox finds. Review it first; your existing
-          archive stays intact.
+          Restore a Worth file as new lists, templates and unfiled Unfiled finds. Review it first; your
+          existing archive stays intact.
         </p>
         <label className="button button-outline file-choice">
           Choose backup
@@ -206,9 +206,9 @@ export function SettingsPage() {
               {file.lists.length} lists · {file.items.length} items · {file.logs.length} logs ·{' '}
               {file.workoutSessions.length} visits · {file.workoutRoutines.length} routines ·{' '}
               {file.photos.length} photos · {file.collectionTemplates.length} templates · {file.inbox.length}{' '}
-              Inbox finds · {file.tasteHistory.length} history changes · {file.connections.length} connections
-              · {file.boards.length} boards · {file.receipts.length} receipts · {file.capsules.length}{' '}
-              capsules · {file.sharedArchives.length} shared copies
+              Unfiled finds · {file.tasteHistory.length} history changes · {file.connections.length}{' '}
+              connections · {file.boards.length} boards · {file.receipts.length} receipts ·{' '}
+              {file.capsules.length} capsules · {file.sharedArchives.length} shared copies
             </p>
             {!!file.capsules.length && (
               <section aria-label="Capsules to restore">
@@ -290,10 +290,10 @@ export function SettingsPage() {
             )}
             {!!file.inbox.length && (
               <div>
-                <p>{file.inbox.length} unfiled Inbox finds will be restored with new private IDs.</p>
+                <p>{file.inbox.length} unfiled Unfiled finds will be restored with new private IDs.</p>
                 <details>
-                  <summary>Preview Inbox finds</summary>
-                  <ul aria-label="Inbox finds to restore">
+                  <summary>Preview Unfiled finds</summary>
+                  <ul aria-label="Unfiled finds to restore">
                     {file.inbox.map((entry) => (
                       <li key={entry.id}>
                         {entry.title}
@@ -335,7 +335,7 @@ export function SettingsPage() {
                     }
                     setFile(null);
                     setStatus(
-                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Inbox ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''}${file.capsules.length ? ` and ${file.capsules.length} ${file.capsules.length === 1 ? 'capsule' : 'capsules'}` : ''}${file.sharedArchives.length ? ` and ${file.sharedArchives.length} shared ${file.sharedArchives.length === 1 ? 'copy' : 'copies'}` : ''} restored. Existing data was kept.`,
+                      `${result.ids.length} ${result.ids.length === 1 ? 'list' : 'lists'} and ${file.collectionTemplates.length} ${file.collectionTemplates.length === 1 ? 'template' : 'templates'}${file.inbox.length ? ` and ${file.inbox.length} Unfiled ${file.inbox.length === 1 ? 'find' : 'finds'}` : ''}${file.boards.length ? ` and ${file.boards.length} ${file.boards.length === 1 ? 'board' : 'boards'}` : ''}${file.receipts.length ? ` and ${file.receipts.length} ${file.receipts.length === 1 ? 'receipt' : 'receipts'}` : ''}${file.capsules.length ? ` and ${file.capsules.length} ${file.capsules.length === 1 ? 'capsule' : 'capsules'}` : ''}${file.sharedArchives.length ? ` and ${file.sharedArchives.length} shared ${file.sharedArchives.length === 1 ? 'copy' : 'copies'}` : ''} restored. Existing data was kept.`,
                     );
                   })
                 }
@@ -354,7 +354,7 @@ export function SettingsPage() {
         <p>
           <Link to="/receipts">Reviewed receipts</Link> keeps checked text, optional image copies and chosen
           record links. <Link to="/read">Read text from a photo</Link> or{' '}
-          <Link to="/code">capture a barcode or ISBN</Link> on this device. <Link to="/inbox">Inbox</Link>{' '}
+          <Link to="/code">capture a barcode or ISBN</Link> on this device. <Link to="/inbox">Unfiled</Link>{' '}
           keeps unfiled finds until you choose a collection. <Link to="/capture">Web capture</Link> reviews a
           name, source link or shared text before saving.
           <Link to="/quick"> Shortlist and saved-find shortcuts</Link> open your own records from a bookmark
@@ -381,7 +381,7 @@ export function SettingsPage() {
       <section className="data-section">
         <h2>Delete Worth data.</h2>
         <p>
-          Remove your lists, Inbox finds, records, photos, routines and shared snapshots. Your shared login
+          Remove your lists, Unfiled finds, records, photos, routines and shared snapshots. Your shared login
           remains. Existing downloaded backups and encrypted device copies remain; remove them separately.
           Owned shared spaces are removed and your memberships end; other people’s independent copies remain.
         </p>

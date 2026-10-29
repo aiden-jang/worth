@@ -1,208 +1,153 @@
-import { PreferenceInsights } from '../components/PreferenceInsights';
-import { usePageTitle } from '../hooks/usePageTitle';
-import '../retrospective.css';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight } from '@phosphor-icons/react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
+import { usePageTitle } from '../hooks/usePageTitle';
+import { requestAddEntry } from '../shared/quick-entry';
+import { decisionLabel } from '../shared/decisions';
+import type { ItemDecision } from '../shared/models';
+import { PreferenceInsights } from '../components/PreferenceInsights';
 import { CallFace } from '../components/PersonalCall';
 import { CabinetEmptyState } from '../components/CabinetEmptyState';
-import { decisionLabel, callAsides } from '../shared/decisions';
-import type { ItemDecision } from '../shared/models';
+import { MemoryPage } from './MemoryPage';
+import '../retrospective.css';
 
 export function PatternsPage() {
-  usePageTitle('Patterns');
-  const patterns = useQuery({ queryKey: ['patterns'], queryFn: api.patterns });
-
-  if (patterns.isPending)
-    return <main className="light-page page-width loading-line">Reading your archive…</main>;
-  if (patterns.isError) {
-    return (
-      <main className="light-page page-width error-page">
-        <h1>Patterns are unavailable.</h1>
-        <button className="button button-outline" onClick={() => void patterns.refetch()}>
-          Try again
-        </button>
-      </main>
-    );
-  }
-
+  usePageTitle('Look back');
+  const [params, setParams] = useSearchParams();
+  const insights = params.get('view') === 'insights';
+  const patterns = useQuery({ queryKey: ['patterns'], queryFn: api.patterns, enabled: insights });
+  const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   const data = patterns.data;
-  if (!data) return null;
-
+  function changeView(value: 'memories' | 'insights') {
+    const next = new URLSearchParams(params);
+    if (value === 'memories') next.delete('view');
+    else next.set('view', value);
+    setParams(next);
+  }
   return (
-    <main className="light-page patterns-page page-width">
-      <header className="patterns-head">
-        <p className="overline">YOUR ARCHIVE</p>
-        <h1>Patterns</h1>
-        <p>Your taste has a paper trail.</p>
-        <Link className="retro-entry" to="/patterns/remember">
-          Remember an experience →
-        </Link>
-        <Link className="retro-entry" to="/patterns/look-back">
-          Look back over a period →
-        </Link>
-        <Link className="retro-entry" to="/patterns/calendar">
-          Activity calendar →
-        </Link>
-        <details className="pattern-more-tools">
+    <main className="page-width everyday-recall">
+      <header className="everyday-heading">
+        <div>
+          <h1>Look back.</h1>
+          <p>Find an afternoon. Remember a favorite.</p>
+        </div>
+      </header>
+      <div className="recall-toolbar">
+        <div className="recall-tabs" role="group" aria-label="Look back views">
+          <button type="button" aria-pressed={!insights} onClick={() => changeView('memories')}>
+            Memories
+          </button>
+          <button type="button" aria-pressed={insights} onClick={() => changeView('insights')}>
+            Insights
+          </button>
+        </div>
+        <details data-menu className="recall-more">
           <summary>More tools</summary>
           <div>
-            <Link className="retro-entry connection-entry" to="/patterns/connections">
-              Connections →
-            </Link>
-
-            <Link className="retro-entry" to="/patterns/boards">
-              Boards &amp; trips →
-            </Link>
-            <Link className="retro-entry" to="/spaces">
-              Shared spaces &amp; two-person choices →
-            </Link>
-            <Link className="retro-entry" to="/capsules">
-              Time capsules →
-            </Link>
-            <Link className="retro-entry" to="/patterns/field-guide">
-              Make a field guide →
-            </Link>
+            <Link to="/patterns/look-back">Period summary →</Link>
+            <Link to="/patterns/calendar">Activity calendar →</Link>
+            <Link to="/patterns/boards">Boards & trips →</Link>
+            <Link to="/patterns/connections">Connections →</Link>
+            <Link to="/spaces">Shared spaces & two-person choices →</Link>
+            <Link to="/capsules">Time capsules →</Link>
+            <Link to="/patterns/field-guide">Make a field guide →</Link>
           </div>
         </details>
-      </header>
-      {data.totalRecords === 0 ? (
-        <CabinetEmptyState
-          title="Too soon to tell."
-          description="Add items or log activity to see your totals here."
-        >
-          <Link className="button button-accent" to="/lists?create=1&kind=collection">
-            Start a collection <ArrowRight size={18} />
-          </Link>
-        </CabinetEmptyState>
+      </div>
+      {!insights ? (
+        <MemoryPage embedded />
       ) : (
-        <>
-          <PreferenceInsights />
-          <section className="pattern-stat-grid" aria-label="Archive patterns">
-            <PatternStat label="Records" value={data.totalRecords} detail="Items and activity logs" />
-            <PatternStat label="Ranked" value={data.rankedItemCount} detail="Items placed in order" />
-            <PatternStat label="Visits" value={data.revisitCount} detail="Dated collection experiences" />
-          </section>
-          <CallDistribution
-            counts={{ favorite: data.favoriteCount, meh: data.mehCount, would_not_again: data.notAgainCount }}
-          />
-          <section className="pattern-notes">
-            <article>
-              <p className="overline">MOST VISITS LOGGED</p>
-              {data.mostReturned ? (
-                <Link to={`/lists/${data.mostReturned.listId}?focus=item:${data.mostReturned.itemId}`}>
-                  <strong>{data.mostReturned.title}</strong>
-                  <span>
-                    {data.mostReturned.listName} · {data.mostReturned.count}{' '}
-                    {data.mostReturned.count === 1 ? 'visit' : 'visits'}
-                  </span>
-                  <ArrowRight size={18} />
-                </Link>
+        <section aria-label="Insights" className="recall-insights">
+          {patterns.isPending && <p role="status">Reading your saved entries…</p>}
+          {patterns.isError && (
+            <p className="form-error" role="alert">
+              Insights couldn’t load. <button onClick={() => void patterns.refetch()}>Try again</button>
+            </p>
+          )}
+          {data && (
+            <>
+              {data.totalRecords === 0 ? (
+                <CabinetEmptyState
+                  title="Too soon to tell."
+                  description="Your saved opinions and activity will appear here."
+                >
+                  <button className="button button-accent" onClick={() => requestAddEntry()}>
+                    Add a name
+                  </button>
+                </CabinetEmptyState>
               ) : (
-                <p>No visits logged yet.</p>
+                <>
+                  <PreferenceInsights />
+                  <CallDistribution
+                    counts={{
+                      favorite: data.favoriteCount,
+                      meh: data.mehCount,
+                      would_not_again: data.notAgainCount,
+                    }}
+                  />
+                  <details className="recall-totals">
+                    <summary>Archive totals</summary>
+                    <dl>
+                      <div>
+                        <dt>Saved records and activity entries</dt>
+                        <dd>{data.totalRecords}</dd>
+                      </div>
+                      <div>
+                        <dt>Ranked items</dt>
+                        <dd>{data.rankedItemCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Dated collection experiences</dt>
+                        <dd>{data.revisitCount}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                </>
               )}
-            </article>
-            <article>
-              <p className="overline">NEWEST COLLECTION</p>
-              {data.newestCollection ? (
-                <Link to={`/lists/${data.newestCollection.id}`}>
-                  <strong>{data.newestCollection.name}</strong>
-                  <span>
-                    {data.newestCollection.itemCount}{' '}
-                    {data.newestCollection.itemCount === 1 ? 'item' : 'items'} kept so far
-                  </span>
-                  <ArrowRight size={18} />
-                </Link>
-              ) : (
-                <p>No collections yet.</p>
+              {!!lists.data?.lists.some((list) => list.kind === 'activity') && (
+                <section className="recall-workouts" aria-label="Activity progress">
+                  <h2>Activity progress</h2>
+                  <p>Open an activity to see its saved history and exercise progress.</p>
+                  {lists.data.lists
+                    .filter((list) => list.kind === 'activity')
+                    .map((list) => (
+                      <Link key={list.id} to={`/lists/${list.id}`}>
+                        {list.name} →
+                      </Link>
+                    ))}
+                </section>
               )}
-            </article>
-            <article>
-              <p className="overline">LAST TOUCHED</p>
-              {data.lastTouchedCollection ? (
-                <Link to={`/lists/${data.lastTouchedCollection.id}`}>
-                  <strong>{data.lastTouchedCollection.name}</strong>
-                  <span>
-                    {data.lastTouchedCollection.itemCount}{' '}
-                    {data.lastTouchedCollection.itemCount === 1 ? 'item' : 'items'} kept so far
-                  </span>
-                  <ArrowRight size={18} />
-                </Link>
-              ) : (
-                <p>No collections yet.</p>
-              )}
-            </article>
-            <article>
-              <p className="overline">LARGEST COLLECTION</p>
-              {data.mostKeptCollection ? (
-                <Link to={`/lists/${data.mostKeptCollection.id}`}>
-                  <strong>{data.mostKeptCollection.name}</strong>
-                  <span>
-                    {data.mostKeptCollection.itemCount}{' '}
-                    {data.mostKeptCollection.itemCount === 1 ? 'item' : 'items'} kept so far
-                  </span>
-                  <ArrowRight size={18} />
-                </Link>
-              ) : (
-                <p>No collections yet.</p>
-              )}
-            </article>
-            <article className="pattern-archive-scope">
-              <p className="overline">LISTS</p>
-              <strong>{data.totalCollections + data.totalActivities}</strong>
-              <span>
-                {data.totalCollections} collections · {data.totalActivities} activities
-              </span>
-            </article>
-          </section>
-        </>
+            </>
+          )}
+        </section>
       )}
     </main>
   );
 }
 
-function PatternStat({ label, value, detail }: { label: string; value: number; detail: string }) {
-  return (
-    <article>
-      <p>{label}</p>
-      <strong>{value}</strong>
-      <span>{detail}</span>
-    </article>
-  );
-}
-
 function CallDistribution({ counts }: { counts: Record<ItemDecision, number> }) {
-  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const total = counts.favorite + counts.meh + counts.would_not_again;
   return (
-    <section className="call-distribution" aria-label="Recorded personal calls">
+    <section className="call-distribution" aria-labelledby="call-distribution-heading">
       <header>
-        <div>
-          <p className="overline">YOUR CALLS</p>
-          <h2>Mixed feelings, on record.</h2>
-        </div>
-        <span>
-          {total} {total === 1 ? 'call' : 'calls'}
-        </span>
+        <p className="overline">YOUR OVERALL CALLS</p>
+        <h2 id="call-distribution-heading">Mixed feelings, on record.</h2>
+        <p>Visit reactions stay separate. Unrated records stay unrated.</p>
       </header>
-      <div className="call-distribution-grid">
-        {(['favorite', 'meh', 'would_not_again'] as const).map((value) => (
-          <article key={value}>
-            <CallFace value={value} />
-            <div>
-              <h3>{decisionLabel(value)}</h3>
-              <span>{callAsides[value]}</span>
+      <dl className="call-summary">
+        {(['favorite', 'meh', 'would_not_again'] as const).map((call) => (
+          <div key={call}>
+            <dt>
+              <CallFace value={call} />
+              <span>{decisionLabel(call)}</span>
+            </dt>
+            <dd>{counts[call]}</dd>
+            <div className="call-summary-track" aria-hidden="true">
+              <span style={{ width: `${total ? (counts[call] / total) * 100 : 0}%` }} />
             </div>
-            <strong>{counts[value]}</strong>
-            <div className="call-count-track" aria-hidden="true">
-              <span style={{ width: total ? `${(counts[value] / total) * 100}%` : '0%' }} />
-            </div>
-          </article>
+          </div>
         ))}
-      </div>
-      <p className="call-distribution-footnote">
-        {total ? 'Only items with a call. Rankings are a separate matter.' : 'No calls yet. No rush.'}
-      </p>
+      </dl>
     </section>
   );
 }

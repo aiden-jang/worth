@@ -1,3 +1,4 @@
+import { requestAddEntry } from '../shared/quick-entry';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -9,7 +10,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useDraft } from '../hooks/useDraft';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useConnection } from '../hooks/useConnection';
-import { inboxEntry, inboxLimit } from '../shared/inbox';
+import { inboxEntry } from '../shared/inbox';
 import { contextSearchText } from '../shared/item-context';
 import { formatRelativeTimestamp } from '../format';
 import '../inbox.css';
@@ -22,7 +23,7 @@ const filingDraft = z.object({
 type FilingDraft = z.infer<typeof filingDraft>;
 
 export function InboxPage() {
-  usePageTitle('Inbox');
+  usePageTitle('Unfiled');
   return (
     <main className="light-page page-width inbox-page">
       <InboxPanel />
@@ -86,16 +87,16 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
     <>
       <header className="page-head inbox-head">
         <div>
-          <p className="overline">UNFILED FINDS</p>
-          <Heading id={drawer ? 'inbox-drawer-title' : undefined}>Inbox.</Heading>
-          <p>Save now. File later.</p>
+          <p className="overline">SAVED / UNFILED</p>
+          <Heading id={drawer ? 'inbox-drawer-title' : undefined}>Unfiled.</Heading>
+          <p>Saved here. Organize whenever you like.</p>
         </div>
-        <Link className="button button-accent" to="/capture">
-          Keep a name →
-        </Link>
+        <button className="button button-accent" onClick={() => requestAddEntry({ listId: 'inbox' })}>
+          Add a name
+        </button>
       </header>
       <p className="inbox-count">
-        {entries.length} unfiled {entries.length === 1 ? 'find' : 'finds'} · Private · Up to {inboxLimit}
+        {entries.length} saved {entries.length === 1 ? 'find' : 'finds'} · Private
       </p>
       {pending && (
         <section className="inbox-pending" aria-label="Pending filing">
@@ -135,12 +136,12 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
           <Link to={`/lists/${saved.listId}?focus=item:${saved.id}`}>Open filed record →</Link>
         </p>
       )}
-      {query.isPending && <p role="status">Opening the Inbox…</p>}
+      {query.isPending && <p role="status">Opening the Unfiled…</p>}
       {query.isError && (
         <p role="alert">
           {query.error.message}{' '}
           <button className="button button-outline" onClick={() => void query.refetch()}>
-            Retry Inbox
+            Retry Unfiled
           </button>
         </p>
       )}
@@ -148,7 +149,7 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
         <>
           {!!entries.length && (
             <label className="inbox-search">
-              Find in Inbox
+              Find in Unfiled
               <input
                 type="search"
                 value={term}
@@ -166,13 +167,16 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
               <div>
                 <h2>A place for the maybes.</h2>
                 <p>Keep a name or a link here. No collection or opinion required.</p>
-                <Link className="button button-outline" to="/capture">
+                <button
+                  className="button button-outline"
+                  onClick={() => requestAddEntry({ listId: 'inbox' })}
+                >
                   Save your first find →
-                </Link>
+                </button>
               </div>
             </section>
           )}
-          {!!entries.length && !filtered.length && <p>No Inbox finds match “{term}”.</p>}
+          {!!entries.length && !filtered.length && <p>No Unfiled finds match “{term}”.</p>}
           <ul className="inbox-list">
             {filtered.slice(0, limit).map((find) => (
               <li key={find.id}>

@@ -66,8 +66,8 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   await expect(page).toHaveURL(/\/lists\/activity$/);
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
-  await page.getByRole('link', { name: 'Inbox', exact: true }).click();
-  const inbox = page.getByRole('dialog', { name: 'Inbox.', exact: true });
+  await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
+  const inbox = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
   await inbox.evaluate((node) => {
     node.tabIndex = -1;
     node.focus();

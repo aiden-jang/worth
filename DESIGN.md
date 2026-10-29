@@ -8,6 +8,47 @@ The product has three jobs:
 - **Log** what happened with enough context to make it useful later.
 - **Rank** what held up, what did not, and what to revisit.
 
+## Everyday flow — October 28
+
+The user found the completed feature set too complex and approved a connected
+simplification of first use, capture, Home, collections, recall and Gym. The
+[everyday references](art/ui-mocks/everyday/README.md) supersede the corresponding
+cabinet compositions. Shared dark olive, cream, butter, fonts and reaction artwork
+remain. This revision changes hierarchy and interaction rather than adding features.
+
+Home leads with search and recent records, including Unfiled. There is no requirement
+to create or organize a collection before saving. Add is one consistently named,
+owner-scoped composer with an explicit destination. Its default is the current
+active list when open, otherwise Unfiled; it never silently uses a last-used list.
+The name is the only capture requirement. A dated collection experience is an
+explicit optional choice; activity entries show their date. Unfiled retains its
+existing text schema, so photos and dated visits become available after filing.
+
+Primary navigation is Home, Collections and Look back, with search, Unfiled and
+personal activity/collection shortcuts as utilities. Phones keep the three primary
+links and Add in a persistent safe-area bar, plus search and account navigation in
+the header. Content and status panels clear that bar. Desktop retains the 192px rail.
+
+Collection contents follow a compact identity header, name capture and one browse /
+search / filter row. Collection settings, sharing and Ranking & tools are contextual;
+batch capture, Want to try capture, experiences, selection and saved views sit in
+Entry options. A completed name-only save returns focus for another name without
+opening a detail view. Desktop selection uses the cream slip; phone selection opens
+a native, scrolling sheet with proper focus return, leaving list positions unchanged.
+Add experience and Edit are its main actions; ranking, notes and queues disclose.
+
+Look back combines Memories and Insights. Search remains visible; date, list and
+archive filters and period shortcuts disclose. Insights initially shows three real
+preference groups, with an explicit expansion for the rest, compact recorded-call
+counts and separate activity progress links. Legacy routes remain directly usable.
+Gym puts current visits and Resume / Finish first. Routines, progress and past
+search disclose below them; past visits are collapsed. Past filters never hide an
+active visit. Setup and Save as routine sit in the visit's own options menu. Rest
+timers disclose without changing their existing countdown behavior.
+
+The authored references precede implementation. [Everyday flow](docs/EVERYDAY.md)
+documents behavior, while the dated QA records screenshots, checks and manual limits.
+
 ## Current build reference
 
 The October 10 **taste cabinet** redesign responds to the user's request for a stronger visual

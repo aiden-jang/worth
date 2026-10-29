@@ -76,7 +76,7 @@ export function SpacesPage() {
           <h1>Shared spaces</h1>
           <p>Your originals stay yours.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p>
         Invite verified accounts to view or contribute. Share chosen text snapshots and a shared note. Later

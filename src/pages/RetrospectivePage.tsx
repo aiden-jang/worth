@@ -17,7 +17,7 @@ import {
 import '../retrospective.css';
 
 export function RetrospectivePage() {
-  usePageTitle('Look back');
+  usePageTitle('Period summary');
   const online = useConnection();
   const draft = useDraft<RetrospectiveDraft>(
     'retrospective',
@@ -74,7 +74,7 @@ export function RetrospectivePage() {
     try {
       const filter = localRetrospectiveFilter(form);
       if (!scopeReady) {
-        setError('Choose an available list, or all lists and Inbox.');
+        setError('Choose an available list, or all lists and Unfiled.');
         return;
       }
       focusResults.current = true;
@@ -91,10 +91,10 @@ export function RetrospectivePage() {
       <header className="page-head">
         <div>
           <p className="overline">ON RECORD</p>
-          <h1>Look back.</h1>
+          <h1>Period summary.</h1>
           <p>A few pages, revisited.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p className="retro-intro">
         Choose a period to see what you kept and logged. This is a private look at records you still have.
@@ -149,7 +149,7 @@ export function RetrospectivePage() {
         <label>
           List to look back on
           <select value={form.listId} onChange={(event) => edit({ listId: event.target.value })}>
-            <option value="">All lists and Inbox</option>
+            <option value="">All lists and Unfiled</option>
             {form.listId && !lists.some((list) => list.id === form.listId) && (
               <option value={form.listId}>Unavailable list — choose another</option>
             )}
@@ -287,7 +287,7 @@ export function RetrospectivePage() {
             </>
           )}
           <p className="muted retro-footnote">
-            This view uses currently kept records, including Inbox when all lists are selected. Merged finds
+            This view uses currently kept records, including Unfiled when all lists are selected. Merged finds
             are not counted separately; Trash is excluded. It does not reconstruct earlier calls, ranks or
             deleted records.
           </p>

@@ -6282,3 +6282,82 @@ test('old favorites resurface only with explicit past visits and merged visits r
     ((await call('/preferences', owner).then((r) => r.json())) as { rediscover: unknown[] }).rediscover,
   ).toEqual([]);
 });
+
+test('unfiled saves participate in recall and opinions without visits, cross-account access or duplicate filing', async () => {
+  const owner = 'unfiledmemories';
+  const first = await inboxFind(owner, 'Sunday bookshop', {
+    decision: 'favorite',
+    note: 'Remember the window seat',
+    type: 'Books',
+    context: { location: 'Brooklyn', labels: ['Sunday'] },
+  });
+  await inboxFind(owner, 'A name is enough');
+  await inboxFind('otherunfiledmemory', 'Sunday bookshop', { decision: 'favorite' });
+  const deleted = await inboxFind(owner, 'Trashed opinion', { decision: 'favorite' });
+  await call(`/inbox/${deleted.id}`, owner, 'DELETE');
+  const read = async (query: string, user = owner) =>
+    (await call(`/memories?${query}`, user).then((response) =>
+      response.json(),
+    )) as import('../src/shared/memories').MemoryPage;
+  const saved = await read('mode=saved&list=inbox&q=Brooklyn&label=Sunday');
+  expect(saved.total).toBe(1);
+  expect(saved.records[0]).toMatchObject({
+    id: first.id,
+    listId: null,
+    listName: 'Unfiled',
+    kind: 'unfiled',
+    note: 'Remember the window seat',
+    reaction: 'favorite',
+    hasPhoto: false,
+    date: new Date(first.createdAt).toISOString().slice(0, 10),
+  });
+  expect((await read('mode=visits')).total).toBe(0);
+  expect((await read('mode=saved', 'foreignunfiledmemory')).total).toBe(0);
+  const patterns = (await call('/patterns', owner).then((response) =>
+    response.json(),
+  )) as import('../src/shared/models').ArchivePatterns;
+  expect(patterns).toMatchObject({ totalRecords: 2, favoriteCount: 1, revisitCount: 0 });
+  const preferences = (await call('/preferences', owner).then((response) =>
+    response.json(),
+  )) as import('../src/shared/memories').Preferences;
+  expect(
+    preferences.groups.find((group) => group.listId === 'inbox' && group.kind === 'collection'),
+  ).toMatchObject({ basis: 'records', favorite: 1, meh: 0, notAgain: 0, unrated: 1 });
+  const list = await archiveCollection(owner, 'Books');
+  expect(
+    (
+      await inboxRequest(owner, `/inbox/${first.id}/file`, {
+        targetListId: list.id,
+        expectedRevision: first.revision,
+      })
+    ).status,
+  ).toBe(201);
+  expect((await read('mode=saved&list=inbox')).total).toBe(1);
+  expect((await read(`mode=saved&list=${list.id}`)).records[0]).toMatchObject({
+    title: first.title,
+    kind: 'saved',
+    date: new Date(first.createdAt).toISOString().slice(0, 10),
+  });
+  expect((await read('mode=saved')).total).toBe(2);
+  const now = Date.now();
+  await platform.env.DB.batch(
+    Array.from({ length: 51 }, (_, index) =>
+      platform.env.DB.prepare(
+        'INSERT INTO inbox_entries(id,owner_id,payload_json,created_at,updated_at) VALUES(?,?,?,?,?)',
+      ).bind(
+        crypto.randomUUID(),
+        owner,
+        JSON.stringify(itemInput.parse({ title: `Unfiled ${index}` })),
+        now + index,
+        now + index,
+      ),
+    ),
+  );
+  const page = await read('mode=saved&list=inbox');
+  const older = await read(`mode=saved&list=inbox&offset=${page.nextOffset}`);
+  expect(page.total).toBe(52);
+  expect(page.records).toHaveLength(50);
+  expect(older.records).toHaveLength(2);
+  expect(new Set([...page.records, ...older.records].map((record) => record.id)).size).toBe(52);
+  expect((await read('mode=visits&list=inbox')).total).toBe(0);
+});

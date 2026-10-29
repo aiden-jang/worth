@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>
+    Worth — everyday flow reference</title
+  ><style>
+    @font-face {
+      font-family: DM Sans;
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+    }
+    @font-face {
+      font-family: DM Sans;
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+      font-weight: 500;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #181915;
+      color: #f0ecdf;
+      font:
+        16px/1.5 'DM Sans',
+        sans-serif;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    button,
+    a,
+    input,
+    select {
+      min-height: 44px;
+    }
+    button {
+      border: 1px solid #737566;
+      border-radius: 12px;
+      background: transparent;
+      color: inherit;
+      padding: 10px 16px;
+    }
+    .primary {
+      background: #e8dc9d;
+      color: #181915;
+      border-color: #e8dc9d;
+    }
+    aside {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 192px;
+      padding: 28px 20px;
+      border-right: 1px solid #38392f;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      background: #141510;
+    }
+    .brand {
+      font-size: 40px;
+      font-weight: 500;
+      letter-spacing: -3px;
+    }
+    nav {
+      display: grid;
+      gap: 8px;
+    }
+    nav a {
+      padding: 12px;
+      border-radius: 10px;
+      color: #aaa99b;
+    }
+    nav .active {
+      background: #292a23;
+      color: #f0ecdf;
+    }
+    .rail-add {
+      margin-top: auto;
+    }
+    .muted,
+    small {
+      color: #aaa99b;
+    }
+    main {
+      margin: 0 44px 0 236px;
+      max-width: 1100px;
+      padding: 42px 0 70px;
+    }
+    h1 {
+      font-size: 48px;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      font-weight: 500;
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    h3 {
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin: 0;
+    }
+    .heading,
+    .section-head,
+    .row,
+    .capture,
+    .tools {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .heading,
+    .section-head {
+      justify-content: space-between;
+    }
+    .heading {
+      margin-bottom: 28px;
+    }
+    .heading p {
+      margin: 0;
+    }
+    .search {
+      border: 1px solid #737566;
+      background: #20211c;
+      color: inherit;
+      padding: 12px 16px;
+      border-radius: 12px;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+    .section-head {
+      margin-bottom: 12px;
+    }
+    .section-head a {
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      color: #aaa99b;
+    }
+    .rows {
+      margin-bottom: 30px;
+    }
+    .row {
+      border-bottom: 1px solid #38392f;
+      padding: 14px 0;
+      min-height: 78px;
+    }
+    .row > div {
+      flex: 1;
+    }
+    .row small {
+      display: block;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+    .row .date {
+      width: 54px;
+      font-size: 12px;
+      color: #aaa99b;
+    }
+    .face {
+      width: 32px;
+      height: 26px;
+      background: #d4d6b9;
+      border-radius: 45%;
+      color: #24251e;
+      text-align: center;
+      font-size: 16px;
+      line-height: 26px;
+      flex: none;
+    }
+    .face.yes {
+      background: #e8dc9d;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+      gap: 36px;
+    }
+    .folders {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .folder {
+      border: 1px solid #38392f;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .folder img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+    }
+    .folder small {
+      display: block;
+    }
+    .memory {
+      background: #eae5d5;
+      color: #24251e;
+      padding: 20px 22px;
+      border-radius: 22px;
+      margin-top: 24px;
+    }
+    .memory p {
+      margin: 5px 0 12px;
+    }
+    .memory small {
+      color: #626456;
+    }
+    .memory button {
+      background: #24251e;
+      color: #eae5d5;
+    }
+    .capture input {
+      min-width: 0;
+      flex: 1;
+      border: 1px solid #737566;
+      border-radius: 12px;
+      background: #20211c;
+      color: inherit;
+      padding: 12px;
+    }
+    .capture {
+      margin-bottom: 16px;
+    }
+    .tools {
+      justify-content: space-between;
+      border-bottom: 1px solid #38392f;
+      margin-bottom: 0;
+    }
+    .tools button {
+      border: 0;
+      padding-inline: 8px;
+      color: #aaa99b;
+    }
+    .selected {
+      background: #292a23;
+      padding-inline: 12px;
+      border-radius: 12px;
+    }
+    .slip {
+      background: #eae5d5;
+      color: #24251e;
+      border-radius: 22px;
+      padding: 24px;
+    }
+    .slip .face {
+      width: 76px;
+      height: 66px;
+      font-size: 36px;
+      line-height: 66px;
+      margin: 28px auto 16px;
+    }
+    .slip h2 {
+      text-align: center;
+    }
+    .slip .calls {
+      display: flex;
+      background: #dedbcb;
+      border-radius: 30px;
+      margin: 24px 0;
+      padding: 4px;
+    }
+    .calls button {
+      flex: 1;
+      border: 0;
+      padding: 8px;
+      font-size: 13px;
+    }
+    .calls .chosen {
+      background: #24251e;
+      color: #eae5d5;
+      border-radius: 24px;
+    }
+    .slip footer {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #c4c2b3;
+      padding-top: 16px;
+    }
+    .slip button {
+      color: #24251e;
+      border-color: #737566;
+    }
+    .workout {
+      border: 1px solid #737566;
+      border-radius: 22px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+    .workout .primary {
+      margin-right: 8px;
+    }
+    .workout .row {
+      margin-top: 10px;
+    }
+    .overline {
+      font-size: 11px;
+      color: #aaa99b;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+    .workout .overline {
+      color: #e8dc9d;
+    }
+    details {
+      border-bottom: 1px solid #38392f;
+      padding: 16px 0;
+    }
+    summary {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .mobile-head,
+    .mobile-bar {
+      display: none;
+    }
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+    .veil {
+      position: fixed;
+      inset: 0;
+      background: #0008;
+      backdrop-filter: blur(4px);
+      display: grid;
+      place-items: center;
+      z-index: 3;
+    }
+    .composer {
+      background: #20211c;
+      border: 1px solid #737566;
+      border-radius: 22px;
+      width: min(480px, calc(100% - 24px));
+      padding: 26px;
+    }
+    .composer .heading {
+      margin-bottom: 24px;
+    }
+    .composer h2 {
+      font-size: 30px;
+    }
+    .composer label {
+      display: block;
+      font-size: 14px;
+      margin: 16px 0;
+    }
+    .composer input,
+    .composer select {
+      display: block;
+      width: 100%;
+      background: #181915;
+      color: inherit;
+      border: 1px solid #737566;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .composer .primary {
+      width: 100%;
+      margin-top: 24px;
+    }
+    .composer .muted {
+      font-size: 13px;
+    }
+    .mock-note {
+      font-size: 11px;
+      color: #aaa99b;
+      margin-top: 36px;
+    }
+    @media (max-width: 680px) {
+      aside {
+        display: none;
+      }
+      .mobile-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        border-bottom: 1px solid #38392f;
+      }
+      .mobile-head .brand {
+        font-size: 32px;
+      }
+      .mobile-head button {
+        border: 0;
+        padding: 8px;
+      }
+      .mobile-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #20211c;
+        border-top: 1px solid #38392f;
+        align-items: center;
+        justify-content: space-around;
+        padding: 8px 12px;
+        z-index: 2;
+        gap: 6px;
+      }
+      .mobile-bar a {
+        font-size: 12px;
+        display: grid;
+        place-items: center;
+        min-width: 60px;
+      }
+      .mobile-bar button {
+        padding: 10px 16px;
+      }
+      main {
+        margin: 0 20px;
+        padding-top: 28px;
+        padding-bottom: 100px;
+      }
+      h1 {
+        font-size: 36px;
+        letter-spacing: -1px;
+      }
+      .heading {
+        margin-bottom: 22px;
+      }
+      .split {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .folders {
+        grid-template-columns: 1fr 1fr;
+      }
+      .folder {
+        display: block;
+        padding: 12px;
+      }
+      .folder img {
+        margin-bottom: 10px;
+      }
+      .folder strong {
+        font-size: 16px;
+      }
+      .folder small {
+        font-size: 12px;
+      }
+      .memory {
+        margin-top: 24px;
+        padding: 18px;
+      }
+      .row {
+        min-height: 72px;
+      }
+      .slip {
+        display: none;
+      }
+      .workout {
+        padding: 18px;
+      }
+      .row button {
+        padding-inline: 12px;
+        font-size: 14px;
+      }
+      .tools {
+        font-size: 14px;
+      }
+      .composer {
+        padding: 22px;
+      }
+      .composer h2 {
+        font-size: 28px;
+      }
+      .composer label {
+        margin: 14px 0;
+      }
+    }
+    :focus-visible {
+      outline: 2px solid #e8dc9d;
+      outline-offset: 3px;
+    }
+  </style>
+  <aside>
+    <a class="brand">worth</a>
+    <nav><a class="active">Home</a><a>Collections</a><a>Look back</a><a>Search</a></nav>
+    <div>
+      <small>QUICK ACCESS</small>
+      <nav><a>Gym ↗</a><a>Places</a></nav>
+    </div>
+    <button class="primary rail-add">＋ Add</button><small>Settings & data</small>
+  </aside>
+  <header class="mobile-head">
+    <span class="brand">worth</span>
+    <div><button aria-label="Search">⌕</button><button aria-label="Menu">☰</button></div>
+  </header>
+  <main>
+    <section class="screen" id="home">
+      <header class="heading">
+        <div>
+          <h1>Good to keep.</h1>
+          <p class="muted">A name is enough. The rest can wait.</p>
+        </div>
+      </header>
+      <input class="search" placeholder="Find a name, place or note" />
+      <div class="split">
+        <div>
+          <div class="section-head">
+            <h2>Recent</h2>
+            <a>View all →</a>
+          </div>
+          <div class="rows">
+            <div class="row">
+              <span class="date">Today</span>
+              <div>
+                <h3>Corner ramen</h3>
+                <small>Places · Brooklyn</small>
+              </div>
+              <span class="face yes">⌣</span>
+            </div>
+            <div class="row">
+              <span class="date">Oct 26</span>
+              <div>
+                <h3>Cold brew</h3>
+                <small>Drinks</small>
+              </div>
+              <span class="face">−</span>
+            </div>
+            <div class="row">
+              <span class="date">Oct 25</span>
+              <div>
+                <h3>The little bookshop</h3>
+                <small>Unfiled · Saved</small>
+              </div>
+              <span>↗</span>
+            </div>
+          </div>
+          <a class="folder"
+            ><div><strong>Gym →</strong><small>Open your workouts</small></div></a
+          >
+        </div>
+        <div>
+          <div class="section-head">
+            <h2>Collections</h2>
+            <a>View all →</a>
+          </div>
+          <div class="folders">
+            <a class="folder"
+              ><img src="../../../public/art/starter-covers/places-v2.svg" alt="" /><strong>Places</strong
+              ><small>12 saved</small></a
+            ><a class="folder"
+              ><img src="../../../public/art/starter-covers/drinks-v2.svg" alt="" /><strong>Drinks</strong
+              ><small>8 saved</small></a
+            >
+          </div>
+          <article class="memory">
+            <small>A LITTLE FROM YOUR ARCHIVE</small>
+            <h3>Sunday at the coast</h3>
+            <p>May 18 · Little outings</p>
+            <button>Pull a memory</button>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section class="screen" id="collection">
+      <header class="heading">
+        <div>
+          <p class="overline">COLLECTION</p>
+          <h1>Places</h1>
+          <p class="muted">12 saved</p>
+        </div>
+        <button>•••</button>
+      </header>
+      <div class="split">
+        <div>
+          <form class="capture"><input placeholder="Add a name" /><button class="primary">Save</button></form>
+          <div class="tools">
+            <button>All ▾</button>
+            <div><button>⌕ Search</button><button>Filter</button><button>•••</button></div>
+          </div>
+          <div class="row selected">
+            <span class="date">01</span>
+            <div>
+              <h3>Corner ramen</h3>
+              <small>Brooklyn</small>
+            </div>
+            <span class="face yes">⌣</span>
+          </div>
+          <div class="row">
+            <span class="date">02</span>
+            <div>
+              <h3>The little bookshop</h3>
+              <small>West Village</small>
+            </div>
+            <span>↗</span>
+          </div>
+          <div class="row">
+            <span class="date">—</span>
+            <div>
+              <h3>Saturday market</h3>
+              <small>Want to try</small>
+            </div>
+            <span>↗</span>
+          </div>
+          <div class="row">
+            <span class="date">—</span>
+            <div>
+              <h3>Neighborhood cinema</h3>
+              <small>Movies</small>
+            </div>
+            <span class="face">−</span>
+          </div>
+        </div>
+        <article class="slip">
+          <p class="overline" style="color: #626456">YOUR CALL</p>
+          <h3>Corner ramen</h3>
+          <div class="face yes">⌣</div>
+          <h2>Favorite.</h2>
+          <div class="calls">
+            <button class="chosen">Favorite</button><button>Meh</button><button>Not again</button>
+          </div>
+          <footer><button>Add experience</button><button>Edit</button></footer>
+        </article>
+      </div>
+    </section>
+    <section class="screen" id="gym">
+      <header class="heading">
+        <div>
+          <p class="overline">ACTIVITY</p>
+          <h1>Gym</h1>
+        </div>
+        <button>•••</button>
+      </header>
+      <div class="section-head">
+        <h2>Current workout</h2>
+        <button class="primary">Start workout</button>
+      </div>
+      <article class="workout">
+        <p class="overline">ACTIVE · TODAY</p>
+        <h3>Push day</h3>
+        <p class="muted">1 exercise logged · 3 sets</p>
+        <button class="primary">Resume workout →</button><button>Finish workout</button>
+        <div class="row">
+          <div><strong>Bench press</strong><small>3 sets · 8 / 8 / 6 reps</small></div>
+          <button>Edit</button>
+        </div>
+        <div class="row">
+          <div><strong>Shoulder press</strong><small>Not logged</small></div>
+          <button>Log exercise →</button>
+        </div>
+      </article>
+      <details><summary>Routines →</summary></details>
+      <details><summary>Progress & exercise history →</summary></details>
+      <details><summary>Past workouts & other activity →</summary></details>
+    </section>
+    <section class="screen" id="add">
+      <header class="heading"><h1>Good to keep.</h1></header>
+      <div class="veil">
+        <form class="composer">
+          <div class="heading">
+            <h2>Keep something.</h2>
+            <button aria-label="Close">×</button>
+          </div>
+          <label>Name<input value="Corner ramen" autofocus /></label
+          ><label
+            >Save in<select>
+              <option>Unfiled — choose a collection later</option>
+              <option>Places</option>
+              <option>Drinks</option>
+            </select></label
+          >
+          <details><summary>Add a note or an opinion</summary></details>
+          <button class="primary">Save</button>
+          <p class="muted">A name is enough.</p>
+        </form>
+      </div>
+    </section>
+    <p class="mock-note">DESIGN REFERENCE · Synthetic examples · Nothing is saved.</p>
+  </main>
+  <nav class="mobile-bar">
+    <a>Home</a><a>Collections</a><a>Look back</a><button class="primary">＋ Add</button>
+  </nav>
+  <script>
+    const screen = new URLSearchParams(location.search).get('screen') || 'home';
+    document.getElementById(screen).classList.add('active');
+  </script>
+</html>

@@ -170,7 +170,7 @@ test('a real local barcode read and explicit book lookup require separate review
   await page.getByRole('button', { name: 'Review capture', exact: true }).click();
   expect(archive.writes).toHaveLength(0);
   await page.getByRole('button', { name: 'Save reviewed capture', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Open Inbox find →', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open Unfiled find →', exact: true })).toBeVisible();
   expect(archive.inbox[0]).toMatchObject({
     title: 'Fantastic Mr. Fox',
     decision: null,

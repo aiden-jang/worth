@@ -27,7 +27,7 @@ export function CaptureSignIn({ authOrigin }: { authOrigin: string }) {
       <p className="product-wordmark">worth</p>
       <h1>Keep this find.</h1>
       <p>
-        Sign in to review the name, source and note, then keep it in Inbox or a collection. Nothing is added
+        Sign in to review the name, source and note, then keep it in Unfiled or a collection. Nothing is added
         automatically.
       </p>
       {share.incoming && (
@@ -172,7 +172,7 @@ export function CapturePage() {
     setReplace(false);
     setError('');
     setStatus(
-      'Incoming share copied into this draft. Review it, then keep it in Inbox or choose a collection.',
+      'Incoming share copied into this draft. Review it, then keep it in Unfiled or choose a collection.',
     );
   }
   function confirmSave() {
@@ -190,7 +190,7 @@ export function CapturePage() {
         <div>
           <p className="overline">CAPTURE</p>
           <h1>Keep a name.</h1>
-          <p>A name is enough. Keep it in Inbox now, or choose a collection before saving.</p>
+          <p>A name is enough. Keep it in Unfiled now, or choose a collection before saving.</p>
         </div>
       </header>
       <p>Saving as {owner?.email || owner?.displayName || 'your signed-in account'}.</p>
@@ -244,7 +244,7 @@ export function CapturePage() {
       {lists.data && !collections.length && (
         <p>
           <Link to="/lists?kind=collection&create=1">Create a collection</Link> when you’re ready to file. You
-          can save to Inbox first.
+          can save to Unfiled first.
         </p>
       )}
       <section className={`capture-panel${form.review ? ' has-review' : ''}`} aria-label="Web capture draft">
@@ -268,7 +268,7 @@ export function CapturePage() {
               onChange={(event) => edit({ listId: event.target.value })}
             >
               <option value="">Choose a destination</option>
-              <option value="inbox">Inbox — file later</option>
+              <option value="inbox">Unfiled — file later</option>
               {collections.map((list) => (
                 <option key={list.id} value={list.id}>
                   {list.name}
@@ -367,7 +367,7 @@ export function CapturePage() {
           <p role="alert">
             {inbox.error.message}{' '}
             <button className="button button-outline" onClick={() => void inbox.refetch()}>
-              Retry Inbox duplicate check
+              Retry Unfiled duplicate check
             </button>
           </p>
         )}
@@ -384,8 +384,8 @@ export function CapturePage() {
             <p className="overline">REVIEW BEFORE SAVING</p>
             <h2>{reviewedItem.title}</h2>
             <p>
-              Destination: {toInbox ? 'Inbox / unfiled' : chosen?.name || 'Unavailable collection'} · Unranked
-              · No call
+              Destination: {toInbox ? 'Unfiled / unfiled' : chosen?.name || 'Unavailable collection'} ·
+              Unranked · No call
             </p>
             <dl className="incoming-preview">
               <dt>Type</dt>
@@ -457,7 +457,7 @@ export function CapturePage() {
             <Link
               to={saved.listId ? `/lists/${saved.listId}?focus=item:${saved.id}` : `/inbox?focus=${saved.id}`}
             >
-              {saved.listId ? 'Open saved record →' : 'Open Inbox find →'}
+              {saved.listId ? 'Open saved record →' : 'Open Unfiled find →'}
             </Link>
           </p>
         )}
@@ -514,7 +514,7 @@ export function CapturePage() {
       {replace && (
         <ConfirmDialog
           title="Replace this capture draft?"
-          description="Copies the incoming name, source and text into this draft. The destination resets to Inbox. Nothing is saved yet."
+          description="Copies the incoming name, source and text into this draft. The destination resets to Unfiled. Nothing is saved yet."
           confirmLabel="Use incoming share"
           onConfirm={applyIncoming}
           onClose={() => setReplace(false)}
@@ -523,7 +523,7 @@ export function CapturePage() {
       {reset && (
         <ConfirmDialog
           title="Clear this capture draft?"
-          description="Removes this device’s draft. An unconfirmed request may already have saved; check Inbox and your collections before starting again."
+          description="Removes this device’s draft. An unconfirmed request may already have saved; check Unfiled and your collections before starting again."
           confirmLabel="Clear draft"
           onClose={() => setReset(false)}
           onConfirm={() => {

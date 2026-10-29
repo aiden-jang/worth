@@ -175,3 +175,14 @@ Shortcuts say `Less clicking.` Existing first-use and collection jokes stay.
 One small joke per moment is enough. Factual labels and help do the work around it.
 Workout copy, account access, errors, legal notices and deletion remain direct.
 Never put brand copy into a saved name or note.
+
+## Everyday flow — October 28
+
+The user requested a simpler and more intuitive everyday app. Signed-in action
+labels now use Add, Save, Add experience, Edit and Start workout. Primary navigation
+uses Home, Collections and Look back. Inbox is labeled Unfiled in the primary flow;
+storage/API names remain unchanged. Ranking & tools replaces the unexplained
+Workbench entry label. The signed-out example retains its accepted Keep it label.
+Home says Good to keep. / A name is enough. The rest can wait. First save asks for
+a name, with no required collection or opinion. Humor stays in faces and small
+moments; no joke replaces a functional action or a factual retry explanation.

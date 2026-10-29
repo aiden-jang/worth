@@ -40,11 +40,35 @@ activity editor owns drafts, photos, workout selection and one save operation.
 `ExerciseSetFields`, `LegacyActivityMeasurements` and `ActivityMeasurements` are controlled
 field components; they receive only their section of the draft and do not persist it.
 
-`AppShell` owns the repeated navigation, keyboard shortcuts, named Add/Shortcuts
-dialogs and a keyboard skip link. Mobile navigation is a disclosure in normal
-flow: Escape restores the toggle, leaving the rail closes it, and crossing to a
-desktop layout clears its open state. It is not a modal focus trap. Page-owned
-titles identify the core directories as well as individual records.
+`AppShell` owns Home / Collections / Look back navigation, the consistently named
+Add action, keyboard shortcuts, save/Undo feedback and a skip link. Phones use a
+persistent safe-area primary bar; the header disclosure holds utility/account links
+and is not a modal focus trap. Escape restores its toggle and a desktop resize
+clears it. Context menus close on outside focus/pointer or Escape; native dialogs
+retain their own focus handling.
+
+`QuickEntry` is lazy and delegates to existing Inbox, item, experience and activity
+endpoints. `shared/quick-entry` validates account-scoped device drafts and their
+frozen discriminated retry payloads. Each save freezes its destination, operation
+identity and body before the request. There is no cross-endpoint multi-step save.
+A new collection experience still uses the existing transactional endpoint; activity
+capture creates one plain dated entry. Names without a collection use the existing
+Inbox store. The UI calls that store Unfiled; JSON/API names remain compatible.
+
+`ArchivePage` merges the owner's real overview records and Unfiled finds for recent
+browsing, retaining whether a date is an experience date or a saved/updated timestamp.
+`CollectionView` preserves capture/filter/rank orchestration, with a single selected
+slip on desktop and `ItemSheet` in a body-level native phone dialog. Selection starts
+closed on each new list view. Successful inline capture restores input focus without
+opening the slip. `OpinionSlip` accepts the appropriate heading level for its context.
+
+`PatternsPage` is the Look back entry point, with Memories and Insights views.
+`MemoryPage` can render inside that landmark or directly at its legacy route.
+URL filters and query cancellation remain intact. Specialized recall tools retain
+their original routes. `WorkoutSessions` renders active visits before the optional
+tools supplied by `ActivityView`, followed by a collapsed past directory. Past
+query/date filters do not filter active visits or their entries. Page-owned titles
+identify the core directories as well as individual records.
 
 Validation uses Zod 4. Creation defaults and patch semantics are separate:
 omitted patch properties must stay absent, never reset stored values. Nested
@@ -921,3 +945,9 @@ rep-count records from saved sets; units and missing values remain explicit.
 `WorkoutProgress` counts finished sessions, while `MemoryShelf` initially summarizes dated
 entries in the current local-calendar month. Both are read-only views. See
 [product behavior and limitations](REMEMBER.md).
+
+Unfiled finds also participate in saved-name recall and overall-call insights.
+Their saved dates remain UTC, they never become dated visits, and their source
+links open the original Unfiled find. Filing moves that source into its collection
+without creating a duplicate recall entry. Owner scoping, Trash exclusions and
+50-record pagination apply to both sources. No database migration is required.

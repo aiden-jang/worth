@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
@@ -12,7 +13,8 @@ test.beforeEach(async ({ archive }) => {
 });
 async function open(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Shelf preview' })).toBeVisible();
 }
@@ -56,7 +58,8 @@ test('private shelf choices persist, open records and remain separate from calls
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
   ).toEqual([]);
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await expect(preview).toContainText('For rainy Sundays.');
   await page.getByText('Personalize this shelf', { exact: true }).click();
@@ -89,7 +92,8 @@ test('shelf drafts recover and conflicting saves require a reviewed reload', asy
   await page.getByText('Personalize this shelf', { exact: true }).click();
   await page.getByRole('textbox', { name: 'Private dedication', exact: true }).fill('My local dedication');
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await page.getByText('Personalize this shelf', { exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Private dedication', exact: true })).toHaveValue(

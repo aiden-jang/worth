@@ -210,11 +210,16 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
           <>
             <p>A few useful answers.</p>
             <section>
-              <h2>Collections or activity?</h2>
+              <h2>Save something first</h2>
               <p>
-                Use a collection for things you revisit or rank. Add a name first; notes, photos and calls are
-                optional. Use activity for dated entries. Exercise mode stores each set’s reps and optional
-                weight separately.
+                Choose Add, enter a name and Save. Outside an open list, the destination starts at Unfiled.
+                You can choose a collection now or organize later. Notes and opinions are optional. Saving a
+                name does not create a visit.
+              </p>
+              <p>
+                Home keeps recent entries and search together. Collections group things you want to find
+                again. Look back brings Memories and Insights together. Gym and other activities keep dated
+                entries and progress.
               </p>
             </section>
             <section>
@@ -228,10 +233,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Selection, merges and recovery</h2>
               <p>
-                Use Select in a collection to move, merge, queue, change type or delete items together. Moves
-                carry photos and history and leave items unranked in the destination. A merge keeps one main
-                entry; original notes, photos, calls and visits remain in Details. Separate an original there
-                to undo its merge. Want to try is independent of opinions, rankings and the revisit queue.
+                Use Entry options → Select items in a collection to move, merge, queue, change type or delete
+                items together. Moves carry photos and history and leave items unranked in the destination. A
+                merge keeps one main entry; original notes, photos, calls and visits remain in Details.
+                Separate an original there to undo its merge. Want to try is independent of opinions, rankings
+                and the revisit queue.
               </p>
               <p>
                 Use Undo after deleting, or open Settings → Trash to restore lists, items and logs for 30
@@ -241,12 +247,12 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
-              <h2>The collection workbench</h2>
+              <h2>Ranking and collection tools</h2>
               <p>
-                Open Workbench from a collection to try a draft ranking, compare records privately, or draw a
-                record from Want to try, the revisit queue or Favorites. Head-to-head comparisons can hide
-                saved ranks and calls; Skip and Undo are available. Reveal the result before using it in the
-                sandbox. Your main ranking changes only after Preview ranking change and Apply ranking.
+                Open Collection options → Ranking & tools to try a draft ranking, compare records privately,
+                or draw a record from Want to try, the revisit queue or Favorites. Head-to-head comparisons
+                can hide saved ranks and calls; Skip and Undo are available. Reveal the result before using it
+                in the sandbox. Your main ranking changes only after Preview ranking change and Apply ranking.
               </p>
               <p>
                 Saved views keep named filters across devices. Context rankings keep alternative orders such
@@ -276,10 +282,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
               <h2>Possible duplicates</h2>
               <p>
-                Open Workbench → Comparison table → Possible duplicates to review matching names and types.
-                Open shows a record’s Details; Revisit opens its visit form without saving a visit. Keep
-                separate saves a review across devices and leaves all records, calls and rankings unchanged.
-                No merge happens automatically.
+                Open Collection options → Ranking & tools → Comparison table → Possible duplicates to review
+                matching names and types. Open shows a record’s Details; Revisit opens its visit form without
+                saving a visit. Keep separate saves a review across devices and leaves all records, calls and
+                rankings unchanged. No merge happens automatically.
               </p>
               <p>
                 Show groups kept separate lets you reopen a review. A new matching record needs review again;
@@ -291,10 +297,11 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Importing CSV and saving links</h2>
               <p>
-                In Workbench → Import &amp; capture, choose a CSV file or paste CSV data. Set the separator,
-                review which columns supply names, types, notes, calls, source URLs and dates, then preview up
-                to 100 records. Possible duplicates start unselected. Choose them explicitly to keep both;
-                invalid rows stay out of the save. Existing records and rankings stay unchanged.
+                In Collection options → Ranking & tools → Import &amp; capture, choose a CSV file or paste CSV
+                data. Set the separator, review which columns supply names, types, notes, calls, source URLs
+                and dates, then preview up to 100 records. Possible duplicates start unselected. Choose them
+                explicitly to keep both; invalid rows stay out of the save. Existing records and rankings stay
+                unchanged.
               </p>
               <p>
                 Link capture can suggest an editable name from the address. It does not open the link or
@@ -307,20 +314,20 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Reusable details and templates</h2>
               <p>
-                Workbench → Collection setup saves optional detail names. In an item’s Custom details, choose
-                Detail names from this collection to add blank fields to that draft. Changing the collection
-                setup never changes existing records. Save setup as template keeps only the collection name,
-                description, authored artwork and detail names. Choose a saved template during collection
-                creation, review the draft, then create an empty collection. No records, notes, uploaded cover
-                photos, ranks or calls are copied. Templates are private and included in backups; removing one
-                leaves existing collections unchanged. Keep up to 50 templates.
+                Ranking & tools → Collection setup saves optional detail names. In an item’s Custom details,
+                choose Detail names from this collection to add blank fields to that draft. Changing the
+                collection setup never changes existing records. Save setup as template keeps only the
+                collection name, description, authored artwork and detail names. Choose a saved template
+                during collection creation, review the draft, then create an empty collection. No records,
+                notes, uploaded cover photos, ranks or calls are copied. Templates are private and included in
+                backups; removing one leaves existing collections unchanged. Keep up to 50 templates.
               </p>
             </section>
             <section>
               <h2>Your collection shelf</h2>
               <p>
-                Workbench → Your shelf offers paper pockets or book spines, optional bookends and a faceless
-                paper creature beside records without calls. Personalize this shelf keeps a private
+                Ranking & tools → Your shelf offers paper pockets or book spines, optional bookends and a
+                faceless paper creature beside records without calls. Personalize this shelf keeps a private
                 dedication, one keepsake and an inscription attached to a chosen record. These choices are
                 saved across devices and included in backup, independently of ranks and calls.
               </p>
@@ -334,10 +341,10 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Cover collages</h2>
               <p>
-                Workbench → Cover collage arranges up to six saved record or visit photos. Choose each frame’s
-                position, size, layer and optional caption. Originals fit without cropping and stay intact.
-                Prepare the exact image, inspect it, then save it as this collection’s private cover or
-                download it. Shelf crops may vary; calls and ranks stay separate.
+                Ranking & tools → Cover collage arranges up to six saved record or visit photos. Choose each
+                frame’s position, size, layer and optional caption. Originals fit without cropping and stay
+                intact. Prepare the exact image, inspect it, then save it as this collection’s private cover
+                or download it. Shelf crops may vary; calls and ranks stay separate.
               </p>
               <p>
                 Arrangements recover on this account/device for seven days when storage is available. Prepared
@@ -374,7 +381,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 Patterns → <Link to="/patterns/calendar">Activity calendar</Link> shows these plans separately
                 from entered visits and activity logs. Choose a month and show it, then choose a day to open
                 its readable agenda. Archived collections are optional. Trash hides their affected entries;
-                Inbox plans follow the record when filed. Worth sends no reminders or notifications. Plans
+                Unfiled plans follow the record when filed. Worth sends no reminders or notifications. Plans
                 stay on their saved day until you deliberately change them.
               </p>
             </section>
@@ -464,12 +471,12 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <h2>Browser capture and quick picks</h2>
               <p>
                 <Link to="/capture">Web capture</Link> reviews a name, source and optional note before saving
-                to Inbox or a collection you choose. Inbox needs no collection and keeps finds unranked until
-                you file them. Incoming shares never save automatically. If Worth appears in your installed
-                browser’s Share menu, send text or a link there; otherwise paste into Web capture. Desktop
-                bookmark instructions are on that page. Incoming content stays in this tab for review and is
-                excluded from the Accounts sign-in return link. Unused shares expire after 15 minutes; applied
-                drafts use the usual account-specific seven-day recovery.
+                to Unfiled or a collection you choose. Unfiled needs no collection and keeps finds unranked
+                until you file them. Incoming shares never save automatically. If Worth appears in your
+                installed browser’s Share menu, send text or a link there; otherwise paste into Web capture.
+                Desktop bookmark instructions are on that page. Incoming content stays in this tab for review
+                and is excluded from the Accounts sign-in return link. Unused shares expire after 15 minutes;
+                applied drafts use the usual account-specific seven-day recovery.
               </p>
               <p>
                 <Link to="/quick">Quick picks</Link> opens a chosen top-five shortlist or draws from your
@@ -480,18 +487,18 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               </p>
             </section>
             <section>
-              <h2>Inbox</h2>
+              <h2>Unfiled</h2>
               <p>
-                <Link to="/inbox">Inbox</Link> keeps up to 500 private, unfiled finds. Open it from navigation
-                without leaving your collection. Edit details, then choose a collection and File in
+                <Link to="/inbox">Unfiled</Link> keeps up to 500 private, unfiled finds. Open it from
+                navigation without leaving your collection. Edit details, then choose a collection and File in
                 collection. Notes, context, dates and calls stay with the find; filing does not add a rank.
                 Exact name/type matches need a keep-separate choice. Photos and visits can be added after
                 filing.
               </p>
               <p>
                 Unfinished edits stay with this account on this device for seven days. If a filing reply is
-                lost, retry its fixed receipt, even after reloading. Deleted Inbox finds remain in Trash for
-                30 days and restore unfiled. Backups include active Inbox finds and give them fresh IDs when
+                lost, retry its fixed receipt, even after reloading. Deleted Unfiled finds remain in Trash for
+                30 days and restore unfiled. Backups include active Unfiled finds and give them fresh IDs when
                 restored. Choose a current collection when filing. Trash is excluded from backups.
               </p>
             </section>
@@ -533,7 +540,7 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             <section>
               <h2>Ranking and opinion history</h2>
               <p>
-                Workbench → Taste history records future changes to ranks and calls. Earlier changes are
+                Ranking & tools → Taste history records future changes to ranks and calls. Earlier changes are
                 unknown. Compare an older order with the current one, then copy it into the ranking sandbox
                 for review. Applying still needs a separate preview and confirmation.
               </p>
@@ -548,9 +555,9 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
               <p>
                 <Link to="/patterns/look-back">Look back</Link> in Patterns reads a period you choose, from
                 one to 366 days. Saved finds use this device’s calendar boundaries; logs use their entered
-                dates. All lists includes Inbox, while archived collections require an explicit choice. Counts
-                cover every match; each record group shows the latest 50, with a prompt to narrow the period
-                when needed.
+                dates. All lists includes Unfiled, while archived collections require an explicit choice.
+                Counts cover every match; each record group shows the latest 50, with a prompt to narrow the
+                period when needed.
               </p>
               <p>
                 This uses records you still keep, with their current names and notes. It does not reconstruct

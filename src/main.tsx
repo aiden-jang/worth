@@ -34,3 +34,5 @@ import './landing-cabinet.css';
 import './completion.css';
 
 import './archive-tools.css';
+
+import './everyday.css';

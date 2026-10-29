@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { memoryFilter, type MemoryRecord } from '../shared/memories';
+import { isSavedMemory, memorySourceHref, memoryFilter, type MemoryRecord } from '../shared/memories';
 import { retrospectivePeriod } from '../shared/retrospective';
 import { CallFace } from './PersonalCall';
 import { BlankSlips } from './BlankSlips';
@@ -59,9 +59,9 @@ export function MemoryShelf() {
         {first ? (
           <>
             <p className="memory-source">
-              {first.listName} · {first.kind === 'saved' ? 'Saved ' : ''}
+              {first.listName} · {isSavedMemory(first) ? 'Saved ' : ''}
               {formatDate(first.date)}
-              {first.kind === 'saved' ? ' (UTC)' : ''}
+              {isSavedMemory(first) ? ' (UTC)' : ''}
             </p>
             {first.location && <p>{first.location}</p>}
             {first.order && <p>{first.order}</p>}
@@ -73,7 +73,7 @@ export function MemoryShelf() {
             )}
             {first.reaction && (
               <p className="memory-source">
-                {first.kind === 'saved' ? 'Overall call' : 'This time'}: {decisionLabel(first.reaction)}
+                {isSavedMemory(first) ? 'Overall call' : 'This time'}: {decisionLabel(first.reaction)}
               </p>
             )}
           </>
@@ -96,13 +96,7 @@ export function MemoryShelf() {
             <Shuffle size={18} aria-hidden="true" />{' '}
             {draw.isPending ? 'Looking…' : revealed ? 'Another memory' : 'Pull a memory'}
           </button>
-          {first && (
-            <Link
-              to={`/lists/${first.listId}?focus=${first.kind === 'saved' ? `item:${first.itemId ?? first.id}` : `log:${first.id}`}`}
-            >
-              Open memory →
-            </Link>
-          )}
+          {first && <Link to={memorySourceHref(first)}>Open memory →</Link>}
         </div>
         {draw.isPending && <p role="status">Looking through your archive…</p>}
         {draw.isError && <p role="alert">Memories couldn’t load. Try pulling again.</p>}
@@ -118,9 +112,9 @@ export function MemoryShelf() {
           </p>
         )}
       </div>
-      {first?.hasPhoto ? (
+      {first?.hasPhoto && first.kind !== 'unfiled' ? (
         <img
-          src={`/api/${first.kind === 'saved' ? 'items' : 'logs'}/${first.id}/photo`}
+          src={`/api/${isSavedMemory(first) ? 'items' : 'logs'}/${first.id}/photo`}
           alt={`Saved photo for ${first.title}`}
           loading="lazy"
         />

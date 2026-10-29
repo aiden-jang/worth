@@ -324,7 +324,7 @@ export function OfflinePage() {
   function downloadPending() {
     if (!vault) return;
     const content = vault.queue
-      .map((op) => `${op.kind === 'capture' ? 'Inbox capture' : 'Note edit'}: ${op.title}\n${op.note}`)
+      .map((op) => `${op.kind === 'capture' ? 'Unfiled capture' : 'Note edit'}: ${op.title}\n${op.note}`)
       .join('\n\n---\n\n');
     const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' })),
       a = document.createElement('a');
@@ -514,7 +514,7 @@ export function OfflinePage() {
             {vault.queue.map((op) => (
               <details key={op.id} className="offline-pending-row">
                 <summary>
-                  {op.kind === 'capture' ? 'Inbox capture' : 'Note edit'} · {op.title}
+                  {op.kind === 'capture' ? 'Unfiled capture' : 'Note edit'} · {op.title}
                 </summary>
                 <label>
                   Queued text
@@ -558,7 +558,7 @@ export function OfflinePage() {
             ))}
           </section>
           <section className="offline-capture">
-            <h2>Capture for the Inbox</h2>
+            <h2>Capture for the Unfiled</h2>
             <p>A name is enough. Queue it to keep it encrypted on this device, then sync when connected.</p>
             <label>
               Find name
@@ -584,7 +584,7 @@ export function OfflinePage() {
               disabled={busy || !title.trim() || vault.queue.length >= 100}
               onClick={() => void run(queueCapture)}
             >
-              Queue Inbox capture
+              Queue Unfiled capture
             </button>
             <p>Unqueued text stays only on this page. It has not been saved to the device copy.</p>
           </section>
@@ -603,7 +603,7 @@ export function OfflinePage() {
                 />
               </label>
               <label>
-                Collection or Inbox
+                Collection or Unfiled
                 <select
                   value={list}
                   onChange={(e) => {
@@ -612,7 +612,7 @@ export function OfflinePage() {
                   }}
                 >
                   <option value="all">All saved text</option>
-                  <option value="inbox">Inbox</option>
+                  <option value="inbox">Unfiled</option>
                   {vault.snapshot.lists.map((l) => (
                     <option key={l.id} value={l.id}>
                       {l.name}
@@ -630,7 +630,7 @@ export function OfflinePage() {
                   <strong>{r.title}</strong>
                   <span>
                     {r.kind === 'inbox'
-                      ? 'Inbox'
+                      ? 'Unfiled'
                       : (vault.snapshot.lists.find((l) => l.id === r.listId)?.name ?? 'Collection')}
                     {r.date ? ` · ${r.date}` : ''}
                   </span>

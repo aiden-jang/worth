@@ -125,7 +125,7 @@ test('a cross-collection field guide exposes only chosen fields and prints the p
 }, info) => {
   await setup(page, archive);
   await page.goto('/patterns');
-  await page.locator('.pattern-more-tools > summary').click();
+  await page.locator('.recall-more > summary').click();
   await page.getByRole('link', { name: 'Make a field guide →', exact: true }).click();
   await capture(page, 'overview', info.project.name);
   await add(page, list.id, a);
@@ -251,7 +251,7 @@ test('guide controls reflow accessibly and blocked storage protects unfinished c
   await add(page, list.id, a);
   await page.getByRole('textbox', { name: 'Caption for Coffee', exact: true }).fill('A caption for copying');
   await expect(page.getByText('Draft could not be saved on this device. Keep this page open.')).toBeVisible();
-  await page.getByRole('link', { name: 'Back to Patterns' }).click();
+  await page.getByRole('link', { name: 'Back to Look back' }).click();
   await expect(page.getByRole('dialog', { name: 'Leave this guide draft?' })).toBeVisible();
   await page
     .getByRole('dialog', { name: 'Leave this guide draft?' })

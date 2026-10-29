@@ -421,3 +421,26 @@ pair measured 4.44:1 against `#eae5d5`, below the 4.5:1 AA threshold. This delib
 accessibility adjustment preserves the visual hierarchy. Failed active-link lookups
 and temporary ranking outages now offer factual retry messages. During link creation,
 the Include selector and close actions pause until the snapshot request finishes.
+
+## Everyday simplification — October 28
+
+The user explicitly approved a connected simplification after finding the previous
+UI complex. [Everyday references](everyday/README.md) supersede earlier Home,
+capture, collection-selection and activity composition rules. Keep the cabinet's
+colors, DM Sans / DM Mono, reaction family, 192px desktop rail and 44px targets.
+Main headings use 48px desktop / 36px phone, weight 500. Shared controls retain 12px
+corners; cream cards and dialogs retain 22px corners.
+
+Home prioritizes search and recent content, including Unfiled; collections and a
+compact memory follow. Add always opens a name-first native composer and names its
+destination. Outside a current active list the destination is Unfiled, independent
+of prior selections. Saving does not imply an experience or an opinion. On phones,
+primary navigation and Add stay in a safe-area bottom bar, with content clearance.
+
+Collection capture and a single browse/search/filter row precede actual names.
+Secondary collection/entry tools disclose, with keyboard dismissal and usable
+focus return. Desktop selection retains a cream slip. Phone selection opens a
+native sheet instead of inserting a tall card between rows. Look back contains
+Memories and Insights; extra filters and specialized tools disclose. Current
+workouts precede routines, progress and past visits. Filtering past history does
+not conceal an active workout. No data schema, sharing or export scope changes.

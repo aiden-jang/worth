@@ -1,23 +1,23 @@
+import { entryOptions } from './navigation';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 
 test('Want to try capture and filtering leave opinions and rankings alone', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
+  await entryOptions(page);
   await page.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
-  await page.getByRole('textbox', { name: 'What did you try?' }).fill('Next café');
+  await page.getByRole('textbox', { name: 'Add a name' }).fill('Next café');
   await expect(page.getByRole('status').filter({ hasText: 'Draft saved on this device.' })).toBeVisible();
   page.once('dialog', (dialog) => void dialog.accept());
   await page.reload();
+  await entryOptions(page);
   await expect(page.getByRole('checkbox', { name: 'Want to try', exact: true })).toBeChecked();
-  await expect(page.getByRole('textbox', { name: 'What did you try?' })).toHaveValue('Next café');
-  await page.getByRole('button', { name: 'Keep it', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Add a name' })).toHaveValue('Next café');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Next café added' })).toBeVisible();
   expect(archive.items.at(-1)).toMatchObject({ wantToTry: true, decision: null });
   expect(archive.list.rankedIds).toEqual(['coffee']);
-  await page
-    .getByRole('navigation', { name: 'Browse collection' })
-    .getByRole('button', { name: /Want to try/ })
-    .click();
+  await page.getByRole('combobox', { name: 'Browse collection' }).selectOption('want');
   await expect(page.getByRole('button', { name: /Next café Want to try/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toHaveCount(0);
 });
@@ -30,7 +30,8 @@ test('merge previews, retries and separation preserve original private notes', a
   archive.failAction = true;
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Select items', exact: true }).click();
   await page.getByRole('button', { name: 'Select visible', exact: true }).click();
   await page.getByRole('button', { name: 'Merge', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Merge items' });
@@ -46,7 +47,7 @@ test('merge previews, retries and separation preserve original private notes', a
   await page
     .getByRole('region', { name: 'Your call for Coffee' })
     .filter({ visible: true })
-    .getByRole('button', { name: 'Details' })
+    .getByRole('button', { name: 'Edit' })
     .click();
   const originals = page.getByRole('region', { name: 'Merged originals' });
   await expect(originals.getByText('Original tea note')).toBeVisible();
@@ -71,7 +72,8 @@ test('bulk move requires a destination and keeps the other collection ranking in
     },
   ];
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Select items', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Select Tea' }).check();
   await page.getByRole('button', { name: 'Move', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Move items' });
@@ -88,7 +90,8 @@ test('bulk move requires a destination and keeps the other collection ranking in
 test('bulk Trash has immediate Undo and recovery from Settings', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Select items', exact: true }).click();
   await page.getByRole('button', { name: 'Select visible', exact: true }).click();
   await page.screenshot({ path: info.outputPath(`selection-${info.project.name}.png`), fullPage: true });
   await page
@@ -103,7 +106,8 @@ test('bulk Trash has immediate Undo and recovery from Settings', async ({ page }
   await expect(page.getByRole('heading', { name: 'Nothing to judge. Yet.' })).toBeVisible();
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Tea Drink', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Select items', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Select Tea' }).check();
   await page
     .getByRole('region', { name: 'Selected items' })

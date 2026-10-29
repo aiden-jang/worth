@@ -48,7 +48,7 @@ export function BoardsPage() {
           <h1>Boards</h1>
           <p>Keep a few things together.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p>
         Moments, shortlists, evenings and trips can draw from any of your collections or visits. Linked

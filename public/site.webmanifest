@@ -86,17 +86,17 @@
   "screenshots": [
     {
       "src": "/screenshots/app-desktop.png",
-      "sizes": "1425x891",
+      "sizes": "1440x900",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "worth on desktop."
+      "label": "Worth Home with example entries."
     },
     {
       "src": "/screenshots/app-mobile.png",
-      "sizes": "375x750",
+      "sizes": "390x780",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "worth on a phone."
+      "label": "Worth Home with example entries."
     }
   ],
   "share_target": {

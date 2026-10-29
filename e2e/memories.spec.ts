@@ -1,3 +1,4 @@
+import { activityTools, entryOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list, type State } from './fixtures';
@@ -74,7 +75,8 @@ test('dated experiences recover a fixed save without duplicate records or inferr
   await experienceFixture(page, archive);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Add experience', exact: true }).click();
   let dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
   await capture(page, 'experience-quick', info.project.name);
   await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('Corner ramen');
@@ -93,7 +95,8 @@ test('dated experiences recover a fixed save without duplicate records or inferr
   await expect(dialog.getByRole('textbox', { name: 'Name', exact: true })).toBeDisabled();
   await expect(dialog.getByRole('button', { name: 'Favorite', exact: true })).toBeDisabled();
   await page.reload();
-  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Add experience', exact: true }).click();
   dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
   await expect(dialog.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Corner ramen');
   await dialog.getByRole('button', { name: 'Retry save', exact: true }).click();
@@ -108,7 +111,7 @@ test('dated experiences recover a fixed save without duplicate records or inferr
   expect(archive.writes.filter((w) => w.path === '/experiences')[0].body).toEqual(
     archive.writes.filter((w) => w.path === '/experiences')[1].body,
   );
-  await expect(page.getByRole('button', { name: 'Log an experience', exact: true })).toBeFocused();
+  await expect(page.getByLabel('Entry options', { exact: true })).toBeFocused();
   await page.locator('.collection-index-row button').first().click();
   await capture(page, 'collection-compact', info.project.name);
 });
@@ -120,7 +123,8 @@ test('an experience needs only a name and reactions can be cleared with one tap'
   await experienceFixture(page, archive, false);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Add experience', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
   const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
   await expect(name).toBeFocused();
@@ -165,7 +169,8 @@ test('a quick visit to a saved name preserves its overall call and protects reac
   archive.list.rankedIds = [existingId];
   await experienceFixture(page, archive, false);
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Log an experience', exact: true }).click();
+  await entryOptions(page);
+  await page.getByRole('button', { name: 'Add experience', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'What did you try?', exact: true });
   await dialog.getByRole('button', { name: 'Meh', exact: true }).click();
   await dialog.getByRole('button', { name: 'Close experience', exact: true }).click();
@@ -193,7 +198,7 @@ test('quick activity logging keeps details optional and previous exercise sets s
   await page.route('**/api/lists/*/workouts', (route) => route.fulfill({ json: { workouts: [] } }));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Add log', exact: true }).click();
+  await page.getByRole('button', { name: 'Add activity', exact: true }).click();
   let dialog = page.getByRole('dialog', { name: 'What happened?', exact: true });
   await expect(dialog.getByLabel('What', { exact: true })).toBeFocused();
   await expect(dialog.getByLabel('When', { exact: true })).toBeHidden();
@@ -217,7 +222,7 @@ test('quick activity logging keeps details optional and previous exercise sets s
     weightUnit: 'kg',
   });
   await page.reload();
-  await page.getByRole('button', { name: 'Add log', exact: true }).click();
+  await page.getByRole('button', { name: 'Add activity', exact: true }).click();
   dialog = page.getByRole('dialog', { name: 'What happened?', exact: true });
   await dialog.getByRole('button', { name: 'Exercise', exact: true }).click();
   await dialog.getByLabel('Exercise', { exact: true }).fill('Bench press');
@@ -313,7 +318,7 @@ test('preferences link to their full supporting records and memory filters keep 
     });
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/patterns');
+  await page.goto('/patterns?view=insights');
   await expect(page.getByText('6 of 8')).toBeVisible();
   await expect(page.getByText(/3 without a call/)).toBeVisible();
   await capture(page, 'preferences', info.project.name);
@@ -331,7 +336,8 @@ test('preferences link to their full supporting records and memory filters keep 
     'rgb(24, 25, 21)',
   );
   await page.getByRole('searchbox').fill('Brooklyn');
-  await page.locator('.memory-date-options > summary').click();
+  if (!(await page.locator('.memory-date-options').evaluate((node) => (node as HTMLDetailsElement).open)))
+    await page.locator('.memory-date-options > summary').click();
   await page.getByLabel('From', { exact: true }).fill('2025-10-01');
   await page.getByLabel('Through', { exact: true }).fill('2025-10-31');
   await expect(page).toHaveURL(/q=Brooklyn/);
@@ -399,9 +405,11 @@ test('workout history recognizes rep progress and complete volume while keeping 
   );
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
+  await activityTools(page, 'Progress & exercise history');
   await page.locator('.workout-progress summary').click();
   await expect(page.locator('.workout-progress')).toContainText('1 finished workout');
-  await page.locator('summary').filter({ hasText: 'Exercise history' }).click();
+  await activityTools(page, 'Progress & exercise history');
+  await page.locator('.exercise-directory:not(.workout-progress) > summary').click();
   await page.getByRole('button', { name: 'View history for Bench press', exact: true }).click();
   const history = page.getByRole('dialog', { name: 'Bench press', exact: true });
   await expect(history).toContainText('Previous best at this weight in this period: 8 reps.');
@@ -422,7 +430,7 @@ test('the memory experience reflows at narrow phone and tablet widths', async ({
   await page.goto('/patterns/remember');
   for (const width of [320, 390, 430, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect(page.getByRole('heading', { name: 'Remember.', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Memories.', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await capture(page, `remember-${width}`, info.project.name);
   }

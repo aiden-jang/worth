@@ -6,6 +6,7 @@ import { BlankSlips } from './BlankSlips';
 
 export function OpinionSlip({
   title,
+  headingLevel = 'h3',
   type,
   rank,
   decision,
@@ -16,6 +17,7 @@ export function OpinionSlip({
   children,
 }: {
   title: string;
+  headingLevel?: 'h2' | 'h3';
   type: string;
   rank?: number;
   decision: ItemDecision | null;
@@ -25,13 +27,14 @@ export function OpinionSlip({
   className?: string;
   children?: ReactNode;
 }) {
+  const Heading = headingLevel;
   return (
     <section className={`opinion-slip ${className}`} aria-label={`Your call for ${title}`}>
       <div className="opinion-slip-top">
         <p className="overline">YOUR CALL{example ? ' / EXAMPLE' : ''}</p>
         <span>{rank ? String(rank).padStart(2, '0') : 'UNRANKED'}</span>
       </div>
-      <h3>{title}</h3>
+      <Heading className="opinion-slip-title">{title}</Heading>
       {type && <p className="opinion-slip-type">{type}</p>}
       <div className="opinion-slip-verdict" aria-live="polite">
         {decision ? (

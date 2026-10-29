@@ -18,7 +18,7 @@ export type ExperienceInput = z.infer<typeof experienceInput>;
 export const memoryFilter = z
   .object({
     mode: z.enum(['visits', 'saved']).default('visits'),
-    list: z.union([z.literal(''), z.string().uuid()]).default(''),
+    list: z.union([z.literal(''), z.literal('inbox'), z.string().uuid()]).default(''),
     from: z.union([z.literal(''), logInput.shape.happenedOn]).default(''),
     to: z.union([z.literal(''), logInput.shape.happenedOn]).default(''),
     q: z.string().trim().max(120).default(''),
@@ -32,12 +32,12 @@ export type MemoryFilter = z.infer<typeof memoryFilter>;
 export interface MemoryRecord {
   id: string;
   itemId: string | null;
-  listId: string;
+  listId: string | null;
   listName: string;
   title: string;
   note: string;
   date: string;
-  kind: 'visit' | 'activity' | 'saved';
+  kind: 'visit' | 'activity' | 'saved' | 'unfiled';
   location: string;
   order: string;
   reaction: ItemDecision | null;
@@ -70,4 +70,13 @@ export interface Preferences {
     favorites: number;
     lastDate: string;
   }[];
+}
+
+export function isSavedMemory(record: MemoryRecord) {
+  return record.kind === 'saved' || record.kind === 'unfiled';
+}
+export function memorySourceHref(record: MemoryRecord) {
+  return record.kind === 'unfiled'
+    ? `/inbox?focus=${record.id}`
+    : `/lists/${record.listId}?focus=${record.kind === 'saved' ? `item:${record.itemId ?? record.id}` : `log:${record.id}`}`;
 }

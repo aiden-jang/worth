@@ -4,6 +4,7 @@ import { OpinionSlip } from './OpinionSlip';
 import { CallBadge } from './PersonalCall';
 
 type IndexProps = {
+  sheet?: boolean;
   selection?: { ids: Set<string>; toggle: (id: string) => void };
   onWant: (item: Item) => void;
   wantPending: boolean;
@@ -23,7 +24,7 @@ type IndexProps = {
   rankPending: boolean;
 };
 
-export function IndexRows({ items, ranks, selectedId, onSelect, selection, ...actions }: IndexProps) {
+export function IndexRows({ items, ranks, selectedId, onSelect, selection, sheet }: IndexProps) {
   return (
     <ol className="collection-index-rows">
       {items.map((item) => {
@@ -46,7 +47,11 @@ export function IndexRows({ items, ranks, selectedId, onSelect, selection, ...ac
               <button
                 type="button"
                 aria-expanded={selected}
-                onClick={() => onSelect(selected ? null : item.id)}
+                aria-haspopup={sheet ? 'dialog' : undefined}
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  onSelect(selected ? null : item.id);
+                }}
               >
                 <strong>{item.title}</strong>
                 {item.type && <span>{item.type}</span>}
@@ -54,9 +59,6 @@ export function IndexRows({ items, ranks, selectedId, onSelect, selection, ...ac
               </button>
               {item.decision && <CallBadge value={item.decision} />}
             </div>
-            {selected && (
-              <ItemActions className="collection-action-tray" item={item} rank={rank} {...actions} />
-            )}
           </li>
         );
       })}
@@ -88,6 +90,7 @@ export function ItemActions({
   return (
     <OpinionSlip
       className={className}
+      headingLevel="h2"
       title={item.title}
       type={item.type}
       rank={rank}
@@ -95,25 +98,20 @@ export function ItemActions({
       disabled={decisionPending}
       onChange={(value) => onDecide(item, value)}
     >
-      <button
-        type="button"
-        className="collection-queue-action"
-        aria-pressed={Boolean(item.wantToTry)}
-        disabled={wantPending}
-        onClick={() => onWant(item)}
-      >
-        {item.wantToTry ? 'Want to try ✓' : 'Save to Want to try'}
-      </button>
-      <button
-        type="button"
-        aria-pressed={Boolean(item.revisitQueued)}
-        className="collection-queue-action"
-        disabled={queuePending}
-        onClick={() => onQueue(item)}
-      >
-        {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
-      </button>
       <div className="collection-tray-actions">
+        <button
+          type="button"
+          aria-label={`Add experience for ${item.title}`}
+          onClick={() => onLogRevisit(item.id)}
+        >
+          Add experience
+        </button>
+        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
+          Edit <ArrowRight size={15} />
+        </button>
+      </div>
+      <details className="item-more">
+        <summary>More options</summary>
         <details className="collection-rank-disclosure">
           <summary aria-label={`Rank ${item.title}`}>Rank</summary>
           <label className="collection-rank-placement">
@@ -135,20 +133,29 @@ export function ItemActions({
             </select>
           </label>
         </details>
+
         <button type="button" aria-label={`Add a note to ${item.title}`} onClick={() => onAddNote(item.id)}>
-          Note
+          Add note
         </button>
         <button
           type="button"
-          aria-label={`Log a revisit to ${item.title}`}
-          onClick={() => onLogRevisit(item.id)}
+          className="collection-queue-action"
+          aria-pressed={Boolean(item.wantToTry)}
+          disabled={wantPending}
+          onClick={() => onWant(item)}
         >
-          Revisit
+          {item.wantToTry ? 'Want to try ✓' : 'Save to Want to try'}
         </button>
-        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
-          Details <ArrowRight size={15} />
+        <button
+          type="button"
+          aria-pressed={Boolean(item.revisitQueued)}
+          className="collection-queue-action"
+          disabled={queuePending}
+          onClick={() => onQueue(item)}
+        >
+          {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
         </button>
-      </div>
+      </details>
     </OpinionSlip>
   );
 }

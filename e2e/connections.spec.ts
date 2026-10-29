@@ -125,7 +125,7 @@ test('reviewed connections preserve records and their constellation has a readab
   const data = await model(page, archive);
   await page.goto('/patterns');
   await capture(page, 'patterns-entry', info.project.name, '.patterns-head');
-  await page.locator('.pattern-more-tools > summary').click();
+  await page.locator('.recall-more > summary').click();
   await page.getByRole('link', { name: 'Connections →', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Connections', exact: true })).toBeVisible();
   await capture(page, 'overview', info.project.name);
@@ -247,7 +247,7 @@ test('failed reads retry, offline drafts remain manual and blocked storage requi
   await page.context().setOffline(true);
   await expect(page.getByRole('button', { name: 'Save connection', exact: true })).toBeDisabled();
   await page.context().setOffline(false);
-  await page.getByRole('link', { name: 'Back to Patterns' }).click();
+  await page.getByRole('link', { name: 'Back to Look back' }).click();
   await expect(page.getByRole('dialog', { name: 'Leave this connection draft?' })).toBeVisible();
   await page
     .getByRole('dialog', { name: 'Leave this connection draft?' })

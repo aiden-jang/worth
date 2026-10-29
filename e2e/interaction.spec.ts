@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 
@@ -26,14 +27,14 @@ test('capture recovers from failure and creates an unranked item without a call'
 }) => {
   archive.failCapture = true;
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('textbox', { name: 'What did you try?' }).fill('New tea');
-  await page.getByRole('button', { name: 'Keep it', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Add a name' }).fill('New tea');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Couldn’t save' })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'What did you try?' })).toHaveValue('New tea');
+  await expect(page.getByRole('textbox', { name: 'Add a name' })).toHaveValue('New tea');
   archive.failCapture = false;
-  await page.getByRole('button', { name: 'Keep it', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'New tea added' })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'What did you try?' })).toBeFocused();
+  await expect(page.getByRole('textbox', { name: 'Add a name' })).toBeFocused();
   expect(archive.items.at(-1)).toMatchObject({ title: 'New tea', decision: null });
   expect(archive.list.rankedIds).toEqual(['coffee']);
   await noOverflow(page);
@@ -47,12 +48,14 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await expect(slip.getByText('Undecided.', { exact: true })).toBeVisible();
   expect(archive.items[0].decision).toBeNull();
   expect(archive.list.rankedIds).toEqual(['coffee']);
-  await slip.getByRole('button', { name: 'Details' }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await slip.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.getByRole('dialog', { name: 'Coffee', exact: true })).toBeVisible();
+  await page.locator('.item-editor-dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await collectionOptions(page);
   await page.getByRole('link', { name: 'Show list' }).click();
   await expect(page.getByRole('heading', { name: 'My drinks' })).toBeVisible();
   await page.goBack();
+  await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   await expect(
     page.getByRole('region', { name: 'Your call for Coffee' }).filter({ visible: true }),
   ).toBeVisible();
@@ -66,6 +69,7 @@ test('calls can clear independently of rank and browsing survives Back', async (
 test('active-link lookup failure has a keyboard-accessible retry', async ({ page, archive }) => {
   archive.failShares = true;
   await page.goto(`/lists/${list.id}`);
+  await collectionOptions(page);
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'active links' })).toBeVisible();
   archive.failShares = false;
@@ -84,7 +88,7 @@ test('account outages recover and public snapshots never expose private notes', 
   await expect(page.getByRole('heading', { name: 'Account unavailable.' })).toBeVisible();
   archive.authDown = false;
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByRole('heading', { name: 'The archive.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Good to keep.' })).toBeVisible();
   await page.goto('/s/review');
   await expect(page.getByRole('heading', { name: 'My drinks' })).toBeVisible();
   await expect(page.getByText('PRIVATE NOTE', { exact: true })).toHaveCount(0);
@@ -122,7 +126,7 @@ test('directory remains usable when device storage is blocked', async ({ page })
     });
   });
   await page.goto('/lists');
-  await expect(page.getByRole('heading', { name: 'Lists', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Collections', exact: true })).toBeVisible();
   await expect(
     page
       .getByRole('link', { name: /My drinks/ })

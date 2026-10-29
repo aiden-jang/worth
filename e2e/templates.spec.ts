@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -16,7 +17,8 @@ const template: CollectionTemplate = {
 async function setup(page: Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   return page.getByRole('region', { name: 'Collection setup', exact: true });
 }
@@ -69,7 +71,8 @@ test('detail drafts recover, concurrent edits require a deliberate reload and du
     .fill('My unfinished field');
   await expect(region.getByText('Draft saved on this device.', { exact: true })).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await expect(region.getByRole('textbox', { name: 'Reusable detail names', exact: true })).toHaveValue(
@@ -119,7 +122,8 @@ test('a lost template response retries the same payload across reload without an
   await expect(region.getByRole('alert')).toContainText('Couldn’t connect');
   await expect(region.getByRole('textbox', { name: 'Template name', exact: true })).toBeDisabled();
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await region.getByRole('button', { name: 'Retry template save', exact: true }).click();
@@ -292,7 +296,8 @@ test('suggested details respect remaining capacity and collection field drafts s
     }),
   );
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await expect(region.getByRole('textbox', { name: 'Reusable detail names', exact: true })).toHaveValue(

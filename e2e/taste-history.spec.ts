@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -113,7 +114,8 @@ async function setup(page: Page, state: State) {
 }
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Taste history', exact: true }).click();
 }
 async function capture(page: Page, name: string, project: string, target = '.taste-history') {

@@ -1,33 +1,27 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { logoutUrl } from '@aidenjang/auth-client';
 import {
   ArrowRight,
-  CaretDown,
   ChartBar,
-  Clock,
   DownloadSimple,
   House,
   List,
   MagnifyingGlass,
   Plus,
   Stack,
-  Tray,
   X,
 } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import type { AuthUser } from '@aidenjang/auth-client';
 import { cleanDeviceData } from '../shared/device-data';
+import { quickEntryRequest, type SavedEntry } from '../shared/quick-entry';
 import { ProductLinks } from './ProductLinks';
 import { useConnection } from '../hooks/useConnection';
 import { api } from '../api';
-import { preferredQuickCaptureList } from '../shared/quick-capture';
-import { starterCollectionCover } from '../shared/starter-covers';
-import type { ListSummary } from '../shared/models';
 
 const InboxDrawer = lazy(() => import('./InboxDrawer').then((module) => ({ default: module.InboxDrawer })));
-
-const quickCaptureStorageKey = 'worth:quick-capture-list';
+const QuickEntry = lazy(() => import('./QuickEntry').then((module) => ({ default: module.QuickEntry })));
 
 export function AppShell({
   children,
@@ -38,32 +32,37 @@ export function AppShell({
   user: AuthUser;
   authOrigin: string;
 }) {
-  const online = useConnection();
+  const online = useConnection(),
+    client = useQueryClient();
   useEffect(() => {
     void cleanDeviceData(user.id).catch(() => {});
   }, [user.id]);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const dialog = useRef<HTMLDialogElement>(null);
-  const shortcutsDialog = useRef<HTMLDialogElement>(null);
+  const location = useLocation(),
+    navigate = useNavigate();
+  const shortcutsDialog = useRef<HTMLDialogElement>(null),
+    menuToggle = useRef<HTMLButtonElement>(null);
+  const rail = useRef<HTMLElement>(null),
+    content = useRef<HTMLDivElement>(null),
+    addTrigger = useRef<HTMLButtonElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
-  const [rememberedListId, setRememberedListId] = useState<string | null>(() => {
-    try {
-      return window.localStorage.getItem(quickCaptureStorageKey);
-    } catch {
-      return null;
-    }
-  });
-  const [pickerQuery, setPickerQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuToggle = useRef<HTMLButtonElement>(null);
-  const rail = useRef<HTMLElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const [inboxOpen, setInboxOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false),
+    [inboxOpen, setInboxOpen] = useState(false);
+  const [add, setAdd] = useState<{ listId: string; title?: string } | null>(null);
+  const [saved, setSaved] = useState<SavedEntry | null>(null);
+  useEffect(() => {
+    const clearSaved = () => setSaved(null);
+    window.addEventListener('worth:trashed', clearSaved);
+    return () => window.removeEventListener('worth:trashed', clearSaved);
+  }, []);
+  const collections = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const activities = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
+  const activityShortcut =
+    activities.find((list) => list.name.trim().toLocaleLowerCase() === 'gym') ?? activities[0];
   useEffect(() => {
     setMenuOpen(false);
     setInboxOpen(false);
-  }, [location.key]);
+    setAdd(null);
+  }, [location.pathname]);
   useEffect(() => {
     if (!menuOpen) return;
     const close = (event: KeyboardEvent) => {
@@ -89,82 +88,25 @@ export function AppShell({
       desktop.removeEventListener('change', resize);
     };
   }, [menuOpen]);
-
-  const quickCaptureList = preferredQuickCaptureList(
-    location.pathname,
-    rememberedListId,
-    lists.data?.lists ?? [],
-  );
-  const collectionLists = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
-  const activityLists = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
-  const pickerTerm = pickerQuery.trim().toLocaleLowerCase();
-  const visibleCollectionLists = pickerTerm
-    ? collectionLists.filter((list) =>
-        `${list.name} ${list.description}`.toLocaleLowerCase().includes(pickerTerm),
-      )
-    : collectionLists;
-  const visibleActivityLists = pickerTerm
-    ? activityLists.filter((list) =>
-        `${list.name} ${list.description}`.toLocaleLowerCase().includes(pickerTerm),
-      )
-    : activityLists;
-  const listScope = new URLSearchParams(location.search).get('kind');
-
-  function restoreMobileFocus() {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && active !== document.body && active.getClientRects().length) return;
-    // Opening a modal closes the disclosure, hiding its original trigger.
-    if (menuToggle.current?.getClientRects().length) menuToggle.current.focus();
-  }
-
-  const rememberList = useCallback((listId: string) => {
-    try {
-      window.localStorage.setItem(quickCaptureStorageKey, listId);
-    } catch {
-      /* Quick capture still works without device storage. */
-    }
-    setRememberedListId(listId);
-  }, []);
-
-  const openList = useCallback(
-    (list: { id: string; kind: 'collection' | 'activity' }) => {
-      rememberList(list.id);
-      dialog.current?.close();
-      navigate(`/lists/${list.id}${list.kind === 'collection' ? '?capture=1' : '?new=1'}`);
+  const openAdd = useCallback(
+    (input: { listId?: string; title?: string } = {}) => {
+      const current = /^\/lists\/([^/]+)$/.exec(location.pathname)?.[1];
+      const requested = input.listId ?? current;
+      const target = lists.data?.lists.find((list) => list.id === requested && !list.archived);
+      setMenuOpen(false);
+      setInboxOpen(false);
+      setAdd({ listId: input.listId === 'inbox' ? 'inbox' : (target?.id ?? 'inbox'), title: input.title });
     },
-    [navigate, rememberList],
+    [lists.data, location.pathname],
   );
-
-  const openPicker = useCallback(() => {
-    setPickerQuery('');
-    dialog.current?.showModal();
-  }, []);
-
-  const openAdd = useCallback(() => {
-    if (lists.isPending) return;
-    if (lists.isError) {
-      navigate('/lists');
-      return;
-    }
-    if (!lists.data?.lists.length) {
-      navigate('/capture');
-      return;
-    }
-    if (quickCaptureList) {
-      openList(quickCaptureList);
-      return;
-    }
-    openPicker();
-  }, [
-    lists.data?.lists.length,
-    lists.isError,
-    lists.isPending,
-    navigate,
-    openList,
-    openPicker,
-    quickCaptureList,
-  ]);
-
+  useEffect(() => {
+    const handle = (event: Event) => {
+      const input = quickEntryRequest.safeParse((event as CustomEvent).detail ?? {});
+      if (input.success) openAdd(input.data);
+    };
+    window.addEventListener('worth:add-entry', handle);
+    return () => window.removeEventListener('worth:add-entry', handle);
+  }, [openAdd]);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('add') !== '1' || lists.isPending) return;
@@ -172,23 +114,28 @@ export function AppShell({
     navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
     openAdd();
   }, [location.pathname, location.search, lists.isPending, navigate, openAdd]);
-
+  function restoreFocus() {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body && active.getClientRects().length) return;
+    const trigger = addTrigger.current?.getClientRects().length
+      ? addTrigger.current
+      : rail.current?.querySelector<HTMLButtonElement>('.header-add');
+    trigger?.focus();
+  }
   useEffect(() => {
     if (location.pathname.endsWith('/show')) return;
-    const handleShortcut = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
+    const handle = (event: KeyboardEvent) => {
       if (
-        target?.isContentEditable ||
-        target?.tagName === 'INPUT' ||
-        target?.tagName === 'TEXTAREA' ||
-        target?.tagName === 'SELECT' ||
-        target?.closest('button, a, [role="button"]')
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        document.querySelector('dialog[open]')
       )
         return;
-      if (dialog.current?.open || shortcutsDialog.current?.open || document.querySelector('dialog[open]'))
+      const target = event.target as HTMLElement | null;
+      if (target?.isContentEditable || target?.closest('input, textarea, select, button, a, [role="button"]'))
         return;
-
       if (event.key === '/') {
         event.preventDefault();
         navigate('/search');
@@ -202,14 +149,54 @@ export function AppShell({
         openAdd();
       }
     };
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
   }, [location.pathname, navigate, openAdd]);
-
+  useEffect(() => {
+    const menus = () => [...document.querySelectorAll<HTMLDetailsElement>('details[data-menu][open]')];
+    const outside = (event: Event) => {
+      if (document.querySelector('dialog[open]')) return;
+      for (const menu of menus())
+        if (event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('dialog[open]')) return;
+      const menu = menus().at(-1);
+      if (!menu) return;
+      event.preventDefault();
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('focusin', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('focusin', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, []);
+  const undo = useMutation({
+    mutationFn: (entry: SavedEntry) =>
+      entry.kind === 'inbox'
+        ? api.deleteInbox(entry.id)
+        : entry.kind === 'item' || entry.undoItemId
+          ? api.deleteItem(entry.undoItemId ?? entry.id)
+          : api.deleteLog(entry.id),
+    onSuccess: (_, entry) => {
+      setSaved((current) => (current?.id === entry.id ? null : current));
+      void client.invalidateQueries();
+    },
+  });
   if (location.pathname.endsWith('/show')) return <>{children}</>;
-
+  const collectionActive = location.pathname === '/lists' || /^\/lists\/[^/]+$/.test(location.pathname);
+  const savedHref = saved
+    ? saved.kind === 'inbox'
+      ? `/inbox?focus=${saved.id}`
+      : `/lists/${saved.listId}?focus=${saved.kind}:${saved.id}`
+    : '/';
   return (
-    <div className="app-shell app-shell-dark">
+    <div className="app-shell app-shell-dark everyday-shell">
       <a
         className="skip-link"
         href="#worth-content"
@@ -229,25 +216,39 @@ export function AppShell({
         aria-label="Archive navigation"
         className={`app-rail ${menuOpen ? 'mobile-menu-open' : ''}`}
       >
-        <Link to="/" className="brand" aria-label="Worth, archive home">
+        <Link to="/" className="brand" aria-label="Worth, home">
           worth
         </Link>
-        <button
-          type="button"
-          ref={menuToggle}
-          className="mobile-menu-toggle icon-button"
-          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={menuOpen}
-          aria-controls="worth-navigation worth-rail-actions"
-          onClick={() => setMenuOpen((current) => !current)}
-        >
-          {menuOpen ? <X size={24} /> : <List size={24} />}
-        </button>
+        <div className="mobile-header-actions">
+          <Link to="/search" className="icon-button" aria-label="Search">
+            <MagnifyingGlass size={23} />
+          </Link>
+          <button
+            type="button"
+            ref={menuToggle}
+            className="mobile-menu-toggle icon-button"
+            aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={menuOpen}
+            aria-controls="worth-navigation worth-rail-actions"
+            onClick={() => setMenuOpen((current) => !current)}
+          >
+            {menuOpen ? <X size={24} /> : <List size={24} />}
+          </button>
+        </div>
         <nav id="worth-navigation" aria-label="Main navigation" className="main-nav">
           <NavLink end to="/">
-            <House size={18} aria-hidden="true" /> Archive
+            <House size={18} aria-hidden="true" /> Home
           </NavLink>
-          <NavLink
+          <NavLink to="/lists" className={() => (collectionActive ? 'active' : undefined)}>
+            <Stack size={18} aria-hidden="true" /> Collections
+          </NavLink>
+          <NavLink to="/patterns">
+            <ChartBar size={18} aria-hidden="true" /> Look back
+          </NavLink>
+          <NavLink className="rail-utility-link" to="/search">
+            <MagnifyingGlass size={18} aria-hidden="true" /> Search
+          </NavLink>
+          <Link
             to="/inbox"
             onClick={(event) => {
               if (
@@ -264,50 +265,28 @@ export function AppShell({
               setInboxOpen(true);
             }}
           >
-            <Tray size={18} aria-hidden="true" /> Inbox
-          </NavLink>
-          <NavLink
-            to="/lists?kind=collection"
-            className={() =>
-              (location.pathname === '/lists' && listScope === 'collection') ||
-              collectionLists.some((list) => location.pathname === `/lists/${list.id}`)
-                ? 'active'
-                : undefined
-            }
-          >
-            <Stack size={18} aria-hidden="true" /> Collections
-          </NavLink>
-          <NavLink
-            to="/lists?kind=activity"
-            className={() =>
-              (location.pathname === '/lists' && listScope === 'activity') ||
-              activityLists.some((list) => location.pathname === `/lists/${list.id}`)
-                ? 'active'
-                : undefined
-            }
-          >
-            <Clock size={18} aria-hidden="true" /> Activity
-          </NavLink>
-          <NavLink to="/patterns">
-            <ChartBar size={18} aria-hidden="true" /> Patterns
-          </NavLink>
-          <NavLink className="rail-utility-link" to="/search" title="Press / to search">
-            <MagnifyingGlass size={18} aria-hidden="true" /> Search <kbd>/</kbd>
-          </NavLink>
+            Unfiled
+          </Link>
         </nav>
-        {collectionLists.length > 0 && (
-          <nav className="rail-collections" aria-label="Your collections">
-            <p>Collections</p>
-            {collectionLists.slice(0, 8).map((list) => (
+        {(collections.length > 0 || activityShortcut) && (
+          <nav className="rail-collections" aria-label="Quick access">
+            <p>QUICK ACCESS</p>
+            {activityShortcut && (
+              <NavLink to={`/lists/${activityShortcut.id}`}>
+                {activityShortcut.name} <ArrowRight size={14} />
+              </NavLink>
+            )}
+            {collections.slice(0, 3).map((list) => (
               <NavLink key={list.id} to={`/lists/${list.id}`}>
                 <span>{list.name}</span>
-                <small>{list.itemCount}</small>
               </NavLink>
             ))}
-            {collectionLists.length > 8 && <Link to="/lists">All lists</Link>}
           </nav>
         )}
         <div className="rail-actions" id="worth-rail-actions">
+          <button className="button button-accent header-add" onClick={() => openAdd()}>
+            <Plus size={18} /> Add
+          </button>
           <a
             className="account-link"
             href={new URL('/account', authOrigin).toString()}
@@ -327,28 +306,10 @@ export function AppShell({
           <button
             className="rail-shortcuts"
             type="button"
-            title="Press ? for keyboard shortcuts"
             onClick={() => shortcutsDialog.current?.showModal()}
           >
             Shortcuts <span>?</span>
           </button>
-          <div className={quickCaptureList ? 'quick-capture quick-capture-ready' : 'quick-capture'}>
-            <button
-              className="button button-accent header-add"
-              onClick={openAdd}
-              disabled={lists.isPending}
-              aria-label={quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add to a list'}
-              title="Press N to add"
-            >
-              <Plus size={17} weight="bold" />
-              {quickCaptureList ? `Add to ${quickCaptureList.name}` : 'Add'}
-            </button>
-            {quickCaptureList && (
-              <button className="quick-capture-picker" aria-label="Choose another list" onClick={openPicker}>
-                <CaretDown size={14} weight="bold" />
-              </button>
-            )}
-          </div>
         </div>
       </aside>
       <div className="app-content" id="worth-content" ref={content}>
@@ -364,75 +325,93 @@ export function AppShell({
           <a href={logoutUrl(authOrigin, window.location.origin)}>Sign out</a>
         </footer>
       </div>
-      {inboxOpen && (
-        <Suspense fallback={<p role="status">Opening Inbox…</p>}>
-          <InboxDrawer onClose={() => setInboxOpen(false)} />
+      <nav className="mobile-primary" aria-label="Quick navigation">
+        <NavLink end to="/">
+          <House size={20} aria-hidden="true" />
+          <span>Home</span>
+        </NavLink>
+        <NavLink to="/lists" className={() => (collectionActive ? 'active' : undefined)}>
+          <Stack size={20} aria-hidden="true" />
+          <span>Collections</span>
+        </NavLink>
+        <NavLink to="/patterns">
+          <ChartBar size={20} aria-hidden="true" />
+          <span>Look back</span>
+        </NavLink>
+        <button ref={addTrigger} className="button button-accent" onClick={() => openAdd()}>
+          <Plus size={19} /> Add
+        </button>
+      </nav>
+      {saved && (
+        <div className="entry-saved" role="status">
+          <span>Saved “{saved.title}”.</span>
+          <Link to={savedHref}>Open</Link>
+          <button
+            type="button"
+            disabled={undo.isPending}
+            onClick={() => {
+              undo.reset();
+              undo.mutate(saved);
+            }}
+          >
+            {undo.isPending ? 'Undoing…' : 'Undo'}
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Dismiss saved message"
+            onClick={() => setSaved(null)}
+          >
+            <X size={18} />
+          </button>
+          {undo.isError && <span role="alert">{undo.error.message}</span>}
+        </div>
+      )}
+      {add && (
+        <Suspense
+          fallback={
+            <p className="entry-saved" role="status">
+              Opening Add…
+            </p>
+          }
+        >
+          <QuickEntry
+            key="quick-entry"
+            lists={lists.data?.lists ?? []}
+            initialListId={add.listId}
+            initialTitle={add.title}
+            onSaved={(entry) => {
+              window.dispatchEvent(new Event('worth:entry-saved'));
+              setSaved(entry);
+            }}
+            onClose={() => {
+              setAdd(null);
+              requestAnimationFrame(restoreFocus);
+            }}
+          />
         </Suspense>
       )}
-      <dialog
-        className="add-dialog"
-        aria-labelledby="worth-add-title"
-        ref={dialog}
-        onClose={restoreMobileFocus}
-        onClick={(event) => {
-          if (event.target === dialog.current) dialog.current.close();
-        }}
-      >
-        <div className="dialog-head">
-          <div>
-            <p className="overline">ADD TO</p>
-            <h2 id="worth-add-title">Pick a list.</h2>
-          </div>
-          <button className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>
-            <X size={20} />
-          </button>
-        </div>
-        {(collectionLists.length + activityLists.length > 6 || pickerQuery) && (
-          <label className="add-list-search">
-            <span className="sr-only">Find a list</span>
-            <input
-              autoFocus
-              value={pickerQuery}
-              onChange={(event) => setPickerQuery(event.target.value)}
-              placeholder="Find a list"
-            />
-          </label>
-        )}
-        <Link className="dialog-create" to="/capture" onClick={() => dialog.current?.close()}>
-          Keep a name in Inbox <ArrowRight size={16} />
-        </Link>
-        <div className="add-list-choices">
-          {visibleCollectionLists.length > 0 && (
-            <ListPickerGroup label="Collections" lists={visibleCollectionLists} onOpen={openList} />
-          )}
-          {visibleActivityLists.length > 0 && (
-            <ListPickerGroup label="Activity" lists={visibleActivityLists} onOpen={openList} />
-          )}
-          {pickerTerm && !visibleCollectionLists.length && !visibleActivityLists.length && (
-            <p className="add-list-empty">No lists match “{pickerQuery.trim()}”.</p>
-          )}
-        </div>
-        <Link className="dialog-create" to="/capture" onClick={() => dialog.current?.close()}>
-          Capture from a browser or link <ArrowRight size={16} />
-        </Link>
-        <Link className="dialog-create" to="/lists?create=1" onClick={() => dialog.current?.close()}>
-          Create a new list <ArrowRight size={16} />
-        </Link>
-      </dialog>
+      {inboxOpen && (
+        <Suspense fallback={<p role="status">Opening Unfiled…</p>}>
+          <InboxDrawer
+            onClose={() => {
+              setInboxOpen(false);
+              requestAnimationFrame(restoreFocus);
+            }}
+          />
+        </Suspense>
+      )}
       <dialog
         className="add-dialog shortcut-dialog"
         aria-labelledby="worth-shortcuts-title"
         ref={shortcutsDialog}
-        onClose={restoreMobileFocus}
+        onClose={restoreFocus}
         onClick={(event) => {
           if (event.target === shortcutsDialog.current) shortcutsDialog.current.close();
         }}
       >
         <div className="dialog-head">
-          <div>
-            <p className="overline">KEYBOARD</p>
-            <h2 id="worth-shortcuts-title">Less clicking.</h2>
-          </div>
+          <h2 id="worth-shortcuts-title">Keyboard shortcuts</h2>
           <button
             className="icon-button"
             aria-label="Close shortcuts"
@@ -444,57 +423,26 @@ export function AppShell({
         <div className="shortcut-list">
           <p>
             <kbd>N</kbd>
-            <span>Add to your current or last-used list</span>
+            <span>Add a name</span>
           </p>
           <p>
             <kbd>/</kbd>
-            <span>Search your archive</span>
+            <span>Search your saved entries</span>
           </p>
           <p>
             <kbd>C</kbd>
-            <span>Focus the capture field in a collection</span>
+            <span>Focus the name field in a collection</span>
           </p>
           <p>
             <kbd>A</kbd>
-            <span>Start a new activity log on an activity page</span>
+            <span>Add an activity entry on an activity page</span>
+          </p>
+          <p>
+            <kbd>Esc</kbd>
+            <span>Close the current panel</span>
           </p>
         </div>
-        <p className="shortcut-note">Shortcuts pause while you type or use a control.</p>
       </dialog>
     </div>
-  );
-}
-
-function ListPickerGroup({
-  label,
-  lists,
-  onOpen,
-}: {
-  label: string;
-  lists: ListSummary[];
-  onOpen: (list: { id: string; kind: 'collection' | 'activity' }) => void;
-}) {
-  return (
-    <section className="add-list-group" aria-label={label}>
-      <p>{label}</p>
-      {lists.map((list) => {
-        const cover =
-          list.kind === 'collection'
-            ? list.hasCoverPhoto
-              ? `/api/lists/${list.id}/cover?v=${list.coverRevision ?? list.updatedAt}`
-              : starterCollectionCover(list.name, list.artwork)
-            : null;
-        return (
-          <button key={list.id} onClick={() => onOpen(list)}>
-            {cover && <img className="add-list-cover" src={cover} alt="" />}
-            <span>
-              {list.name}
-              <small>{list.kind === 'collection' ? 'Add an item' : 'Log a moment'}</small>
-            </span>
-            <ArrowRight size={18} />
-          </button>
-        );
-      })}
-    </section>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { api } from '../api';
@@ -5,15 +6,16 @@ import { formatDate } from '../format';
 import '../memories.css';
 
 export function PreferenceInsights() {
+  const [allGroups, setAllGroups] = useState(false);
   const query = useQuery({ queryKey: ['patterns', 'preferences'], queryFn: api.preferences });
   return (
     <section className="preference-insights" aria-labelledby="preference-heading">
       <header>
         <p className="overline">WHAT HELD UP</p>
-        <h2 id="preference-heading">A little more your type.</h2>
+        <h2 id="preference-heading">What you like.</h2>
         <p>
-          Overall calls and visit reactions, kept separate. Up to 12 groups with the most recorded calls, by
-          collection, type and personal label.
+          Your recorded opinions, with the entries behind them. Overall calls and visit reactions stay
+          separate.
         </p>
       </header>
       {query.isPending && <p role="status">Reading your preferences…</p>}
@@ -28,15 +30,20 @@ export function PreferenceInsights() {
       {query.data && (
         <>
           <div className="preference-grid">
-            {query.data.groups.map((group) => {
+            {(allGroups ? query.data.groups : query.data.groups.slice(0, 3)).map((group) => {
               const rated = group.favorite + group.meh + group.notAgain;
               return (
                 <article key={`${group.listId}:${group.kind}:${group.basis}:${group.name}`}>
                   <p className="overline">
-                    {group.listName} · {group.kind} ·{' '}
-                    {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
+                    {group.listName} · {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
                   </p>
-                  <h3>{group.kind === 'collection' ? 'Across this collection' : group.name}</h3>
+                  <h3>
+                    {group.kind === 'collection'
+                      ? group.listId === 'inbox'
+                        ? 'Your unfiled finds'
+                        : 'Across this collection'
+                      : group.name}
+                  </h3>
                   <p>
                     <strong>
                       {group.favorite} of {rated}
@@ -71,6 +78,16 @@ export function PreferenceInsights() {
               );
             })}
           </div>
+          {query.data.groups.length > 3 && (
+            <button
+              className="button button-outline"
+              type="button"
+              aria-expanded={allGroups}
+              onClick={() => setAllGroups((value) => !value)}
+            >
+              {allGroups ? 'Show fewer groups' : `Show all ${query.data.groups.length} groups`}
+            </button>
+          )}
           {!query.data.groups.length && (
             <p>
               A few overall calls or visit reactions will appear here. Types and labels can add detail later.

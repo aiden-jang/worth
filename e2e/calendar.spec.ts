@@ -89,6 +89,7 @@ test('calendar distinguishes plans from logs and keeps month choices deliberate'
 }, info) => {
   await setup(page, archive);
   await page.goto('/patterns');
+  await page.locator('.recall-more > summary').click();
   await page.getByRole('link', { name: 'Activity calendar →', exact: true }).click();
   await show(page);
   await expect(page.getByRole('region', { name: 'Selected day', exact: true })).toContainText(

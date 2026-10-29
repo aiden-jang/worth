@@ -42,7 +42,7 @@ export function SearchPage() {
   const inboxResults = results.data?.results.filter((result) => result.kind === 'inbox') ?? [];
   const logResults = results.data?.results.filter((result) => result.kind === 'log') ?? [];
   const groups: { scope: Exclude<SearchScope, 'all'>; label: string; results: SearchResult[] }[] = [
-    { scope: 'inbox', label: 'Inbox', results: inboxResults },
+    { scope: 'inbox', label: 'Unfiled', results: inboxResults },
     { scope: 'lists', label: 'Lists', results: listResults },
     { scope: 'items', label: 'Items', results: itemResults },
     { scope: 'logs', label: 'Logs', results: logResults },
@@ -120,7 +120,7 @@ export function SearchPage() {
                 [
                   ['all', 'All', results.data.results.length],
                   ['lists', 'Lists', listResults.length],
-                  ['inbox', 'Inbox', inboxResults.length],
+                  ['inbox', 'Unfiled', inboxResults.length],
                   ['items', 'Items', itemResults.length],
                   ['logs', 'Logs', logResults.length],
                   ['exercises', 'Exercises', exercises.length],

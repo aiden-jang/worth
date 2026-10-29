@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { copyFile, mkdir, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
@@ -5,7 +6,8 @@ import { test, expect, list } from './fixtures';
 
 async function open(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Booklets & cards', exact: true }).click();
 }
 
@@ -152,7 +154,8 @@ test('photo export failures recover and export settings survive closing', async 
   expect(html).not.toContain('/api/items/');
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Booklets & cards', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Coffee', exact: true })).toBeChecked();
 });

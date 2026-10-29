@@ -19,6 +19,7 @@ import { WorkoutSessions } from './WorkoutSessions';
 
 export function ActivityView({
   listId,
+  listName,
   aliases,
   logs,
   loading,
@@ -30,6 +31,7 @@ export function ActivityView({
   onNew,
 }: {
   listId: string;
+  listName: string;
   aliases: ExerciseAliases;
   logs: Log[];
   loading: boolean;
@@ -154,95 +156,22 @@ export function ActivityView({
     );
 
   return (
-    <section className="activity-view">
-      {lastLog && (
-        <section className="activity-summary" aria-label="Latest activity">
-          <div>
-            <span>Last done</span>
-            <strong>{lastLog.title}</strong>
-          </div>
-          <div>
-            <span>{formatElapsedDays(lastLog.happenedOn)}</span>
-            <small>{formatDate(lastLog.happenedOn)}</small>
-          </div>
-          <button
-            className="activity-summary-again"
-            type="button"
-            onClick={() => {
-              setInitialWorkout(null);
-              setInitialExercise('');
-              setRepeatLog(lastLog);
-              onNew();
-            }}
-          >
-            Log again <ArrowRight size={15} />
-          </button>
-        </section>
-      )}
-      <WorkoutRoutines
-        listId={listId}
-        seed={routineSeed}
-        onCloseSeed={() => setRoutineSeed(null)}
-        onStarted={clearFilters}
-      />
-      {!loading && !error && (
-        <>
-          <WorkoutProgress workouts={workouts} />
-          <ExerciseDirectory
-            logs={logs}
-            listId={listId}
-            aliases={aliases.groups}
-            onOpen={setHistoryTitle}
-            onManageAliases={() => setEditingAliases(true)}
-          />
-        </>
-      )}
-      <div className="workout-launch">
+    <section
+      className={`activity-view ${workouts.length || logs.some((log) => log.exercise) || /gym|workout|training/i.test(listName) ? 'workout-first' : 'activity-first'}`}
+    >
+      <div className="activity-primary-actions">
         <button
           type="button"
-          className="button button-outline"
+          className="button button-accent"
           disabled={workoutsQuery.isPending || workoutsQuery.isError}
           onClick={() => setCreatingWorkout(true)}
         >
-          <Plus size={17} /> New workout
+          <Plus size={18} /> Start workout
+        </button>
+        <button type="button" className="button button-outline" onClick={() => onNew()}>
+          <Plus size={18} /> Add activity
         </button>
       </div>
-      <div className="activity-tools">
-        <input
-          aria-label="Search activity"
-          placeholder="Find a log"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <select
-          aria-label="Sort activity"
-          value={sort}
-          onChange={(event) => setSort(event.target.value as typeof sort)}
-        >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="name">Name</option>
-        </select>
-        <select
-          aria-label="Time period"
-          value={period}
-          onChange={(event) => setPeriod(event.target.value as typeof period)}
-        >
-          <option value="all">All time</option>
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="year">This year</option>
-        </select>
-        {hasFilters && (
-          <button className="clear-filters" type="button" onClick={clearFilters}>
-            Clear filters
-          </button>
-        )}
-        <span role="status">
-          {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
-        </span>
-      </div>
-      <p className="activity-shortcut-hint">Press A to log from anywhere on this page.</p>
       {workoutsQuery.isError ? (
         <p className="error-banner" role="alert">
           Couldn't load workouts. <button onClick={() => void workoutsQuery.refetch()}>Try again</button>
@@ -251,6 +180,99 @@ export function ActivityView({
         <p className="loading-line">Loading workouts…</p>
       ) : (
         <WorkoutSessions
+          afterActive={
+            <>
+              {lastLog && !workouts.some((workout) => workout.status === 'active') && (
+                <section className="activity-summary" aria-label="Latest activity">
+                  <div>
+                    <span>Last done</span>
+                    <strong>{lastLog.title}</strong>
+                  </div>
+                  <div>
+                    <span>{formatElapsedDays(lastLog.happenedOn)}</span>
+                    <small>{formatDate(lastLog.happenedOn)}</small>
+                  </div>
+                  <button
+                    className="activity-summary-again"
+                    type="button"
+                    onClick={() => {
+                      setInitialWorkout(null);
+                      setInitialExercise('');
+                      setRepeatLog(lastLog);
+                      onNew();
+                    }}
+                  >
+                    Log again <ArrowRight size={15} />
+                  </button>
+                </section>
+              )}
+              <details className="activity-secondary" open={routineSeed ? true : undefined}>
+                <summary>Routines</summary>{' '}
+                <WorkoutRoutines
+                  listId={listId}
+                  seed={routineSeed}
+                  onCloseSeed={() => setRoutineSeed(null)}
+                  onStarted={clearFilters}
+                />
+              </details>
+              <details className="activity-secondary">
+                <summary>Progress & exercise history</summary>{' '}
+                {!loading && !error && (
+                  <>
+                    <WorkoutProgress workouts={workouts} />
+                    <ExerciseDirectory
+                      logs={logs}
+                      listId={listId}
+                      aliases={aliases.groups}
+                      onOpen={setHistoryTitle}
+                      onManageAliases={() => setEditingAliases(true)}
+                    />
+                  </>
+                )}
+              </details>
+              <details className="activity-secondary" open={hasFilters || undefined}>
+                <summary>Search past activity{hasFilters ? ' · Filters on' : ''}</summary>
+                <p className="exercise-helper">
+                  Filters apply to past workouts and other activity. Current workouts stay visible.
+                </p>{' '}
+                <div className="activity-tools">
+                  <input
+                    aria-label="Search activity"
+                    placeholder="Find a log"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                  <select
+                    aria-label="Sort activity"
+                    value={sort}
+                    onChange={(event) => setSort(event.target.value as typeof sort)}
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="name">Name</option>
+                  </select>
+                  <select
+                    aria-label="Time period"
+                    value={period}
+                    onChange={(event) => setPeriod(event.target.value as typeof period)}
+                  >
+                    <option value="all">All time</option>
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="year">This year</option>
+                  </select>
+                  {hasFilters && (
+                    <button className="clear-filters" type="button" onClick={clearFilters}>
+                      Clear filters
+                    </button>
+                  )}
+                  <span role="status">
+                    {visible.length} of {logs.length} {logs.length === 1 ? 'log' : 'logs'}
+                  </span>
+                </div>
+              </details>
+            </>
+          }
           listId={listId}
           creating={creatingWorkout}
           onCloseCreate={() => {
@@ -301,7 +323,7 @@ export function ActivityView({
           description={
             logs.length
               ? 'Try another search.'
-              : 'Create a routine above to plan your exercises, or start with one log.'
+              : 'Start a workout, or keep a single activity entry. Routines are optional.'
           }
         >
           {!logs.length && (

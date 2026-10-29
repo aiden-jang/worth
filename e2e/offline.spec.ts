@@ -114,7 +114,7 @@ async function unlock(page: Page, phrase = password) {
 }
 async function queue(page: Page, title: string) {
   await page.getByRole('textbox', { name: 'Find name', exact: true }).fill(title);
-  await page.getByRole('button', { name: 'Queue Inbox capture', exact: true }).click();
+  await page.getByRole('button', { name: 'Queue Unfiled capture', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Capture queued');
 }
 async function disk(page: Page) {
@@ -275,7 +275,7 @@ test('cross-tab changes never overwrite another queue and reopening reads the la
   await expect(other.getByRole('heading', { name: 'Saved text archive', exact: true })).toBeVisible();
   await queue(other, 'Other tab find');
   await page.getByRole('textbox', { name: 'Find name', exact: true }).fill('This tab unsaved text');
-  await page.getByRole('button', { name: 'Queue Inbox capture', exact: true }).click();
+  await page.getByRole('button', { name: 'Queue Unfiled capture', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('changed in another tab');
   await expect(page.getByRole('textbox', { name: 'Find name', exact: true })).toHaveValue(
     'This tab unsaved text',
@@ -299,7 +299,7 @@ test('storage failures retain typed text, prior ciphertext and usable narrow lay
     };
   });
   await page.getByRole('textbox', { name: 'Find name', exact: true }).fill('Keep this unfinished capture');
-  await page.getByRole('button', { name: 'Queue Inbox capture', exact: true }).click();
+  await page.getByRole('button', { name: 'Queue Unfiled capture', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Could not save the encrypted device copy');
   await expect(page.getByRole('textbox', { name: 'Find name', exact: true })).toHaveValue(
     'Keep this unfinished capture',

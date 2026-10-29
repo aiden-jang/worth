@@ -1,10 +1,12 @@
 # Worth UI work
 
 Before changing a primary screen, read `DESIGN.md`, the current build references in
-`art/ui-mocks/taste-cabinet/README.md`, and `art/ui-mocks/BUILD-CONTRACT.md`, then open the
-relevant reference image. The October 10 taste cabinet is the current build target.
-The user authorized a stronger redesign after rejecting incremental polish. Earlier
-personality and generated references remain history; their different layouts do not govern this revision.
+`art/ui-mocks/everyday/README.md`, and `art/ui-mocks/BUILD-CONTRACT.md`, then open the
+relevant reference image. The October 28 everyday flow is the current interaction
+and composition target for Home, Add, collections, recall and activity. The user
+explicitly requested structural simplification after finding the earlier UI complex.
+The taste-cabinet references still govern identity, artwork, colors and secondary
+screens. Earlier compositions are history where the everyday revision supersedes them.
 
 - Match the current reference's layout, typography scale, spacing, palette, rules, and selected states.
 - Use the current revision in `art/ui-mocks/BUILD-CONTRACT.md` for exact fonts, colors,

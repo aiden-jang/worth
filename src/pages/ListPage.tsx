@@ -1,4 +1,4 @@
-import { ArrowLeft, GearSix, Plus, PresentationChart, ShareNetwork } from '@phosphor-icons/react';
+import { ArrowLeft, GearSix, PresentationChart, ShareNetwork } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -117,48 +117,46 @@ export function ListPage() {
           </p>
           {list.description && <p className="list-user-description">{list.description}</p>}
         </div>
-        <div className="list-head-actions">
-          {list.kind === 'collection' && (
+        <details data-menu className="list-head-actions collection-options">
+          <summary aria-label="Collection options">•••</summary>
+          <div className="collection-options-panel">
+            {list.kind === 'collection' && (
+              <button
+                className="button button-outline"
+                disabled={
+                  itemsQuery.isPending || itemsQuery.isError || logsQuery.isPending || logsQuery.isError
+                }
+                onClick={() => setShowWorkbench(true)}
+              >
+                Ranking & tools
+              </button>
+            )}
+            {list.kind === 'collection' && (
+              <Link className="button button-outline" to={`/lists/${list.id}/show`}>
+                <PresentationChart size={18} /> Show list
+              </Link>
+            )}
+            {list.kind === 'collection' && (
+              <button
+                className="button button-outline"
+                onClick={(event) => {
+                  // Safari does not focus a button on pointer activation; the dialog needs its return target.
+                  event.currentTarget.focus();
+                  setShowShare(true);
+                }}
+              >
+                <ShareNetwork size={18} /> Share
+              </button>
+            )}
             <button
-              className="button button-outline"
-              disabled={
-                itemsQuery.isPending || itemsQuery.isError || logsQuery.isPending || logsQuery.isError
-              }
-              onClick={() => setShowWorkbench(true)}
+              className="icon-button settings-button"
+              aria-label="List settings"
+              onClick={() => setShowSettings(true)}
             >
-              Workbench
+              <GearSix size={20} /> Settings
             </button>
-          )}
-          {list.kind === 'collection' && (
-            <Link className="button button-outline" to={`/lists/${list.id}/show`}>
-              <PresentationChart size={18} /> Show list
-            </Link>
-          )}
-          {list.kind === 'collection' && (
-            <button
-              className="button button-outline"
-              onClick={(event) => {
-                // Safari does not focus a button on pointer activation; the dialog needs its return target.
-                event.currentTarget.focus();
-                setShowShare(true);
-              }}
-            >
-              <ShareNetwork size={18} /> Share
-            </button>
-          )}
-          <button
-            className="icon-button settings-button"
-            aria-label="List settings"
-            onClick={() => setShowSettings(true)}
-          >
-            <GearSix size={20} />
-          </button>
-          {list.kind === 'activity' && (
-            <button className="button button-accent" onClick={() => setParams({ new: '1' })}>
-              <Plus size={18} /> Add log
-            </button>
-          )}
-        </div>
+          </div>
+        </details>
       </section>
       {list.archived && (
         <div className="collection-archive-notice" role="status">
@@ -261,6 +259,7 @@ export function ListPage() {
         </>
       ) : (
         <ActivityView
+          listName={list.name}
           listId={listId}
           aliases={{ groups: list.exerciseAliases ?? [], revision: list.exerciseAliasRevision ?? 0 }}
           logs={logs}

@@ -1,6 +1,6 @@
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, RequestError } from '../api';
 import { planEditorDraft, exerciseKey, targetSummary } from '../shared/activity-plans';
 import { RoutineTargetsEditor } from './RoutineTargetsEditor';
@@ -29,7 +29,9 @@ export function WorkoutSessions({
   onSaveRoutine,
   creating,
   onCloseCreate,
+  afterActive,
 }: {
+  afterActive?: ReactNode;
   creating: boolean;
   onCloseCreate: () => void;
   listId: string;
@@ -61,11 +63,14 @@ export function WorkoutSessions({
   const filtered = workouts
     .filter(
       (workout) =>
-        (!periodStart || workout.happenedOn >= periodStart) &&
-        (!query.trim() ||
-          workout.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
-          visibleLogs.some((log) => log.workoutId === workout.id) ||
-          workout.plannedExercises?.some((name) => name.toLowerCase().includes(query.trim().toLowerCase()))),
+        workout.status === 'active' ||
+        ((!periodStart || workout.happenedOn >= periodStart) &&
+          (!query.trim() ||
+            workout.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
+            visibleLogs.some((log) => log.workoutId === workout.id) ||
+            workout.plannedExercises?.some((name) =>
+              name.toLowerCase().includes(query.trim().toLowerCase()),
+            ))),
     )
     .sort((a, b) =>
       sort === 'name'
@@ -73,55 +78,50 @@ export function WorkoutSessions({
         : (sort === 'oldest' ? 1 : -1) *
           (a.happenedOn.localeCompare(b.happenedOn) || a.createdAt - b.createdAt),
     );
-  if (!workouts.length && !creating && !editing) return null;
-  return (
-    <section className="workout-sessions" aria-label="Workouts">
-      {update.isError && (
-        <p className="form-error" role="alert">
-          {update.error.message}
-        </p>
-      )}
-      <div className="workout-section-head">
-        <p className="overline">WORKOUTS</p>
-        <span className="workout-count">{filtered.length} shown</span>
-      </div>
-      {!filtered.length && workouts.length > 0 && (
-        <p className="workout-empty">No workouts match these filters.</p>
-      )}
-      {filtered.map((workout) => {
-        const entries = logs
-          .filter((log) => log.workoutId === workout.id)
-          .sort((a, b) => a.createdAt - b.createdAt);
-        const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
-        const pending = (workout.plannedExercises ?? []).filter(
-          (name) =>
-            !entries.some((entry) => normalize(entry.title) === normalize(name)) &&
-            !(workout.skippedExercises ?? []).includes(name),
-        );
-        const visiblePending = pending.filter(
-          (name) =>
-            !query.trim() ||
-            workout.title.toLowerCase().includes(query.trim().toLowerCase()) ||
-            name.toLowerCase().includes(query.trim().toLowerCase()),
-        );
-        const shown = entries.filter((log) => visibleLogs.some((entry) => entry.id === log.id));
-        const sets = entries.reduce((sum, entry) => sum + (entry.exerciseSets?.length ?? 0), 0);
-        const reps = entries.reduce(
-          (sum, entry) => sum + (entry.exerciseSets ?? []).reduce((n, set) => n + (set.reps ?? 0), 0),
-          0,
-        );
-        return (
-          <article className="workout-card" key={workout.id}>
-            <div className="workout-card-heading">
-              <div>
-                <p className="overline">
-                  {workout.status === 'active' ? 'ACTIVE WORKOUT' : 'WORKOUT RECAP'} ·{' '}
-                  {formatDate(workout.happenedOn)}
-                </p>
-                <h2 id={`workout-heading-${workout.id}`} tabIndex={-1}>
-                  {workout.title}
-                </h2>
-              </div>
+  const active = filtered.filter((workout) => workout.status === 'active');
+  const past = filtered.filter((workout) => workout.status !== 'active');
+  function renderWorkout(workout: WorkoutSession) {
+    const entries = logs
+      .filter((log) => log.workoutId === workout.id)
+      .sort((a, b) => a.createdAt - b.createdAt);
+    const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
+    const pending = (workout.plannedExercises ?? []).filter(
+      (name) =>
+        !entries.some((entry) => normalize(entry.title) === normalize(name)) &&
+        !(workout.skippedExercises ?? []).includes(name),
+    );
+    const visiblePending = pending.filter(
+      (name) =>
+        workout.status === 'active' ||
+        !query.trim() ||
+        workout.title.toLowerCase().includes(query.trim().toLowerCase()) ||
+        name.toLowerCase().includes(query.trim().toLowerCase()),
+    );
+    const shown =
+      workout.status === 'active'
+        ? entries
+        : entries.filter((log) => visibleLogs.some((entry) => entry.id === log.id));
+    const sets = entries.reduce((sum, entry) => sum + (entry.exerciseSets?.length ?? 0), 0);
+    const reps = entries.reduce(
+      (sum, entry) => sum + (entry.exerciseSets ?? []).reduce((n, set) => n + (set.reps ?? 0), 0),
+      0,
+    );
+    return (
+      <article className="workout-card" key={workout.id}>
+        <div className="workout-card-heading">
+          <div>
+            <p className="overline">
+              {workout.status === 'active' ? 'ACTIVE WORKOUT' : 'WORKOUT RECAP'} ·{' '}
+              {formatDate(workout.happenedOn)}
+            </p>
+            <h2 id={`workout-heading-${workout.id}`} tabIndex={-1}>
+              {workout.title}
+            </h2>
+          </div>
+          <details data-menu className="collection-options workout-options">
+            <summary aria-label={`Workout options for ${workout.title}`}>•••</summary>
+            <div className="collection-options-panel">
+              {' '}
               <button
                 type="button"
                 className="button button-outline"
@@ -130,161 +130,186 @@ export function WorkoutSessions({
               >
                 Edit workout
               </button>
-            </div>
-            <p className="workout-count">
-              {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged ·{' '}
-              {entries.length && !sets
-                ? 'No individual sets recorded'
-                : `${sets} ${sets === 1 ? 'set' : 'sets'} · ${reps} ${reps === 1 ? 'rep' : 'reps'}`}
-              {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
-            </p>
-            <div className="routine-actions">
-              {workout.status === 'active' && (
-                <button
-                  type="button"
-                  className="button button-accent"
-                  onClick={() => onAdd(workout, pending[0])}
-                >
-                  Resume workout <ArrowRight size={17} />
-                </button>
-              )}
-              <button
-                type="button"
-                className="button button-outline"
-                disabled={update.isPending}
-                onClick={() =>
-                  update.mutate({
-                    id: workout.id,
-                    patch: { status: workout.status === 'active' ? 'finished' : 'active' },
-                  })
-                }
-              >
-                {update.isPending && update.variables?.id === workout.id
-                  ? 'Saving…'
-                  : workout.status === 'active'
-                    ? 'Finish workout'
-                    : 'Reopen workout'}
-              </button>
-            </div>
-            {workout.status === 'active' && <RestTimer key={workout.id} workoutId={workout.id} />}
-            {workout.status !== 'active' && pending.length > 0 && (
-              <p className="exercise-helper">
-                {pending.length} planned {pending.length === 1 ? 'exercise was' : 'exercises were'} left
-                unlogged.
-              </p>
-            )}
-            <div className="workout-exercises">
-              {shown.map((log) => (
-                <button type="button" key={log.id} onClick={() => onOpen(log)}>
-                  <span>
-                    <strong>{log.title}</strong>
-                    <small>{formatActivityMetric(log)}</small>
-                  </span>
-                  <ArrowRight size={18} />
-                </button>
-              ))}
-            </div>
-            {visiblePending.length > 0 && (
-              <div className="planned-exercises">
-                <p className="overline">EXERCISES TO LOG</p>
-                <div className="workout-exercises">
-                  {visiblePending.map((name) => (
-                    <div className="planned-row" key={name}>
-                      <button
-                        type="button"
-                        key={name}
-                        onClick={() => onAdd(workout, name)}
-                        aria-label={`Log ${name} in ${workout.title}`}
-                      >
-                        <span>
-                          <strong>{name}</strong>
-                          <small>Not logged</small>
-                          {workout.targets
-                            ?.filter((target) => exerciseKey(target.exercise) === exerciseKey(name))
-                            .map((target) => (
-                              <small key={target.exercise}>
-                                Planned: {targetSummary(target) || 'Note only'}
-                                {target.note ? ` · ${target.note}` : ''}
-                              </small>
-                            ))}
-                        </span>
-                        <span className="planned-action">
-                          Log exercise <ArrowRight size={18} />
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className="button button-outline"
-                        aria-label={`Skip ${name} for this visit`}
-                        disabled={update.isPending}
-                        onClick={() =>
-                          update.mutate({
-                            id: workout.id,
-                            patch: { skippedExercises: [...(workout.skippedExercises ?? []), name] },
-                          })
-                        }
-                      >
-                        Skip
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {Boolean(workout.skippedExercises?.length) && (
-              <div className="skipped-exercises">
-                <p className="overline">SKIPPED THIS VISIT</p>
-                {workout.skippedExercises?.map((name) => (
-                  <p key={name}>
-                    <span>{name}</span>
-                    <button
-                      type="button"
-                      className="button button-outline"
-                      disabled={update.isPending}
-                      onClick={() =>
-                        update.mutate({
-                          id: workout.id,
-                          patch: {
-                            skippedExercises: workout.skippedExercises?.filter((value) => value !== name),
-                          },
-                        })
-                      }
-                    >
-                      Restore
-                    </button>
-                  </p>
-                ))}
-              </div>
-            )}
-            {!entries.length && !pending.length && (
-              <div className="workout-empty-state">
-                <ActivityIllustration kind="workout" />
-                <p className="workout-empty">Add the first exercise to this visit.</p>
-              </div>
-            )}
-            <div className="routine-actions">
-              <button
-                type="button"
-                className="button button-outline"
-                aria-label={`Add exercise to ${workout.title}`}
-                onClick={() => onAdd(workout)}
-              >
-                <Plus size={17} /> Add exercise
-              </button>
               {entries.length > 0 || workout.plannedExercises?.length ? (
                 <button
                   type="button"
                   className="button button-outline"
-                  aria-label={`Save ${workout.title} as routine`}
+                  aria-label={`Save as routine: ${workout.title}`}
                   onClick={() => onSaveRoutine(workout, entries)}
                 >
                   Save as routine
                 </button>
               ) : null}
             </div>
-          </article>
-        );
-      })}
+          </details>
+        </div>
+        <p className="workout-count">
+          {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged ·{' '}
+          {entries.length && !sets
+            ? 'No individual sets recorded'
+            : `${sets} ${sets === 1 ? 'set' : 'sets'} · ${reps} ${reps === 1 ? 'rep' : 'reps'}`}
+          {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
+        </p>
+        <div className="routine-actions">
+          {workout.status === 'active' && (
+            <button type="button" className="button button-accent" onClick={() => onAdd(workout, pending[0])}>
+              Resume workout <ArrowRight size={17} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="button button-outline"
+            disabled={update.isPending}
+            onClick={() =>
+              update.mutate({
+                id: workout.id,
+                patch: { status: workout.status === 'active' ? 'finished' : 'active' },
+              })
+            }
+          >
+            {update.isPending && update.variables?.id === workout.id
+              ? 'Saving…'
+              : workout.status === 'active'
+                ? 'Finish workout'
+                : 'Reopen workout'}
+          </button>
+        </div>
+        {workout.status === 'active' && (
+          <details className="workout-rest">
+            <summary>Rest timer</summary>
+            <RestTimer key={workout.id} workoutId={workout.id} />
+          </details>
+        )}
+        {workout.status !== 'active' && pending.length > 0 && (
+          <p className="exercise-helper">
+            {pending.length} planned {pending.length === 1 ? 'exercise was' : 'exercises were'} left unlogged.
+          </p>
+        )}
+        <div className="workout-exercises">
+          {shown.map((log) => (
+            <button type="button" key={log.id} onClick={() => onOpen(log)}>
+              <span>
+                <strong>{log.title}</strong>
+                <small>{formatActivityMetric(log)}</small>
+              </span>
+              <ArrowRight size={18} />
+            </button>
+          ))}
+        </div>
+        {visiblePending.length > 0 && (
+          <div className="planned-exercises">
+            <p className="overline">EXERCISES TO LOG</p>
+            <div className="workout-exercises">
+              {visiblePending.map((name) => (
+                <div className="planned-row" key={name}>
+                  <div className="planned-identity">
+                    <strong>{name}</strong>
+                    <small>Not logged</small>
+                    {workout.targets
+                      ?.filter((target) => exerciseKey(target.exercise) === exerciseKey(name))
+                      .map((target) => (
+                        <small key={target.exercise}>
+                          Planned: {targetSummary(target) || 'Note only'}
+                          {target.note ? ` · ${target.note}` : ''}
+                        </small>
+                      ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="planned-log"
+                    aria-label={`Log exercise for ${name} in ${workout.title}`}
+                    onClick={() => onAdd(workout, name)}
+                  >
+                    Log exercise <ArrowRight size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    aria-label={`Skip ${name} for this visit`}
+                    disabled={update.isPending}
+                    onClick={() =>
+                      update.mutate({
+                        id: workout.id,
+                        patch: { skippedExercises: [...(workout.skippedExercises ?? []), name] },
+                      })
+                    }
+                  >
+                    Skip
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {Boolean(workout.skippedExercises?.length) && (
+          <div className="skipped-exercises">
+            <p className="overline">SKIPPED THIS VISIT</p>
+            {workout.skippedExercises?.map((name) => (
+              <p key={name}>
+                <span>{name}</span>
+                <button
+                  type="button"
+                  className="button button-outline"
+                  disabled={update.isPending}
+                  onClick={() =>
+                    update.mutate({
+                      id: workout.id,
+                      patch: {
+                        skippedExercises: workout.skippedExercises?.filter((value) => value !== name),
+                      },
+                    })
+                  }
+                >
+                  Restore
+                </button>
+              </p>
+            ))}
+          </div>
+        )}
+        {!entries.length && !pending.length && (
+          <div className="workout-empty-state">
+            <ActivityIllustration kind="workout" />
+            <p className="workout-empty">Add the first exercise to this visit.</p>
+          </div>
+        )}
+        <div className="routine-actions">
+          <button
+            type="button"
+            className="button button-outline"
+            aria-label={`Add exercise to ${workout.title}`}
+            onClick={() => onAdd(workout)}
+          >
+            <Plus size={17} /> Add exercise
+          </button>
+        </div>
+      </article>
+    );
+  }
+  return (
+    <section className="workout-sessions" aria-label="Workouts">
+      {update.isError && (
+        <p className="form-error" role="alert">
+          {update.error.message}
+        </p>
+      )}
+      {active.length > 0 && (
+        <div className="workout-section-head">
+          <h2>Current workout{active.length > 1 ? 's' : ''}</h2>
+        </div>
+      )}
+      {!filtered.length && workouts.length > 0 && (
+        <p className="workout-empty">No workouts match these filters.</p>
+      )}
+      {active.map(renderWorkout)}
+      {afterActive}
+      {past.length > 0 && (
+        <details className="past-workouts">
+          <summary>
+            Past workouts <span>{past.length}</span>
+          </summary>
+          {past.map(renderWorkout)}
+        </details>
+      )}
       {(editing || creating) && (
         <WorkoutEditor
           key={editing?.id ?? 'new'}

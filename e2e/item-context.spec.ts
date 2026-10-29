@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
+import { closeItemSheet } from './navigation';
 
 async function details(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
@@ -9,7 +10,7 @@ async function details(page: import('@playwright/test').Page) {
   await page
     .getByRole('region', { name: 'Your call for Coffee' })
     .filter({ visible: true })
-    .getByRole('button', { name: 'Details', exact: true })
+    .getByRole('button', { name: 'Edit', exact: true })
     .click();
   await page.locator('.item-context > summary').click();
 }
@@ -68,6 +69,7 @@ test('private context saves, filters by personal labels and downloads an explici
   expect(archive.items[0].decision).toBe('favorite');
   expect(archive.list.rankedIds).toEqual(['coffee']);
   await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await closeItemSheet(page);
   await page.getByRole('button', { name: 'Filter', exact: true }).click();
   await page.getByRole('combobox', { name: 'Personal label', exact: true }).selectOption('comfort watch');
   await expect(page.locator('.collection-index')).toContainText('Coffee');

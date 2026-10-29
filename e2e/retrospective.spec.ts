@@ -32,7 +32,7 @@ function period(url: URL): RetrospectiveFilter {
 function recap(filter: RetrospectiveFilter): Retrospective {
   return {
     period: filter,
-    scopeName: filter.listId ? list.name : 'All lists and Inbox',
+    scopeName: filter.listId ? list.name : 'All lists and Unfiled',
     readAt: '2026-11-02T12:00:00Z',
     counts: { kept: 2, revisits: 1, activity: 1 },
     kept: [
@@ -50,7 +50,7 @@ function recap(filter: RetrospectiveFilter): Retrospective {
       {
         id: 'unfiled-test',
         listId: null,
-        listName: 'Inbox',
+        listName: 'Unfiled',
         archived: false,
         kind: 'inbox',
         title: 'An unfiled find',
@@ -104,8 +104,9 @@ test('a chosen period reads real groups without writes or inferred old calls, an
     return route.fulfill({ json: recap(filter) });
   });
   await page.goto('/patterns');
-  await page.getByRole('link', { name: 'Look back over a period →', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Look back.', exact: true })).toBeVisible();
+  await page.locator('.recall-more > summary').click();
+  await page.getByRole('link', { name: 'Period summary →', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Period summary.', exact: true })).toBeVisible();
   expect(requests).toHaveLength(0);
   await choosePeriod(page);
   await capture(page, 'period', info.project.name);
@@ -142,7 +143,7 @@ test('a chosen period reads real groups without writes or inferred old calls, an
   await expect.poll(() => requests.length).toBe(2);
   expect(requests[1]).toEqual(requests[0]);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Look back.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Period summary.', exact: true })).toBeVisible();
   await expect(page.locator('.retro-results')).toHaveCount(0);
   expect(requests).toHaveLength(2);
 });

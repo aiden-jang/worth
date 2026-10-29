@@ -1,6 +1,6 @@
 import { ExperienceEditor } from './ExperienceEditor';
 import '../memories.css';
-import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
+import { ArrowRight, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { api, RequestError } from '../api';
@@ -25,7 +25,7 @@ import {
 import { BlankSlips } from './BlankSlips';
 import { IndexRows, ItemActions } from './CollectionIndex';
 import { CollectionTools } from './CollectionTools';
-import { CallFace } from './PersonalCall';
+import { ItemSheet } from './ItemSheet';
 import { SavedViews } from './SavedViews';
 import { FilingMoment } from './FilingMoment';
 import type { SavedViewFilters } from '../shared/workspace';
@@ -61,6 +61,7 @@ export function CollectionView({
   const client = useQueryClient();
   const [experienceOpen, setExperienceOpen] = useState(false);
   const captureRef = useRef<HTMLInputElement>(null);
+  const entryMenu = useRef<HTMLDetailsElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
   const captureDraft = useDraft<CaptureDraft>(
@@ -90,7 +91,6 @@ export function CollectionView({
     }));
   const online = useConnection();
   const [browse, setBrowse] = useViewPreference<BrowseMode>(`collection:${list.id}:browse`, 'all');
-  const [showSearch, setShowSearch] = useViewPreference(`collection:${list.id}:showSearch`, false);
   const [showFilters, setShowFilters] = useViewPreference(`collection:${list.id}:showFilters`, false);
   const [search, setSearch] = useViewPreference(`collection:${list.id}:search`, '');
   const [addedSince, setAddedSince] = useViewPreference(`collection:${list.id}:addedSince`, '');
@@ -118,10 +118,14 @@ export function CollectionView({
   const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState('');
   const [filing, setFiling] = useState({ sequence: 0, count: 0, message: '' });
-  const [selectedId, setSelectedId] = useViewPreference<string | null>(
-    `collection:${list.id}:selectedId`,
-    null,
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [phone, setPhone] = useState(() => matchMedia('(max-width: 680px)').matches);
+  useEffect(() => {
+    const media = matchMedia('(max-width: 680px)');
+    const change = () => setPhone(media.matches);
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
 
   useEffect(() => {
     restoreCaptureFocus.current = null;
@@ -161,7 +165,8 @@ export function CollectionView({
   useEffect(() => {
     if (!selectedId) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSelectedId(null);
+      if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('dialog[open]'))
+        setSelectedId(null);
     };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
@@ -197,7 +202,7 @@ export function CollectionView({
       setRankFilter('all');
       setDecisionFilter('all');
       setSort('rank');
-      setSelectedId(item.id);
+      setSelectedId(null);
       setStatus(`${item.title} added to ${list.name}.`);
       setFiling((previous) => ({
         sequence: previous.sequence + 1,
@@ -231,7 +236,7 @@ export function CollectionView({
       setRankFilter('all');
       setDecisionFilter('all');
       setSort('rank');
-      setSelectedId(created.length === 1 ? (created[0]?.id ?? null) : null);
+      setSelectedId(null);
       setStatus(`${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`);
       setFiling((previous) => ({
         sequence: previous.sequence + 1,
@@ -397,6 +402,13 @@ export function CollectionView({
     rankPending: rank.isPending,
   };
 
+  function closeEntryOptions() {
+    const menu = entryMenu.current;
+    if (!menu) return;
+    menu.open = false;
+    menu.querySelector('summary')?.focus();
+  }
+
   function selectBrowse(next: BrowseMode) {
     setBrowse(next);
     setStatus('');
@@ -408,7 +420,7 @@ export function CollectionView({
         <div className="cabinet-collection-main">
           <form className="collection-capture" onSubmit={submit}>
             <label>
-              <span className="sr-only">{batchMode ? 'One name per line' : 'What did you try?'}</span>
+              <span className="sr-only">{batchMode ? 'One name per line' : 'Add a name'}</span>
               {batchMode ? (
                 <textarea
                   ref={batchCaptureRef}
@@ -424,7 +436,7 @@ export function CollectionView({
                   value={title}
                   maxLength={collectionItemTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="What did you try?"
+                  placeholder={captureWant ? 'Add a name to Want to try' : 'Add a name'}
                   disabled={capturePending}
                 />
               )}
@@ -437,45 +449,17 @@ export function CollectionView({
                 (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
               }
             >
-              {capturePending ? 'Keeping…' : batchMode ? `Keep ${batchEntries.length || ''}` : 'Keep it'}{' '}
+              {capturePending ? 'Saving…' : batchMode ? `Save ${batchEntries.length || ''}` : 'Save'}{' '}
               <ArrowRight size={17} />
             </button>
-            <div className="collection-capture-note">
-              <button
-                type="button"
-                onClick={() => setBatchMode((current) => !current)}
-                disabled={capturePending}
-              >
-                {batchMode ? 'Add one' : 'Add several'}
-              </button>
-              <p>
-                {batchMode
-                  ? batchHasLongTitle
-                    ? `Each name can be up to ${collectionItemTitleLimit} characters.`
-                    : `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`
-                  : 'Rank later. No rush.'}
+            {batchMode && (
+              <p className="collection-capture-note">
+                {batchHasLongTitle
+                  ? `Each name can be up to ${collectionItemTitleLimit} characters.`
+                  : `${batchEntries.length}/${batchCaptureLimit} names ready. Blank or duplicate lines are ignored.`}
               </p>
-            </div>
+            )}
           </form>
-          <label className="capture-want">
-            <input
-              type="checkbox"
-              checked={captureWant}
-              disabled={capturePending}
-              onChange={(e) => setCaptureWant(e.target.checked)}
-            />
-            Want to try
-          </label>
-          <button
-            type="button"
-            className="button button-outline experience-entry"
-            onClick={(event) => {
-              event.currentTarget.focus();
-              setExperienceOpen(true);
-            }}
-          >
-            Log an experience
-          </button>
           {experienceOpen && (
             <ExperienceEditor listId={list.id} items={items} onClose={() => setExperienceOpen(false)} />
           )}
@@ -516,24 +500,6 @@ export function CollectionView({
             </p>
           )}
 
-          {showSearch && (
-            <div className="collection-search" id="collection-search">
-              <label>
-                <span className="sr-only">Search {list.name}</span>
-                <input
-                  autoFocus
-                  value={search}
-                  placeholder={`Search ${list.name.toLowerCase()}`}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-              {search && (
-                <button type="button" onClick={() => setSearch('')}>
-                  <X size={15} /> Clear
-                </button>
-              )}
-            </div>
-          )}
           {showFilters && (
             <div className="collection-advanced-filters" id="collection-filters">
               {types.length > 0 && (
@@ -660,37 +626,6 @@ export function CollectionView({
             </div>
           )}
 
-          <SavedViews
-            listId={list.id}
-            current={{
-              label,
-              stamp,
-              browse,
-              search,
-              type,
-              rankFilter,
-              decisionFilter,
-              sort,
-              addedSince,
-              addedBefore,
-              visits,
-            }}
-            onApply={(filters) => {
-              setLabel(filters.label);
-              setStamp(filters.stamp);
-              setBrowse(filters.browse);
-              setSearch(filters.search);
-              setType(filters.type);
-              setRankFilter(filters.rankFilter);
-              setDecisionFilter(filters.decisionFilter);
-              setSort(filters.sort);
-              setAddedSince(filters.addedSince);
-              setAddedBefore(filters.addedBefore);
-              setVisits(filters.visits);
-              setShowSearch(Boolean(filters.search));
-              setSelectedId(null);
-            }}
-          />
           {selecting && (
             <CollectionTools
               list={list}
@@ -711,50 +646,42 @@ export function CollectionView({
             />
           )}
           <div className="collection-index-layout">
-            {items.length > 0 && (
+            {
               <div className="cabinet-index-toolbar">
-                <nav className="collection-browse" aria-label="Browse collection">
-                  <span>Show</span>
-                  {browseModes.map((mode) => (
-                    <button
-                      type="button"
-                      key={mode.id}
-                      className={browse === mode.id ? 'active' : ''}
-                      aria-pressed={browse === mode.id}
-                      onClick={() => selectBrowse(mode.id)}
-                    >
-                      {mode.label}
-                      <small>
+                <label className="collection-browse-select">
+                  <span className="sr-only">Browse collection</span>
+                  <select
+                    aria-label="Browse collection"
+                    value={browse}
+                    onChange={(event) => selectBrowse(event.target.value as BrowseMode)}
+                  >
+                    {browseModes.map((mode) => (
+                      <option key={mode.id} value={mode.id}>
+                        {mode.label} (
                         {mode.id === 'want'
-                          ? items.filter((i) => i.wantToTry).length
+                          ? items.filter((item) => item.wantToTry).length
                           : collectionBrowseCount(mode.id, items)}
-                      </small>
+                        )
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="collection-search" id="collection-search">
+                  <label>
+                    <span className="sr-only">Search {list.name}</span>
+                    <input
+                      value={search}
+                      placeholder="Search"
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </label>
+                  {search && (
+                    <button type="button" onClick={() => setSearch('')}>
+                      <X size={15} /> Clear
                     </button>
-                  ))}
-                </nav>
-
+                  )}
+                </div>
                 <div className="collection-utilities">
-                  <button
-                    type="button"
-                    className="collection-search-toggle"
-                    aria-pressed={selecting}
-                    onClick={() => {
-                      setSelecting((v) => !v);
-                      setSelectionIds(new Set());
-                      setSelectedId(null);
-                    }}
-                  >
-                    {selecting ? 'Cancel selection' : 'Select'}
-                  </button>
-                  <button
-                    className={`collection-search-toggle ${showSearch ? 'active' : ''}`}
-                    type="button"
-                    aria-expanded={showSearch}
-                    aria-controls="collection-search"
-                    onClick={() => setShowSearch((current) => !current)}
-                  >
-                    <MagnifyingGlass size={16} /> Search
-                  </button>
                   <button
                     className={`collection-search-toggle ${showFilters || hasAdvancedFilters ? 'active' : ''}`}
                     type="button"
@@ -764,9 +691,88 @@ export function CollectionView({
                   >
                     Filter{hasAdvancedFilters ? ' ·' : ''}
                   </button>
+                  <details ref={entryMenu} data-menu className="entry-options">
+                    <summary aria-label="Entry options">•••</summary>
+                    <div className="entry-options-panel">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeEntryOptions();
+                          setBatchMode((current) => !current);
+                          requestAnimationFrame(() =>
+                            (batchMode ? captureRef.current : batchCaptureRef.current)?.focus(),
+                          );
+                        }}
+                        disabled={capturePending}
+                      >
+                        {batchMode ? 'Add one name' : 'Add several'}
+                      </button>
+                      <label className="capture-want">
+                        <input
+                          type="checkbox"
+                          checked={captureWant}
+                          disabled={capturePending}
+                          onChange={(event) => setCaptureWant(event.target.checked)}
+                        />
+                        Want to try
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeEntryOptions();
+                          setExperienceOpen(true);
+                        }}
+                      >
+                        Add experience
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={selecting}
+                        onClick={() => {
+                          closeEntryOptions();
+                          setSelecting((value) => !value);
+                          setSelectionIds(new Set());
+                          setSelectedId(null);
+                        }}
+                      >
+                        {selecting ? 'Cancel selection' : 'Select items'}
+                      </button>
+                      <SavedViews
+                        listId={list.id}
+                        current={{
+                          label,
+                          stamp,
+                          browse,
+                          search,
+                          type,
+                          rankFilter,
+                          decisionFilter,
+                          sort,
+                          addedSince,
+                          addedBefore,
+                          visits,
+                        }}
+                        onApply={(filters) => {
+                          closeEntryOptions();
+                          setLabel(filters.label);
+                          setStamp(filters.stamp);
+                          setBrowse(filters.browse);
+                          setSearch(filters.search);
+                          setType(filters.type);
+                          setRankFilter(filters.rankFilter);
+                          setDecisionFilter(filters.decisionFilter);
+                          setSort(filters.sort);
+                          setAddedSince(filters.addedSince);
+                          setAddedBefore(filters.addedBefore);
+                          setVisits(filters.visits);
+                          setSelectedId(null);
+                        }}
+                      />
+                    </div>
+                  </details>
                 </div>
               </div>
-            )}
+            }
             <div className="collection-index">
               {!visible.length ? (
                 <div className={items.length ? 'collection-index-empty' : 'collection-empty-composition'}>
@@ -808,6 +814,7 @@ export function CollectionView({
                       ranks={ranks}
                       selectedId={selectedId}
                       onSelect={setSelectedId}
+                      sheet={phone}
                       {...rowActions}
                     />
                   )}
@@ -819,6 +826,7 @@ export function CollectionView({
                         ranks={ranks}
                         selectedId={selectedId}
                         onSelect={setSelectedId}
+                        sheet={phone}
                         {...rowActions}
                       />
                     </section>
@@ -828,15 +836,14 @@ export function CollectionView({
             </div>
           </div>
         </div>
-        {selectedItem ? (
-          <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
-        ) : items.length > 0 ? (
-          <aside className="opinion-slip opinion-slip-empty">
-            <CallFace value="meh" arms />
-            <h3>Pick an item.</h3>
-            <p>You have the floor.</p>
-          </aside>
-        ) : null}
+        {selectedItem &&
+          (phone ? (
+            <ItemSheet title={selectedItem.title} onClose={() => setSelectedId(null)}>
+              <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+            </ItemSheet>
+          ) : (
+            <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+          ))}
       </div>
     </section>
   );

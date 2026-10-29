@@ -7,7 +7,7 @@ native companion.
 
 ## Log an experience
 
-Open a collection and choose **Log an experience**. Enter a name and save; the
+Open a collection’s **Entry options → Add experience**, or use **Add → Add a note or an opinion → Record a dated experience** with that collection selected. Enter a name and save; the
 date starts at today. Favorite, Meh and Not again are optional one-tap reactions;
 tap the selected reaction again to clear it. **Use a saved name** opens existing
 records. **Date and details** opens the date, place, order, note and optional type.
@@ -22,12 +22,11 @@ already reached Worth. Existing photos can be viewed from history; add or manage
 photos through the record and visit details.
 
 The visit reaction never changes the overall call, ranking, Want to try or revisit
-queue. Name-only **Keep it** remains available and does not create a visit.
+queue. Name-only **Save** remains available and does not create a visit.
 
 ## Find an experience
 
-Open **Remember where you went** from Archive, or **Remember an experience** from
-Patterns. Experiences includes explicitly dated collection visits and activity
+Open **Look back → Memories**. Existing direct memory links remain usable. Experiences includes explicitly dated collection visits and activity
 entries. Search names, notes, visit locations and orders. Date/archive filters
 open on demand, or when a link already selects a period. Select a list, date
 range or period shortcut; archived lists are opt-in. Records open their original
@@ -73,7 +72,7 @@ the browser on request; it does not send records to a spreadsheet service.
 
 ## Read your preferences
 
-Patterns shows up to 12 collection, collection/type or collection/label groups with the most
+Look back → Insights shows three groups first, with Show all for up to 12 collection, collection/type or collection/label groups with the most
 recorded calls. Collection summaries work without types or labels, including
 name-only entries with an explicit visit reaction. Overall-call groups count records; visit-reaction groups count
 explicit visits and are labeled separately. Both use current types and labels.
@@ -101,7 +100,7 @@ remain an explicit **Use previous sets** action, followed by editable actual
 results. Copied sets are not saved until you save the log. Existing or restored
 notes open automatically.
 
-Within an activity, **Workout progress** counts explicitly finished sessions in
+Within an activity, **Progress & exercise history → Workout progress** counts explicitly finished sessions in
 four- or twelve-week periods and compares the preceding period of equal length.
 The weekly list uses seven-day blocks ending today. Active sessions are excluded;
 missing entries do not establish that no exercise happened.
@@ -120,13 +119,19 @@ spaced point per recorded entry, not an elapsed-time axis or fitness score.
 
 ## Design integration
 
-Patterns keeps Remember, Look back and Activity calendar visible, with the other
-optional tools in a named disclosure.
+The October 28 everyday flow supersedes the earlier dense primary layout. Look
+back combines Memories and Insights, with specialized tools in More tools.
+Collection name capture, search and records come first; advanced tools disclose.
+Phone selection opens a native cream sheet without pushing rows down. Current
+workouts precede optional routine/progress/history controls and stay visible during
+past searches. The cabinet colors, fonts and actual reaction art remain.
 
-The existing cabinet colors, typography, rail and desktop collection composition
-remain. Mobile collection selections use a smaller opinion character alongside
-the verdict, retaining all three labeled calls and a faceless no-call state.
-This is a deliberate compact variation of the original tall mobile reference.
-The monthly memory card reuses cream, recorded photos and existing reaction art.
-No streaks, social feeds, automatic location tracking or inferred workout targets
-are added.
+The monthly memory card is compact on Home and uses recorded photos and calls.
+No streaks, social feeds, automatic location tracking, required organization or
+inferred workout targets are added. See [Everyday flow](EVERYDAY.md).
+
+Unfiled finds also participate in saved-name recall and overall-call insights.
+Their saved dates remain UTC, they never become dated visits, and their source
+links open the original Unfiled find. Filing moves that source into its collection
+without creating a duplicate recall entry. Owner scoping, Trash exclusions and
+50-record pagination apply to both sources. No database migration is required.

@@ -67,7 +67,7 @@ export function ActivityCalendarPage() {
           <h1>Calendar</h1>
           <p>Plans, visits and activities.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p className="calendar-intro">
         See visits and activities on the dates you logged. Revisit plans use the saved date or snooze. Opening

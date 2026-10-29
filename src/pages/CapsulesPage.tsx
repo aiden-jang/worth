@@ -74,7 +74,7 @@ export function CapsulesPage() {
           <h1>Time capsules</h1>
           <p>A few things, kept as they were.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p>
         Seal a message and chosen snapshots. Open them on or after your chosen date, then compare them with

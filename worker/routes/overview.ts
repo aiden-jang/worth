@@ -161,18 +161,21 @@ export function registerOverviewRoutes(api: Hono<AppEnv>): void {
     const [summary, mostReturned, lastTouchedCollection, newestCollection, mostKeptCollection] =
       await Promise.all([
         c.env.DB.prepare(
-          `SELECT
-          (SELECT COUNT(*) FROM active_items WHERE owner_id = ?) + (SELECT COUNT(*) FROM active_logs WHERE owner_id = ?) AS total_records,
+          `WITH saved AS (
+          SELECT decision FROM active_items WHERE owner_id=?
+          UNION ALL SELECT json_extract(payload_json,'$.decision') AS decision FROM inbox_entries WHERE owner_id=? AND trashed_at IS NULL
+        ) SELECT
+          (SELECT COUNT(*) FROM saved) + (SELECT COUNT(*) FROM active_logs WHERE owner_id = ?) AS total_records,
           (SELECT COUNT(*) FROM active_lists WHERE owner_id = ? AND kind = 'collection') AS total_collections,
           (SELECT COUNT(*) FROM active_lists WHERE owner_id = ? AND kind = 'activity') AS total_activities,
           (SELECT COALESCE(SUM(json_array_length(ranked_ids)), 0) FROM active_lists
             WHERE owner_id = ? AND kind = 'collection') AS ranked_item_count,
           (SELECT COUNT(*) FROM active_logs WHERE owner_id = ? AND item_id IS NOT NULL) AS revisit_count,
-          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'favorite') AS favorite_count,
-          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'would_not_again') AS not_again_count,
-          (SELECT COUNT(*) FROM active_items WHERE owner_id = ? AND decision = 'meh') AS meh_count`,
+          (SELECT COUNT(*) FROM saved WHERE decision = 'favorite') AS favorite_count,
+          (SELECT COUNT(*) FROM saved WHERE decision = 'would_not_again') AS not_again_count,
+          (SELECT COUNT(*) FROM saved WHERE decision = 'meh') AS meh_count`,
         )
-          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
+          .bind(ownerId, ownerId, ownerId, ownerId, ownerId, ownerId, ownerId)
           .first<{
             total_records: number;
             total_collections: number;

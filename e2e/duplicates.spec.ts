@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
@@ -14,7 +15,8 @@ test.beforeEach(async ({ archive }) => {
 });
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
 }
@@ -42,7 +44,8 @@ test('matching records can stay separate across reloads and reopen without chang
   expect(archive.list.rankedIds).toEqual([first]);
   expect(archive.items.map((item) => item.decision)).toEqual(['favorite', null]);
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
   await expect(page.locator('.duplicate-review > summary')).toHaveText('Possible duplicates · 0');
@@ -78,7 +81,8 @@ test('new group members need a new review and obsolete saved reviews can be remo
   await expect(page.locator('.duplicate-review > summary')).toHaveText('Possible duplicates · 0');
   archive.items.push({ ...archive.items[0], id: third, title: 'COFFEE', decision: 'meh' });
   await page.reload();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
   await expect(page.locator('.duplicate-review > summary')).toHaveText('Possible duplicates · 1');

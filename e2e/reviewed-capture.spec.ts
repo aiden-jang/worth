@@ -1,3 +1,4 @@
+import { collectionOptions } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list, item, type State } from './fixtures';
@@ -43,7 +44,8 @@ async function importer(page: Page, archive: State, failAfterSave = false) {
 }
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Import & capture', exact: true }).click();
 }
 async function capture(page: Page, name: string, project: string) {
@@ -114,7 +116,8 @@ test('an interrupted import recovers its frozen request and retry identity after
   await expect(page.getByRole('alert')).toBeInViewport();
   await capture(page, 'retry', info.project.name);
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
-  await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
   await page.getByRole('button', { name: 'Import & capture', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Keep row 1: A small find', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Retry saving these records', exact: true }).click();

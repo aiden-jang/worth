@@ -443,7 +443,7 @@ export function CodeCapturePage() {
             </p>
           )}
           <p>
-            Next, review this name, note and source in capture and choose Inbox or a collection. Nothing is
+            Next, review this name, note and source in capture and choose Unfiled or a collection. Nothing is
             saved here.
           </p>
           <button

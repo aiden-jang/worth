@@ -29,11 +29,11 @@ export function InboxDrawer({ onClose }: { onClose: () => void }) {
     >
       <div className="inbox-drawer-tools">
         <Link to="/inbox" onClick={onClose}>
-          Open full Inbox ↗
+          Open Unfiled ↗
         </Link>
         <button
           className="icon-button"
-          aria-label="Close Inbox"
+          aria-label="Close Unfiled"
           disabled={pending}
           onClick={() => dialog.current?.close()}
         >

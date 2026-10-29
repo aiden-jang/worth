@@ -274,7 +274,7 @@ export function PhotoTextPage() {
             )}
           </details>
           <p>
-            Next, review this name and note in capture and choose Inbox or a collection. Your photo and the
+            Next, review this name and note in capture and choose Unfiled or a collection. Your photo and the
             rest of the text are not sent with them.
           </p>
           <button

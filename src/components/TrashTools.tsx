@@ -11,7 +11,7 @@ export function TrashPanel() {
     mutationFn: (entry: TrashReference) => api.restoreTrash([entry]),
     onSuccess: () => {
       setStatus(
-        'Restored. Items return unranked and Inbox finds return unfiled; list rankings are preserved.',
+        'Restored. Items return unranked and Unfiled finds return unfiled; list rankings are preserved.',
       );
       void client.invalidateQueries();
     },
@@ -20,7 +20,7 @@ export function TrashPanel() {
     <section className="data-section" id="trash" aria-labelledby="trash-title">
       <h2 id="trash-title">Trash.</h2>
       <p>
-        Restore deleted lists, items, logs and Inbox finds for 30 days. Notes, history and photos stay with
+        Restore deleted lists, items, logs and Unfiled finds for 30 days. Notes, history and photos stay with
         them. Restore a deleted list or item first to see any records deleted separately inside it.
       </p>
       <p className="data-hint">
@@ -90,11 +90,14 @@ export function TrashNotice() {
         current.filter((entry) => !refs.some((ref) => ref.kind === entry.kind && ref.id === entry.id)),
       );
     };
+    const saved = () => setEntries([]);
     window.addEventListener('worth:trashed', listener);
     window.addEventListener('worth:restored', restored);
+    window.addEventListener('worth:entry-saved', saved);
     return () => {
       window.removeEventListener('worth:trashed', listener);
       window.removeEventListener('worth:restored', restored);
+      window.removeEventListener('worth:entry-saved', saved);
     };
   }, [client, resetUndo]);
   if (!entries.length) return null;

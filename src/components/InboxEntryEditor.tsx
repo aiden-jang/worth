@@ -86,7 +86,7 @@ export function InboxEntryEditor({
           current && { entries: current.entries.map((other) => (other.id === saved.id ? saved : other)) },
       );
       void client.invalidateQueries({ queryKey: ['search'] });
-      setStatus('Changes saved. Still in the Inbox.');
+      setStatus('Changes saved. Still in the Unfiled.');
     },
   });
   const trash = useMutation({

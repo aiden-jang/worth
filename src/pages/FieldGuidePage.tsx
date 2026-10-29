@@ -127,7 +127,7 @@ export function FieldGuidePage() {
           <h1>Field guide</h1>
           <p>A few finds, in your own order.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p className="guide-intro">
         Choose up to 12 records across collections. Names and types are included; notes, saved locations,

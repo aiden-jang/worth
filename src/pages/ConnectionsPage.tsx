@@ -62,7 +62,7 @@ export function ConnectionsPage() {
           <h1>Connections</h1>
           <p>Keep the things in common.</p>
         </div>
-        <Link to="/patterns">Back to Patterns →</Link>
+        <Link to="/patterns">Back to Look back →</Link>
       </header>
       <p className="connections-intro">
         Link related finds, editions or versions, the same thing across places, and replacements. Records keep

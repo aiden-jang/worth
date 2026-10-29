@@ -30,7 +30,7 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
 });
 
-test('a name can wait in Inbox without any collection and capture retries safely', async ({
+test('a name can wait in Unfiled without any collection and capture retries safely', async ({
   page,
   archive,
 }, info) => {
@@ -39,12 +39,12 @@ test('a name can wait in Inbox without any collection and capture retries safely
   await page.goto('/capture');
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Only a name');
   await page.getByRole('button', { name: 'Review capture', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Capture review' })).toContainText('Inbox / unfiled');
+  await expect(page.getByRole('region', { name: 'Capture review' })).toContainText('Unfiled / unfiled');
   await page.getByRole('button', { name: 'Save reviewed capture', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Couldn’t connect');
   await page.reload();
   await page.getByRole('button', { name: 'Retry same capture', exact: true }).click();
-  await page.getByRole('link', { name: 'Open Inbox find →', exact: true }).click();
+  await page.getByRole('link', { name: 'Open Unfiled find →', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await expect(editor.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Only a name');
   expect(archive.inbox).toHaveLength(1);
@@ -54,7 +54,7 @@ test('a name can wait in Inbox without any collection and capture retries safely
   await capture(page, 'unfiled', info.project.name);
 });
 
-test('Inbox details preserve optional context and unfinished drafts before filing', async ({
+test('Unfiled details preserve optional context and unfinished drafts before filing', async ({
   page,
   archive,
 }, info) => {
@@ -74,7 +74,7 @@ test('Inbox details preserve optional context and unfinished drafts before filin
     'Keep the cloth cover.',
   );
   await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
-  await expect(editor.getByText('Changes saved. Still in the Inbox.', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Changes saved. Still in the Unfiled.', { exact: true })).toBeVisible();
   expect(archive.inbox[0]).toMatchObject({
     decision: null,
     wantToTry: true,
@@ -97,7 +97,7 @@ test('Inbox details preserve optional context and unfinished drafts before filin
   expect(archive.list.rankedIds).toEqual(['coffee']);
 });
 
-test('lost filing replies remain recoverable after the source leaves Inbox and the page reloads', async ({
+test('lost filing replies remain recoverable after the source leaves Unfiled and the page reloads', async ({
   page,
   archive,
 }, info) => {
@@ -119,7 +119,7 @@ test('lost filing replies remain recoverable after the source leaves Inbox and t
   expect(writes[0].body).toEqual(writes[1].body);
 });
 
-test('stale Inbox edits keep their draft and require explicit reload', async ({ page, archive }) => {
+test('stale Unfiled edits keep their draft and require explicit reload', async ({ page, archive }) => {
   archive.inbox = [find()];
   await page.goto(`/inbox?focus=${archive.inbox[0].id}`);
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
@@ -144,7 +144,7 @@ test('stale Inbox edits keep their draft and require explicit reload', async ({ 
   );
 });
 
-test('Inbox opens over a collection and Trash Undo works inside the drawer', async ({
+test('Unfiled opens over a collection and Trash Undo works inside the drawer', async ({
   page,
   archive,
 }, info) => {
@@ -152,8 +152,8 @@ test('Inbox opens over a collection and Trash Undo works inside the drawer', asy
   await page.goto(`/lists/${list.id}`);
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
-  await page.getByRole('link', { name: 'Inbox', exact: true }).click();
-  const drawer = page.getByRole('dialog', { name: 'Inbox.', exact: true });
+  await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
   await expect(drawer).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`));
   await capture(page, 'drawer', info.project.name);
@@ -171,21 +171,24 @@ test('Inbox opens over a collection and Trash Undo works inside the drawer', asy
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
   ).toEqual([]);
-  await drawer.getByRole('button', { name: 'Close Inbox', exact: true }).click();
+  await drawer.getByRole('button', { name: 'Close Unfiled', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'My drinks', exact: true })).toBeVisible();
 });
 
-test('empty Inbox and long unfiled names reflow without invented calls', async ({ page, archive }, info) => {
+test('empty Unfiled and long unfiled names reflow without invented calls', async ({
+  page,
+  archive,
+}, info) => {
   await page.goto('/inbox');
   await expect(page.getByRole('heading', { name: 'A place for the maybes.', exact: true })).toBeVisible();
   await capture(page, 'empty', info.project.name);
   archive.inbox = [find('A very long saved find with an edition and a location '.repeat(2).slice(0, 120))];
   await page.reload();
-  await page.getByRole('searchbox', { name: 'Find in Inbox', exact: true }).fill('Sam');
+  await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('Sam');
   await expect(page.getByRole('button', { name: /A very long saved find/ })).toBeVisible();
-  await page.getByRole('searchbox', { name: 'Find in Inbox', exact: true }).fill('No such find');
-  await expect(page.getByText('No Inbox finds match “No such find”.', { exact: true })).toBeVisible();
-  await page.getByRole('searchbox', { name: 'Find in Inbox', exact: true }).fill('');
+  await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('No such find');
+  await expect(page.getByText('No Unfiled finds match “No such find”.', { exact: true })).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('');
   for (const width of [320, 430, 768]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -214,7 +217,7 @@ test('filing an exact name and type match needs an explicit keep-separate choice
   await keep.check();
   await editor.getByRole('textbox', { name: 'Private note', exact: true }).fill('My separate record.');
   await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
-  await expect(editor.getByText('Changes saved. Still in the Inbox.', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Changes saved. Still in the Unfiled.', { exact: true })).toBeVisible();
   await expect(keep).not.toBeChecked();
   await expect(editor.getByRole('button', { name: 'File in collection', exact: true })).toBeDisabled();
   await keep.check();
@@ -225,7 +228,7 @@ test('filing an exact name and type match needs an explicit keep-separate choice
   expect(archive.list.rankedIds).toEqual(['coffee']);
 });
 
-test('Inbox-only backups have a reviewable restore preview', async ({ page, archive }) => {
+test('Unfiled-only backups have a reviewable restore preview', async ({ page, archive }) => {
   await page.route('**/api/import', async (route) => {
     const body = route.request().postDataJSON();
     archive.writes.push({ path: '/import', body });
@@ -249,31 +252,34 @@ test('Inbox-only backups have a reviewable restore preview', async ({ page, arch
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(backup)),
   });
-  await page.getByText('Preview Inbox finds', { exact: true }).click();
-  await expect(page.getByRole('list', { name: 'Inbox finds to restore' })).toContainText(
+  await page.getByText('Preview Unfiled finds', { exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Unfiled finds to restore' })).toContainText(
     'A tiny illustrated book',
   );
   expect(archive.writes).toHaveLength(0);
   await page.getByRole('button', { name: 'Restore previewed data', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('1 Inbox find restored');
+  await expect(page.getByRole('status')).toContainText('1 Unfiled find restored');
   expect(archive.writes.find((entry) => entry.path === '/import')?.body).toMatchObject({
     inbox: [{ title: 'A tiny illustrated book', context: { recommendedBy: 'Sam' } }],
   });
 });
 
-test('capture links close Inbox even when it opened over the capture page', async ({ page }, info) => {
+test('capture links close Unfiled even when it opened over the capture page', async ({ page }, info) => {
   await page.goto('/capture');
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Unfinished capture');
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
-  await page.getByRole('link', { name: 'Inbox', exact: true }).click();
-  const drawer = page.getByRole('dialog', { name: 'Inbox.', exact: true });
-  await drawer.getByRole('link', { name: 'Keep a name →', exact: true }).click();
+  await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
+  await drawer.getByRole('button', { name: 'Add a name', exact: true }).click();
   await expect(drawer).toHaveCount(0);
+  const quick = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await expect(quick.getByLabel('Save in')).toHaveValue('inbox');
+  await quick.getByRole('button', { name: 'Close Add', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Unfinished capture');
 });
 
-test('blocked draft storage asks before discarding unfinished Inbox edits', async ({ page, archive }) => {
+test('blocked draft storage asks before discarding unfinished Unfiled edits', async ({ page, archive }) => {
   archive.inbox = [find()];
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => {
@@ -298,7 +304,7 @@ test('blocked draft storage asks before discarding unfinished Inbox edits', asyn
   expect(archive.inbox[0].note).toBe('Try the illustrated edition.');
 });
 
-test('a draft stays recoverable when its saved find leaves Inbox elsewhere', async ({
+test('a draft stays recoverable when its saved find leaves Unfiled elsewhere', async ({
   page,
   archive,
 }, info) => {

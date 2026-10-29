@@ -1,3 +1,4 @@
+import { activityTools } from './navigation';
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -226,6 +227,7 @@ test('routine targets copy into future workouts while recorded measurements rema
   const state = await setup(page, archive);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${listId}`);
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'New routine', exact: true }).click();
   const routine = page.getByRole('dialog', { name: 'Your usual lineup', exact: true });
   await routine.getByLabel('Name', { exact: true }).fill('A small loop');
@@ -240,6 +242,7 @@ test('routine targets copy into future workouts while recorded measurements rema
   await capture(page, 'routine-targets', info.project.name, '.routine-target-card');
   await routine.getByRole('button', { name: 'Save routine', exact: true }).click();
   await expect(routine).toBeHidden();
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'Start workout from A small loop', exact: true }).click();
   const start = page.getByRole('dialog', { name: 'Start a fresh visit', exact: true });
   await expect(start).toContainText('600s duration');
@@ -248,6 +251,7 @@ test('routine targets copy into future workouts while recorded measurements rema
   await expect(start).toBeHidden();
   expect(state.logs).toHaveLength(0);
   expect(state.workouts[0].targets?.[0].durationSeconds).toBe(600);
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'Edit routine A small loop', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit routine', exact: true });
   await edit.getByRole('spinbutton', { name: 'Run planned duration seconds', exact: true }).fill('900');
@@ -255,7 +259,7 @@ test('routine targets copy into future workouts while recorded measurements rema
   await expect(edit).toBeHidden();
   expect(state.workouts[0].targets?.[0].durationSeconds).toBe(600);
   expect(state.routines[0].targets?.[0].durationSeconds).toBe(900);
-  await page.getByRole('button', { name: 'Log Run in A small loop', exact: true }).click();
+  await page.getByRole('button', { name: 'Log exercise for Run in A small loop', exact: true }).click();
   const exercise = page.getByRole('dialog', { name: 'Log an exercise', exact: true });
   await expect(exercise.getByRole('spinbutton', { name: 'Set 1 reps', exact: true })).toHaveValue('');
   await expect(exercise.getByLabel('Planned target', { exact: true })).toContainText('600s duration');
@@ -287,6 +291,7 @@ test('a lost routine start keeps its fixed retry after reload and never duplicat
   const state = await setup(page, archive);
   seedRoutine(state.routines);
   await page.goto(`/lists/${listId}`);
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'Start workout from A small loop', exact: true }).click();
   let start = page.getByRole('dialog', { name: 'Start a fresh visit', exact: true });
   state.loseNext();
@@ -298,6 +303,7 @@ test('a lost routine start keeps its fixed retry after reload and never duplicat
   state.routines[0].targets![0].durationSeconds = 900;
   state.routines[0].revision = 1;
   await page.reload();
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'Start workout from A small loop', exact: true }).click();
   start = page.getByRole('dialog', { name: 'Start a fresh visit', exact: true });
   await expect(start).toContainText('600s duration');
@@ -316,6 +322,7 @@ test('stale routine edits compare the saved plan while keeping the previous draf
   const state = await setup(page, archive);
   seedRoutine(state.routines);
   await page.goto(`/lists/${listId}`);
+  await activityTools(page, 'Routines');
   await page.getByRole('button', { name: 'Edit routine A small loop', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit routine', exact: true });
   await edit.getByLabel('Name', { exact: true }).fill('My unfinished plan');
@@ -370,7 +377,8 @@ test('exercise aliases group literal measurements and retain original names with
     },
   );
   await page.goto(`/lists/${listId}`);
-  await page.locator('summary').filter({ hasText: 'Exercise history' }).click();
+  await activityTools(page, 'Progress & exercise history');
+  await page.locator('.exercise-directory:not(.workout-progress) > summary').click();
   await page.getByRole('button', { name: 'Group exercise names', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Same exercise. Different names.', exact: true });
   await editor.getByRole('button', { name: 'Add name group', exact: true }).click();
