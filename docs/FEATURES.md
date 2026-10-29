@@ -25,7 +25,7 @@
 - Make a booklet from up to 12 selected records, with captions and explicit rank/call/note/photo
   options. Download an offline HTML copy or print/save a PDF. Prepare an individual recommendation
   card as a PNG with your own message and a preview of exactly what leaves Worth.
-- Prepare a passphrase-protected offline text copy, queue Inbox captures or note edits, and explicitly sync with account/reset/conflict checks. Bookmark the separate offline page; images and extended detail remain in connected Worth.
+- Prepare a passphrase-protected offline text copy, queue Unfiled captures or note edits, and explicitly sync with account/reset/conflict checks. Bookmark the separate offline page; images and extended detail remain in connected Worth.
 - Collaborate in private spaces with verified-email invitations, viewer/editor access, selected text snapshots and shared notes. Make two-person choices privately and reveal them together; preserve disconnected private copies.
 - Seal private time capsules with a message, opening date/timezone and explicitly reviewed record/photo snapshots; compare them with current sources after opening. Owner backups include unopened contents.
 - Assemble a personal field guide across collections, with explicit note/location/photo choices, captions, an exact preview and an offline HTML or printable copy.
@@ -35,7 +35,7 @@
 - Gather cross-collection records and visits into private moments, shortlists, evening and trip boards, with manual stop replay and a readable list.
 - Log a dated experience with optional place, order and reaction; recover a fixed retry without duplicate names or visits.
 - Recall experiences by date, place, note or list, with separate saved-name dates and a private monthly memory card.
-- Read preference groups with rated-only denominators and links to their supporting records. Compare workout frequency, rep-specific records and complete weighted volume. See [Remember and progress](docs/REMEMBER.md).
+- Read preference groups with rated-only denominators and links to their supporting records. Compare workout frequency, rep-specific records and complete weighted volume. See [Remember and progress](REMEMBER.md).
 - Browse collections, search private records, open Look back → Insights, and review workout history.
 - Choose a period in Look back → More tools → Period summary for a private recap of currently kept finds and dated logs.
 - Keep up to 12 private photos per record, add separate captions/arrows, choose their order and cover, or compare two originals with a keyboard slider and full side-by-side view.
