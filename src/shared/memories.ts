@@ -37,7 +37,7 @@ export interface MemoryRecord {
   title: string;
   note: string;
   date: string;
-  kind: 'visit' | 'activity' | 'saved' | 'unfiled';
+  kind: 'visit' | 'activity' | 'saved' | 'unfiled' | 'unfiled-visit';
   location: string;
   order: string;
   reaction: ItemDecision | null;
@@ -76,7 +76,16 @@ export function isSavedMemory(record: MemoryRecord) {
   return record.kind === 'saved' || record.kind === 'unfiled';
 }
 export function memorySourceHref(record: MemoryRecord) {
-  return record.kind === 'unfiled'
+  return record.kind === 'unfiled' || record.kind === 'unfiled-visit'
     ? `/inbox?focus=${record.id}`
     : `/lists/${record.listId}?focus=${record.kind === 'saved' ? `item:${record.itemId ?? record.id}` : `log:${record.id}`}`;
+}
+export function memoryPhotoHref(record: MemoryRecord) {
+  const kind =
+    record.kind === 'unfiled' || record.kind === 'unfiled-visit'
+      ? 'inbox'
+      : isSavedMemory(record)
+        ? 'items'
+        : 'logs';
+  return `/api/${kind}/${record.id}/photo`;
 }

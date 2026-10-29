@@ -7,8 +7,7 @@ import { photoFingerprint } from '../photo-gallery';
 import { connectionCapacity } from '../connections';
 import { normalizeConnection } from '../../src/shared/connections';
 import { inboxChanged, inboxGuard } from '../inbox';
-import { inboxLimit } from '../../src/shared/inbox';
-import { itemInput } from '../../src/shared/validation';
+import { inboxLimit, inboxPayload } from '../../src/shared/inbox';
 import { appendTemplates, templateCapacityError } from '../templates';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
@@ -30,6 +29,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         records.workoutSessions.length +
         records.workoutRoutines.length +
         records.inbox.length +
+        records.inbox.filter((entry) => entry.photo).length +
         records.boards.length +
         records.receipts.length +
         records.sharedArchives.length +
@@ -51,17 +51,22 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     for (const [kind, table, field] of [
       ['list', 'list_photos', 'list_id'],
       ['asset', 'photo_assets', 'id'],
+      ['inbox', 'inbox_photos', 'inbox_id'],
     ] as const) {
       const eligible =
         kind === 'list'
           ? `${field} IN (SELECT id FROM active_lists WHERE owner_id=?)`
-          : 'id IN (SELECT value FROM json_each(?)) AND removed_at IS NULL AND data IS NOT NULL';
+          : kind === 'inbox'
+            ? 'inbox_id IN (SELECT value FROM json_each(?)) AND removed_at IS NULL AND data IS NOT NULL'
+            : 'id IN (SELECT value FROM json_each(?)) AND removed_at IS NULL AND data IS NOT NULL';
       const scope =
         kind === 'list'
           ? owner
-          : JSON.stringify(
-              records.photoAssets.filter((source) => source.available).map((source) => source.id),
-            );
+          : kind === 'inbox'
+            ? JSON.stringify(records.inbox.filter((entry) => entry.photo?.available).map((entry) => entry.id))
+            : JSON.stringify(
+                records.photoAssets.filter((source) => source.available).map((source) => source.id),
+              );
       const stats = await c.env.DB.prepare(
         `SELECT COUNT(*) AS n, COALESCE(SUM(length(data)),0) AS bytes FROM ${table} WHERE owner_id = ? AND ${eligible}`,
       )
@@ -82,7 +87,12 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
           .all<{ id: string; content_type: string; data: number[] }>();
         for (const row of rows.results) {
           const bytes = new Uint8Array(row.data);
-          const source = kind === 'asset' ? records.photoAssets.find((source) => source.id === row.id) : null;
+          const source =
+            kind === 'asset'
+              ? records.photoAssets.find((source) => source.id === row.id)
+              : kind === 'inbox'
+                ? records.inbox.find((entry) => entry.id === row.id)?.photo
+                : null;
           if (
             source &&
             (source.contentType !== row.content_type ||
@@ -112,6 +122,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     const expected = [
       ...records.lists.filter((l) => l.hasCoverPhoto).map((l) => `list:${l.id}`),
       ...records.photoAssets.filter((source) => source.available).map((source) => `asset:${source.id}`),
+      ...records.inbox.filter((entry) => entry.photo?.available).map((entry) => `inbox:${entry.id}`),
       ...records.receipts
         .filter((receipt) => receipt.attachment?.available)
         .map((receipt) => `receipt:${receipt.id}`),
@@ -212,6 +223,7 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
         ...file.workoutSessions,
         ...file.workoutRoutines,
         ...file.inbox,
+        ...file.inbox.flatMap((entry) => (entry.photo ? [entry.photo] : [])),
         ...file.photoAssets,
         ...file.boards,
         ...file.receipts,
@@ -321,11 +333,28 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
       file.inbox.map((entry) => ({
         id: id(entry.id),
         owner_id: owner,
-        payload_json: JSON.stringify(itemInput.parse(entry)),
+        payload_json: JSON.stringify(inboxPayload.parse(entry)),
         revision: 0,
         created_at: entry.createdAt,
         updated_at: entry.updatedAt,
       })),
+    );
+    rows(
+      'inbox_photos',
+      file.inbox.flatMap((entry) =>
+        entry.photo
+          ? [
+              {
+                id: id(entry.photo.id),
+                inbox_id: id(entry.id),
+                owner_id: owner,
+                content_type: entry.photo.contentType,
+                fingerprint: entry.photo.fingerprint,
+                created_at: entry.photo.createdAt,
+              },
+            ]
+          : [],
+      ),
     );
     rows(
       'items',
@@ -503,6 +532,37 @@ export function registerPortabilityRoutes(api: Hono<AppEnv>) {
     rows('time_capsules', capsules.capsules);
     rows('capsule_photos', capsules.photos);
     statements.push(...capsules.statements);
+    const inboxPhotos = file.photos.filter((photo) => photo.kind === 'inbox');
+    for (let index = 0; index < inboxPhotos.length; index += 20) {
+      const group = inboxPhotos.slice(index, index + 20);
+      const bindings: (string | Uint8Array)[] = [];
+      for (const photo of group) {
+        const source = file.inbox.find((entry) => entry.id === photo.id)!.photo!;
+        const bytes = Uint8Array.from(atob(photo.data), (character) => character.charCodeAt(0));
+        if (
+          bytes.length > 900000 ||
+          photoContentType(bytes) !== source.contentType ||
+          (source.fingerprint && (await photoFingerprint(bytes)) !== source.fingerprint)
+        )
+          throw new ApiError(
+            400,
+            'INVALID_PHOTO',
+            'An Unfiled photo has an invalid type, size or fingerprint.',
+          );
+        bindings.push(id(source.id), bytes);
+      }
+      statements.push(
+        c.env.DB.prepare(
+          `UPDATE inbox_photos SET data=CASE id ${group.map(() => 'WHEN ? THEN ?').join(' ')} ELSE data END WHERE owner_id=? AND id IN(SELECT value FROM json_each(?))`,
+        ).bind(
+          ...bindings,
+          owner,
+          JSON.stringify(
+            group.map((photo) => id(file.inbox.find((entry) => entry.id === photo.id)!.photo!.id)),
+          ),
+        ),
+      );
+    }
     const assetPhotos = file.photos.filter((photo) => photo.kind === 'asset');
     for (let at = 0; at < assetPhotos.length; at += 20) {
       const group = assetPhotos.slice(at, at + 20),

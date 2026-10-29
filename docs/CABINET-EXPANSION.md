@@ -340,7 +340,8 @@ Inbox keeps up to 500 private, unfiled finds without requiring a collection. Web
 capture defaults here; applying shared content and saving still require review.
 Navigation opens a scrolling overlay over the current page, with a full-page
 route for ordinary/private links. The editor preserves notes, context, optional
-calls, plans and dates; photos and visits can be added after filing. Explicit
+calls, plans and dates. The later Unfiled-memory extension also keeps one optional
+experience and photo before filing; see [everyday flow](EVERYDAY.md). Explicit
 filing moves one saved find into an owned current collection, unranked. Exact
 name/type matches require keeping a separate record; no merging is inferred.
 

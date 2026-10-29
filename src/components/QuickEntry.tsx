@@ -4,6 +4,10 @@ import { Link } from 'react-router';
 import { X } from '@phosphor-icons/react';
 import { api } from '../api';
 import { useDraft } from '../hooks/useDraft';
+import { useDraftPhoto } from '../hooks/useDraftPhoto';
+import { preparePhoto } from '../shared/photos';
+import { inboxPayload } from '../shared/inbox';
+import { DraftPhoto } from './DraftPhoto';
 import { useConnection } from '../hooks/useConnection';
 import { today } from '../format';
 import { itemInput, logInput } from '../shared/validation';
@@ -52,6 +56,8 @@ export function QuickEntry({
     (value): value is QuickEntryDraft => quickEntryDraft.safeParse(value).success,
   );
   const { form, setForm } = draft;
+  const photo = useDraftPhoto('quick-entry');
+  const [preparing, setPreparing] = useState(false);
   const target = lists.find((list) => list.id === form.listId && !list.archived);
   const activity = form.pending?.kind === 'activity' || target?.kind === 'activity';
   const collection = target?.kind === 'collection';
@@ -68,6 +74,9 @@ export function QuickEntry({
   const [detailsOpen, setDetailsOpen] = useState(
     Boolean(form.note || form.decision || form.wantToTry || form.experienced),
   );
+  useEffect(() => {
+    if (photo.file) setDetailsOpen(true);
+  }, [photo.file]);
   const [validation, setValidation] = useState('');
   useEffect(() => {
     const node = dialog.current;
@@ -76,14 +85,29 @@ export function QuickEntry({
     return () => node?.close();
   }, []);
   const save = useMutation({
-    mutationFn: async (pending: QuickEntryPending): Promise<SavedEntry> => {
+    mutationFn: async ({
+      pending,
+      file,
+    }: {
+      pending: QuickEntryPending;
+      file: File | null;
+    }): Promise<SavedEntry> => {
+      async function attach(entry: SavedEntry, revision = 0) {
+        draft.rememberSaved(entry.id);
+        if (pending.photoKey && file) {
+          if (entry.kind === 'inbox') await api.uploadInboxPhoto(entry.id, file, pending.photoKey, revision);
+          else
+            await api.uploadPhoto(entry.kind === 'item' ? 'items' : 'logs', entry.id, file, pending.photoKey);
+        }
+        return entry;
+      }
       if (pending.kind === 'inbox') {
         const { entry } = await api.createInbox(pending.item, draft.operationId.current);
-        return { id: entry.id, title: entry.title, listId: null, kind: 'inbox' };
+        return attach({ id: entry.id, title: entry.title, listId: null, kind: 'inbox' }, entry.revision);
       }
       if (pending.kind === 'item') {
         const { item } = await api.createItem(pending.listId, pending.item, draft.operationId.current);
-        return { id: item.id, title: item.title, listId: item.listId, kind: 'item' };
+        return attach({ id: item.id, title: item.title, listId: item.listId, kind: 'item' });
       }
       if (pending.kind === 'experience') {
         const { item, log } = await api.createExperience(
@@ -91,37 +115,39 @@ export function QuickEntry({
           pending.body,
           draft.operationId.current,
         );
-        return {
+        return attach({
           id: log.id,
           title: pending.body.title,
           listId: pending.listId,
           kind: 'log',
           // A new name and its first visit are one save; repeat visits undo only the visit.
           undoItemId: pending.body.itemId ? undefined : item.id,
-        };
+        });
       }
       const { log } = await api.createLog(pending.listId, pending.body, draft.operationId.current);
-      return { id: log.id, title: log.title, listId: log.listId, kind: 'log' };
+      return attach({ id: log.id, title: log.title, listId: log.listId, kind: 'log' });
     },
     onSuccess: (entry) => {
       draft.clear();
+      photo.clear();
       for (const key of ['inbox', 'items', 'logs', 'list', 'lists', 'overview', 'patterns', 'search'])
         void client.invalidateQueries({ queryKey: [key] });
       onSaved(entry);
       dialog.current?.close();
     },
   });
-  const locked = save.isPending || !!form.pending;
+  const locked = preparing || save.isPending || !!form.pending;
   function edit(patch: Partial<QuickEntryDraft>) {
     setForm({ ...form, ...patch });
     setValidation('');
     save.reset();
   }
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    if (save.isPending || !online || (!ready && !form.pending)) return;
+    if (preparing || save.isPending || !photo.ready || !online || (!ready && !form.pending)) return;
+    setPreparing(true);
     try {
-      const pending: QuickEntryPending =
+      let pending: QuickEntryPending =
         form.pending ??
         (activity
           ? {
@@ -144,11 +170,14 @@ export function QuickEntry({
             : form.listId === 'inbox'
               ? {
                   kind: 'inbox',
-                  item: itemInput.parse({
+                  item: inboxPayload.parse({
                     title: form.title,
                     note: form.note,
-                    decision: form.decision,
+                    decision: form.experienced ? null : form.decision,
                     wantToTry: form.wantToTry,
+                    memory: form.experienced
+                      ? { happenedOn: form.happenedOn, reaction: form.decision }
+                      : null,
                   }),
                 }
               : {
@@ -161,11 +190,27 @@ export function QuickEntry({
                     wantToTry: form.wantToTry,
                   }),
                 });
+      let file: File | null = null;
+      if (pending.photoKey && (!photo.file || photo.operationId.current !== pending.photoKey))
+        throw new Error(
+          'This photo draft could not be recovered. Check the saved entry before clearing this draft and choosing another photo.',
+        );
+      if (photo.file && (!form.pending || pending.photoKey)) {
+        const prepared = await photo.freeze(await preparePhoto(photo.file));
+        file = prepared.file;
+        pending = { ...pending, photoKey: prepared.key };
+      }
       draft.checkpoint({ ...form, pending });
-      save.mutate(pending);
-    } catch {
-      setValidation('Check the name and date before saving.');
+      save.mutate({ pending, file });
+    } catch (error) {
+      setValidation(
+        error instanceof Error && !('issues' in error)
+          ? error.message
+          : 'Check the name and date before saving.',
+      );
       setDetailsOpen(true);
+    } finally {
+      setPreparing(false);
     }
   }
   return (
@@ -180,7 +225,7 @@ export function QuickEntry({
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (!save.isPending) dialog.current?.close();
+        if (!save.isPending && !preparing) dialog.current?.close();
       }}
     >
       <div className="editor-inner">
@@ -190,7 +235,7 @@ export function QuickEntry({
             type="button"
             className="icon-button"
             aria-label="Close Add"
-            disabled={save.isPending}
+            disabled={save.isPending || preparing}
             onClick={() => dialog.current?.close()}
           >
             <X size={22} />
@@ -220,12 +265,11 @@ export function QuickEntry({
                     itemId: null,
                     experienced:
                       form.experienced &&
-                      lists.some((list) => list.id === event.target.value && list.kind === 'collection'),
-                    decision:
-                      lists.some((list) => list.id === event.target.value && list.kind === 'activity') ||
-                      (form.experienced && event.target.value === 'inbox')
-                        ? null
-                        : form.decision,
+                      (event.target.value === 'inbox' ||
+                        lists.some((list) => list.id === event.target.value && list.kind === 'collection')),
+                    decision: lists.some((list) => list.id === event.target.value && list.kind === 'activity')
+                      ? null
+                      : form.decision,
                     wantToTry: lists.some(
                       (list) => list.id === event.target.value && list.kind === 'activity',
                     )
@@ -269,19 +313,10 @@ export function QuickEntry({
               onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
               className="quick-entry-details"
             >
-              <summary>{activity ? 'Add a note' : 'Add a note or an opinion'}</summary>
-              <label>
-                Note <span className="optional">optional</span>
-                <textarea
-                  rows={3}
-                  maxLength={4000}
-                  value={form.note}
-                  onChange={(event) => edit({ note: event.target.value })}
-                />
-              </label>
+              <summary>Add details</summary>
               {!activity && (
                 <>
-                  {collection && (
+                  {(collection || form.listId === 'inbox') && (
                     <label className="check-label">
                       <input
                         type="checkbox"
@@ -298,12 +333,36 @@ export function QuickEntry({
                       Record a dated experience
                     </label>
                   )}
+                  {form.experienced && (
+                    <label>
+                      When
+                      <input
+                        type="date"
+                        required
+                        value={form.happenedOn}
+                        onChange={(event) => edit({ happenedOn: event.target.value })}
+                      />
+                    </label>
+                  )}
+                </>
+              )}
+              <label>
+                Note <span className="optional">optional</span>
+                <textarea
+                  rows={3}
+                  maxLength={4000}
+                  value={form.note}
+                  onChange={(event) => edit({ note: event.target.value })}
+                />
+              </label>
+              {!activity && (
+                <>
                   <p className="quick-entry-label">
-                    {collection && form.experienced ? 'This time' : 'Overall call'}{' '}
+                    {form.experienced ? 'This time' : 'Overall call'}{' '}
                     <span className="optional">optional</span>
                   </p>
                   <CallChoices
-                    label={collection && form.experienced ? 'This time' : 'Overall call'}
+                    label={form.experienced ? 'This time' : 'Overall call'}
                     value={form.decision}
                     onChange={(decision) => edit({ decision })}
                   />
@@ -317,12 +376,13 @@ export function QuickEntry({
                       Want to try
                     </label>
                   )}
-                  {form.listId === 'inbox' && (
-                    <p className="quick-entry-helper">
-                      Photos and dated visits can be added after choosing a collection.
-                    </p>
-                  )}
                 </>
+              )}
+              <DraftPhoto file={photo.file} onChange={photo.change} disabled={locked || !photo.ready} />
+              {photo.status && (
+                <p role="status" className="draft-state">
+                  {photo.status}
+                </p>
               )}
             </details>
             {collection && form.experienced && (
@@ -365,7 +425,7 @@ export function QuickEntry({
                 )}
               </div>
             )}
-            {(activity || (collection && form.experienced)) && (
+            {activity && (
               <label>
                 When
                 <input
@@ -397,9 +457,15 @@ export function QuickEntry({
           )}
           <button
             className="button button-accent quick-entry-save"
-            disabled={!online || save.isPending || (!ready && !form.pending)}
+            disabled={!online || preparing || !photo.ready || save.isPending || (!ready && !form.pending)}
           >
-            {save.isPending ? 'Saving…' : form.pending ? 'Retry save' : 'Save'}
+            {preparing
+              ? 'Preparing photo…'
+              : save.isPending
+                ? 'Saving…'
+                : form.pending
+                  ? 'Retry save'
+                  : 'Save'}
           </button>
           <p className="quick-entry-helper">A name is enough. You can add more later.</p>
           {(form.title || form.pending) && (
@@ -426,6 +492,8 @@ export function QuickEntry({
           onClose={() => setDiscard(false)}
           onConfirm={() => {
             draft.clear(initial);
+            photo.clear();
+            draft.savedId.current = null;
             setForm(initial);
             draft.operationId.current = crypto.randomUUID();
             save.reset();

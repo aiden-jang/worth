@@ -43,7 +43,7 @@
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
   a ranking image. Only the collection name and ranked titles/types leave the archive.
-- Keep private unfiled finds in Unfiled (stored as Inbox), recover edits and filing retries, then file into a collection unranked.
+- Keep private finds in Unfiled (stored as Inbox), optionally add an experienced date, reaction and one photo, recover interrupted saves, then file into a collection unranked without losing the memory.
 - Read English printed text from a photo on-device, edit it, then review a name and optional note before saving. No photo upload or external AI processing is used for recognition.
 - Review receipt text on-device, attach an exact checked image copy if you choose, and map each line to an existing record or an explicitly named new unranked record. Receipt removal leaves sources intact.
 - Read product barcodes on-device, or optionally look up a checked ISBN and review a book title before capture.

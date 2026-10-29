@@ -444,3 +444,21 @@ native sheet instead of inserting a tall card between rows. Look back contains
 Memories and Insights; extra filters and specialized tools disclose. Current
 workouts precede routines, progress and past visits. Filtering past history does
 not conceal an active workout. No data schema, sharing or export scope changes.
+
+## Unfiled memories — October 28
+
+The user approved keeping optional date, thought and photo before choosing a
+collection. This supersedes the preceding revision’s text-only Unfiled scope and
+no-schema-change statement. The [Unfiled-memory references](everyday/README.md)
+extend Add without altering the default name-only composition. Add details opens
+an explicit experience checkbox, its date, note, labeled reaction choices and an
+optional photo disclosure. Reaction choices use the existing compact capsule,
+with words retained and no repeated face art in the small controls. Native dialogs scroll within the viewport; phone inputs
+use 16px text. Keep the cabinet tokens and 44px touch targets.
+
+A date is never inferred from a name, photo or save timestamp. The experience
+reaction and overall call remain distinct. An Unfiled find holds one optional
+experience and one private photo; filing transfers these atomically to the
+collection. Interrupted text/photo saves retain exact retry identities and device
+drafts. Migration 0028 and JSON version 11 support this extension; older backups
+and clients remain compatible. No paid service, native app or reminder is added.

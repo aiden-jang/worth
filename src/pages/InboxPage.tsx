@@ -12,7 +12,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useConnection } from '../hooks/useConnection';
 import { inboxEntry } from '../shared/inbox';
 import { contextSearchText } from '../shared/item-context';
-import { formatRelativeTimestamp } from '../format';
+import { formatDate, formatRelativeTimestamp } from '../format';
 import '../inbox.css';
 
 const filingDraft = z.object({
@@ -41,7 +41,12 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
   const [term, setTerm] = useState(''),
     [limit, setLimit] = useState(30);
   const [discard, setDiscard] = useState(false);
-  const [saved, setSaved] = useState<{ id: string; listId: string; title: string } | null>(null);
+  const [saved, setSaved] = useState<{
+    id: string;
+    listId: string;
+    title: string;
+    logId?: string | null;
+  } | null>(null);
   const draft = useDraft<FilingDraft>(
     'inbox-filing',
     { pending: null },
@@ -52,11 +57,11 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
     mutationKey: ['inbox'],
     mutationFn: (value: NonNullable<FilingDraft['pending']>) =>
       api.fileInbox(value.entry.id, value.targetId, value.entry.revision, draft.operationId.current),
-    onSuccess: ({ item }) => {
+    onSuccess: ({ item, logId }) => {
       draft.clear({ pending: null });
       draft.setForm({ pending: null });
       draft.operationId.current = crypto.randomUUID();
-      setSaved({ id: item.id, listId: item.listId, title: item.title });
+      setSaved({ id: item.id, listId: item.listId, title: item.title, logId });
       void client.invalidateQueries();
     },
     onError: () => {
@@ -133,7 +138,11 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
       {saved && (
         <p role="status">
           “{saved.title}” filed.{' '}
-          <Link to={`/lists/${saved.listId}?focus=item:${saved.id}`}>Open filed record →</Link>
+          <Link
+            to={`/lists/${saved.listId}?focus=${saved.logId ? `log:${saved.logId}` : `item:${saved.id}`}`}
+          >
+            Open filed record →
+          </Link>
         </p>
       )}
       {query.isPending && <p role="status">Opening the Unfiled…</p>}
@@ -193,6 +202,8 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
                     <small>
                       {find.type ? `${find.type} · ` : ''}
                       {formatRelativeTimestamp(find.createdAt)}
+                      {find.memory ? ` · Experienced ${formatDate(find.memory.happenedOn)}` : ''}
+                      {find.photo?.available ? ' · Photo' : ''}
                       {find.wantToTry ? ' · Want to try' : ''}
                     </small>
                     {find.note && <span className="inbox-row-note">{find.note}</span>}

@@ -30,6 +30,7 @@ export const archiveFile = z
       z.literal(8),
       z.literal(9),
       z.literal(10),
+      z.literal(11),
     ]),
     boards: z.array(savedBoard).max(100).default([]),
     receipts: z.array(savedReceipt).max(100).default([]),
@@ -128,7 +129,7 @@ export const archiveFile = z
     photos: z
       .array(
         z.object({
-          kind: z.enum(['list', 'item', 'log', 'asset', 'receipt', 'capsule']),
+          kind: z.enum(['list', 'item', 'log', 'asset', 'receipt', 'capsule', 'inbox']),
           id,
           contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
           data: z
@@ -157,6 +158,7 @@ export const archiveFile = z
       ...file.workoutSessions,
       ...file.workoutRoutines,
       ...file.inbox,
+      ...file.inbox.flatMap((entry) => (entry.photo ? [entry.photo] : [])),
       ...file.boards,
       ...file.receipts,
       ...file.sharedArchives,
@@ -165,6 +167,8 @@ export const archiveFile = z
       ...file.capsules.flatMap((capsule) => capsule.entries.flatMap((entry) => entry.photos)),
     ];
     if (file.schemaVersion < 10 && file.sharedArchives.length) bad('Shared copies require backup version 10');
+    if (file.schemaVersion < 11 && file.inbox.some((entry) => entry.memory || entry.photo))
+      bad('Unfiled memories and photos require backup version 11');
     if (new TextEncoder().encode(JSON.stringify(file.sharedArchives)).length > 8 * 1024 * 1024)
       bad('Shared copies exceed the 8 MB text limit');
     if (records.length > 5000) bad('Restore up to 5,000 records at a time');
@@ -387,21 +391,28 @@ export const archiveFile = z
       if (photoKeys.has(`${p.kind}:${p.id}`)) bad('The file contains duplicate photos');
       photoKeys.add(`${p.kind}:${p.id}`);
       if (
-        !(p.kind === 'list'
-          ? lists.has(p.id)
-          : p.kind === 'item'
-            ? items.has(p.id)
-            : p.kind === 'asset'
-              ? sources.has(p.id)
-              : p.kind === 'receipt'
-                ? receipts.has(p.id)
-                : p.kind === 'capsule'
-                  ? capsulePhotos.has(p.id)
-                  : file.logs.some((g) => g.id === p.id))
+        !(p.kind === 'inbox'
+          ? file.inbox.some((entry) => entry.id === p.id)
+          : p.kind === 'list'
+            ? lists.has(p.id)
+            : p.kind === 'item'
+              ? items.has(p.id)
+              : p.kind === 'asset'
+                ? sources.has(p.id)
+                : p.kind === 'receipt'
+                  ? receipts.has(p.id)
+                  : p.kind === 'capsule'
+                    ? capsulePhotos.has(p.id)
+                    : file.logs.some((g) => g.id === p.id))
       )
         bad('A photo has an invalid record');
     }
     for (const photo of file.photos) {
+      if (photo.kind === 'inbox') {
+        const source = file.inbox.find((entry) => entry.id === photo.id)?.photo;
+        if (!source?.available || source.contentType !== photo.contentType)
+          bad('An Unfiled photo has an invalid type or availability.');
+      }
       if (
         photo.kind === 'capsule' &&
         (!capsulePhotos.get(photo.id)?.available ||
@@ -437,6 +448,11 @@ export const archiveFile = z
     )
       bad('A receipt is missing its attachment copy.');
     if (file.photosExcluded && file.photos.length) bad('A records-only file cannot contain photos');
+    if (
+      !file.photosExcluded &&
+      file.inbox.some((entry) => entry.photo?.available && !photoKeys.has(`inbox:${entry.id}`))
+    )
+      bad('An Unfiled memory is missing its photo copy.');
     if (
       !file.photosExcluded &&
       [...capsulePhotos.values()].some((photo) => photo.available && !photoKeys.has(`capsule:${photo.id}`))

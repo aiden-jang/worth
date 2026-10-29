@@ -2,7 +2,8 @@
 
 Worth is a place to save names and memories with very little required input.
 Organization, reactions, ranking and detail are optional. The October 28 revision
-changes how people reach existing capabilities; it does not migrate or remove data.
+simplifies how people reach existing capabilities. Its subsequent Unfiled-memory
+extension adds optional date/photo storage without removing existing data.
 
 ## Save first
 
@@ -11,12 +12,19 @@ Choose **Add**, enter a name and choose **Save**. Outside an open active list,
 There is no hidden last-used destination. A recovered draft keeps its own visible
 destination. Unfiled is the existing Inbox store with a clearer primary UI label.
 
-**Add a note or an opinion** opens optional text and an overall call. For a
-collection, **Record a dated experience** makes the date visible and treats the
-reaction as **This time**. It saves a name and visit together using the existing
-transaction. If that name already exists, Use saved attaches the visit explicitly
-to that record; otherwise Save keeps a separate new name. A saved name alone never creates a visit. Photos and dated visits
-are available after an Unfiled find is moved into a collection.
+**Add details** opens optional text, a call and one photo. **Record a dated
+experience** reveals the date and treats its reaction as **This time**. This also
+works in Unfiled: a find can keep its date, thought and photo before organization.
+An Unfiled find holds one optional experience; repeated visits belong to a
+collection record. The overall call stays separate when editing an existing find.
+Saving a name or photo alone never creates a visit.
+
+For a collection, saving an experience creates the name and visit in one transaction.
+If that name already exists, Use saved attaches the visit explicitly to that
+record; otherwise Save keeps a separate new name. Filing an Unfiled memory creates
+one unranked name and its dated visit atomically. A memory photo moves to the
+visit gallery; a photo without a memory moves to the saved name. Filing never
+duplicates the source in recall.
 
 Choosing an activity in Add saves one dated activity entry. Exercise sets and
 workout controls remain in that activity's dedicated flow. Nothing is completed,
@@ -28,7 +36,10 @@ that visit. Save and Trash notices replace each other and stay above phone navig
 Unfinished drafts remain scoped to the account on this device. A lost
 save reply freezes the exact payload and operation identity; Retry checks that
 same save, including after reload. Clearing a retry draft does not undo a request
-that may already have reached Worth.
+that may already have reached Worth. A selected photo is prepared on-device and
+frozen before saving. If its upload reply is lost, Retry checks the same saved
+record and upload; it does not create another find. Photos remain optional and
+connected-only.
 
 ## Find what you kept
 
@@ -78,13 +89,19 @@ visits, legacy measurements, source routines and conflict protection are preserv
 
 Settings retains JSON restore, photo backups and Excel downloads. Existing URLs,
 private ownership, account boundaries, Trash and public-link scope are unchanged.
-There are no database migrations or new external services for this revision.
+Migration 0028 adds private Unfiled photo storage. JSON version 11 preserves
+Unfiled memories and original photos in a full backup; records-only restore keeps
+an unavailable-photo placeholder. Excel includes the explicit experience date,
+reaction and photo availability alongside the separate saved date and overall call.
+Older backups remain supported. No new external service is used.
 
 Design references live in `art/ui-mocks/everyday`; dated implementation captures
-and verification limits live in `art/ui-qa/everyday-flow`.
+and verification limits live in `art/ui-qa/everyday-flow`. The Unfiled-memory
+extension is verified in [its own captures](../art/ui-qa/unfiled-memories/README.md).
 
-Unfiled finds also participate in saved-name recall and overall-call insights.
-Their saved dates remain UTC, they never become dated visits, and their source
-links open the original Unfiled find. Filing moves that source into its collection
-without creating a duplicate recall entry. Owner scoping, Trash exclusions and
-50-record pagination apply to both sources. No database migration is required.
+Unfiled finds participate in saved-name recall and overall-call insights. Only an
+explicit experience also appears in dated Memories and visit-reaction insights.
+Saved dates remain UTC, separate from the experienced date; links open the
+original Unfiled find. Filing moves that source into its collection without
+duplicate recall. Owner scoping, Trash exclusions and 50-record pagination apply
+to both sources. Specialized calendars and period summaries remain collection-based.

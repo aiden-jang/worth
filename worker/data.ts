@@ -12,7 +12,7 @@ import { connectionsQuery, mapConnection, type ConnectionRow } from './connectio
 import type { RecordConnection } from '../src/shared/connections';
 import { historyQuery, mapHistory, type HistoryRow } from './taste-history';
 import type { TasteEvent } from '../src/shared/taste-history';
-import { mapInbox, type InboxRow } from './inbox';
+import { mapInbox, inboxQuery, type InboxRow } from './inbox';
 import { collectionTemplates } from '../src/shared/templates';
 import type { InboxEntry } from '../src/shared/inbox';
 import type { CollectionTemplate } from '../src/shared/templates';
@@ -34,7 +34,7 @@ const emptyContextJson = JSON.stringify(emptyItemContext);
 export type RecordExport = {
   inbox: InboxEntry[];
   collectionTemplates: CollectionTemplate[];
-  schemaVersion: 10;
+  schemaVersion: 11;
   capsules: SavedCapsule[];
   sharedArchives: SharedArchive[];
   receipts: SavedReceipt[];
@@ -379,7 +379,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
       .bind(ownerId),
     db
       .prepare(
-        'SELECT * FROM inbox_entries WHERE owner_id = ? AND trashed_at IS NULL ORDER BY created_at DESC, id DESC',
+        `${inboxQuery} WHERE e.owner_id = ? AND e.trashed_at IS NULL ORDER BY e.created_at DESC, e.id DESC`,
       )
       .bind(ownerId),
     db.prepare('SELECT templates_json FROM collection_template_sets WHERE owner_id = ?').bind(ownerId),
@@ -482,7 +482,7 @@ export async function exportRecords(db: D1Database, ownerId: string): Promise<Re
     ),
     inbox: (inboxResult.results as InboxRow[]).map(mapInbox),
     // Older readers must reject new backup kinds instead of silently discarding them.
-    schemaVersion: 10,
+    schemaVersion: 11,
     sharedArchives: await exportSharedArchives(db, ownerId),
     capsules: (capsuleResult.results as CapsuleRow[]).map((row) =>
       normalizeCapsuleReferences(

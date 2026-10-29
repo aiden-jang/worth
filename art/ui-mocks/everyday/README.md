@@ -7,15 +7,17 @@ They supersede the older cabinet layouts for those primary flows while retaining
 its colors, typography, artwork and reaction system. Specialized secondary screens
 retain their cabinet references.
 
-| Flow       | Desktop                             | Phone                             |
-| ---------- | ----------------------------------- | --------------------------------- |
-| Home       | [Reference](home-desktop.png)       | [Reference](home-phone.png)       |
-| Add        | [Reference](add-desktop.png)        | [Reference](add-phone.png)        |
-| Collection | [Reference](collection-desktop.png) | [Reference](collection-phone.png) |
-| Gym        | [Reference](gym-desktop.png)        | [Reference](gym-phone.png)        |
+| Flow           | Desktop                                 | Phone                                 |
+| -------------- | --------------------------------------- | ------------------------------------- |
+| Home           | [Reference](home-desktop.png)           | [Reference](home-phone.png)           |
+| Add            | [Reference](add-desktop.png)            | [Reference](add-phone.png)            |
+| Unfiled memory | [Reference](unfiled-memory-desktop.png) | [Reference](unfiled-memory-phone.png) |
+| Collection     | [Reference](collection-desktop.png)     | [Reference](collection-phone.png)     |
+| Gym            | [Reference](gym-desktop.png)            | [Reference](gym-phone.png)            |
 
 The editable [HTML](index.html) selects a screen with `?screen=home`, `add`,
-`collection` or `gym`. Fixtures are explicitly synthetic and do not write data.
+`unfiled-memory`, `collection` or `gym`. The Unfiled-memory variant was authored
+and inspected before adding the optional details; the default Add remains name-only. Fixtures are explicitly synthetic and do not write data.
 Desktop is 1440 × 900 and phone is 390 × 780 with natural page scrolling. A fixed
 phone navigation bar appears at the viewport edge in full-page captures; the
 running app includes content clearance and device safe areas.

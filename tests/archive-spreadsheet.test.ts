@@ -141,3 +141,35 @@ test('empty archives remain readable workbooks and overlong cells direct people 
   archive.items[0].note = 'x'.repeat(32768);
   expect(() => archiveSpreadsheet(archive)).toThrow('Export JSON to keep it in full');
 });
+
+test('Unfiled experience dates and reactions remain separate from saved dates and overall calls in Excel', () => {
+  const archive = archiveFile.parse({
+    ...fixture(),
+    schemaVersion: 11,
+    inbox: [
+      {
+        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        revision: 0,
+        title: 'Bookshop',
+        decision: 'favorite',
+        createdAt: 0,
+        updatedAt: 0,
+        memory: { happenedOn: '2026-10-20', reaction: 'meh' },
+        photo: {
+          id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          contentType: 'image/png',
+          fingerprint: null,
+          createdAt: 1,
+          available: true,
+        },
+      },
+    ],
+  });
+  const sheet = read(archiveSpreadsheet(archive))['xl/worksheets/sheet8.xml'];
+  expect(sheet.querySelector('c[r="K1"] t')?.textContent).toBe('Experienced on');
+  expect(sheet.querySelector('c[r="K2"]')?.getAttribute('s')).toBe('2');
+  expect(sheet.querySelector('c[r="L2"] t')?.textContent).toBe('Meh');
+  expect(sheet.querySelector('c[r="C2"] t')?.textContent).toBe('Favorite');
+  expect(sheet.querySelector('c[r="M2"] v')?.textContent).toBe('1');
+  expect(sheet.querySelector('c[r="H2"]')?.getAttribute('s')).toBe('3');
+});

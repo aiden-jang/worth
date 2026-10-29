@@ -15,8 +15,8 @@ and never writes to a private archive.
 ## Everyday use
 
 - **Add** keeps a name in Unfiled, or an explicitly selected collection. Notes and
-  opinions are optional. Saving a name does not create a visit. Add a dated
-  experience when you want to record when something happened.
+  opinions are optional. Add details can keep a date and photo even in Unfiled.
+  Saving a name or photo alone does not create a visit.
 - **Home** puts search and recent entries first, including Unfiled finds. Collections
   and activity shortcuts stay within reach, with a compact memory to rediscover.
 - **Collections** open directly to names, quick capture, search and a browse/filter

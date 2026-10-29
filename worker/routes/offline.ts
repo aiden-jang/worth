@@ -1,3 +1,4 @@
+import { inboxPayload } from '../../src/shared/inbox';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
 import { ApiError } from '../data';
@@ -141,7 +142,7 @@ export function registerOfflineRoutes(api: Hono<AppEnv>) {
         rank: null,
       })),
       ...result[5].results.map((r) => {
-        const item = itemInput.parse(JSON.parse(String(r.payload_json)));
+        const item = inboxPayload.parse(JSON.parse(String(r.payload_json)));
         return {
           id: r.id,
           kind: 'inbox',
@@ -149,7 +150,7 @@ export function registerOfflineRoutes(api: Hono<AppEnv>) {
           title: item.title,
           note: item.note,
           updatedAt: r.updated_at,
-          date: null,
+          date: item.memory?.happenedOn ?? null,
           decision: item.decision,
           rank: null,
         };

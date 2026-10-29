@@ -1211,3 +1211,44 @@
     font-size: 16px;
   }
 }
+
+/* One optional image keeps an Unfiled memory useful before it has a collection. */
+.unfiled-photo {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: var(--panel);
+}
+.quick-entry-details .draft-photo {
+  border-top: 1px solid var(--line);
+  margin: 14px 0;
+}
+.quick-entry-details .draft-photo img {
+  max-height: 220px;
+  object-fit: contain;
+}
+.quick-entry-form .draft-photo .photo-file-input {
+  width: 1px;
+  min-height: 1px;
+  padding: 0;
+}
+:is(.quick-entry-form, .inbox-editor) .call-choices {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 28px;
+  background: var(--raised);
+}
+:is(.quick-entry-form, .inbox-editor) .call-choices button {
+  min-height: 44px;
+  padding: 8px 4px;
+  border-radius: 24px;
+  font-size: 13px;
+}
+:is(.quick-entry-form, .inbox-editor) .call-choices button.active {
+  background: var(--acid);
+  color: var(--ink);
+}
+:is(.quick-entry-form, .inbox-editor) .call-choices .call-face {
+  display: none;
+}

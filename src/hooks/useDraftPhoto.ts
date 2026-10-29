@@ -10,24 +10,47 @@ function storage(): Promise<IDBDatabase> {
     request.onerror = () => reject(request.error);
   });
 }
+type StoredPhoto = {
+  file?: File;
+  data?: ArrayBuffer;
+  name?: string;
+  type?: string;
+  lastModified?: number;
+  updatedAt: number;
+  operationId?: string;
+};
 async function access(key: string, action: 'read' | 'write' | 'delete', file?: File, operationId?: string) {
+  if (
+    action === 'write' &&
+    (!file ||
+      !file.size ||
+      file.size > 20 * 1024 * 1024 ||
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
+  )
+    throw new Error('Choose a JPEG, PNG or WebP photo up to 20 MB.');
+  // Raw bytes survive IndexedDB cloning on browsers that cannot persist a File.
+  const value: StoredPhoto | undefined =
+    action === 'write' && file
+      ? {
+          data: await file.arrayBuffer(),
+          name: file.name,
+          type: file.type,
+          lastModified: file.lastModified,
+          updatedAt: Date.now(),
+          operationId,
+        }
+      : undefined;
   const db = await storage();
   try {
-    return await new Promise<{ file: File; updatedAt: number; operationId?: string } | undefined>(
-      (resolve, reject) => {
-        const transaction = db.transaction('files', action === 'read' ? 'readonly' : 'readwrite');
-        const store = transaction.objectStore('files');
-        const request =
-          action === 'read'
-            ? store.get(key)
-            : action === 'delete'
-              ? store.delete(key)
-              : store.put({ file, updatedAt: Date.now(), operationId }, key);
-        transaction.oncomplete = () => resolve(action === 'read' ? request.result : undefined);
-        transaction.onerror = () => reject(transaction.error);
-        transaction.onabort = () => reject(transaction.error);
-      },
-    );
+    return await new Promise<StoredPhoto | undefined>((resolve, reject) => {
+      const transaction = db.transaction('files', action === 'read' ? 'readonly' : 'readwrite');
+      const store = transaction.objectStore('files');
+      const request =
+        action === 'read' ? store.get(key) : action === 'delete' ? store.delete(key) : store.put(value, key);
+      transaction.oncomplete = () => resolve(action === 'read' ? request.result : undefined);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+    });
   } finally {
     db.close();
   }
@@ -50,13 +73,25 @@ export function useDraftPhoto(name: string) {
     access(key, 'read')
       .then((value) => {
         if (!live || revision.current) return;
-        if (value && value.updatedAt > Date.now() - draftLifetime && value.file instanceof File) {
+        const recovered =
+          value?.file instanceof File
+            ? value.file
+            : value?.data instanceof ArrayBuffer &&
+                value.data.byteLength > 0 &&
+                value.data.byteLength <= 20 * 1024 * 1024 &&
+                ['image/jpeg', 'image/png', 'image/webp'].includes(value.type ?? '')
+              ? new File([value.data], value.name ?? 'photo', {
+                  type: value.type,
+                  lastModified: value.lastModified,
+                })
+              : null;
+        if (value && value.updatedAt > Date.now() - draftLifetime && recovered) {
           operationId.current =
             typeof value.operationId === 'string' &&
             /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.operationId)
               ? value.operationId
               : crypto.randomUUID();
-          setFile(value.file);
+          setFile(recovered);
           setStatus('Photo restored from this device.');
         } else if (value) void access(key, 'delete').catch(() => {});
       })

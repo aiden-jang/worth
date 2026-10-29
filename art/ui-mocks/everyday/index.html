@@ -348,6 +348,8 @@
       z-index: 3;
     }
     .composer {
+      max-height: calc(100dvh - 24px);
+      overflow-y: auto;
       background: #20211c;
       border: 1px solid #737566;
       border-radius: 22px;
@@ -482,6 +484,8 @@
         font-size: 14px;
       }
       .composer {
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
         padding: 22px;
       }
       .composer h2 {
@@ -684,7 +688,82 @@
               <option>Drinks</option>
             </select></label
           >
-          <details><summary>Add a note or an opinion</summary></details>
+          <details><summary>Add details</summary></details>
+          <button class="primary">Save</button>
+          <p class="muted">A name is enough.</p>
+        </form>
+      </div>
+    </section>
+    <section class="screen" id="unfiled-memory">
+      <header class="heading"><h1>Good to keep.</h1></header>
+      <div class="veil">
+        <form class="composer">
+          <div class="heading">
+            <h2>Keep something.</h2>
+            <button aria-label="Close">×</button>
+          </div>
+          <label>Name<input value="Corner ramen" autofocus /></label
+          ><label
+            >Save in<select>
+              <option>Unfiled — choose a collection later</option>
+              <option>Places</option>
+              <option>Drinks</option>
+            </select></label
+          >
+          <details><summary>Add details</summary></details>
+          <div style="border-block: 1px solid #38392f; padding: 12px 0; margin-top: 12px">
+            <p>✓ Record a dated experience</p>
+            <label>When<input type="date" value="2026-10-28" /></label>
+            <label>Note <small>optional</small><input value="Window seat. Good noodles." /></label>
+            <p>This time <small>optional</small></p>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 4px;
+                padding: 4px;
+                border-radius: 28px;
+                background: #292a23;
+              "
+            >
+              <button
+                class="primary"
+                style="
+                  border-radius: 24px;
+                  padding: 8px 4px;
+                  font-size: 13px;
+                  margin: 0;
+                  border-color: transparent;
+                "
+              >
+                Favorite</button
+              ><button
+                style="
+                  border-radius: 24px;
+                  padding: 8px 4px;
+                  font-size: 13px;
+                  margin: 0;
+                  border-color: transparent;
+                "
+              >
+                Meh</button
+              ><button
+                style="
+                  border-radius: 24px;
+                  padding: 8px 4px;
+                  font-size: 13px;
+                  margin: 0;
+                  border-color: transparent;
+                "
+              >
+                Not again
+              </button>
+            </div>
+            <details>
+              <summary style="padding: 16px 0">Photo · optional</summary>
+              <button>Choose photo</button><button>Take photo</button>
+            </details>
+          </div>
           <button class="primary">Save</button>
           <p class="muted">A name is enough.</p>
         </form>

@@ -70,6 +70,7 @@ beforeAll(async () => {
     '0025_time_capsules.sql',
     '0026_private_spaces.sql',
     '0027_offline_queue.sql',
+    '0028_unfiled_memories.sql',
   ]) {
     if (file === '0009_product_flow.sql') {
       await platform.env.DB.prepare(
@@ -1020,7 +1021,7 @@ test('record exports are owner-scoped and do not include photo binaries', async 
     items: Array<{ title: string; decision: string | null; note: string }>;
     logs: Array<{ title: string; hasPhoto: boolean }>;
   };
-  expect(exported.schemaVersion).toBe(10);
+  expect(exported.schemaVersion).toBe(11);
   expect(exported.photosExcluded).toBe(true);
   expect(exported.lists).toEqual([expect.objectContaining({ id: list.id })]);
   expect(exported.items).toEqual([
@@ -3213,7 +3214,7 @@ test('taste history records future changes atomically, preserves gaps, and follo
   await call(`/logs/${visit.log.id}`, owner, 'DELETE');
   expect((await history(other.id)).events.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(exported.schemaVersion).toBe(10);
+  expect(exported.schemaVersion).toBe(11);
   expect(exported.tasteHistory).toHaveLength(remaining.events.length + 2);
   expect(exported.tasteHistory.find((e) => e.id === opinion.id)?.logId).toBeNull();
   const restored = await app.request(
@@ -3433,7 +3434,7 @@ test('replacement chains reject loops and backup remapping preserves directions 
   ).toBe(409);
   const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
   expect(exported.connections).toHaveLength(2);
-  expect(exported.schemaVersion).toBe(10);
+  expect(exported.schemaVersion).toBe(11);
   const restored = await app.request(
     'https://worth.test/api/import',
     {
@@ -3900,7 +3901,7 @@ test('version 5 gallery backups preserve all originals and independent metadata,
   const response = await call('/export/backup', owner);
   expect(response.status).toBe(200);
   const backup = archiveFile.parse(await response.json());
-  expect(backup.schemaVersion).toBe(10);
+  expect(backup.schemaVersion).toBe(11);
   expect(backup.photoAssets).toHaveLength(2);
   expect(backup.photos.map((p) => p.kind)).toEqual(['asset', 'asset']);
   expect(backup.items[0].gallery.map((entry) => entry.caption)).toEqual(['Second first', 'Earlier original']);
@@ -4274,7 +4275,7 @@ test('version six backup remaps boards and row identities and preserves missing-
   const { board } = (await (await createTestBoard(owner, body)).json()) as BoardResult;
   await call(`/items/${missing.id}`, owner, 'DELETE');
   const backup = (await call('/export/records', owner).then((r) => r.json())) as ArchiveFile;
-  expect(backup.schemaVersion).toBe(10);
+  expect(backup.schemaVersion).toBe(11);
   expect(archiveFile.safeParse(backup).success).toBe(true);
   expect(backup.boards[0].entries[1]).toMatchObject({
     reference: null,
@@ -4603,7 +4604,7 @@ test('version seven receipt backups preserve exact attachments, creation provena
   await call(`/items/${missing.id}`, owner, 'DELETE');
   await call(`/lists/${list.id}`, owner, 'DELETE');
   const backup = archiveFile.parse(await call('/export/backup', owner).then((r) => r.json()));
-  expect(backup.schemaVersion).toBe(10);
+  expect(backup.schemaVersion).toBe(11);
   expect(backup.photos.filter((p) => p.kind === 'receipt')).toHaveLength(1);
   expect(backup.receipts[0].lines[0]).toMatchObject({
     createdHere: true,
@@ -4925,7 +4926,7 @@ test('activity plans and aliases survive fresh-ID restore with literal measureme
   });
   expect(logResponse.status).toBe(201);
   const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
-  expect(backup.schemaVersion).toBe(10);
+  expect(backup.schemaVersion).toBe(11);
   expect(backup.lists[0].exerciseAliases).toEqual([group]);
   expect(backup.logs[0].measurements).toEqual(measurements);
   const restoreKey = crypto.randomUUID(),
@@ -5112,7 +5113,7 @@ test('capsules keep closed contents and photos private until an explicit server-
       .status,
   ).toBe(409);
   const backup = archiveFile.parse(await (await call('/export/records', owner)).json());
-  expect(backup.schemaVersion).toBe(10);
+  expect(backup.schemaVersion).toBe(11);
   expect(backup.capsules[0].message).toBe(input.message);
   expect(backup.capsules[0].openedAt).toBeNull();
   await call(`/items/${item.id}`, owner, 'PATCH', {
@@ -6360,4 +6361,220 @@ test('unfiled saves participate in recall and opinions without visits, cross-acc
   expect(older.records).toHaveLength(2);
   expect(new Set([...page.records, ...older.records].map((record) => record.id)).size).toBe(52);
   expect((await read('mode=visits&list=inbox')).total).toBe(0);
+});
+
+const unfiledPng = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pJ8AAAAASUVORK5CYII=',
+  'base64',
+);
+function unfiledPhoto(
+  owner: string,
+  id: string,
+  revision: number,
+  key = crypto.randomUUID(),
+  bytes: Uint8Array = unfiledPng,
+) {
+  return app.request(
+    `https://worth.test/api/inbox/${id}/photo`,
+    {
+      method: 'PUT',
+      headers: {
+        Cookie: `preview_user=${owner}`,
+        Origin: 'https://worth.test',
+        'Content-Type': 'image/png',
+        'Idempotency-Key': key,
+        'X-Worth-Inbox-Revision': String(revision),
+      },
+      body: new Blob([new Uint8Array(bytes)], { type: 'image/png' }),
+    },
+    platform.env,
+    platform.ctx,
+  );
+}
+
+test('an Unfiled memory keeps an explicit visit and photo through recall, backup, restore and atomic filing', async () => {
+  const owner = 'unfiledphotomemory';
+  const entry = await inboxFind(owner, 'Noodles by the window', {
+    note: 'Rain outside',
+    decision: 'favorite',
+    memory: { happenedOn: '2025-02-11', reaction: 'meh' },
+    context: { location: 'Brooklyn' },
+  });
+  const key = crypto.randomUUID();
+  const uploads = await Promise.all([
+    unfiledPhoto(owner, entry.id, 0, key),
+    unfiledPhoto(owner, entry.id, 0, key),
+  ]);
+  expect(uploads.map((r) => r.status)).toEqual([200, 200]);
+  const saved = ((await uploads[0].json()) as { entry: InboxEntry }).entry;
+  expect(saved.revision).toBe(1);
+  expect(saved.photo).toMatchObject({ id: key, available: true, contentType: 'image/png' });
+  expect((await call(`/inbox/${entry.id}/photo`, 'unfiledphotointruder')).status).toBe(404);
+  const image = await call(`/inbox/${entry.id}/photo`, owner);
+  expect(image.headers.get('cache-control')).toContain('no-store');
+  expect(new Uint8Array(await image.arrayBuffer())).toEqual(new Uint8Array(unfiledPng));
+  const visits = (await (
+    await call('/memories?mode=visits&list=inbox&from=2025-02-11&to=2025-02-11&q=Brooklyn', owner)
+  ).json()) as { records: unknown[]; total: number };
+  expect(visits.total).toBe(1);
+  expect(visits.records[0]).toMatchObject({
+    id: entry.id,
+    kind: 'unfiled-visit',
+    date: '2025-02-11',
+    reaction: 'meh',
+    hasPhoto: true,
+  });
+  const savedNames = (await (await call('/memories?mode=saved&list=inbox', owner)).json()) as {
+    records: { date: string; reaction: string }[];
+  };
+  expect(savedNames.records[0].date).not.toBe('2025-02-11');
+  expect(savedNames.records[0].reaction).toBe('favorite');
+  const groups = (await (await call('/preferences', owner)).json()) as {
+    groups: { basis: string; favorite: number; meh: number }[];
+  };
+  expect(groups.groups).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ basis: 'records', favorite: 1, meh: 0 }),
+      expect.objectContaining({ basis: 'visits', favorite: 0, meh: 1 }),
+    ]),
+  );
+  const summary = await (await call('/patterns', owner)).json();
+  expect(summary).toMatchObject({ totalRecords: 2, revisitCount: 1, favoriteCount: 1, mehCount: 0 });
+  const backupResponse = await call('/export/backup', owner);
+  expect(backupResponse.status).toBe(200);
+  const backup = archiveFile.parse(await backupResponse.json());
+  expect(backup.schemaVersion).toBe(11);
+  expect(backup.photos).toMatchObject([{ kind: 'inbox', id: entry.id }]);
+  const restoredOwner = 'unfiledphotorestored';
+  expect((await planCreate('/import', restoredOwner, backup)).status).toBe(201);
+  const restored = ((await (await call('/inbox', restoredOwner)).json()) as { entries: InboxEntry[] })
+    .entries[0];
+  expect(restored.id).not.toBe(entry.id);
+  expect(restored.photo?.id).not.toBe(key);
+  expect(restored.memory).toEqual(entry.memory);
+  expect(
+    new Uint8Array(await (await call(`/inbox/${restored.id}/photo`, restoredOwner)).arrayBuffer()),
+  ).toEqual(new Uint8Array(unfiledPng));
+  const list = (await (
+    await call('/lists', owner, 'POST', { name: 'Outings', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  const filing = { targetListId: list.list.id, expectedRevision: saved.revision },
+    filingKey = crypto.randomUUID();
+  const file = await inboxRequest(owner, `/inbox/${entry.id}/file`, filing, filingKey);
+  expect(file.status).toBe(201);
+  const result = (await file.json()) as { item: Item; logId: string };
+  expect(result.item.decision).toBe('favorite');
+  expect(result.item.createdAt).toBe(entry.createdAt);
+  const log = (await (await call(`/lists/${list.list.id}/logs`, owner)).json()) as { logs: Log[] };
+  expect(log.logs.find((log) => log.id === result.logId)).toMatchObject({
+    happenedOn: '2025-02-11',
+    note: 'Rain outside',
+    context: { reaction: 'meh', location: 'Brooklyn' },
+    hasPhoto: true,
+  });
+  expect((await inboxRequest(owner, `/inbox/${entry.id}/file`, filing, filingKey)).status).toBe(201);
+  expect((await call(`/inbox/${entry.id}/photo`, owner)).status).toBe(404);
+  expect((await unfiledPhoto(owner, entry.id, 0, key)).status).toBe(404);
+  expect(new Uint8Array(await (await call(`/logs/${result.logId}/photo`, owner)).arrayBuffer())).toEqual(
+    new Uint8Array(unfiledPng),
+  );
+  expect((await (await call('/memories?mode=visits', owner)).json()) as unknown).toMatchObject({
+    total: 1,
+    records: [{ kind: 'visit', id: result.logId }],
+  });
+  const gallery = (await (await call(`/logs/${result.logId}/photos`, owner)).json()) as {
+    gallery: { entries: { id: string }[] };
+  };
+  expect(gallery.gallery.entries[0].id).toBe(key);
+});
+
+test('Unfiled photo removal and replacements reject stale writes and late retries cannot resurrect originals', async () => {
+  const owner = 'unfiledphotosafety',
+    entry = await inboxFind(owner, 'A name and a photo');
+  const first = crypto.randomUUID();
+  expect((await unfiledPhoto(owner, entry.id, 0, first)).status).toBe(200);
+  expect((await unfiledPhoto(owner, entry.id, 1, first, new Uint8Array([...unfiledPng, 1]))).status).toBe(
+    409,
+  );
+  expect((await unfiledPhoto(owner, entry.id, 0)).status).toBe(409);
+  const remove = () =>
+    app.request(
+      `https://worth.test/api/inbox/${entry.id}/photo`,
+      {
+        method: 'DELETE',
+        headers: {
+          Cookie: `preview_user=${owner}`,
+          Origin: 'https://worth.test',
+          'X-Worth-Inbox-Revision': '1',
+          'X-Worth-Photo-Id': first,
+        },
+      },
+      platform.env,
+      platform.ctx,
+    );
+  expect((await remove()).status).toBe(200);
+  expect((await unfiledPhoto(owner, entry.id, 2, first)).status).toBe(410);
+  const second = crypto.randomUUID();
+  expect((await unfiledPhoto(owner, entry.id, 2, second)).status).toBe(200);
+  expect((await remove()).status).toBe(409);
+  expect(await (await call('/memories?mode=visits&list=inbox', owner)).json()).toMatchObject({ total: 0 });
+  const records = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(records.inbox[0].photo?.id).toBe(second);
+  expect(records.photos).toHaveLength(0);
+  expect((await planCreate('/import', 'unfiledtextrestore', records)).status).toBe(201);
+  const bare = ((await (await call('/inbox', 'unfiledtextrestore')).json()) as { entries: InboxEntry[] })
+    .entries[0];
+  expect(bare.photo?.available).toBe(false);
+  expect((await call(`/inbox/${bare.id}/photo`, 'unfiledtextrestore')).status).toBe(404);
+  expect((await call(`/inbox/${entry.id}`, owner, 'DELETE')).status).toBe(204);
+  expect((await call(`/inbox/${entry.id}/photo`, owner)).status).toBe(404);
+  expect(
+    (await call('/trash/restore', owner, 'POST', { entries: [{ kind: 'inbox', id: entry.id }] })).status,
+  ).toBe(200);
+  expect((await call(`/inbox/${entry.id}/photo`, owner)).status).toBe(200);
+  const target = (await (
+    await call('/lists', owner, 'POST', {
+      name: 'Saved names',
+      kind: 'collection',
+    })
+  ).json()) as { list: ListDetail };
+  const filed = await inboxRequest(owner, `/inbox/${entry.id}/file`, {
+    targetListId: target.list.id,
+    expectedRevision: 3,
+  });
+  expect(filed.status).toBe(201);
+  const result = (await filed.json()) as { item: Item; logId: string | null };
+  expect(result.logId).toBeNull();
+  expect(result.item.hasPhoto).toBe(true);
+  expect(await (await call(`/lists/${target.list.id}/logs`, owner)).json()).toMatchObject({ logs: [] });
+  expect(new Uint8Array(await (await call(`/items/${result.item.id}/photo`, owner)).arrayBuffer())).toEqual(
+    new Uint8Array(unfiledPng),
+  );
+});
+
+test('older Unfiled editors preserve a memory and filing rejects a revision changed by a photo', async () => {
+  const owner = 'unfiledoldeditor',
+    entry = await inboxFind(owner, 'Older client', { memory: { happenedOn: '2026-04-01', reaction: null } });
+  const updated = await call(`/inbox/${entry.id}`, owner, 'PUT', {
+    item: { ...itemInput.parse(entry), note: 'Old client note' },
+    expectedRevision: 0,
+  });
+  expect(updated.status).toBe(200);
+  expect((await updated.json()) as unknown).toMatchObject({ entry: { memory: entry.memory, revision: 1 } });
+  const list = (await (
+    await call('/lists', owner, 'POST', { name: 'Later', kind: 'collection' })
+  ).json()) as { list: ListDetail };
+  expect((await unfiledPhoto(owner, entry.id, 1)).status).toBe(200);
+  expect(
+    (
+      await inboxRequest(owner, `/inbox/${entry.id}/file`, {
+        targetListId: list.list.id,
+        expectedRevision: 1,
+      })
+    ).status,
+  ).toBe(409);
+  expect(await (await call(`/lists/${list.list.id}/items`, owner)).json()).toMatchObject({ items: [] });
+  const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
+  expect(archiveFile.safeParse({ ...backup, photos: [] }).success).toBe(false);
+  expect(archiveFile.safeParse({ ...backup, schemaVersion: 10 }).success).toBe(false);
 });

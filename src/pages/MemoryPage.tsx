@@ -4,7 +4,7 @@ import { api } from '../api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { formatDate } from '../format';
 import { retrospectivePeriod } from '../shared/retrospective';
-import { isSavedMemory, memorySourceHref, memoryFilter } from '../shared/memories';
+import { memoryPhotoHref, memorySourceHref, memoryFilter } from '../shared/memories';
 import { decisionLabel } from '../shared/decisions';
 import '../memories.css';
 
@@ -212,13 +212,15 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
             <time dateTime={record.date}>{formatDate(record.date)}</time>
             <article>
               <p className="overline">
-                {record.kind === 'unfiled'
-                  ? 'SAVED / UNFILED'
-                  : record.kind === 'saved'
-                    ? 'SAVED'
-                    : record.kind === 'visit'
-                      ? 'VISIT'
-                      : 'ACTIVITY'}{' '}
+                {record.kind === 'unfiled-visit'
+                  ? 'VISIT / UNFILED'
+                  : record.kind === 'unfiled'
+                    ? 'SAVED / UNFILED'
+                    : record.kind === 'saved'
+                      ? 'SAVED'
+                      : record.kind === 'visit'
+                        ? 'VISIT'
+                        : 'ACTIVITY'}{' '}
                 · {record.listName}
               </p>
               <h2>
@@ -229,14 +231,14 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
               {record.reaction && (
                 <span className="memory-stamp">
                   {decisionLabel(record.reaction)}
-                  {record.kind === 'visit' ? ' this time' : ''}
+                  {record.kind === 'visit' || record.kind === 'unfiled-visit' ? ' this time' : ''}
                 </span>
               )}
               {record.note && <p className="memory-note">{record.note}</p>}
-              {record.hasPhoto && record.kind !== 'unfiled' && (
+              {record.hasPhoto && (
                 <img
                   className="memory-photo"
-                  src={`/api/${isSavedMemory(record) ? 'items' : 'logs'}/${record.id}/photo`}
+                  src={memoryPhotoHref(record)}
                   alt={`Saved photo for ${record.title}`}
                   loading="lazy"
                 />

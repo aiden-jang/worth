@@ -3,6 +3,8 @@ import type { Item, ListDetail, Log, TrashEntry } from '../src/shared/models';
 import type { WorkspaceResponse } from '../src/shared/workspace';
 import type { CollectionTemplate } from '../src/shared/templates';
 import { itemInput } from '../src/shared/validation';
+import { inboxPayload } from '../src/shared/inbox';
+import { visitContext } from '../src/shared/visit-context';
 import type { InboxEntry } from '../src/shared/inbox';
 import { emptyItemContext } from '../src/shared/item-context';
 
@@ -37,6 +39,7 @@ export const item: Item = {
   lastLoggedOn: null,
 };
 export type State = {
+  failInboxPhotoReply: boolean;
   failInboxCreateReply: boolean;
   failInboxFileReply: boolean;
   inbox: InboxEntry[];
@@ -58,6 +61,7 @@ export type State = {
 };
 export async function mockArchive(page: Page): Promise<State> {
   const state: State = {
+    failInboxPhotoReply: false,
     failInboxCreateReply: false,
     failInboxFileReply: false,
     inbox: [],
@@ -78,6 +82,8 @@ export async function mockArchive(page: Page): Promise<State> {
     writes: [],
   };
   const inboxReceipts = new Map<string, unknown>();
+  const inboxImages = new Map<string, Buffer>();
+  const inboxUploads = new Set<string>();
   await page.route('**/api/**', async (route) => {
     const request = route.request(),
       path = new URL(request.url()).pathname.replace('/api', '');
@@ -90,7 +96,7 @@ export async function mockArchive(page: Page): Promise<State> {
       state.writes.push({ path, body: { ...body, key } });
       if (inboxReceipts.has(key)) return reply(inboxReceipts.get(key), 201);
       const entry = {
-        ...itemInput.parse(body.item),
+        ...inboxPayload.parse(body.item),
         id: crypto.randomUUID(),
         revision: 0,
         createdAt: Date.now(),
@@ -107,6 +113,41 @@ export async function mockArchive(page: Page): Promise<State> {
     if (path.startsWith('/inbox/')) {
       const id = path.split('/')[2],
         entry = state.inbox.find((find) => find.id === id);
+      if (path.endsWith('/photo')) {
+        if (!entry) return reply({ message: 'This find is unavailable.' }, 404);
+        if (method === 'GET') {
+          const image = inboxImages.get(id);
+          return image
+            ? route.fulfill({ body: image, contentType: 'image/png' })
+            : reply({ message: 'No photo' }, 404);
+        }
+        const headers = request.headers(),
+          key = headers['idempotency-key'];
+        state.writes.push({ path, body: { key, revision: Number(headers['x-worth-inbox-revision']) } });
+        if (method === 'PUT' && inboxUploads.has(key)) return reply({ entry });
+        if (Number(headers['x-worth-inbox-revision']) !== entry.revision)
+          return reply({ message: 'This find changed elsewhere.' }, 409);
+        if (method === 'PUT') {
+          inboxImages.set(id, request.postDataBuffer()!);
+          inboxUploads.add(key);
+          entry.photo = {
+            id: key,
+            contentType: 'image/png',
+            fingerprint: null,
+            createdAt: Date.now(),
+            available: true,
+          };
+        } else {
+          entry.photo = null;
+          inboxImages.delete(id);
+        }
+        entry.revision++;
+        if (state.failInboxPhotoReply) {
+          state.failInboxPhotoReply = false;
+          return route.abort('failed');
+        }
+        return reply({ entry });
+      }
       if (path.endsWith('/file')) {
         const body = request.postDataJSON(),
           key = request.headers()['idempotency-key'];
@@ -118,31 +159,55 @@ export async function mockArchive(page: Page): Promise<State> {
           ...itemInput.parse(entry),
           id: crypto.randomUUID(),
           listId: body.targetListId,
-          hasPhoto: false,
-          logCount: 0,
-          lastLoggedOn: null,
+          hasPhoto: !entry.memory && !!entry.photo?.available,
+          logCount: entry.memory ? 1 : 0,
+          lastLoggedOn: entry.memory?.happenedOn ?? null,
           createdAt: entry.createdAt,
           updatedAt: Date.now(),
         };
+        const logId = entry.memory ? crypto.randomUUID() : null;
+        if (entry.memory && logId)
+          state.logs.push({
+            id: logId,
+            listId: body.targetListId,
+            itemId: filed.id,
+            title: entry.title,
+            happenedOn: entry.memory.happenedOn,
+            note: entry.note,
+            context: visitContext.parse({
+              reaction: entry.memory.reaction,
+              location: entry.context.location,
+            }),
+            amount: null,
+            unit: '',
+            sets: null,
+            reps: null,
+            hasPhoto: !!entry.photo?.available,
+            createdAt: entry.createdAt,
+            updatedAt: Date.now(),
+          });
         state.items.push(filed);
         state.inbox = state.inbox.filter((find) => find.id !== id);
-        inboxReceipts.set(key, { item: filed });
+        inboxReceipts.set(key, { item: filed, logId });
         if (state.failInboxFileReply) {
           state.failInboxFileReply = false;
           return route.abort('failed');
         }
-        return reply({ item: filed }, 201);
+        return reply({ item: filed, logId }, 201);
       }
       if (!entry) return reply({ message: 'This find was filed or moved to Trash.' }, 404);
       if (method === 'PUT') {
         const body = request.postDataJSON();
         state.writes.push({ path, body });
-        if (entry.revision !== body.expectedRevision)
+        if (entry.revision !== body.expectedRevision) {
+          if (JSON.stringify(inboxPayload.parse(entry)) === JSON.stringify(inboxPayload.parse(body.item)))
+            return reply({ entry });
           return reply(
             { message: 'This Inbox find changed elsewhere. Your draft is still here. Reload before saving.' },
             409,
           );
-        Object.assign(entry, itemInput.parse(body.item), {
+        }
+        Object.assign(entry, inboxPayload.parse(body.item), {
           revision: entry.revision + 1,
           updatedAt: Date.now(),
         });

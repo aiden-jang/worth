@@ -1,17 +1,28 @@
 import { z } from 'zod';
 import { itemInput, logInput } from './validation';
 import { experienceInput } from './memories';
+import { inboxPayload } from './inbox';
 
 const destination = z.union([z.literal('inbox'), z.string().uuid()]);
+const attachment = { photoKey: z.string().uuid().optional() };
 export const quickEntryRequest = z.object({
   listId: destination.optional(),
   title: z.string().max(120).optional(),
 });
 const quickEntryPending = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('inbox'), item: itemInput }).strict(),
-  z.object({ kind: z.literal('item'), listId: z.string().uuid(), item: itemInput }).strict(),
-  z.object({ kind: z.literal('experience'), listId: z.string().uuid(), body: experienceInput }).strict(),
-  z.object({ kind: z.literal('activity'), listId: z.string().uuid(), body: logInput }).strict(),
+  z.object({ kind: z.literal('inbox'), item: inboxPayload, ...attachment }).strict(),
+  z.object({ kind: z.literal('item'), listId: z.string().uuid(), item: itemInput, ...attachment }).strict(),
+  z
+    .object({
+      kind: z.literal('experience'),
+      listId: z.string().uuid(),
+      body: experienceInput,
+      ...attachment,
+    })
+    .strict(),
+  z
+    .object({ kind: z.literal('activity'), listId: z.string().uuid(), body: logInput, ...attachment })
+    .strict(),
 ]);
 export const quickEntryDraft = z
   .object({

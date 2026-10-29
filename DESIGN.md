@@ -20,9 +20,10 @@ Home leads with search and recent records, including Unfiled. There is no requir
 to create or organize a collection before saving. Add is one consistently named,
 owner-scoped composer with an explicit destination. Its default is the current
 active list when open, otherwise Unfiled; it never silently uses a last-used list.
-The name is the only capture requirement. A dated collection experience is an
-explicit optional choice; activity entries show their date. Unfiled retains its
-existing text schema, so photos and dated visits become available after filing.
+The name is the only capture requirement. Add details offers an explicit dated
+experience, thought, reaction and one private photo, including in Unfiled. Saving
+a name or photo alone never implies a visit. Activity entries show their date.
+The Unfiled-memory extension below supersedes the initial text-only capture scope.
 
 Primary navigation is Home, Collections and Look back, with search, Unfiled and
 personal activity/collection shortcuts as utilities. Phones keep the three primary

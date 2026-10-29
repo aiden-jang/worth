@@ -492,8 +492,9 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
                 <Link to="/inbox">Unfiled</Link> keeps up to 500 private, unfiled finds. Open it from
                 navigation without leaving your collection. Edit details, then choose a collection and File in
                 collection. Notes, context, dates and calls stay with the find; filing does not add a rank.
-                Exact name/type matches need a keep-separate choice. Photos and visits can be added after
-                filing.
+                Exact name/type matches need a keep-separate choice. Add details can keep one photo and an
+                explicit dated experience before filing. A photo alone never implies a visit. Filing a memory
+                keeps its date, reaction and photo together in the collection.
               </p>
               <p>
                 Unfinished edits stay with this account on this device for seven days. If a filing reply is

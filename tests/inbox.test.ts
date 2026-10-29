@@ -22,5 +22,6 @@ test('backup readers retain old files and reject unsupported future formats', ()
     updatedAt: 2,
   };
   expect(archiveFile.parse({ ...base, schemaVersion: 2, inbox: [entry] }).inbox).toEqual([entry]);
-  expect(archiveFile.safeParse({ ...base, schemaVersion: 11, inbox: [entry] }).success).toBe(false);
+  expect(archiveFile.safeParse({ ...base, schemaVersion: 11, inbox: [entry] }).success).toBe(true);
+  expect(archiveFile.safeParse({ ...base, schemaVersion: 12, inbox: [entry] }).success).toBe(false);
 });

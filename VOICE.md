@@ -186,3 +186,10 @@ Workbench entry label. The signed-out example retains its accepted Keep it label
 Home says Good to keep. / A name is enough. The rest can wait. First save asks for
 a name, with no required collection or opinion. Humor stays in faces and small
 moments; no joke replaces a functional action or a factual retry explanation.
+
+## Unfiled memory details — October 28
+
+Use **Add details** for optional capture fields and **Record a dated experience**
+for the explicit date choice. **This time** labels an experience reaction; the
+overall call stays separate. Keep date/photo help factual. A name-only find is
+complete; never imply that missing details need to be filled in.

@@ -74,7 +74,7 @@ test('Unfiled details preserve optional context and unfinished drafts before fil
     'Keep the cloth cover.',
   );
   await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
-  await expect(editor.getByText('Changes saved. Still in the Unfiled.', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Changes saved. Still in Unfiled.', { exact: true })).toBeVisible();
   expect(archive.inbox[0]).toMatchObject({
     decision: null,
     wantToTry: true,
@@ -217,7 +217,7 @@ test('filing an exact name and type match needs an explicit keep-separate choice
   await keep.check();
   await editor.getByRole('textbox', { name: 'Private note', exact: true }).fill('My separate record.');
   await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
-  await expect(editor.getByText('Changes saved. Still in the Unfiled.', { exact: true })).toBeVisible();
+  await expect(editor.getByText('Changes saved. Still in Unfiled.', { exact: true })).toBeVisible();
   await expect(keep).not.toBeChecked();
   await expect(editor.getByRole('button', { name: 'File in collection', exact: true })).toBeDisabled();
   await keep.check();

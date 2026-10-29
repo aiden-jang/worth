@@ -8,6 +8,7 @@ export function recordIdentityGuard(db: D1Database, ids: readonly string[]) {
     'workout_sessions',
     'workout_routines',
     'inbox_entries',
+    'inbox_photos',
     'photo_assets',
     'memory_boards',
     'receipts',

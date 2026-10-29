@@ -225,6 +225,12 @@
   flex-wrap: wrap;
 }
 @media (max-width: 680px) {
+  .inbox-editor input,
+  .inbox-editor select,
+  .inbox-editor textarea,
+  .inbox-search input {
+    font-size: 16px;
+  }
   .inbox-head {
     display: grid;
   }

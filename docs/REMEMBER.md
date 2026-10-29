@@ -7,7 +7,7 @@ native companion.
 
 ## Log an experience
 
-Open a collection’s **Entry options → Add experience**, or use **Add → Add a note or an opinion → Record a dated experience** with that collection selected. Enter a name and save; the
+Open a collection’s **Entry options → Add experience**, or use **Add → Add details → Record a dated experience** with that collection selected. Enter a name and save; the
 date starts at today. Favorite, Meh and Not again are optional one-tap reactions;
 tap the selected reaction again to clear it. **Use a saved name** opens existing
 records. **Date and details** opens the date, place, order, note and optional type.
@@ -130,8 +130,9 @@ The monthly memory card is compact on Home and uses recorded photos and calls.
 No streaks, social feeds, automatic location tracking, required organization or
 inferred workout targets are added. See [Everyday flow](EVERYDAY.md).
 
-Unfiled finds also participate in saved-name recall and overall-call insights.
-Their saved dates remain UTC, they never become dated visits, and their source
-links open the original Unfiled find. Filing moves that source into its collection
-without creating a duplicate recall entry. Owner scoping, Trash exclusions and
-50-record pagination apply to both sources. No database migration is required.
+Unfiled finds participate in saved-name recall and overall-call insights. Only an
+explicit experience also appears in dated Memories and visit-reaction insights.
+Saved dates remain UTC, separate from the experienced date; links open the
+original Unfiled find. Filing moves that source into its collection without
+duplicate recall. Owner scoping, Trash exclusions and 50-record pagination apply
+to both sources. Specialized calendars and period summaries remain collection-based.

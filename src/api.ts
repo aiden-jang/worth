@@ -300,8 +300,23 @@ export const api = {
       json('PUT', { item, expectedRevision }),
     ),
   deleteInbox: (id: string) => trashRecord('inbox', id, `/inbox/${id}`),
+  uploadInboxPhoto: (id: string, blob: Blob, key: string, revision: number) =>
+    request<{ entry: import('./shared/inbox').InboxEntry }>(`/inbox/${id}/photo`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': blob.type,
+        'Idempotency-Key': key,
+        'X-Worth-Inbox-Revision': String(revision),
+      },
+      body: blob,
+    }),
+  deleteInboxPhoto: (id: string, revision: number, photoId: string) =>
+    request<{ entry: import('./shared/inbox').InboxEntry }>(`/inbox/${id}/photo`, {
+      method: 'DELETE',
+      headers: { 'X-Worth-Inbox-Revision': String(revision), 'X-Worth-Photo-Id': photoId },
+    }),
   fileInbox: (id: string, targetListId: string, expectedRevision: number, key: string) =>
-    request<{ item: Item }>(`/inbox/${id}/file`, {
+    request<{ item: Item; logId?: string | null }>(`/inbox/${id}/file`, {
       ...json('POST', { targetListId, expectedRevision }),
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
     }),

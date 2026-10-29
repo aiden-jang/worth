@@ -273,6 +273,9 @@ export function archiveSpreadsheet(archive: ArchiveFile): Uint8Array<ArrayBuffer
         'Saved at (UTC)',
         'Record ID',
         'Other context (JSON)',
+        'Experienced on',
+        'Reaction this time',
+        'Photo available',
       ],
       rows: archive.inbox.map((item) => [
         item.title,
@@ -285,6 +288,9 @@ export function archiveSpreadsheet(archive: ArchiveFile): Uint8Array<ArrayBuffer
         stamp(item.createdAt),
         item.id,
         contextText(item.context),
+        item.memory ? day(item.memory.happenedOn) : null,
+        decisionLabel(item.memory?.reaction ?? null),
+        !!item.photo?.available,
       ]),
     },
     {

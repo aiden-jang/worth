@@ -50,7 +50,11 @@ retain their own focus handling.
 `QuickEntry` is lazy and delegates to existing Inbox, item, experience and activity
 endpoints. `shared/quick-entry` validates account-scoped device drafts and their
 frozen discriminated retry payloads. Each save freezes its destination, operation
-identity and body before the request. There is no cross-endpoint multi-step save.
+identity and body before the request. Optional photos use a deliberate two-stage
+save: create/update the record, then upload the prepared image with its own stable
+operation identity. Drafts retain both identities and the frozen image; exact
+retries confirm the saved record and photo without duplicating either. Text and
+photo writes are not presented as one database transaction.
 A new collection experience still uses the existing transactional endpoint; activity
 capture creates one plain dated entry. Names without a collection use the existing
 Inbox store. The UI calls that store Unfiled; JSON/API names remain compatible.
@@ -421,13 +425,25 @@ JSON payload, revision, timestamps and soft deletion. The website supports at mo
 500 active finds. A native scrolling drawer opens over the current page; `/inbox`
 is also a private full-page route. No native companion is involved. Name-only web
 capture defaults here, without needing a collection. Optional context, calls,
-plans and dates remain independent of rank. Photos and visits are added after filing.
+plans and dates remain independent of rank. Migration `0028_unfiled_memories.sql`
+extends the payload with an optional explicit experience (`happenedOn`, `reaction`)
+and stores one photo separately in `inbox_photos`. Overall calls remain independent.
+Photo bytes never appear in the normal Inbox listing; owner-bound reads use
+private, no-store responses. JPEG/PNG/WebP uploads validate type, dimensions and
+a 900 KB limit. Stable upload IDs and fingerprints make retries idempotent.
+Removal/replacement tombstones retain the ID while deleting bytes, preventing
+a delayed upload from restoring an old photo. Photo changes increment the entry
+revision. Older clients that omit memory on edit preserve the saved memory.
 
 Creation stores a fingerprinted retry receipt and checks capacity in one D1 batch.
 Edits compare the saved revision; an exact lost-response retry returns the saved
 payload. Filing atomically guards the source revision and owned active destination,
 creates a fresh unranked item, removes the Inbox source and stores its result receipt.
-It preserves original creation time and all payload fields. Source and target
+It preserves original creation time and all payload fields. An explicit memory
+creates one log with the original date, note, reaction and location. Its photo
+moves atomically to the log gallery; without a memory the photo moves to the item
+gallery. Gallery metadata, assets and cover cache are included in the same batch.
+The filing receipt retains the log ID for the original source link. Source and target
 ownership are resolved from the current session. Retrying after a later move or
 Trash action reports changed state instead of recreating the record. Receipts are
 retained until all-data deletion, preventing resurrection after purge.
@@ -445,7 +461,7 @@ for 30 days, restore them unfiled and atomically enforce active capacity. Backup
 read Inbox and collection records in the same D1 read batch, avoiding a missing
 record during concurrent filing. Restore remaps Inbox IDs and checks capacity
 inside the same transaction as all records and the import receipt; capacity failure
-rolls back everything. Inbox introduced schema version 2; current exports use version 10 for receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–10; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
+rolls back everything. Inbox introduced schema version 2; current exports use version 11, including Unfiled memories/photos alongside receipts, boards, photo galleries, connections and taste history. Restore accepts versions 1–11; version 1 defaults to no Inbox and versions 1/2 default to no history. All-data deletion clears
 Inbox, Trash and operation receipts. Public snapshots never include Inbox content.
 
 ## On-device photo text
@@ -519,8 +535,8 @@ copying an old order into the existing sandbox still requires its ordinary
 preview and revision-checked apply. The reason editor retains account-bound
 seven-day drafts, explicit close confirmation and draft-preserving conflict reload.
 
-Taste history introduced version 3; current version 10 backup formats include history in the same read
-batch as records. Restore accepts versions 1–10, remaps event/item/list/log IDs,
+Taste history introduced version 3; current version 11 backup formats include history in the same read
+batch as records. Restore accepts versions 1–11, remaps event/item/list/log IDs,
 retains event dates/reasons/gaps and inserts history without triggering artificial
 changes. Restore supports up to 10,000 events and 16 MB of history within its existing 32 MB and batch
 limits; exports do not silently trim history. Public snapshots/cards/booklets
@@ -551,7 +567,7 @@ bounded diagram of up to 12 neighbors with a numbered readable alternative; the
 full list pages 25 matching links, including type, direction and reason.
 
 Version 4 records/photo backups add raw connection references to the existing
-single D1 snapshot. Restore accepts versions 1–10, defaults older files to no links,
+single D1 snapshot. Restore accepts versions 1–11, defaults older files to no links,
 checks duplicate pairs/cycles/ownership in the file and canonicalizes again after
 fresh ID remapping. Capacity failure rolls back all records and the restore
 receipt. Public sharing, ranks, calls and source record content do not change.
@@ -621,7 +637,7 @@ capacity, including missing originals retained by records-only restore.
 Version 5 backups read metadata and all owned active source references in the
 records snapshot, with optional immutable source bytes read separately. Expected
 sources/fingerprints are checked and missing bytes fail the backup rather than
-being omitted. Selected cover bytes are not exported twice. The current reader accepts 1–10,
+being omitted. Selected cover bytes are not exported twice. The current reader accepts 1–11,
 remaps parent/source/arrow IDs, preserves captions/order/cover and reconstructs cover
 caches from available sources. Old single-photo files create compatible source
 metadata and caches within the same restore transaction. Records-only files restore
@@ -631,7 +647,11 @@ remain, with at most 5,000 source metadata entries and explicit transfer errors.
 The lazy scrolling browser gallery dialog preserves the cabinet editor, with a
 seven-day account/device draft and one recoverable replaced snapshot. Upload files
 and their operation identities are stored together in IndexedDB; prepared bytes are
-checkpointed before sending. Source headers are bounded before decoding. Private
+checkpointed before sending. The shared photo-draft hook stores raw bytes and file
+metadata rather than a File object so Safari can clone the draft reliably. It
+retains readers for older File-based drafts, validates size/type before buffering,
+and reconstructs the exact prepared file and upload identity after reload. Source
+headers are bounded before decoding. Private
 captions/arrows remain plain text, with normalized source coordinates and a readable
 annotation list. Before/after is an explicit source selection with a keyboard range
 and full side-by-side alternative; no visit date or chronological order is inferred.
@@ -691,7 +711,7 @@ projection or invitation is added by a board.
 
 Version 6 exports read boards in the same D1 snapshot as records. Unavailable or
 merged source references become explicit missing links while entered text remains.
-Restore accepts versions 1–10 (older files default to no boards), validates source
+Restore accepts versions 1–11 (older files default to no boards), validates source
 references, remaps board/entry/source IDs and resets revisions. Capacity failure
 rolls back the complete restore and receipt, permitting the same retry after space
 is freed. Board text is bounded at 16 MiB within existing backup limits. All-data
@@ -742,7 +762,7 @@ sources. Text is bounded at 100 receipts/16 MiB within existing backup limits.
 Created-record provenance and the originally entered name remain, while stale original destination references
 normalize to live item links; missing sources retain entered line text/amounts.
 Full backup images use a separate receipt photo kind and validate exact bytes.
-Restore accepts versions 1–10, defaults older files to no receipts, gives receipt,
+Restore accepts versions 1–11, defaults older files to no receipts, gives receipt,
 line and source links fresh IDs, and never creates a second set of linked records.
 Records-only restores mark absent image bytes unavailable. Capacity failure rolls
 back all records and the restore receipt, allowing the same retry after space is
@@ -793,7 +813,7 @@ unit mixing, averaging, score or inferred set is added. Missing values leave gap
 the chart supports negative values and a readable original-name entry index.
 
 Version 8 includes aliases, future plans and recorded measurements in the same
-records snapshot. Restore accepts versions 1–10, validates target names and activity
+records snapshot. Restore accepts versions 1–11, validates target names and activity
 ownership, remaps alias-group and record IDs and preserves independent snapshots.
 Earlier versions default to empty additions. Restore never recreates
 creation receipts; all-data deletion removes them through their list relationship.
@@ -946,8 +966,9 @@ rep-count records from saved sets; units and missing values remain explicit.
 entries in the current local-calendar month. Both are read-only views. See
 [product behavior and limitations](REMEMBER.md).
 
-Unfiled finds also participate in saved-name recall and overall-call insights.
-Their saved dates remain UTC, they never become dated visits, and their source
-links open the original Unfiled find. Filing moves that source into its collection
-without creating a duplicate recall entry. Owner scoping, Trash exclusions and
-50-record pagination apply to both sources. No database migration is required.
+Unfiled finds participate in saved-name recall and overall-call insights. Only an
+explicit experience also appears in dated Memories and visit-reaction insights.
+Saved dates remain UTC, separate from the experienced date; links open the
+original Unfiled find. Filing moves that source into its collection without
+duplicate recall. Owner scoping, Trash exclusions and 50-record pagination apply
+to both sources. Specialized calendars and period summaries remain collection-based.

@@ -3,7 +3,13 @@ import { useState } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { isSavedMemory, memorySourceHref, memoryFilter, type MemoryRecord } from '../shared/memories';
+import {
+  isSavedMemory,
+  memorySourceHref,
+  memoryPhotoHref,
+  memoryFilter,
+  type MemoryRecord,
+} from '../shared/memories';
 import { retrospectivePeriod } from '../shared/retrospective';
 import { CallFace } from './PersonalCall';
 import { BlankSlips } from './BlankSlips';
@@ -112,12 +118,8 @@ export function MemoryShelf() {
           </p>
         )}
       </div>
-      {first?.hasPhoto && first.kind !== 'unfiled' ? (
-        <img
-          src={`/api/${isSavedMemory(first) ? 'items' : 'logs'}/${first.id}/photo`}
-          alt={`Saved photo for ${first.title}`}
-          loading="lazy"
-        />
+      {first?.hasPhoto ? (
+        <img src={memoryPhotoHref(first)} alt={`Saved photo for ${first.title}`} loading="lazy" />
       ) : first?.reaction ? (
         <CallFace value={first.reaction} />
       ) : (

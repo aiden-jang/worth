@@ -6,21 +6,29 @@ import { Link } from 'react-router';
 import { api } from '../api';
 import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
-import { isItemDraft } from '../shared/drafts';
+import { useDraftPhoto } from '../hooks/useDraftPhoto';
+import { preparePhoto } from '../shared/photos';
+import { DraftPhoto } from './DraftPhoto';
+import { today } from '../format';
+import { z } from 'zod';
 import { emptyItemContext } from '../shared/item-context';
 import type { InboxEntry, InboxPayload } from '../shared/inbox';
-import { itemInput } from '../shared/validation';
+import { inboxPayload } from '../shared/inbox';
 import { duplicateIdentity } from '../shared/record-identity';
 import { captureIssueText } from '../shared/reviewed-capture';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ItemContextEditor } from './ItemContextEditor';
 import { CallChoices } from './PersonalCall';
 
-type EditorDraft = { item: InboxPayload; revision: number };
+const editorDraft = z.object({
+  item: inboxPayload,
+  revision: z.number().int().nonnegative(),
+  pending: z.boolean().optional(),
+  photoKey: z.string().uuid().optional(),
+});
+type EditorDraft = z.infer<typeof editorDraft>;
 function isEditorDraft(value: unknown): value is EditorDraft {
-  if (!value || typeof value !== 'object') return false;
-  const draft = value as EditorDraft;
-  return Number.isInteger(draft.revision) && draft.revision >= 0 && isItemDraft(draft.item);
+  return editorDraft.safeParse(value).success;
 }
 
 export function InboxEntryEditor({
@@ -38,7 +46,7 @@ export function InboxEntryEditor({
   const online = useConnection(),
     client = useQueryClient();
   const initial: EditorDraft = entry
-    ? { item: itemInput.parse(entry), revision: entry.revision }
+    ? { item: inboxPayload.parse(entry), revision: entry.revision }
     : {
         item: {
           title: '',
@@ -55,10 +63,14 @@ export function InboxEntryEditor({
       };
   const draft = useDraft<EditorDraft>(`inbox:${id}`, initial, isEditorDraft);
   const { item, revision } = draft.form;
-  const changed = JSON.stringify(item) !== JSON.stringify(initial.item);
+  const photo = useDraftPhoto(`inbox:${id}`);
+  const [preparing, setPreparing] = useState(false),
+    [photoError, setPhotoError] = useState('');
+  const changed = JSON.stringify(item) !== JSON.stringify(initial.item) || !!photo.file;
   const stale = !!entry && revision !== entry.revision;
-  const [confirm, setConfirm] = useState<'reload' | 'trash' | 'close' | null>(null);
+  const [confirm, setConfirm] = useState<'reload' | 'trash' | 'close' | 'photo' | null>(null);
   const [targetId, setTargetId] = useState('');
+  const photoRemoval = useRef<{ revision: number; id: string } | null>(null);
   const [keepSeparate, setKeepSeparate] = useState(false);
   const [status, setStatus] = useState('');
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
@@ -72,21 +84,27 @@ export function InboxEntryEditor({
   const duplicate = targetItems.data?.items.some(
     (other) => duplicateIdentity(other) === duplicateIdentity(item),
   );
-  const parsed = itemInput.safeParse(item);
+  const parsed = inboxPayload.safeParse(item);
   const save = useMutation({
     mutationKey: ['inbox'],
-    mutationFn: () => api.updateInbox(id, itemInput.parse(item), revision),
+    mutationFn: async ({ snapshot, file }: { snapshot: EditorDraft; file: File | null }) => {
+      let result = await api.updateInbox(id, inboxPayload.parse(snapshot.item), snapshot.revision);
+      if (snapshot.photoKey && file)
+        result = await api.uploadInboxPhoto(id, file, snapshot.photoKey, result.entry.revision);
+      return result;
+    },
     onSuccess: ({ entry: saved }) => {
-      const next = { item: itemInput.parse(saved), revision: saved.revision };
+      const next = { item: inboxPayload.parse(saved), revision: saved.revision };
       draft.clear(next);
       draft.setForm(next);
+      photo.clear();
       client.setQueryData<{ entries: InboxEntry[] }>(
         ['inbox'],
         (current) =>
           current && { entries: current.entries.map((other) => (other.id === saved.id ? saved : other)) },
       );
-      void client.invalidateQueries({ queryKey: ['search'] });
-      setStatus('Changes saved. Still in the Unfiled.');
+      void client.invalidateQueries();
+      setStatus('Changes saved. Still in Unfiled.');
     },
   });
   const trash = useMutation({
@@ -94,6 +112,7 @@ export function InboxEntryEditor({
     mutationFn: () => api.deleteInbox(id),
     onSuccess: () => {
       draft.clear(initial);
+      photo.clear();
       void client.invalidateQueries({ queryKey: ['inbox'] });
       void client.invalidateQueries({ queryKey: ['search'] });
       onClose();
@@ -103,7 +122,7 @@ export function InboxEntryEditor({
     mutationKey: ['inbox'],
     mutationFn: () => api.inboxEntry(id),
     onSuccess: ({ entry: latest }) => {
-      const next = { item: itemInput.parse(latest), revision: latest.revision };
+      const next = { item: inboxPayload.parse(latest), revision: latest.revision };
       client.setQueryData<{ entries: InboxEntry[] }>(
         ['inbox'],
         (current) =>
@@ -111,13 +130,51 @@ export function InboxEntryEditor({
       );
       draft.clear(next);
       draft.setForm(next);
+      photo.clear();
       save.reset();
       setConfirm(null);
       setKeepSeparate(false);
       setStatus('Saved details reloaded.');
     },
   });
-  const busy = save.isPending || trash.isPending || reload.isPending;
+  const removePhoto = useMutation({
+    mutationFn: () => api.deleteInboxPhoto(id, photoRemoval.current!.revision, photoRemoval.current!.id),
+    onSuccess: ({ entry: saved }) => {
+      const next = { item: inboxPayload.parse(saved), revision: saved.revision };
+      draft.clear(next);
+      draft.setForm(next);
+      setConfirm(null);
+      void client.invalidateQueries();
+      setStatus('Photo removed. Your saved details remain.');
+    },
+  });
+  const busy = preparing || save.isPending || trash.isPending || reload.isPending || removePhoto.isPending;
+  async function submit() {
+    if (!entry || !parsed.success || !online || busy || !photo.ready || (stale && !draft.form.pending))
+      return;
+    setPreparing(true);
+    setPhotoError('');
+    try {
+      let file: File | null = null,
+        photoKey = draft.form.photoKey;
+      if (photoKey && (!photo.file || photo.operationId.current !== photoKey))
+        throw new Error(
+          'This photo draft could not be recovered. Reload saved details before choosing another photo.',
+        );
+      if (photo.file) {
+        const prepared = await photo.freeze(await preparePhoto(photo.file));
+        file = prepared.file;
+        photoKey = prepared.key;
+      }
+      const snapshot = { ...draft.form, pending: true, photoKey };
+      draft.checkpoint(snapshot);
+      save.mutate({ snapshot, file });
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : 'This photo could not be prepared.');
+    } finally {
+      setPreparing(false);
+    }
+  }
   useEffect(() => {
     const node = dialog.current;
     node?.showModal();
@@ -137,7 +194,7 @@ export function InboxEntryEditor({
     <dialog
       className="inbox-editor"
       ref={dialog}
-      aria-labelledby="inbox-editor-title"
+      aria-label="Keep the details."
       onClose={(event) => {
         event.stopPropagation();
         if (!dialog.current?.open) onClose();
@@ -150,16 +207,16 @@ export function InboxEntryEditor({
     >
       <header className="dialog-head">
         <div>
-          <p className="overline">INBOX / UNFILED</p>
-          <h2 id="inbox-editor-title">Keep the details.</h2>
+          <p className="overline">UNFILED</p>
+          <h2>Keep the details.</h2>
         </div>
         <button className="icon-button" aria-label="Close find" disabled={busy} onClick={closeFind}>
           <X size={22} />
         </button>
       </header>
       <p>
-        Only a name is needed. You can add photos and visits after filing. Unfinished changes stay on this
-        device for seven days.
+        Only a name is needed. Dates and a photo are optional. Unfinished changes stay on this device for
+        seven days.
       </p>
       {!online && <p role="status">You’re offline. This draft stays on this device; reconnect to save.</p>}
       {!entry && (
@@ -183,7 +240,7 @@ export function InboxEntryEditor({
           </button>
         </section>
       )}
-      {stale && (
+      {stale && !draft.form.pending && (
         <p className="error-banner" role="alert">
           This find changed elsewhere. Your draft is still here. Reload its saved details before saving or
           filing.
@@ -193,10 +250,10 @@ export function InboxEntryEditor({
         className="settings-form"
         onSubmit={(event) => {
           event.preventDefault();
-          if (entry && parsed.success && !stale && online && !busy) save.mutate();
+          void submit();
         }}
       >
-        <fieldset disabled={busy}>
+        <fieldset disabled={busy || !!draft.form.pending}>
           <label>
             Name
             <input
@@ -206,6 +263,45 @@ export function InboxEntryEditor({
               onChange={(event) => edit({ title: event.target.value })}
             />
           </label>
+          <details className="record-extras" open={!!item.memory}>
+            <summary>
+              Memory details <span>optional</span>
+            </summary>
+            <label className="inbox-check">
+              <input
+                type="checkbox"
+                checked={!!item.memory}
+                onChange={(event) =>
+                  edit({ memory: event.target.checked ? { happenedOn: today(), reaction: null } : null })
+                }
+              />
+              Record a dated experience
+            </label>
+            {item.memory && (
+              <>
+                <label>
+                  When
+                  <input
+                    type="date"
+                    value={item.memory.happenedOn}
+                    required
+                    onChange={(event) =>
+                      edit({ memory: { ...item.memory!, happenedOn: event.target.value } })
+                    }
+                  />
+                </label>
+                <p>
+                  This time <span className="optional">optional</span>
+                </p>
+                <CallChoices
+                  label="This time"
+                  value={item.memory.reaction}
+                  onChange={(reaction) => edit({ memory: { ...item.memory!, reaction } })}
+                />
+                <p>The overall call stays separate.</p>
+              </>
+            )}
+          </details>
           <label>
             Type
             <input
@@ -269,7 +365,46 @@ export function InboxEntryEditor({
             title={item.title}
             onChange={(context) => edit({ context })}
           />
+          {entry?.photo?.available && (
+            <img
+              className="unfiled-photo"
+              src={`/api/inbox/${id}/photo?v=${entry.revision}`}
+              alt={`Saved photo for ${item.title}`}
+            />
+          )}
+          {entry?.photo && !entry.photo.available && (
+            <p>This records-only copy has no photo original. Choose a photo to attach one.</p>
+          )}
+          <DraftPhoto
+            file={photo.file}
+            onChange={photo.change}
+            disabled={busy || !!draft.form.pending || !photo.ready}
+            helper="Keeps one private photo with this Unfiled find. It stays attached when you file it."
+          />
+          {entry?.photo && (
+            <button
+              className="button button-outline"
+              type="button"
+              disabled={changed || stale || busy || !online || !!draft.form.pending}
+              onClick={() => {
+                photoRemoval.current = { revision: entry.revision, id: entry.photo!.id };
+                setConfirm('photo');
+              }}
+            >
+              Remove saved photo
+            </button>
+          )}
         </fieldset>
+        {photo.status && (
+          <p role="status" className="draft-state">
+            {photo.status}
+          </p>
+        )}
+        {photoError && (
+          <p role="alert" className="form-error">
+            {photoError}
+          </p>
+        )}
         {entry && !parsed.success && (
           <p className="form-error" role="alert">
             {captureIssueText(parsed.error.issues)}
@@ -278,9 +413,17 @@ export function InboxEntryEditor({
         <div className="data-actions">
           <button
             className="button button-accent"
-            disabled={busy || !online || !entry || stale || !parsed.success || !changed}
+            disabled={
+              busy ||
+              !photo.ready ||
+              !online ||
+              !entry ||
+              (stale && !draft.form.pending) ||
+              !parsed.success ||
+              (!changed && !draft.form.pending)
+            }
           >
-            Save changes
+            {draft.form.pending ? 'Retry save' : 'Save changes'}
           </button>
           <button
             className="button button-outline"
@@ -291,6 +434,9 @@ export function InboxEntryEditor({
             Reload saved details
           </button>
         </div>
+        {draft.form.pending && (
+          <p>This save is waiting for confirmation. Retry checks the same details and photo.</p>
+        )}
       </form>
       {draft.status && (
         <p className="draft-status" role="status">
@@ -306,9 +452,7 @@ export function InboxEntryEditor({
       <section className="inbox-filing" aria-label="File this find">
         <p className="overline">GIVE IT A PLACE</p>
         <h3>File when you’re ready.</h3>
-        <p>
-          Moves this saved find into one collection, unranked. Its note, context and any call stay with it.
-        </p>
+        <p>Moves this saved find into one collection, unranked. Its details, date and photo stay with it.</p>
         {changed && <p>Save or reload your changes before filing.</p>}
         {lists.isError && (
           <p role="alert">
@@ -370,6 +514,7 @@ export function InboxEntryEditor({
             !online ||
             changed ||
             stale ||
+            !!draft.form.pending ||
             !target ||
             targetItems.isPending ||
             targetItems.isError ||
@@ -398,6 +543,17 @@ export function InboxEntryEditor({
           pending={reload.isPending}
           error={reload.error?.message}
           onConfirm={() => reload.mutate()}
+        />
+      )}
+      {confirm === 'photo' && (
+        <ConfirmDialog
+          title="Remove this saved photo?"
+          description="Permanently removes this photo original. Your name, note and date remain."
+          confirmLabel="Remove photo"
+          pending={removePhoto.isPending}
+          error={removePhoto.error?.message}
+          onClose={() => setConfirm(null)}
+          onConfirm={() => removePhoto.mutate()}
         />
       )}
       {confirm === 'close' && (

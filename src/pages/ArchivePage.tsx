@@ -50,7 +50,9 @@ export function ArchivePage() {
       id: `inbox:${entry.id}`,
       title: entry.title,
       detail: 'Unfiled',
-      date: `Saved ${formatRelativeTimestamp(entry.createdAt)}`,
+      date: entry.memory
+        ? `Experienced ${formatDate(entry.memory.happenedOn)}`
+        : `Saved ${formatRelativeTimestamp(entry.createdAt)}`,
       time: entry.createdAt,
       decision: entry.decision,
       href: `/inbox?focus=${entry.id}`,

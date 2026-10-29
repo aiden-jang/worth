@@ -4,8 +4,9 @@ import type { AppEnv } from '../context';
 import { ApiError, requireItem, requireList } from '../data';
 import { readJson } from '../http';
 import { fingerprint, operationId } from '../operations';
-import { inboxCreate, inboxEdit, inboxFile, inboxLimit } from '../../src/shared/inbox';
-import { itemInput } from '../../src/shared/validation';
+import { inboxCreate, inboxEdit, inboxFile, inboxLimit, inboxPayload } from '../../src/shared/inbox';
+import { visitContext } from '../../src/shared/visit-context';
+import { registerInboxPhotos } from './inbox-photos';
 import {
   inboxChanged,
   inboxGuard,
@@ -16,6 +17,7 @@ import {
 } from '../inbox';
 
 export function registerInboxRoutes(api: Hono<AppEnv>) {
+  registerInboxPhotos(api);
   api.get('/inbox', async (c) => c.json({ entries: await readInbox(c.env.DB, c.get('ownerId')) }));
   api.get('/inbox/:id', async (c) =>
     c.json({ entry: await requireInbox(c.env.DB, c.get('ownerId'), c.req.param('id')) }),
@@ -69,10 +71,12 @@ export function registerInboxRoutes(api: Hono<AppEnv>) {
     const owner = c.get('ownerId'),
       id = c.req.param('id');
     const entry = await requireInbox(c.env.DB, owner, id);
-    const { item, expectedRevision } = await readJson(c.req.raw, inboxEdit, 32 * 1024);
+    const { item: received, expectedRevision } = await readJson(c.req.raw, inboxEdit, 32 * 1024);
+    // Older installed clients cannot edit a memory they do not know about.
+    const item = received.memory === undefined ? { ...received, memory: entry.memory } : received;
     const payload = JSON.stringify(item);
     if (entry.revision !== expectedRevision) {
-      if (JSON.stringify(itemInput.parse(entry)) === payload) return c.json({ entry });
+      if (JSON.stringify(inboxPayload.parse(entry)) === payload) return c.json({ entry });
       throw new ApiError(
         409,
         'INBOX_CHANGED',
@@ -120,7 +124,7 @@ export function registerInboxRoutes(api: Hono<AppEnv>) {
             'INBOX_FILED_CHANGED',
             'This find was already filed, then moved. Check your collections.',
           );
-        return c.json({ item }, 201);
+        return c.json({ item, logId: result.logId ?? null }, 201);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404)
           throw new ApiError(
@@ -133,13 +137,18 @@ export function registerInboxRoutes(api: Hono<AppEnv>) {
     };
     const prior = await previousInboxOperation(c.env.DB, owner, key, 'file', hash);
     if (prior) return reply(prior);
-    await requireInbox(c.env.DB, owner, entryId);
+    const entry = await requireInbox(c.env.DB, owner, entryId);
     const target = await requireList(c.env.DB, owner, input.targetListId);
     if (target.kind !== 'collection')
       throw new ApiError(400, 'WRONG_LIST_KIND', 'File this find in a collection.');
     const now = Date.now(),
       itemId = crypto.randomUUID(),
-      result = { entryId, itemId, listId: target.id };
+      logId = entry.memory ? crypto.randomUUID() : null,
+      result = { entryId, itemId, listId: target.id, logId };
+    const photoRecord = logId ?? itemId,
+      photoField = logId ? 'log_id' : 'item_id',
+      photoCache = logId ? 'log_photos' : 'item_photos',
+      parent = logId ? 'logs' : 'items';
     try {
       await c.env.DB.batch([
         inboxGuard(
@@ -154,6 +163,39 @@ export function registerInboxRoutes(api: Hono<AppEnv>) {
           `INSERT INTO items (id, list_id, owner_id, title, type, note, decision, revisit_queued, want_to_try, context_json, started_on, ended_on, created_at, updated_at)
           SELECT ?, ?, owner_id, json_extract(payload_json,'$.title'), json_extract(payload_json,'$.type'), json_extract(payload_json,'$.note'), json_extract(payload_json,'$.decision'), json_extract(payload_json,'$.revisitQueued'), json_extract(payload_json,'$.wantToTry'), json_extract(payload_json,'$.context'), json_extract(payload_json,'$.startedOn'), json_extract(payload_json,'$.endedOn'), created_at, ? FROM inbox_entries WHERE id = ? AND owner_id = ?`,
         ).bind(itemId, target.id, now, entryId, owner),
+        ...(entry.memory
+          ? [
+              c.env.DB.prepare(
+                'INSERT INTO logs(id,list_id,item_id,owner_id,title,happened_on,note,context_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+              ).bind(
+                logId,
+                target.id,
+                itemId,
+                owner,
+                entry.title,
+                entry.memory.happenedOn,
+                entry.note,
+                JSON.stringify(
+                  visitContext.parse({ reaction: entry.memory.reaction, location: entry.context.location }),
+                ),
+                entry.createdAt,
+                now,
+              ),
+            ]
+          : []),
+        c.env.DB.prepare(
+          `INSERT INTO photo_assets(id,owner_id,${photoField},content_type,data,fingerprint,created_at)
+          SELECT id,owner_id,?,content_type,data,fingerprint,created_at FROM inbox_photos
+          WHERE inbox_id=? AND owner_id=? AND removed_at IS NULL`,
+        ).bind(photoRecord, entryId, owner),
+        c.env.DB.prepare(
+          `INSERT INTO ${photoCache}(${photoField},owner_id,content_type,data,updated_at)
+          SELECT ?,owner_id,content_type,data,? FROM inbox_photos WHERE inbox_id=? AND owner_id=? AND removed_at IS NULL AND data IS NOT NULL`,
+        ).bind(photoRecord, now, entryId, owner),
+        c.env.DB.prepare(
+          `UPDATE ${parent} SET cover_photo_id=(SELECT id FROM inbox_photos WHERE inbox_id=? AND owner_id=? AND removed_at IS NULL),
+          gallery_json=COALESCE((SELECT json_array(json_object('id',id,'caption','','arrows',json('[]'))) FROM inbox_photos WHERE inbox_id=? AND owner_id=? AND removed_at IS NULL),'[]') WHERE id=? AND owner_id=?`,
+        ).bind(entryId, owner, entryId, owner, photoRecord, owner),
         c.env.DB.prepare('DELETE FROM inbox_entries WHERE id = ? AND owner_id = ?').bind(entryId, owner),
         c.env.DB.prepare('UPDATE lists SET updated_at = ? WHERE id = ? AND owner_id = ?').bind(
           now,
