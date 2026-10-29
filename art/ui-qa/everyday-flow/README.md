@@ -68,6 +68,11 @@ and retry policy are retained. The database regression checks Unfiled owner
 isolation, real saved dates, literal search, opinion counts, no invented visits,
 Trash exclusion, filing without duplicate recall and 50-record pagination.
 
+The Back-navigation regression waits for ranking-only controls before returning;
+the collection and ranking screens share their heading. It then checks that the
+fresh collection selection is closed before opening the saved item. Ten repeated
+desktop/phone runs passed without changing timeouts or retries.
+
 This is browser automation and screenshot inspection. A physical phone, its
 software keyboard, spoken screen-reader output and an independent usability study
 were not tested. Actual ease of everyday use still needs observation with real

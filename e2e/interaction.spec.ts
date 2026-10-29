@@ -53,8 +53,14 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await page.locator('.item-editor-dialog').getByRole('button', { name: 'Close', exact: true }).click();
   await collectionOptions(page);
   await page.getByRole('link', { name: 'Show list' }).click();
+  await expect(page.getByRole('group', { name: 'How many rankings to show' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'My drinks' })).toBeVisible();
   await page.goBack();
+  await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
   await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   await expect(
     page.getByRole('region', { name: 'Your call for Coffee' }).filter({ visible: true }),
