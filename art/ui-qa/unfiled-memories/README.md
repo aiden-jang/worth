@@ -72,3 +72,19 @@ An Unfiled find holds one optional experience and one photo. Multiple visits and
 specialized calendar/period-summary tools remain collection-based. This was
 browser automation and screenshot review; a physical phone, software keyboard,
 spoken screen-reader output and independent usability observation were not tested.
+
+## Full-suite receipt follow-up
+
+The first GitHub run passed 382 browser cases but failed six receipt cases because
+an older test helper read only File-based device storage. It now reads current
+byte-based drafts and legacy File drafts, retaining the original polling budget,
+nonempty-byte assertion, exact upload comparisons, pixel checks, lost-reply and
+missing-copy checks. All 18 Chromium desktop/phone receipt cases passed afterward.
+
+Two extra WebKit receipt tests cannot compare multipart bytes through Playwright's
+request interception: a local echo-server check reproduced an empty intercepted
+file while the server received all 3,578 original PNG bytes with identical SHA-256,
+both with and without interception. This is a test-tool limit; those mocked receipt
+cases are not claimed as WebKit passes. The 15 everyday/Unfiled WebKit cases,
+including photo draft recovery after reload, passed. No assertion, timeout,
+application upload or content-security policy was relaxed for this difference.

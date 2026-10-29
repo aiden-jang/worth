@@ -207,24 +207,30 @@ async function preparedBytes(page: Page) {
   await expect
     .poll(async () => {
       bytes = await page.evaluate(async () => {
-        const file = await new Promise<File | undefined>((resolve, reject) => {
-          const request = indexedDB.open('worth-draft-photos', 1);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => {
-            const db = request.result,
-              tx = db.transaction('files', 'readonly');
-            const result = tx.objectStore('files').get('browser-preview:receipt-prepared');
-            tx.oncomplete = () => {
-              db.close();
-              resolve(result.result?.file);
+        const stored = await new Promise<{ data?: ArrayBuffer; file?: File } | undefined>(
+          (resolve, reject) => {
+            const request = indexedDB.open('worth-draft-photos', 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+              const db = request.result,
+                tx = db.transaction('files', 'readonly');
+              const result = tx.objectStore('files').get('browser-preview:receipt-prepared');
+              tx.oncomplete = () => {
+                db.close();
+                resolve(result.result);
+              };
+              tx.onerror = () => {
+                db.close();
+                reject(tx.error);
+              };
             };
-            tx.onerror = () => {
-              db.close();
-              reject(tx.error);
-            };
-          };
-        });
-        return file ? Array.from(new Uint8Array(await file.arrayBuffer())) : null;
+          },
+        );
+        return stored?.data instanceof ArrayBuffer
+          ? Array.from(new Uint8Array(stored.data))
+          : stored?.file
+            ? Array.from(new Uint8Array(await stored.file.arrayBuffer()))
+            : null;
       });
       return bytes?.length ?? 0;
     })
