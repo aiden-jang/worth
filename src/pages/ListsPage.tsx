@@ -5,6 +5,7 @@ import { FieldNamesInput } from '../components/CollectionFields';
 import { readFieldNames } from '../shared/collection-fields';
 import type { CollectionTemplate } from '../shared/templates';
 import '../templates.css';
+import '../directory.css';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -18,7 +19,11 @@ import type { CollectionArt, ListKind } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
 import { starterCollectionCover } from '../shared/starter-covers';
 
-import { ListDirectory, type CollectionOrder } from '../components/ListDirectory';
+import {
+  CollectionDirectoryControls,
+  ListDirectory,
+  type CollectionOrder,
+} from '../components/ListDirectory';
 
 const collectionOrderStorageKey = 'worth:collection-order';
 
@@ -112,6 +117,7 @@ export function ListsPage() {
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [collectionOrder, setCollectionOrder] = useState<CollectionOrder>(savedCollectionOrder);
   const [collectionQuery, setCollectionQuery] = useViewPreference('collection-directory:query', '');
+  const [directoryToolsOpen, setDirectoryToolsOpen] = useState(false);
   const collectionLists = directory.data?.lists.filter((list) => list.kind === 'collection') ?? [];
   const activityLists = directory.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const visibleCollectionLists = listScope === 'activity' ? [] : collectionLists;
@@ -138,6 +144,11 @@ export function ListsPage() {
       );
     return right.updatedAt - left.updatedAt;
   });
+  const needsDirectoryTools =
+    visibleCollectionLists.length > 3 || !!collectionQuery.trim() || collectionOrder !== 'recent';
+  useEffect(() => {
+    if (needsDirectoryTools) setDirectoryToolsOpen(true);
+  }, [needsDirectoryTools]);
   const pageTitle = listScope === 'activity' ? 'Activity' : 'Collections';
   const workoutShortcut = params.get('action') === 'workout';
   const pageDescription = showingArchived
@@ -265,12 +276,28 @@ export function ListsPage() {
   }
 
   return (
-    <main className="light-page lists-page page-width">
+    <main className={`light-page lists-page page-width${creating ? '' : ' directory-page'}`}>
       <div className="page-head">
         <div>
-          <p className="overline">YOUR ARCHIVE</p>
+          {creating && <p className="overline">YOUR ARCHIVE</p>}
           <h1>{pageTitle}</h1>
-          <p>{pageDescription}</p>
+          {creating || showingArchived || workoutShortcut ? (
+            <p>{pageDescription}</p>
+          ) : (
+            directory.data && (
+              <p className="directory-count">
+                {[
+                  listScope !== 'activity' &&
+                    `${visibleCollectionLists.length} ${visibleCollectionLists.length === 1 ? 'collection' : 'collections'}`,
+                  listScope !== 'collection' &&
+                    visibleActivityLists.length > 0 &&
+                    `${visibleActivityLists.length} ${visibleActivityLists.length === 1 ? 'activity' : 'activities'}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )
+          )}
         </div>
         {!creating && (
           <div className="list-page-actions">
@@ -283,7 +310,10 @@ export function ListsPage() {
                   : 'New collection'}
             </button>
             {listScope !== 'activity' && (
-              <Link className="button button-outline" to="/lists?create=1&kind=activity">
+              <Link
+                className={`button button-outline${creating ? '' : ' directory-secondary-action'}`}
+                to="/lists?create=1&kind=activity"
+              >
                 New activity
               </Link>
             )}
@@ -292,29 +322,39 @@ export function ListsPage() {
       </div>
 
       {!creating && listScope !== 'activity' && (
-        <div className="collection-status-controls" role="group" aria-label="Collection status">
-          <button
-            className="button button-outline"
-            aria-pressed={!showingArchived}
-            onClick={() => {
-              const next = new URLSearchParams(params);
-              next.delete('archived');
-              setParams(next);
-            }}
-          >
-            Current
-          </button>
-          <button
-            className="button button-outline"
-            aria-pressed={showingArchived}
-            onClick={() => {
-              const next = new URLSearchParams(params);
-              next.set('archived', '1');
-              setParams(next);
-            }}
-          >
-            Archived
-          </button>
+        <div className="directory-toolbar">
+          <div className="collection-status-controls" role="group" aria-label="Collection status">
+            <button
+              className="button button-outline"
+              aria-pressed={!showingArchived}
+              onClick={() => {
+                const next = new URLSearchParams(params);
+                next.delete('archived');
+                setParams(next);
+              }}
+            >
+              Current
+            </button>
+            <button
+              className="button button-outline"
+              aria-pressed={showingArchived}
+              onClick={() => {
+                const next = new URLSearchParams(params);
+                next.set('archived', '1');
+                setParams(next);
+              }}
+            >
+              Archived
+            </button>
+          </div>
+          {(needsDirectoryTools || directoryToolsOpen) && (
+            <CollectionDirectoryControls
+              order={collectionOrder}
+              onOrderChange={setCollectionOrder}
+              query={collectionQuery}
+              onQueryChange={setCollectionQuery}
+            />
+          )}
         </div>
       )}
 
@@ -525,19 +565,16 @@ export function ListsPage() {
             {visibleCollectionLists.length > 0 && (
               <ListDirectory
                 heading={showingArchived ? 'Archived collections' : 'Collections'}
-                detail={listScope === 'collection' ? '' : 'Things you can compare, rank, and revisit.'}
+                showHeading={visibleActivityLists.length > 0}
                 lists={orderedCollectionLists}
                 isCollectionDirectory
-                collectionOrder={collectionOrder}
-                onCollectionOrderChange={setCollectionOrder}
-                collectionQuery={collectionQuery}
                 onCollectionQueryChange={setCollectionQuery}
               />
             )}
             {visibleActivityLists.length > 0 && (
               <ListDirectory
                 heading="Activity"
-                detail={listScope === 'activity' ? '' : 'Things you want to log over time.'}
+                showHeading={visibleCollectionLists.length > 0}
                 lists={visibleActivityLists}
                 workoutShortcut={workoutShortcut}
               />

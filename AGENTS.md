@@ -2,8 +2,9 @@
 
 Before changing a primary screen, read `DESIGN.md`, the current build references in
 `art/ui-mocks/everyday/README.md`, and `art/ui-mocks/BUILD-CONTRACT.md`, then open the
-relevant reference image. The October 28 everyday flow is the current interaction
-and composition target for Home, Add, collections, recall and activity. The user
+relevant reference image. The October 28 everyday flow and October 29 directory revision are the current
+interaction and composition targets for Home, Add, collections, recall and activity.
+Use `art/ui-mocks/directory/README.md` for the collections directory. The user
 explicitly requested structural simplification after finding the earlier UI complex.
 The taste-cabinet references still govern identity, artwork, colors and secondary
 screens. Earlier compositions are history where the everyday revision supersedes them.

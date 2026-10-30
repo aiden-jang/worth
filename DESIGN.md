@@ -523,3 +523,15 @@ copy date, passphrase scope and unsaved text stay factual and visible. Name-only
 Inbox capture remains possible; notes are optional. Read text through a searchable
 collection/Inbox index, with separate call/rank labels and explicit note queuing.
 No stored records or queued requests are inferred from decorative artwork.
+
+## Collections directory — October 29
+
+The user identified an unbalanced sparse directory. The new
+[directory references](art/ui-mocks/directory/README.md) replace its earlier
+composition. One header and toolbar lead to compact cards with integrated artwork,
+name and metadata. Search/order controls are useful for a larger collection set;
+active saved filters keep them reachable even in a sparse set. Current/Archived
+stay visible. Mixed collections/activity get simple section titles; one kind does
+not repeat the page title. The empty state retains its working starter choices.
+Home artwork and collection contents retain their existing composition. Directory
+styles now live together instead of competing across historical skins.

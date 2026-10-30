@@ -462,3 +462,26 @@ experience and one private photo; filing transfers these atomically to the
 collection. Interrupted text/photo saves retain exact retry identities and device
 drafts. Migration 0028 and JSON version 11 support this extension; older backups
 and clients remain compatible. No paid service, native app or reminder is added.
+
+## Collections directory — October 29
+
+The user approved fixing the directory's hierarchy and sparse layout. The
+[directory references](directory/README.md) supersede the earlier directory
+composition, leaving the Home shelf, creation flow and collection contents under
+their existing references. Use one 48px/36px heading, actual scope counts, New
+collection and a quiet New activity action. One toolbar groups Current/Archived
+with optional search/order controls. Keep those controls for more than three
+collections or an active query/nondefault order; they remain open for that directory visit through
+filtering and archive changes, preserving focus when cleared. Section titles are visible only for mixed kinds.
+
+A compact dark card groups a 152px, 1.6-ratio artwork thumbnail, 24px name, 13px
+metadata and 12px update caption. Keep 16px padding, 20px gaps and 22px corners.
+At <=1180px use one column. Phones use 96px artwork, 14px padding/gaps, 21px names,
+18px corners and 16px form inputs. At <=360px the thumbnail is 80px and filters
+stack. Preserve readable wrapped names, 44px controls, visible focus, original
+private photo framing and actual stored counts. The empty state retains working
+starter choices. Unfiled gains a consistent utility icon in the navigation.
+
+`src/directory.css` owns directory styles. Remove superseded directory rules from
+historical stylesheets instead of appending another competing skin. Keep public
+snapshots, records, ranking, photos, archive state and saved preferences unchanged.

@@ -320,61 +320,12 @@
   color: var(--muted);
 }
 /* The directory and archive share the same shelf object. */
-.collection-directory-card.cabinet-directory-card {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  gap: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-}
 .cabinet-directory-picture {
   width: 100%;
   aspect-ratio: 1.6;
   border-radius: 16px;
   position: relative;
   overflow: hidden;
-}
-.cabinet-directory-card .collection-directory-index {
-  position: absolute;
-  left: 14px;
-  bottom: 12px;
-  padding: 5px 8px;
-  background: var(--slip);
-  color: var(--ink);
-  border-radius: 999px;
-  font-size: 10px;
-}
-.cabinet-directory-card .collection-directory-copy {
-  padding: 16px 28px 0 0;
-  width: 100%;
-}
-.cabinet-directory-card .collection-directory-copy strong {
-  font-size: 23px;
-  letter-spacing: -0.035em;
-}
-.cabinet-directory-card > svg {
-  position: absolute;
-  right: 0;
-  top: auto;
-  bottom: 0;
-  margin: 0;
-  color: var(--muted);
-}
-.cabinet-directory-card .collection-directory-updated {
-  display: block;
-  margin-top: 8px;
-  font-size: 11px;
-}
-.cabinet-directory-card .collection-directory-signals {
-  font-size: 11px;
-}
-.cabinet-directory-card:focus-visible {
-  outline: 2px solid var(--acid);
-  outline-offset: 6px;
-  border-radius: 16px;
 }
 @media (max-width: 1180px) {
   .cabinet-first-use {
@@ -470,19 +421,6 @@
     font-size: 36px;
   }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .cabinet-directory-card .collection-artwork > img {
-    transition: transform 180ms ease;
-  }
-  .cabinet-directory-card:focus-visible .collection-artwork > img {
-    transform: scale(1.025);
-  }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .cabinet-directory-card:hover .collection-artwork > img {
-    transform: scale(1.025);
-  }
-}
 
 .cabinet-create .panel-title > .icon-button {
   min-width: 44px;
@@ -496,18 +434,8 @@
 .undecided-slips {
   --blank-back: #d8d4c4;
 }
-.cabinet-directory-card::before,
 .cabinet-starter-card::before {
   display: none;
-}
-.cabinet-directory-card .collection-directory-copy strong {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-overflow: clip;
-}
-.cabinet-directory-card .collection-directory-copy small > span:first-child {
-  white-space: normal;
-  overflow-wrap: anywhere;
 }
 .starter-card.cabinet-starter-card {
   display: flex;

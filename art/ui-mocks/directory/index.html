@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Worth — collection directory reference</title>
+  <style>
+    @font-face {
+      font-family: DM Sans;
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+    }
+    @font-face {
+      font-family: DM Sans;
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+      font-weight: 500;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #181915;
+      color: #f0ecdf;
+      font:
+        16px/1.5 'DM Sans',
+        sans-serif;
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+    button,
+    a,
+    input,
+    select {
+      min-height: 44px;
+    }
+    button {
+      border: 1px solid #737566;
+      border-radius: 12px;
+      background: transparent;
+      color: inherit;
+      padding: 10px 16px;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .primary {
+      background: #e8dc9d;
+      color: #181915;
+      border-color: #e8dc9d;
+    }
+    .quiet {
+      border-color: transparent;
+      color: #aaa99b;
+    }
+    aside {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 192px;
+      padding: 28px 20px;
+      border-right: 1px solid #38392f;
+      background: #141510;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .brand {
+      font-size: 40px;
+      font-weight: 500;
+      letter-spacing: -3px;
+    }
+    nav {
+      display: grid;
+      gap: 8px;
+    }
+    nav a {
+      padding: 12px;
+      border-radius: 10px;
+      color: #aaa99b;
+    }
+    nav .active {
+      background: #292a23;
+      color: #f0ecdf;
+    }
+    .rail-add {
+      margin-top: auto;
+    }
+    main {
+      margin-left: 192px;
+      padding: 40px 48px 100px;
+    }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      font-size: 48px;
+      line-height: 1.1;
+      letter-spacing: -0.055em;
+      font-weight: 500;
+      margin: 0 0 10px;
+    }
+    .head p {
+      margin: 0;
+      color: #aaa99b;
+      font-size: 14px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #38392f;
+      margin-bottom: 28px;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #20211c;
+      border-radius: 28px;
+      padding: 4px;
+    }
+    .tabs button {
+      border: 0;
+      border-radius: 24px;
+      color: #aaa99b;
+      padding: 8px 18px;
+    }
+    .tabs .selected {
+      background: #292a23;
+      color: #f0ecdf;
+    }
+    .filters {
+      display: flex;
+      gap: 12px;
+    }
+    .filters[hidden] {
+      display: none;
+    }
+    input,
+    select {
+      min-width: 0;
+      background: #20211c;
+      border: 1px solid #38392f;
+      color: #f0ecdf;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    input {
+      width: 220px;
+    }
+    select {
+      width: 184px;
+    }
+    .shelf {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      min-height: 144px;
+      padding: 16px;
+      border: 1px solid #38392f;
+      border-radius: 22px;
+      background: #20211c;
+      position: relative;
+    }
+    .art {
+      width: 152px;
+      aspect-ratio: 1.6;
+      flex: none;
+      border-radius: 12px;
+      overflow: hidden;
+      display: block;
+    }
+    .art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .copy {
+      min-width: 0;
+      flex: 1;
+    }
+    .copy h2 {
+      font-size: 24px;
+      letter-spacing: -0.035em;
+      line-height: 1.25;
+      font-weight: 500;
+      margin: 0 0 6px;
+      overflow-wrap: anywhere;
+    }
+    .copy p {
+      font-size: 13px;
+      color: #aaa99b;
+      margin: 0;
+    }
+    .copy small {
+      display: block;
+      color: #aaa99b;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .arrow {
+      color: #aaa99b;
+      align-self: center;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 32px 0 16px;
+    }
+    .section-title span {
+      color: #aaa99b;
+      font-size: 13px;
+      margin-left: 8px;
+    }
+    .activity {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border: 1px solid #38392f;
+      border-radius: 16px;
+      background: #20211c;
+    }
+    .activity p {
+      margin: 0;
+    }
+    .activity small {
+      color: #aaa99b;
+    }
+    .mobile-head,
+    .bottom {
+      display: none;
+    }
+    .empty {
+      padding: 36px 0;
+    }
+    .empty h2 {
+      font-size: 26px;
+      font-weight: 500;
+      margin: 0 0 10px;
+    }
+    .empty p {
+      color: #aaa99b;
+    }
+    .mock {
+      color: #aaa99b;
+      font-size: 11px;
+      margin-top: 40px;
+    }
+    @media (max-width: 1180px) {
+      .shelf {
+        grid-template-columns: 1fr;
+      }
+      .filters input {
+        width: 170px;
+      }
+    }
+    @media (max-width: 680px) {
+      aside {
+        display: none;
+      }
+      .mobile-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid #38392f;
+      }
+      .mobile-head .brand {
+        font-size: 32px;
+      }
+      main {
+        margin: 0;
+        padding: 24px 20px 112px;
+      }
+      .head {
+        display: block;
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 36px;
+      }
+      .actions {
+        margin-top: 20px;
+        gap: 4px;
+      }
+      .toolbar {
+        flex-wrap: wrap;
+        gap: 16px;
+        padding-bottom: 20px;
+        margin-bottom: 24px;
+      }
+      .filters {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 184px;
+        gap: 8px;
+      }
+      .filters input {
+        width: 100%;
+      }
+      input,
+      select {
+        width: 100%;
+        font-size: 16px;
+      }
+      .card {
+        gap: 14px;
+        padding: 14px;
+        min-height: 128px;
+        border-radius: 18px;
+      }
+      .art {
+        width: 96px;
+      }
+      .copy h2 {
+        font-size: 21px;
+      }
+      .copy p {
+        font-size: 12px;
+      }
+      .copy small {
+        margin-top: 8px;
+        font-size: 11px;
+      }
+      .arrow {
+        display: none;
+      }
+      .bottom {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #20211c;
+        border-top: 1px solid #38392f;
+        font-size: 12px;
+      }
+      .bottom .primary {
+        padding: 10px 24px;
+      }
+      .bottom a {
+        display: flex;
+        align-items: center;
+      }
+      .mock {
+        font-size: 10px;
+      }
+    }
+  </style>
+  <aside>
+    <div class="brand">worth</div>
+    <nav>
+      <a>⌂ Home</a><a class="active">▱ Collections</a><a>▥ Look back</a><a>⌕ Search</a><a>▣ Unfiled</a>
+    </nav>
+    <button class="primary rail-add">＋ Add</button><small>Preview · Account settings</small>
+  </aside>
+  <header class="mobile-head">
+    <div class="brand">worth</div>
+    <span>⌕　☰</span>
+  </header>
+  <main>
+    <header class="head">
+      <div>
+        <h1>Collections</h1>
+        <p id="summary">1 collection</p>
+      </div>
+      <div class="actions">
+        <button class="primary">＋ New collection</button><button class="quiet">New activity</button>
+      </div>
+    </header>
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="selected" id="current">Current</button><button id="archived">Archived</button>
+      </div>
+      <div class="filters" id="filters" hidden>
+        <input placeholder="Search" /><select>
+          <option>Latest updates</option>
+        </select>
+      </div>
+    </div>
+    <section id="content"></section>
+    <p class="mock">DESIGN REFERENCE · Synthetic fixtures · Nothing is saved.</p>
+  </main>
+  <nav class="bottom">
+    <a>Home</a><a>Collections</a><a>Look back</a><button class="primary">＋ Add</button>
+  </nav>
+  <script>
+    const state = new URLSearchParams(location.search).get('state') || 'sparse';
+    const examples = [
+      ['Drinks', '2 items · 1 favorite', 'drinks'],
+      ['Movies', '8 items · 3 ranked', 'movies'],
+      ['Places', '5 items', 'places'],
+      ['Cars', '4 items · 2 favorites', 'cars'],
+    ];
+    const lists = state === 'populated' ? examples : state === 'empty' ? [] : examples.slice(0, 1);
+    document.querySelector('#summary').textContent =
+      state === 'archived'
+        ? '1 archived collection'
+        : `${lists.length} ${lists.length === 1 ? 'collection' : 'collections'}${state === 'populated' ? ' · 1 activity' : ''}`;
+    if (state === 'archived') {
+      document.querySelector('#current').className = '';
+      document.querySelector('#archived').className = 'selected';
+    }
+    document.querySelector('#filters').hidden = state !== 'populated';
+    document.querySelector('#content').innerHTML = lists.length
+      ? `${state === 'populated' ? '<h2 class="section-title">Collections <span>4</span></h2>' : ''}<div class="shelf">${lists.map(([name, count, art]) => `<a class="card"><span class="art"><img src="../../../public/art/starter-covers/${art}-v2.svg" alt=""></span><span class="copy"><h2>${name}</h2><p>${count}</p><small>Updated yesterday</small></span><span class="arrow">→</span></a>`).join('')}</div>${state === 'populated' ? '<h2 class="section-title">Activity <span>1</span></h2><a class="activity"><span>G</span><div><p>Gym</p><small>6 entries · Updated today</small></div></a>' : ''}`
+      : '<div class="empty"><h2>Room for a few things.</h2><p>Start with a name. The rest can wait.</p><button class="primary">New collection</button></div>';
+  </script>
+</html>

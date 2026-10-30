@@ -981,29 +981,6 @@
     font-size: 28px;
   }
 }
-.collection-directory-entry {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-}
-.collection-directory-copy strong {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-.collection-directory-cover-action {
-  position: static;
-  justify-items: start;
-  margin-top: 8px;
-}
-.collection-directory-cover-action button {
-  min-height: 44px;
-  border-radius: 7px;
-  background: transparent;
-  font:
-    12px 'DM Sans',
-    sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
-}
 .public-header .brand,
 .public-message .brand {
   font:
@@ -1820,20 +1797,6 @@
 }
 .item-context .date-pair {
   margin: 16px 0;
-}
-
-.collection-status-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 28px;
-}
-.collection-status-controls .button {
-  min-height: 44px;
-}
-.collection-status-controls [aria-pressed='true'] {
-  border-color: var(--acid);
-  color: var(--acid);
 }
 .collection-archive-notice {
   display: flex;

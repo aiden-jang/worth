@@ -10,6 +10,7 @@ import {
   MagnifyingGlass,
   Plus,
   Stack,
+  Tray,
   X,
 } from '@phosphor-icons/react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
@@ -265,7 +266,7 @@ export function AppShell({
               setInboxOpen(true);
             }}
           >
-            Unfiled
+            <Tray size={18} aria-hidden="true" /> Unfiled
           </Link>
         </nav>
         {(collections.length > 0 || activityShortcut) && (

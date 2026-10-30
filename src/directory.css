@@ -1,0 +1,453 @@
+/* The collection directory owns its composition instead of stacking historical skins. */
+.directory-page {
+  padding-top: 40px;
+}
+.directory-page .page-head {
+  align-items: center;
+  gap: 24px;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+}
+.directory-page .page-head h1 {
+  max-width: none;
+  margin: 0 0 10px;
+  font-size: 48px;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  font-weight: 500;
+}
+.directory-page .page-head p {
+  margin: 0;
+  max-width: 65ch;
+  color: var(--muted);
+  font-size: 14px;
+}
+.directory-page .list-page-actions {
+  margin: 0;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.directory-page .list-page-actions .button {
+  min-height: 44px;
+}
+.directory-page .directory-secondary-action {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.directory-page .directory-secondary-action:hover {
+  color: var(--paper);
+  background: var(--raised);
+}
+.directory-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+.collection-status-controls {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 28px;
+  background: var(--panel);
+}
+.collection-status-controls .button {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: var(--muted);
+}
+.collection-status-controls [aria-pressed='true'] {
+  color: var(--paper);
+  background: var(--raised);
+}
+.collection-status-controls .button:hover {
+  color: var(--paper);
+}
+.collection-directory-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.collection-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 240px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding-left: 12px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.collection-directory-search:focus-within {
+  border-color: var(--acid);
+  outline: 2px solid var(--acid);
+  outline-offset: 2px;
+}
+.collection-directory-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 8px 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--paper);
+  font:
+    400 14px/1.4 'DM Sans',
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.collection-directory-search input:focus {
+  outline: 0;
+}
+.collection-directory-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.collection-directory-search input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.collection-directory-search > svg {
+  flex: none;
+}
+.collection-directory-search button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--paper);
+}
+.collection-directory-order {
+  display: block;
+  min-width: 0;
+}
+.collection-directory-order select {
+  width: 184px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 30px 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--paper);
+  font:
+    400 14px/1.4 'DM Sans',
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.collection-directory-order select:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 2px;
+}
+.list-directory + .list-directory {
+  margin-top: 32px;
+}
+.directory-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.directory-section-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.directory-section-head > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.collection-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.collection-directory-entry {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--panel);
+}
+.collection-directory-entry:hover {
+  border-color: var(--line-strong);
+}
+.collection-directory-entry:focus-within {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+.collection-directory-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 144px;
+  padding: 16px;
+  color: var(--paper);
+  border-radius: 22px;
+  text-decoration: none;
+}
+.collection-directory-card:focus-visible {
+  outline: 0;
+}
+.directory-artwork {
+  display: block;
+  width: 152px;
+  aspect-ratio: 1.6;
+  flex: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.directory-artwork .collection-artwork {
+  width: 100%;
+  height: 100%;
+}
+.directory-artwork .collection-artwork > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.directory-artwork .monogram-letter {
+  font-size: 42px;
+}
+.collection-directory-copy {
+  min-width: 0;
+  flex: 1;
+}
+.collection-directory-copy strong {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+.collection-directory-copy small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.collection-directory-copy .collection-directory-updated {
+  margin-top: 10px;
+  font-size: 12px;
+}
+.directory-description {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+.collection-directory-card > svg,
+.directory-row > svg {
+  flex: none;
+  color: var(--muted);
+}
+.collection-directory-cover-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 8px;
+}
+.collection-directory-cover-action button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+}
+.collection-directory-cover-action button:hover {
+  color: var(--paper);
+  background: var(--raised);
+}
+.collection-directory-cover-action > span {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.collection-directory-empty {
+  padding: 32px 0;
+}
+.collection-directory-empty h2 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 500;
+}
+.collection-directory-empty p {
+  color: var(--muted);
+}
+.activity-directory-grid {
+  display: grid;
+  gap: 12px;
+}
+.directory-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  min-height: 88px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--paper);
+}
+.directory-row:hover {
+  border-color: var(--line-strong);
+}
+.directory-row:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+.directory-index {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--raised);
+  text-transform: uppercase;
+}
+.directory-name {
+  min-width: 0;
+  flex: 1;
+}
+.directory-name strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.directory-name small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .collection-directory-entry,
+  .directory-row {
+    transition: border-color 160ms ease;
+  }
+}
+@media (max-width: 1180px) {
+  .collection-directory-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 680px) {
+  .directory-page {
+    padding-top: 24px;
+  }
+  .directory-page .page-head {
+    display: block;
+    margin-bottom: 24px;
+  }
+  .directory-page .page-head h1 {
+    font-size: 36px;
+  }
+  .directory-page .page-head .list-page-actions {
+    display: flex;
+    width: auto;
+    flex-direction: row;
+    margin-top: 20px;
+    gap: 4px;
+  }
+  .directory-page .list-page-actions .button {
+    min-height: 44px;
+    width: auto;
+  }
+  .directory-toolbar {
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+  .collection-directory-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 184px;
+    gap: 8px;
+    width: 100%;
+  }
+  .collection-directory-search {
+    width: 100%;
+  }
+  .collection-directory-search input {
+    font-size: 16px;
+  }
+  .collection-directory-order select {
+    width: 100%;
+    font-size: 16px;
+  }
+  .collection-directory-entry {
+    border-radius: 18px;
+  }
+  .collection-directory-card {
+    gap: 14px;
+    min-height: 128px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+  .directory-artwork {
+    width: 96px;
+  }
+  .directory-artwork .monogram-letter {
+    font-size: 30px;
+  }
+  .collection-directory-copy strong {
+    font-size: 21px;
+  }
+  .collection-directory-copy small {
+    font-size: 12px;
+  }
+  .collection-directory-copy .collection-directory-updated {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+  .collection-directory-card > svg {
+    display: none;
+  }
+  .directory-row {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .directory-artwork {
+    width: 80px;
+  }
+  .collection-directory-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collection-directory-order select {
+    font-size: 16px;
+  }
+}

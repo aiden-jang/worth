@@ -5,7 +5,8 @@ Home, Add, collections, recall and Gym. These authored phone and desktop referen
 were rendered and inspected before implementing their corresponding compositions.
 They supersede the older cabinet layouts for those primary flows while retaining
 its colors, typography, artwork and reaction system. Specialized secondary screens
-retain their cabinet references.
+retain their cabinet references. The [October 29 directory](../directory/README.md)
+supersedes the earlier collections directory composition.
 
 | Flow           | Desktop                                 | Phone                                 |
 | -------------- | --------------------------------------- | ------------------------------------- |

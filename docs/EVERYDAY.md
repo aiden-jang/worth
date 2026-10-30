@@ -48,6 +48,13 @@ existing data; no names, calls or activity are invented for a sparse account.
 Collections and a compact memory offer quieter ways to browse. The regular search
 continues to cover archived content with its existing labels and boundaries.
 
+The Collections directory groups names, artwork and counts into compact cards.
+Current/Archived remain available. Search and ordering appear for more than three
+collections, or while a saved filter/order needs to be cleared. The directory
+keeps its existing name/description search, order preference and archive links.
+Search text stays in the tab and clears on reload; the order preference persists.
+Once visible, the controls stay open for the directory visit.
+
 Collections open with name capture, a browse selector, search and Filter. A
 name-only save returns input focus without opening details. Selecting a record
 shows its actual call in the desktop slip or a native phone sheet, leaving other
