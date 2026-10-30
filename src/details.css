@@ -282,7 +282,7 @@
   align-items: center;
   gap: 16px;
   font:
-    13px 'DM Sans',
+    14px 'DM Sans',
     sans-serif;
   color: var(--muted);
   border: 0;
@@ -295,7 +295,7 @@
   min-height: 44px;
   border: 1px solid var(--line);
   padding: 10px 14px;
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   color: var(--paper);
 }
 .share-preview {
@@ -899,15 +899,6 @@
   }
 }
 /* Page headings and rules share the primary cabinet rhythm. */
-.page-head h1,
-.patterns-head h1,
-.search-page h1,
-.activity-list-page .list-page-head h1 {
-  font-size: 68px;
-  font-weight: 500;
-  letter-spacing: -0.065em;
-  line-height: 1.04;
-}
 .patterns-head {
   border: 0;
 }
@@ -920,12 +911,6 @@
   gap: 0 32px;
 }
 @media (max-width: 680px) {
-  .page-head h1,
-  .patterns-head h1,
-  .search-page h1,
-  .activity-list-page .list-page-head h1 {
-    font-size: 44px;
-  }
   .pattern-notes {
     gap: 0;
   }

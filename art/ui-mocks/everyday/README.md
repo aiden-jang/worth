@@ -7,6 +7,8 @@ They supersede the older cabinet layouts for those primary flows while retaining
 its colors, typography, artwork and reaction system. Specialized secondary screens
 retain their cabinet references. The [October 29 directory](../directory/README.md)
 supersedes the earlier collections directory composition.
+The [October 30 app pass](../app-polish/README.md) supersedes shared heading,
+control and compact Home-card styling while preserving these interactions.
 
 | Flow           | Desktop                                 | Phone                                 |
 | -------------- | --------------------------------------- | ------------------------------------- |

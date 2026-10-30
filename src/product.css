@@ -382,13 +382,6 @@ button:disabled {
 .search-page {
   padding-top: 36px;
 }
-.page-head h1,
-.patterns-head h1,
-.search-page h1 {
-  font-size: 80px;
-  letter-spacing: -0.06em;
-  line-height: 1;
-}
 .patterns-head {
   max-width: none;
   padding-bottom: 28px;
@@ -401,11 +394,6 @@ button:disabled {
   .patterns-page,
   .search-page {
     padding-top: 24px;
-  }
-  .page-head h1,
-  .patterns-head h1,
-  .search-page h1 {
-    font-size: clamp(42px, 13vw, 52px);
   }
   .list-page-actions {
     width: 100%;
@@ -600,14 +588,6 @@ textarea {
   padding-bottom: 24px;
   align-items: center;
 }
-.page-head h1,
-.patterns-head h1,
-.search-page h1,
-.activity-list-page .list-page-head h1 {
-  font-size: 56px;
-  line-height: 1.08;
-  letter-spacing: -0.055em;
-}
 .page-head > div > p:last-child {
   color: var(--muted);
   font-size: 14px;
@@ -708,10 +688,6 @@ textarea {
   padding-bottom: 24px;
   align-items: center;
 }
-.activity-list-page .list-page-head h1 {
-  max-width: none;
-  overflow-wrap: anywhere;
-}
 .activity-list-page .list-page-head .list-record-count {
   margin-top: 8px;
   font: 11px var(--mono);
@@ -756,9 +732,6 @@ textarea {
   font-size: 28px;
   line-height: 1.2;
   letter-spacing: -0.04em;
-}
-.search-page h1 {
-  max-width: none;
 }
 .search-page > .overline,
 .patterns-head > .overline {
@@ -852,12 +825,6 @@ textarea {
   }
   .page-width {
     width: calc(100% - 40px);
-  }
-  .page-head h1,
-  .patterns-head h1,
-  .search-page h1,
-  .activity-list-page .list-page-head h1 {
-    font-size: 40px;
   }
   .lists-page,
   .patterns-page,
@@ -1010,7 +977,6 @@ input,
 textarea,
 select {
   background-color: var(--panel);
-  border-radius: 6px;
 }
 .add-dialog,
 .confirm-dialog {

@@ -1,12 +1,6 @@
 .spaces-page {
   max-width: 1140px;
 }
-.spaces-page h1 {
-  font-size: 68px;
-  line-height: 1.04;
-  letter-spacing: -0.045em;
-  overflow-wrap: anywhere;
-}
 .space-tickets {
   width: 112px;
   flex: none;
@@ -137,9 +131,6 @@
   white-space: pre-wrap;
 }
 @media (max-width: 680px) {
-  .spaces-page h1 {
-    font-size: 44px;
-  }
   .space-create {
     flex-direction: column;
     gap: 16px;

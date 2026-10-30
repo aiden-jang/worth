@@ -3,14 +3,6 @@
 .capsule-page {
   max-width: 1140px;
 }
-.capsules-page h1,
-.capsule-compose h1,
-.capsule-page h1 {
-  font-size: 68px;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
-  overflow-wrap: anywhere;
-}
 .capsule-directory {
   display: grid;
   gap: 16px;
@@ -34,7 +26,7 @@
   min-width: 0;
 }
 .capsule-card h2 {
-  font-size: 28px;
+  font-size: 24px;
   overflow-wrap: anywhere;
   margin: 8px 0;
 }
@@ -219,11 +211,6 @@
   }
 }
 @media (max-width: 680px) {
-  .capsules-page h1,
-  .capsule-compose h1,
-  .capsule-page h1 {
-    font-size: 44px;
-  }
   .capsule-card {
     gap: 16px;
     padding: 22px 18px;
@@ -232,7 +219,7 @@
     width: 60px;
   }
   .capsule-card h2 {
-    font-size: 26px;
+    font-size: 22px;
   }
   .capsule-empty {
     align-items: start;

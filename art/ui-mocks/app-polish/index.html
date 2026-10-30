@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worth — app composition reference</title>
+  <style>
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('../../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('../../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+      font-weight: 500;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #181915;
+      color: #f0ecdf;
+      font:
+        400 15px/1.6 'DM Sans',
+        sans-serif;
+    }
+    body {
+      display: grid;
+      grid-template-columns: 192px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    aside {
+      padding: 28px 20px;
+      border-right: 1px solid #38392f;
+      background: #141412;
+    }
+    .wordmark {
+      font-size: 40px;
+      letter-spacing: -0.075em;
+      font-weight: 500;
+    }
+    aside nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 36px;
+    }
+    aside a {
+      padding: 10px 12px;
+      min-height: 44px;
+      color: #aaa99b;
+      font-size: 14px;
+    }
+    aside a.active {
+      background: #292a23;
+      border-radius: 12px;
+      color: #f0ecdf;
+    }
+    .content {
+      width: min(calc(100% - 88px), 1200px);
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      font-size: 48px;
+      line-height: 1.1;
+      letter-spacing: -0.055em;
+      font-weight: 500;
+      margin: 0 0 10px;
+      overflow-wrap: anywhere;
+    }
+    h2 {
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: -0.035em;
+      font-weight: 500;
+      margin: 0 0 12px;
+    }
+    h3 {
+      font-size: 21px;
+      line-height: 1.3;
+      font-weight: 500;
+      margin: 0 0 8px;
+    }
+    p {
+      margin: 0 0 18px;
+    }
+    header p {
+      margin: 0;
+      color: #aaa99b;
+      font-size: 14px;
+    }
+    small,
+    .muted {
+      color: #aaa99b;
+      font-size: 13px;
+    }
+    .button,
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      border: 1px solid #737566;
+      padding: 10px 16px;
+      background: transparent;
+      color: inherit;
+      border-radius: 12px;
+      font:
+        500 14px 'DM Sans',
+        sans-serif;
+      cursor: pointer;
+    }
+    .primary {
+      background: #e8dc9d;
+      border-color: #e8dc9d;
+      color: #181915;
+    }
+    .quiet {
+      color: #aaa99b;
+      border-color: transparent;
+    }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: 46px;
+      padding: 11px 12px;
+      color: inherit;
+      border: 1px solid #737566;
+      border-radius: 12px;
+      background: #20211c;
+      font:
+        400 15px/1.5 'DM Sans',
+        sans-serif;
+    }
+    textarea {
+      min-height: 100px;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+      color: #aaa99b;
+      font-size: 14px;
+    }
+    label + label {
+      margin-top: 18px;
+    }
+    .search {
+      margin-bottom: 28px;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+      gap: 36px;
+      align-items: start;
+    }
+    .panel {
+      border: 1px solid #38392f;
+      border-radius: 22px;
+      padding: 24px;
+    }
+    .panel + .panel {
+      margin-top: 16px;
+    }
+    .slip {
+      background: #eae5d5;
+      color: #24251e;
+      border-color: #eae5d5;
+    }
+    .slip p,
+    .slip label,
+    .slip small {
+      color: #626456;
+    }
+    .slip input,
+    .slip textarea {
+      background: transparent;
+      color: #24251e;
+      border-color: #8c8d80;
+    }
+    .section {
+      border-top: 1px solid #38392f;
+      padding: 24px 0;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 76px;
+      border-bottom: 1px solid #38392f;
+      padding: 14px 0;
+    }
+    .row > div {
+      flex: 1;
+      min-width: 0;
+    }
+    .row strong {
+      font-size: 21px;
+      font-weight: 500;
+    }
+    .row small {
+      display: block;
+    }
+    .art {
+      display: grid;
+      place-items: center;
+      width: 96px;
+      height: 60px;
+      flex: none;
+      background: #bec7ad;
+      border-radius: 10px;
+      color: #34382d;
+      font-size: 30px;
+    }
+    .folder {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+    }
+    .folder .art {
+      width: 72px;
+      height: 45px;
+    }
+    .folder strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #38392f;
+      margin-bottom: 24px;
+    }
+    .segments {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 28px;
+      background: #20211c;
+    }
+    .segments button {
+      border: 0;
+      border-radius: 24px;
+      color: #aaa99b;
+    }
+    .segments .active {
+      background: #292a23;
+      color: #f0ecdf;
+    }
+    .capture {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .capture input {
+      flex: 1;
+    }
+    .empty {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 28px 0;
+    }
+    .empty p {
+      max-width: 40ch;
+      color: #aaa99b;
+      margin-bottom: 0;
+    }
+    .form {
+      max-width: 760px;
+    }
+    .form > button {
+      margin-top: 20px;
+    }
+    .disclosure {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #38392f;
+    }
+    .proof {
+      font-size: 11px;
+      color: #aaa99b;
+      margin-top: 44px;
+    }
+    .mobile-top,
+    .bottom {
+      display: none;
+    }
+    @media (max-width: 960px) {
+      .split {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
+    @media (max-width: 680px) {
+      body {
+        display: block;
+      }
+      aside {
+        display: none;
+      }
+      .mobile-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        min-height: 66px;
+        border-bottom: 1px solid #38392f;
+      }
+      .mobile-top .wordmark {
+        font-size: 32px;
+      }
+      .content {
+        width: calc(100% - 40px);
+        padding: 24px 0 110px;
+      }
+      header {
+        display: block;
+        margin-bottom: 24px;
+      }
+      header:has(> button) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+      }
+      header > .actions,
+      header > a {
+        display: inline-flex;
+        margin-top: 16px;
+      }
+      h1 {
+        font-size: 36px;
+      }
+      h2 {
+        font-size: 22px;
+      }
+      input,
+      select,
+      textarea {
+        font-size: 16px;
+      }
+      .panel {
+        padding: 20px;
+        border-radius: 18px;
+      }
+      .toolbar {
+        gap: 12px;
+      }
+      .empty {
+        gap: 18px;
+        align-items: start;
+      }
+      .empty .art {
+        width: 64px;
+        height: 60px;
+      }
+      .bottom {
+        display: flex;
+        position: fixed;
+        inset: auto 0 0;
+        align-items: center;
+        justify-content: space-around;
+        gap: 8px;
+        padding: 8px 12px;
+        min-height: 72px;
+        border-top: 1px solid #38392f;
+        background: #20211c;
+        font-size: 11px;
+      }
+    }
+  </style>
+  <aside>
+    <div class="wordmark">worth</div>
+    <nav>
+      <a href="#">⌂　Home</a><a href="#">◇　Collections</a><a href="#">▥　Look back</a
+      ><a href="#">⌕　Search</a><a href="#">▱　Unfiled</a>
+    </nav>
+  </aside>
+  <div class="mobile-top">
+    <div class="wordmark">worth</div>
+    <span>⌕　☰</span>
+  </div>
+  <main class="content"></main>
+  <nav class="bottom">
+    <span>⌂<br />Home</span><span>◇<br />Collections</span><span>▥<br />Look back</span
+    ><button class="primary">＋ Add</button>
+  </nav>
+  <script>
+    const screen = new URLSearchParams(location.search).get('screen') || 'search';
+    const heading = (title, description, action = '') =>
+      `<header><div><h1>${title}</h1><p>${description}</p></div>${action}</header>`;
+    const screens = {
+      home:
+        heading('Good to keep.', 'A name is enough. The rest can wait.') +
+        `<input class="search" placeholder="Find a name, place or note" /><div class="split"><section><h2>Recent</h2><div class="row"><div><strong>Corner ramen</strong><small>Places · Today</small></div>↗</div><div class="row"><div><strong>The little bookshop</strong><small>Unfiled · Yesterday</small></div>↗</div></section><section><h2>Collections</h2><div class="panel folder"><div class="art">♧</div><div><strong>Drinks</strong><small>2 saved</small></div></div><div class="panel slip"><small>A LITTLE FROM YOUR ARCHIVE</small><h3>Sunday at the coast</h3><p>A place to return to.</p><button>Pull a memory</button></div></section></div>`,
+      collection:
+        heading('Drinks', '2 items · 1 ranked', '<button aria-label="Collection options">•••</button>') +
+        `<div class="capture"><input placeholder="Add a name" /><button class="primary">Save</button></div><div class="toolbar"><span>All (2)⌄</span><span>⌕ Search　Filter　•••</span></div><div class="row"><small>01</small><div><strong>Cold brew</strong><small>Drink</small></div><span>Favorite</span></div><div class="row"><small>—</small><div><strong>Green tea</strong><small>Drink</small></div>↗</div>`,
+      activity:
+        heading('Gym', 'Your activity.', '<button>•••</button>') +
+        `<div class="actions"><button class="primary">Start workout</button><button>Add activity</button></div><section class="panel" style="margin-top:24px"><small>ACTIVE · TODAY</small><h2>Push day</h2><p>1 exercise logged · 3 sets</p><div class="actions"><button class="primary">Resume workout</button><button>Finish workout</button></div><div class="row"><div><strong>Bench press</strong><small>3 sets · 8 / 8 / 6 reps</small></div><button>Edit</button></div></section><div class="disclosure">Routines <span>+</span></div><div class="disclosure">Progress & exercise history <span>+</span></div>`,
+      search:
+        heading('Find that thing.', 'Search names and notes across your archive.') +
+        `<input class="search" placeholder="A name, a place, a good drink…" /><div class="toolbar"><div class="segments"><button class="active">All</button><button>Items</button><button>Unfiled</button></div><small>2 results</small></div><div class="row"><div><strong>Corner ramen</strong><small>Places · Saved item</small></div>↗</div><div class="row"><div><strong>The little bookshop</strong><small>Unfiled · Saved find</small></div>↗</div>`,
+      recall:
+        heading('Look back.', 'Find an afternoon. Remember a favorite.') +
+        `<div class="toolbar"><div class="actions"><button>Memories</button><button class="quiet">Insights</button></div><button>More tools</button></div><div class="segments"><button class="active">Experiences</button><button>Saved things</button></div><p class="muted" style="margin-top:16px">Dated visits and activity. Names you kept are under Saved things.</p><label>Find a name, place or note<input /></label><div class="disclosure">Filters <span>+</span></div><div class="row"><small>Oct 26</small><div><strong>Sunday at the coast</strong><small>Little outings · A walk and a good view.</small></div>↗</div>`,
+      settings:
+        heading('Settings.', 'Copies, drafts, and a little housekeeping.') +
+        `<section class="section form"><h2>Take a copy.</h2><p class="muted">Download your records for a spreadsheet, a backup or a fresh start.</p><div class="actions"><button class="primary">Export JSON (.json)</button><button>Export Excel (.xlsx)</button><button>Back up with photos</button></div><p class="muted" style="margin-top:16px">Records-only JSON excludes photos and covers. Keep downloaded files somewhere private.</p></section><section class="section form"><h2>Bring it back.</h2><p class="muted">Review a Worth file before restoring it as new records.</p><button>Choose backup</button></section><section class="section form"><h2>Trash.</h2><p class="muted">Restore deleted records for 30 days. Your notes and photos stay with them.</p><small>Trash is empty.</small></section>`,
+      capture:
+        heading(
+          'Read a photo.',
+          'Keep the words. You choose what follows.',
+          '<a class="button quiet">Back to capture →</a>',
+        ) +
+        `<p class="muted">Read printed text on this device, then check and edit it. Your photo is not uploaded for processing.</p><div class="split"><section class="panel"><h2>A clear view helps.</h2><p class="muted">Choose an upright JPEG, PNG or WebP. You can paste text instead.</p><div class="actions"><button>Choose photo</button><button class="primary">Read text on this device</button></div></section><section class="panel slip"><h2>Your words, checked.</h2><p>Nothing is saved automatically. Review the words before keeping them.</p><label>Read or pasted text<textarea></textarea></label><label>Name to keep<input /></label><button style="margin-top:20px">Review capture</button></section></div>`,
+      tools:
+        heading(
+          'Period summary.',
+          'A few pages, revisited.',
+          '<a class="button quiet">Back to Look back →</a>',
+        ) +
+        `<p class="muted">Choose a period to see what you kept and logged. Your records are not changed or shared.</p><form class="panel form"><div class="actions" style="margin-bottom:20px"><button>This month</button><button>Last month</button><button>This year</button></div><label>From<input type="date" value="2026-10-01" /></label><label>Through<input type="date" value="2026-10-30" /></label><label>List to look back on<select><option>All lists and Unfiled</option></select></label><button class="primary">Show this period</button></form>`,
+    };
+    document.querySelector('main').innerHTML =
+      (screens[screen] || screens.search) +
+      '<p class="proof">DESIGN REFERENCE · Synthetic examples · Nothing is saved.</p>';
+  </script>
+</html>

@@ -2,11 +2,6 @@
   align-items: start;
   gap: 24px;
 }
-.field-guide-page .page-head h1 {
-  font-size: 68px;
-  font-weight: 400;
-  letter-spacing: -0.055em;
-}
 .field-guide-page .page-head > a,
 .field-guide-page .button {
   min-height: 44px;
@@ -108,9 +103,6 @@
 @media (max-width: 680px) {
   .field-guide-page .page-head {
     display: grid;
-  }
-  .field-guide-page .page-head h1 {
-    font-size: 44px;
   }
   .guide-two {
     grid-template-columns: minmax(0, 1fr);

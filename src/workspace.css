@@ -1,0 +1,142 @@
+/* Shared working-page rhythm. Screen-specific content stays in its own stylesheet. */
+.app-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.app-content > main {
+  flex: 1;
+  min-height: 0;
+  padding-top: 40px;
+  padding-bottom: 32px;
+}
+.app-content > main > :is(.page-head, .everyday-heading, .data-heading),
+.app-content .list-page-head {
+  gap: 24px;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+  align-items: center;
+}
+.app-content > main h1 {
+  max-width: none;
+  margin: 0 0 10px;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+}
+.app-content > main > :is(.page-head, .everyday-heading, .data-heading) p:not(.overline),
+.app-content .list-page-head .list-record-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.app-content > main > :is(.page-head, .data-heading) .overline {
+  margin: 0 0 10px;
+}
+.app-content .page-head > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.app-content .page-head > a:hover {
+  color: var(--paper);
+}
+.app-content .page-head > div {
+  flex: 1;
+}
+.app-shell .icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.app-content .site-footer {
+  margin-top: 0;
+}
+.app-content .data-page {
+  width: min(calc(100% - 88px), 1200px);
+  max-width: none;
+  padding-inline: 0;
+  margin-inline: auto;
+}
+.data-page .data-section,
+.data-page .settings-section {
+  max-width: 820px;
+}
+.data-page :is(.data-section, .settings-section) h2 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+.app-content :is(.memory-filters, .collection-advanced-filters) label > span {
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.app-content .collection-advanced-filters select {
+  min-height: 44px;
+}
+.app-content .collection-search-toggle {
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.app-content .collection-browse-select select {
+  font-size: 15px;
+}
+:is(.app-content, dialog, .offline-page) :is(input, select, textarea):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.app-content :is(.home-search, .global-search):focus-within {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+.app-content :is(.home-search, .global-search, .collection-directory-search) input:focus-visible {
+  outline: 0;
+}
+@media (max-width: 1180px) {
+  .app-content .data-page {
+    width: calc(100% - 56px);
+  }
+}
+@media (max-width: 680px) {
+  .app-content {
+    min-height: calc(100dvh - 66px);
+  }
+  .app-content > main {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  .app-content > main > :is(.page-head, .everyday-heading, .data-heading),
+  .app-content .list-page-head {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .app-content > main h1 {
+    font-size: 36px;
+  }
+  .app-content .page-head > a {
+    align-self: start;
+  }
+  .app-content .data-page {
+    width: calc(100% - 40px);
+  }
+  .data-page :is(.data-section, .settings-section) h2 {
+    font-size: 22px;
+  }
+  :is(.app-content, .app-shell dialog, .offline-page)
+    :is(
+      input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+      select,
+      textarea
+    ) {
+    font-size: 16px;
+  }
+}

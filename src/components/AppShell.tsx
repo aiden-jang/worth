@@ -249,7 +249,7 @@ export function AppShell({
           <NavLink className="rail-utility-link" to="/search">
             <MagnifyingGlass size={18} aria-hidden="true" /> Search
           </NavLink>
-          <Link
+          <NavLink
             to="/inbox"
             onClick={(event) => {
               if (
@@ -267,7 +267,7 @@ export function AppShell({
             }}
           >
             <Tray size={18} aria-hidden="true" /> Unfiled
-          </Link>
+          </NavLink>
         </nav>
         {(collections.length > 0 || activityShortcut) && (
           <nav className="rail-collections" aria-label="Quick access">

@@ -64,8 +64,12 @@ export function SearchPage() {
   }
   return (
     <main className="light-page search-page page-width">
-      <p className="overline">SEARCH YOUR ARCHIVE</p>
-      <h1>Find that thing.</h1>
+      <header className="page-head">
+        <div>
+          <h1>Find that thing.</h1>
+          <p>Search names and notes across your archive.</p>
+        </div>
+      </header>
       <label className="global-search">
         <MagnifyingGlass size={26} />
         <span className="sr-only">Search all lists</span>

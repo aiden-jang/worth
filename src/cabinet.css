@@ -32,6 +32,8 @@
 }
 .button {
   border-radius: var(--radius-control);
+  min-height: 44px;
+  font-size: 14px;
 }
 .app-shell-dark {
   grid-template-columns: 192px minmax(0, 1fr);
@@ -759,13 +761,6 @@
   gap: 24px;
   align-items: end;
 }
-.collection-list-page .list-page-head h1 {
-  font-size: 68px;
-  font-weight: 500;
-  letter-spacing: -0.065em;
-  line-height: 1;
-  margin: 10px 0;
-}
 .collection-list-page .list-page-head .list-record-count {
   font:
     13px 'DM Sans',
@@ -813,9 +808,6 @@
   object-fit: cover;
   border-radius: 8px;
   margin: 0 0 12px 20px;
-}
-.collection-list-page .list-page-head h1 {
-  overflow-wrap: anywhere;
 }
 .collection-capture {
   display: grid;
@@ -1247,13 +1239,6 @@
   font-weight: 400;
 }
 /* Supporting pages share the cabinet's quiet spacing and directory style. */
-.page-head h1,
-.activity-list-page .list-page-head h1,
-.patterns-page .page-head h1,
-.search-page .page-head h1 {
-  font-weight: 500;
-  letter-spacing: -0.065em;
-}
 @media (max-width: 1180px) {
   .page-width {
     width: calc(100% - 56px);
@@ -1405,9 +1390,6 @@
   .collection-list-page .list-page-head {
     display: block;
     margin: 20px 0 22px;
-  }
-  .collection-list-page .list-page-head h1 {
-    font-size: 50px;
   }
   .collection-list-page .list-head-actions {
     margin-top: 16px;

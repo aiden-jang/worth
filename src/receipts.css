@@ -64,7 +64,7 @@
   min-width: 0;
 }
 :is(.receipt-source, .receipt-review) :is(h2, h3) {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.2;
   font-weight: 400;
   overflow-wrap: anywhere;
@@ -133,7 +133,7 @@
 .receipt-lines h3,
 .receipt-saved-lines h2,
 .receipt-save h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 400;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -174,7 +174,7 @@
   border-color: #e8dc9d;
 }
 .receipt-directory h2 {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.2;
   font-weight: 400;
   overflow-wrap: anywhere;
@@ -189,8 +189,8 @@
   height: 110px;
 }
 .receipt-empty h2 {
-  font-size: 32px;
-  font-weight: 400;
+  font-size: 24px;
+  font-weight: 500;
 }
 .receipt-attachment {
   max-width: 900px;

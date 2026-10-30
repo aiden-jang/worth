@@ -6,8 +6,10 @@ relevant reference image. The October 28 everyday flow and October 29 directory 
 interaction and composition targets for Home, Add, collections, recall and activity.
 Use `art/ui-mocks/directory/README.md` for the collections directory. The user
 explicitly requested structural simplification after finding the earlier UI complex.
-The taste-cabinet references still govern identity, artwork, colors and secondary
-screens. Earlier compositions are history where the everyday revision supersedes them.
+The October 30 app-wide pass in `art/ui-mocks/app-polish/README.md` governs shared
+headings, spacing, controls, compact Home cards and supporting pages. The taste-cabinet
+references still govern identity, artwork, colors and specialized content. Earlier
+compositions are history where these revisions supersede them.
 
 - Match the current reference's layout, typography scale, spacing, palette, rules, and selected states.
 - Use the current revision in `art/ui-mocks/BUILD-CONTRACT.md` for exact fonts, colors,

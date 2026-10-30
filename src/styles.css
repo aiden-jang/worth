@@ -385,17 +385,6 @@ img {
   min-height: 100vh;
   padding-top: clamp(2.5rem, 4vw, 4.5rem);
 }
-.page-head h1,
-.list-page-head h1,
-.search-page h1 {
-  max-width: 9ch;
-  margin: 0.55rem 0 0;
-  color: var(--paper);
-  font-size: clamp(4rem, 10vw, 9rem);
-  font-weight: 700;
-  letter-spacing: -0.09em;
-  line-height: 0.78;
-}
 .archive-search,
 .global-search {
   display: flex;
@@ -888,11 +877,6 @@ textarea::placeholder {
   color: var(--muted);
   line-height: 1.6;
 }
-.page-head h1,
-.list-page-head h1,
-.search-page h1 {
-  font-size: clamp(3.7rem, 8vw, 7.2rem);
-}
 .list-page-actions {
   display: grid;
   grid-template-columns: max-content max-content;
@@ -1062,27 +1046,32 @@ textarea::placeholder {
 }
 label {
   display: grid;
-  gap: 0.46rem;
+  gap: 8px;
   color: var(--muted);
-  font: 500 0.66rem var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font:
+    400 14px/1.5 'DM Sans',
+    Arial,
+    sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
 }
 .optional {
   color: var(--faint);
-  font-size: 0.58rem;
+  font-size: 12px;
+  letter-spacing: normal;
+  text-transform: none;
 }
 input,
 textarea,
 select {
   width: 100%;
   border: 1px solid var(--line-strong);
-  border-radius: 1px;
+  border-radius: 12px;
   padding: 0.73rem 0.78rem;
-  background: #0c1012;
+  background: var(--panel);
   color: var(--paper);
   font:
-    400 0.86rem 'DM Sans',
+    400 15px/1.5 'DM Sans',
     Arial,
     sans-serif;
   letter-spacing: normal;
@@ -1091,6 +1080,15 @@ select {
 textarea {
   resize: vertical;
   line-height: 1.5;
+}
+input:where(
+  :not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='range']):not(
+      [type='color']
+    )
+),
+textarea,
+select {
+  min-height: 44px;
 }
 select {
   min-width: 0;
@@ -1104,9 +1102,6 @@ select:focus {
 }
 .lists-page .page-head > div > p:first-child {
   color: var(--acid);
-}
-.lists-page .page-head h1 {
-  max-width: 6ch;
 }
 .list-suggestions {
   margin-top: 3.75rem;
@@ -1217,11 +1212,6 @@ select:focus {
   align-items: end;
   padding-bottom: 2.6rem;
 }
-.list-page-head h1 {
-  max-width: 11ch;
-  font-size: clamp(3.5rem, 7vw, 7rem);
-  line-height: 0.84;
-}
 .list-page-head .overline {
   color: var(--acid);
 }
@@ -1230,11 +1220,6 @@ select:focus {
   grid-template-columns: minmax(0, 1fr) auto auto;
   column-gap: 1rem;
   padding-bottom: 1.7rem;
-}
-.collection-list-page .list-page-head h1 {
-  max-width: none;
-  font-size: clamp(2.7rem, 4.8vw, 4.8rem);
-  line-height: 0.92;
 }
 .collection-list-page .list-page-head > div:first-child > p:last-child {
   max-width: 48ch;
@@ -2264,14 +2249,6 @@ dialog::backdrop {
 .patterns-head .overline {
   color: var(--acid);
 }
-.patterns-head h1 {
-  margin: 0.75rem 0 0;
-  color: var(--paper);
-  font-size: clamp(4.5rem, 9vw, 9.5rem);
-  font-weight: 700;
-  letter-spacing: -0.1em;
-  line-height: 0.78;
-}
 .patterns-head > p:last-child {
   max-width: 38ch;
   margin: 1.5rem 0 0;
@@ -3107,11 +3084,6 @@ dialog::backdrop {
     display: block;
     padding-bottom: 2rem;
   }
-  .page-head h1,
-  .list-page-head h1,
-  .search-page h1 {
-    font-size: clamp(3.8rem, 17vw, 5.7rem);
-  }
   .page-head > .button,
   .list-page-actions,
   .list-head-actions {
@@ -3152,9 +3124,6 @@ dialog::backdrop {
   }
   .collection-cover-control {
     grid-template-columns: 1fr;
-  }
-  .patterns-head h1 {
-    font-size: clamp(3.8rem, 17vw, 5.7rem);
   }
   .pattern-stat-grid {
     grid-template-columns: 1fr 1fr;

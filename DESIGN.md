@@ -535,3 +535,26 @@ stay visible. Mixed collections/activity get simple section titles; one kind doe
 not repeat the page title. The empty state retains its working starter choices.
 Home artwork and collection contents retain their existing composition. Directory
 styles now live together instead of competing across historical skins.
+
+## Shared app composition — October 30
+
+The user requested the compact directory treatment throughout Worth. A fresh
+desktop/phone audit of working routes preceded the [app references](art/ui-mocks/app-polish/README.md).
+The shared page frame now owns the 48px/36px title rhythm, readable insets,
+header spacing and content/footer balance. Superseded heading declarations were
+removed from the historical skins and supporting page styles. Screen-specific
+cards, forms and artwork remain in their own stylesheets.
+
+Functional form labels use sentence-case DM Sans; phone text fields use at least
+16px to avoid small-text focus zoom. Controls share rounded corners, visible focus
+and usable targets. Home uses compact horizontal collection cards and a smaller
+first-save invitation. Search, Unfiled, Look back, creation, capture, supporting
+tools and Settings use the same working-page scale. The Unfiled drawer also uses
+the compact dialog heading scale. Settings presents downloads and restore before
+recovery and device housekeeping, retaining its privacy explanations and limits.
+
+The public Help/policy pages and standalone offline page receive readable title
+and control sizing under their own headers. Ranked displays, public snapshots,
+exported/printable objects and the signed-out landing keep their presentation
+compositions. Actual data, optional input, call/rank independence, archive behavior,
+privacy scopes and native sheet/dialog interactions remain the product contract.

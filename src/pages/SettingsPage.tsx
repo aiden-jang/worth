@@ -129,35 +129,11 @@ export function SettingsPage() {
           {status}
         </p>
       )}
-      <TrashPanel />
-      <section className="data-section">
-        <h2>Offline copy.</h2>
-        <p>
-          Prepare an encrypted text copy for this browser, queue Unfiled captures and note edits, then
-          explicitly sync when connected. Manage or remove offline copies and pending saves on the offline
-          page.
-        </p>
-        <a className="button button-outline" href={`/offline/?account=${encodeURIComponent(owner ?? '')}`}>
-          Open offline copy →
-        </a>
-      </section>
       <section className="data-section">
         <h2>Take a copy.</h2>
         <p>
           Excel opens your collections, saved things, experiences, workouts, sets, measurements, routines and
           Unfiled (the Inbox sheet) in separate sheets. JSON is the full archive format for restoring Worth.
-        </p>
-        <p>
-          Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
-          capsule backups include unopened contents; keep downloaded files private. Shared spaces and saved
-          private copies restore as disconnected private archives. Invitations and unrevealed choices are
-          excluded.
-        </p>
-        <p className="data-hint">
-          Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
-          restore supports up to 5,000 records, 500 lists, 500 Unfiled finds, 50 templates, 1,000 connections,
-          10,000 history changes (up to 16 MB of history) and 200 photos/covers. Keep downloaded files
-          somewhere private.
         </p>
         <div className="data-actions">
           <button
@@ -182,12 +158,24 @@ export function SettingsPage() {
             {busy === 'backup' ? 'Preparing backup…' : 'Back up with photos'}
           </button>
         </div>
+        <p>
+          Download your records, or a full backup with photos. Share links and Trash aren’t included. Time
+          capsule backups include unopened contents; keep downloaded files private. Shared spaces and saved
+          private copies restore as disconnected private archives. Invitations and unrevealed choices are
+          excluded.
+        </p>
+        <p className="data-hint">
+          Records-only JSON excludes photos and covers. Photo backups and restore files are limited to 32 MB;
+          restore supports up to 5,000 records, 500 lists, 500 Unfiled finds, 50 templates, 1,000 connections,
+          10,000 history changes (up to 16 MB of history) and 200 photos/covers. Keep downloaded files
+          somewhere private.
+        </p>
       </section>
       <section className="data-section">
         <h2>Bring it back.</h2>
         <p>
-          Restore a Worth file as new lists, templates and unfiled Unfiled finds. Review it first; your
-          existing archive stays intact.
+          Restore a Worth file as new lists, templates and Unfiled finds. Review it first; your existing
+          archive stays intact.
         </p>
         <label className="button button-outline file-choice">
           Choose backup
@@ -290,7 +278,7 @@ export function SettingsPage() {
             )}
             {!!file.inbox.length && (
               <div>
-                <p>{file.inbox.length} unfiled Unfiled finds will be restored with new private IDs.</p>
+                <p>{file.inbox.length} Unfiled finds will be restored with new private IDs.</p>
                 <details>
                   <summary>Preview Unfiled finds</summary>
                   <ul aria-label="Unfiled finds to restore">
@@ -348,6 +336,18 @@ export function SettingsPage() {
             </div>
           </div>
         )}
+      </section>
+      <TrashPanel />
+      <section className="data-section">
+        <h2>Offline copy.</h2>
+        <p>
+          Prepare an encrypted text copy for this browser, queue Unfiled captures and note edits, then
+          explicitly sync when connected. Manage or remove offline copies and pending saves on the offline
+          page.
+        </p>
+        <a className="button button-outline" href={`/offline/?account=${encodeURIComponent(owner ?? '')}`}>
+          Open offline copy →
+        </a>
       </section>
       <section className="settings-section">
         <h2>Within reach.</h2>

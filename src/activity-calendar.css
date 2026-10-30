@@ -2,11 +2,6 @@
   align-items: start;
   gap: 24px;
 }
-.activity-calendar-page .page-head h1 {
-  font-size: 68px;
-  font-weight: 400;
-  letter-spacing: -0.055em;
-}
 .activity-calendar-page .page-head > a,
 .activity-calendar-page .button {
   min-height: 44px;
@@ -144,9 +139,6 @@
 @media (max-width: 680px) {
   .activity-calendar-page .page-head {
     display: grid;
-  }
-  .activity-calendar-page .page-head h1 {
-    font-size: 44px;
   }
   .calendar-weekdays {
     display: none;

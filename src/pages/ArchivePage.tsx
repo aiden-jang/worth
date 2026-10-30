@@ -170,8 +170,10 @@ export function ArchivePage() {
                     <li key={list.id}>
                       <Link to={`/lists/${list.id}`}>
                         <CollectionArtwork name={list.name} cover={cover} />
-                        <strong>{list.name}</strong>
-                        <small>{list.itemCount} saved</small>
+                        <span>
+                          <strong>{list.name}</strong>
+                          <small>{list.itemCount} saved</small>
+                        </span>
                       </Link>
                     </li>
                   );

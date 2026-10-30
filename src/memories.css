@@ -5,11 +5,6 @@
   flex-wrap: wrap;
   margin: 20px 0;
 }
-.memory-modes [aria-pressed='true'] {
-  background: var(--accent, #e8dc9d);
-  color: #181915;
-  border-color: #e8dc9d;
-}
 .memory-filters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -349,9 +344,8 @@
 }
 
 .memory-modes .button[aria-pressed='true']:hover:not(:disabled) {
-  background: #e8dc9d;
-  color: #181915;
-  border-color: #e8dc9d;
+  background: var(--raised);
+  color: var(--paper);
 }
 .experience-extras > summary {
   min-height: 44px;
@@ -423,4 +417,26 @@
   min-height: 44px;
   padding: 12px 0;
   cursor: pointer;
+}
+
+.memory-modes {
+  width: fit-content;
+  display: inline-flex;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 28px;
+  background: var(--panel);
+}
+
+.memory-modes .button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.memory-modes .button[aria-pressed='true'] {
+  background: var(--raised);
+  color: var(--paper);
 }

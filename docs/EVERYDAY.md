@@ -5,6 +5,13 @@ Organization, reactions, ranking and detail are optional. The October 28 revisio
 simplifies how people reach existing capabilities. Its subsequent Unfiled-memory
 extension adds optional date/photo storage without removing existing data.
 
+The October 30 styling pass carries the compact directory scale into the working
+pages: consistent headings and spacing, readable labels, phone-sized inputs and
+compact Home cards. Settings leads with exports and restore, followed by Trash,
+offline copies and other housekeeping. Privacy explanations, export limits and
+destructive confirmations remain explicit. This pass changes presentation without
+adding fields or changing the capture, storage or sharing contracts.
+
 ## Save first
 
 Choose **Add**, enter a name and choose **Save**. Outside an open active list,

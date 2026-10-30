@@ -485,3 +485,33 @@ starter choices. Unfiled gains a consistent utility icon in the navigation.
 `src/directory.css` owns directory styles. Remove superseded directory rules from
 historical stylesheets instead of appending another competing skin. Keep public
 snapshots, records, ranking, photos, archive state and saved preferences unchanged.
+
+## Shared app polish — October 30
+
+The user requested the directory treatment across Worth. The
+[app-wide references](app-polish/README.md) extend the compact working-page scale
+to all connected pages. Use 48px desktop / 36px phone titles, weight 500, 1.1 line
+height and -0.055em tracking, without inherited narrow title caps. Start content
+40px / 24px down and keep 28px / 24px after headers. Preserve existing desktop
+44px and phone 20px insets; narrow desktop retains the established 28px inset.
+Factual status kickers and return links may add their own readable line.
+
+Use 14px sentence-case functional labels, 15px desktop / 16px phone text fields,
+12px control corners and at least 44px ordinary action targets. Keyboard focus
+must remain visible on dark and cream surfaces. Section headings are generally
+24px desktop / 22px phone; presentation objects retain their specialized scales.
+Keep the cabinet palette, original artwork, finite motion and reduced-motion behavior.
+
+Home collection cards group thumbnail and text horizontally on desktop and for a
+single collection on phones. Multiple phone collections keep a compact two-column
+shelf. Empty invitations use modest artwork. Settings leads with downloads and
+restore; export/privacy scope and destructive consequences remain visible.
+
+`src/workspace.css` owns connected page framing and the shared title rhythm.
+Screen-specific composition remains in its owning stylesheet, with obsolete
+heading rules removed. Import workspace styling after the connected app styles;
+the standalone offline entry keeps its own CSS rather than hoisting the working
+page styles into a shared entry chunk. Public policy/help and offline titles use
+48px/36px under their own headers. Ranked displays, public snapshots and exports
+retain their presentation layout. Verify both direct navigation and return to
+Home after lazy pages have loaded. No new feature or data schema is part of this pass.
