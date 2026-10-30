@@ -281,46 +281,59 @@ test('Gym puts the active workout before optional tools and past filters cannot 
   await expect(page.getByRole('textbox', { name: 'Exercise', exact: true })).toHaveValue('Bench press');
 });
 
-test('unfiled memories keep saved dates and open the original find', async ({ page, archive }) => {
+test('unfiled recall keeps its scope across memory types and opens the original find', async ({
+  page,
+  archive,
+}, info) => {
   const id = crypto.randomUUID();
   archive.inbox = [
     {
       ...itemInput.parse({ title: 'The window-seat bookshop', decision: 'favorite' }),
+      memory: { happenedOn: '2025-04-10', reaction: 'favorite' },
       id,
       revision: 0,
-      createdAt: 1,
-      updatedAt: 1,
+      createdAt: Date.UTC(2025, 3, 12),
+      updatedAt: Date.UTC(2025, 3, 12),
     },
   ];
   await page.route('**/api/memories?*', (route) => {
     const saved = new URL(route.request().url()).searchParams.get('mode') === 'saved';
     return route.fulfill({
       json: {
-        total: saved ? 1 : 0,
-        records: saved
-          ? [
-              {
-                id,
-                itemId: null,
-                listId: null,
-                listName: 'Unfiled',
-                title: 'The window-seat bookshop',
-                note: '',
-                date: '2025-04-12',
-                kind: 'unfiled',
-                location: '',
-                order: '',
-                reaction: 'favorite',
-                hasPhoto: false,
-              },
-            ]
-          : [],
+        total: 1,
+        records: [
+          {
+            id,
+            itemId: null,
+            listId: null,
+            listName: 'Unfiled',
+            title: 'The window-seat bookshop',
+            note: '',
+            date: saved ? '2025-04-12' : '2025-04-10',
+            kind: saved ? 'unfiled' : 'unfiled-visit',
+            location: '',
+            order: '',
+            reaction: 'favorite',
+            hasPhoto: false,
+          },
+        ],
         nextOffset: null,
       },
     });
   });
   await page.goto('/patterns?mode=saved&list=inbox');
   await expect(page.locator('.memory-timeline')).toContainText('SAVED / UNFILED');
+  await expect(page.locator('.memory-timeline time')).toHaveAttribute('datetime', '2025-04-12');
+  await page.getByRole('button', { name: 'Experiences', exact: true }).click();
+  await expect(page).toHaveURL(/list=inbox/);
+  const sourceFilter = page.getByRole('combobox', { name: 'Collection or activity', exact: true });
+  await expect(sourceFilter).toHaveValue('inbox');
+  await expect(page.locator('.memory-timeline')).toContainText('VISIT / UNFILED');
+  await expect(page.locator('.memory-timeline time')).toHaveAttribute('datetime', '2025-04-10');
+  await sourceFilter.selectOption(list.id);
+  await sourceFilter.selectOption('inbox');
+  await capture(page, 'recall-unfiled', info.project.name);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const source = page.getByRole('link', { name: 'The window-seat bookshop ↗', exact: true });
   await expect(source).toHaveAttribute('href', `/inbox?focus=${id}`);
   await source.click();
@@ -330,6 +343,65 @@ test('unfiled memories keep saved dates and open the original find', async ({ pa
       .getByRole('textbox', { name: 'Name', exact: true }),
   ).toHaveValue('The window-seat bookshop');
   expect(archive.writes).toHaveLength(0);
+});
+
+test('empty recall distinguishes undated names from filtered results and offers a next step', async ({
+  page,
+}, info) => {
+  await page.route('**/api/memories?*', (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    const records =
+      params.get('mode') === 'saved' && !params.get('q')
+        ? [
+            {
+              id: 'coffee',
+              itemId: 'coffee',
+              listId: list.id,
+              listName: list.name,
+              title: 'Coffee',
+              note: '',
+              date: '2025-04-12',
+              kind: 'saved',
+              location: '',
+              order: '',
+              reaction: null,
+              hasPhoto: false,
+            },
+          ]
+        : [];
+    return route.fulfill({ json: { records, total: records.length, nextOffset: null } });
+  });
+  await page.goto('/patterns');
+  const empty = page.locator('.memory-page .workspace-empty');
+  await expect(empty).toContainText('No dated experiences yet.');
+  await capture(page, 'recall-no-experiences', info.project.name);
+  await empty.getByRole('button', { name: 'See saved things', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Saved things', exact: true })).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Coffee ↗', exact: true })).toBeVisible();
+  await page.getByRole('searchbox').fill('not in my archive');
+  await expect(empty).toContainText('No matches for these filters.');
+  await capture(page, 'recall-no-matches', info.project.name);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await empty.getByRole('button', { name: 'Clear filters', exact: true }).click();
+  await expect(page.getByRole('searchbox')).toHaveValue('');
+  await expect(page.getByRole('searchbox')).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Saved things', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('link', { name: 'Coffee ↗', exact: true })).toBeVisible();
+  await page.unroute('**/api/memories?*');
+  await page.reload();
+  await expect(empty).toContainText('No saved names yet.');
+  await capture(page, 'recall-no-names', info.project.name);
+  for (const width of [320, 430, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await empty.getByRole('button', { name: 'Add a name', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await expect(dialog.getByLabel('Save in')).toHaveValue('inbox');
+  await expect(dialog.getByLabel('Name', { exact: true })).toBeFocused();
 });
 
 test('global activity capture saves one dated entry without inventing exercise sets or a workout', async ({

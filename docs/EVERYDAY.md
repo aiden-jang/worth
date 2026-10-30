@@ -54,6 +54,7 @@ Home starts with search and recent records, including Unfiled. List shortcuts op
 existing data; no names, calls or activity are invented for a sparse account.
 Collections and a compact memory offer quieter ways to browse. The regular search
 continues to cover archived content with its existing labels and boundaries.
+The Recent section's **Search all** link opens archive search.
 
 The Collections directory groups names, artwork and counts into compact cards.
 Current/Archived remain available. Search and ordering appear for more than three
@@ -80,6 +81,10 @@ configuration is deleted.
 Filters opens list, date, archive and period choices. Links retain their exact
 scope, and old `/patterns/remember` links still open directly. Saved-name dates
 are UTC and remain distinct from experienced dates.
+Unfiled is available in both memory types, and switching types preserves that
+scope. Empty Experiences points to Saved things; an empty saved archive offers
+Add a name. A filtered search with no matches offers Clear filters while keeping
+the selected memory type.
 
 **Insights** shows recorded preferences and their supporting sources. The first
 three groups are expanded, with Show all for the rest. Overall-call counts stay

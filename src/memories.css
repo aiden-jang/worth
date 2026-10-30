@@ -130,6 +130,13 @@
 .preference-insights p {
   line-height: 1.6;
 }
+.memory-empty {
+  min-height: 0;
+  padding: 0;
+}
+.memory-empty p {
+  margin: 0 0 12px;
+}
 .memory-page h2,
 .memory-page a {
   overflow-wrap: anywhere;

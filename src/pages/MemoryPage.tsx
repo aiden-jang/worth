@@ -1,16 +1,20 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { formatDate } from '../format';
 import { retrospectivePeriod } from '../shared/retrospective';
 import { memoryPhotoHref, memorySourceHref, memoryFilter } from '../shared/memories';
+import { requestAddEntry } from '../shared/quick-entry';
 import { decisionLabel } from '../shared/decisions';
 import '../memories.css';
 
 export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
   usePageTitle(embedded ? 'Look back' : 'Memories');
   const [params, setParams] = useSearchParams();
+  const search = useRef<HTMLInputElement>(null);
+  const savedMode = useRef<HTMLButtonElement>(null);
   const parsed = memoryFilter.safeParse(Object.fromEntries(params));
   const filter = parsed.success ? parsed.data : memoryFilter.parse({});
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
@@ -41,6 +45,19 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
   }
   const data = parsed.success ? records.data : undefined;
   const entries = data?.pages.flatMap((page) => page.records) ?? [];
+  const hasFilters = Boolean(
+    filter.q ||
+    filter.from ||
+    filter.to ||
+    filter.list ||
+    filter.archived === '1' ||
+    filter.type ||
+    filter.label,
+  );
+  function clearFilters() {
+    setParams({ mode: filter.mode }, { replace: true });
+    search.current?.focus();
+  }
   const Container = embedded ? 'section' : 'main';
   return (
     <Container
@@ -61,11 +78,12 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
         <button
           className="button button-outline"
           aria-pressed={filter.mode === 'visits'}
-          onClick={() => update({ mode: 'visits', list: filter.list === 'inbox' ? '' : filter.list })}
+          onClick={() => update({ mode: 'visits' })}
         >
           Experiences
         </button>
         <button
+          ref={savedMode}
           className="button button-outline"
           aria-pressed={filter.mode === 'saved'}
           onClick={() => update({ mode: 'saved' })}
@@ -82,6 +100,7 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
         <label>
           Find a name, place or note
           <input
+            ref={search}
             type="search"
             maxLength={120}
             value={params.get('q') ?? ''}
@@ -111,7 +130,7 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
             Collection or activity
             <select value={filter.list} onChange={(e) => update({ list: e.target.value })}>
               <option value="">All lists</option>
-              {filter.mode === 'saved' && <option value="inbox">Unfiled</option>}
+              <option value="inbox">Unfiled</option>
               {filter.list && filter.list !== 'inbox' && !choices.some((list) => list.id === filter.list) && (
                 <option value={filter.list}>Selected list</option>
               )}
@@ -159,10 +178,7 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
               {['This month', 'Last month', 'This year'][index]}
             </button>
           ))}
-          <button
-            className="button button-outline"
-            onClick={() => setParams({ mode: filter.mode }, { replace: true })}
-          >
+          <button className="button button-outline" onClick={clearFilters}>
             Clear filters
           </button>
         </div>
@@ -202,9 +218,28 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
         </p>
       )}
       {data && !entries.length && (
-        <p className="workspace-empty">
-          Nothing recorded here yet. Try another period, or log an experience in a collection.
-        </p>
+        <div className="workspace-empty memory-empty">
+          <p>
+            {hasFilters
+              ? 'No matches for these filters. Try another search, or clear the filters.'
+              : filter.mode === 'visits'
+                ? 'No dated experiences yet. Names saved without a date are under Saved things.'
+                : 'No saved names yet. A name is enough to start.'}
+          </p>
+          <button
+            className="button button-outline"
+            type="button"
+            onClick={() => {
+              if (hasFilters) clearFilters();
+              else if (filter.mode === 'visits') {
+                update({ mode: 'saved' });
+                savedMode.current?.focus();
+              } else requestAddEntry({ listId: 'inbox' });
+            }}
+          >
+            {hasFilters ? 'Clear filters' : filter.mode === 'visits' ? 'See saved things' : 'Add a name'}
+          </button>
+        </div>
       )}
       <ol className="memory-timeline">
         {entries.map((record) => (

@@ -99,7 +99,7 @@ export function ArchivePage() {
           <header className="everyday-section-head">
             <h2 id="home-recent-heading">Recent</h2>
             <Link to="/search">
-              View all <ArrowRight size={15} />
+              Search all <ArrowRight size={15} />
             </Link>
           </header>
           {inbox.isError && (
