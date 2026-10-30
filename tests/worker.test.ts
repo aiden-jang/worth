@@ -17,6 +17,7 @@ import { itemInput } from '../src/shared/validation';
 import type { InboxEntry } from '../src/shared/inbox';
 import { itemContext } from '../src/shared/item-context';
 import { emptyCollectionShelf } from '../src/shared/workspace';
+import { addGalleryPhoto } from '../worker/photo-gallery';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -3789,6 +3790,37 @@ test('galleries preserve original bytes while captions, arrows, order and cover 
       })
     ).status,
   ).toBe(409);
+});
+
+test('an exact photo retry succeeds when its first upload commits before the gallery read', async () => {
+  const owner = 'galleryinterleave',
+    list = await archiveCollection(owner, 'Retry timing'),
+    item = await archiveItem(owner, list.id, 'A memory'),
+    key = crypto.randomUUID(),
+    bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  let committed = false;
+  const db = new Proxy(platform.env.DB, {
+    get(target, property) {
+      if (property === 'batch')
+        return async (statements: D1PreparedStatement[]) => {
+          if (!committed) {
+            // The retry found no asset; the original commits before its gallery snapshot.
+            committed = true;
+            expect((await galleryUpload(owner, 'items', item.id, key, 0, bytes)).status).toBe(200);
+          }
+          return target.batch(statements);
+        };
+      const value = Reflect.get(target, property);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const gallery = await addGalleryPhoto(db, owner, 'items', item.id, key, bytes, 'image/png', 0);
+  expect(committed).toBe(true);
+  expect(gallery.revision).toBe(1);
+  expect(gallery.entries.map((entry) => entry.id)).toEqual([key]);
+  expect(
+    Array.from(new Uint8Array(await (await call(`/items/${item.id}/photos/${key}`, owner)).arrayBuffer())),
+  ).toEqual(Array.from(bytes));
 });
 
 test('photo uploads retry immutably, removed originals cannot resurrect, and capacity is atomic', async () => {

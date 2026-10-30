@@ -186,25 +186,25 @@ export async function addGalleryPhoto(
   const hash = await photoFingerprint(bytes);
   if (await previousUpload(db, owner, kind, recordId, assetId, hash))
     return readGallery(db, owner, kind, recordId);
-  const album = await readGallery(db, owner, kind, recordId),
-    config = galleryTables(kind);
-  if (expectedRevision !== undefined && expectedRevision !== album.revision)
-    throw new ApiError(
-      409,
-      'GALLERY_CHANGED',
-      'These photos changed elsewhere. Reload saved photos before trying again.',
-    );
-  const entries = [
-    ...album.entries.map(({ id, caption, arrows }) => ({ id, caption, arrows })),
-    { id: assetId, caption: '', arrows: [] },
-  ];
-  if (album.entries.length >= 12)
-    throw new ApiError(
-      409,
-      'GALLERY_FULL',
-      'Keep up to 12 photos per record. Remove one before adding another.',
-    );
   try {
+    const album = await readGallery(db, owner, kind, recordId),
+      config = galleryTables(kind);
+    if (expectedRevision !== undefined && expectedRevision !== album.revision)
+      throw new ApiError(
+        409,
+        'GALLERY_CHANGED',
+        'These photos changed elsewhere. Reload saved photos before trying again.',
+      );
+    const entries = [
+      ...album.entries.map(({ id, caption, arrows }) => ({ id, caption, arrows })),
+      { id: assetId, caption: '', arrows: [] },
+    ];
+    if (album.entries.length >= 12)
+      throw new ApiError(
+        409,
+        'GALLERY_FULL',
+        'Keep up to 12 photos per record. Remove one before adding another.',
+      );
     await db.batch([
       recordIdentityGuard(db, [assetId]),
       guard(db, owner, kind, recordId, album.revision),
@@ -217,6 +217,7 @@ export async function addGalleryPhoto(
       ...cover(db, owner, kind, recordId, assetId),
     ]);
   } catch (error) {
+    // The original can commit between the first retry lookup and the gallery read.
     if (await previousUpload(db, owner, kind, recordId, assetId, hash))
       return readGallery(db, owner, kind, recordId);
     changed(error);
