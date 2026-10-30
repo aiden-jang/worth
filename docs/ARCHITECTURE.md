@@ -33,6 +33,13 @@ flowchart LR
 | `migrations/`          | Ordered additive D1 schema history                                                      |
 | `tests/`, `e2e/`       | Pure/component/API regressions and production-build browser journeys                    |
 
+`src/styles.css` owns the shared palette and base controls used by both connected
+and offline entries. Cabinet styles supply opinion slips, artwork and presentation;
+feature styles own their content. `src/workspace.css` owns connected page framing,
+titles and spacing. Keep each declaration with its owner instead of adding another
+theme or override layer. Shelf colors/styles and list-kind classes are generated
+from saved choices; literal-only class searches cannot establish that they are unused.
+
 Keep orchestration in the page/view, persistence in the API/Worker, and independent
 editors in their own components. Do not introduce a repository layer that simply
 forwards every query. Parameterized SQL and owner checks belong together. The

@@ -429,19 +429,6 @@
   color: #626456;
   white-space: nowrap;
 }
-.call-distribution-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  margin-top: 32px;
-}
-.call-distribution-grid article {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
 .call-distribution .call-face {
   --face-ink: var(--ink);
   --face-outline: var(--ink);
@@ -453,55 +440,6 @@
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.025em;
-}
-.call-distribution-grid article > div > span {
-  display: block;
-  font-size: 11px;
-  margin-top: 4px;
-  color: #626456;
-}
-.call-distribution-grid strong {
-  font-size: 32px;
-  font-weight: 500;
-  letter-spacing: -0.05em;
-}
-.call-count-track {
-  grid-column: 1 / -1;
-  height: 5px;
-  background: #cfccbc;
-  border-radius: 3px;
-  overflow: hidden;
-}
-.call-count-track > span {
-  display: block;
-  height: 100%;
-  background: #55584a;
-}
-.call-distribution-footnote {
-  color: #626456;
-  margin: 24px 0 0;
-  font-size: 11px;
-  line-height: 1.5;
-}
-.pattern-notes {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.pattern-notes article {
-  background: transparent;
-  border: 0;
-  border-top: 1px solid var(--line);
-  padding: 24px 0;
-  min-height: 0;
-}
-.pattern-notes .pattern-archive-scope {
-  grid-column: 1 / -1;
-}
-.pattern-archive-scope strong {
-  font:
-    500 36px 'DM Sans',
-    sans-serif;
-  letter-spacing: -0.04em;
-  margin-top: 14px;
 }
 .ranking-display {
   min-height: 100vh;
@@ -718,17 +656,6 @@
   font-size: 13px;
   color: var(--acid);
 }
-@media (max-width: 1180px) {
-  .call-distribution-grid {
-    gap: 20px;
-  }
-  .call-distribution-grid article {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .call-distribution-grid strong {
-    grid-column: 1 / -1;
-  }
-}
 @media (max-width: 680px) {
   .editor-dialog,
   .share-dialog {
@@ -827,21 +754,6 @@
   .call-distribution h2 {
     font-size: 26px;
   }
-  .call-distribution-grid {
-    grid-template-columns: minmax(0, 1fr);
-    margin-top: 24px;
-    gap: 24px;
-  }
-  .call-distribution-grid article {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-  .call-distribution-grid strong {
-    grid-column: auto;
-  }
-  .pattern-notes {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
   .show-header,
   .public-header {
     padding: 0 20px;
@@ -898,22 +810,9 @@
     padding: 24px 20px;
   }
 }
-/* Page headings and rules share the primary cabinet rhythm. */
-.patterns-head {
-  border: 0;
-}
 .pattern-stat-grid {
   border: 0;
   border-block: 1px solid var(--line);
-}
-.pattern-notes {
-  border: 0;
-  gap: 0 32px;
-}
-@media (max-width: 680px) {
-  .pattern-notes {
-    gap: 0;
-  }
 }
 .photo-buttons > label {
   position: relative;
@@ -940,25 +839,6 @@
   letter-spacing: -0.05em;
 }
 .add-dialog .dialog-head .overline {
-  color: var(--muted);
-}
-.add-list-group > p {
-  font: 10px var(--mono);
-  color: var(--muted);
-}
-.add-list-group button {
-  min-height: 72px;
-}
-.add-list-group button > span {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-}
-.add-list-group button small {
-  font:
-    12px 'DM Sans',
-    sans-serif;
-  margin-top: 5px;
   color: var(--muted);
 }
 @media (max-width: 680px) {
@@ -1269,11 +1149,6 @@
     gap: 12px;
   }
 }
-.workout-launch {
-  display: flex;
-  justify-content: flex-end;
-  margin: 18px 0;
-}
 .workout-section-head .workout-count {
   margin: 0;
 }
@@ -1334,13 +1209,6 @@
 .planned-exercises {
   margin: 20px 0;
 }
-.planned-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  font-size: 13px;
-}
 @media (max-width: 960px) {
   .routine-grid {
     grid-template-columns: 1fr;
@@ -1352,9 +1220,6 @@
   }
   .routine-card h2 {
     font-size: 26px;
-  }
-  .planned-action {
-    font-size: 12px;
   }
 }
 

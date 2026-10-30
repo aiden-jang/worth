@@ -169,14 +169,6 @@
   max-width: 78ch;
   line-height: 1.6;
 }
-.patterns-head .retro-entry {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: #e8dc9d;
-  margin-top: 12px;
-  font-size: 14px;
-}
 @media (max-width: 680px) {
   .retrospective-page .page-head {
     display: grid;
@@ -197,17 +189,5 @@
   }
   .retro-results-head .button {
     justify-self: start;
-  }
-}
-
-.patterns-head .retro-entry + .retro-entry {
-  margin-left: 20px;
-}
-@media (max-width: 680px) {
-  .patterns-head .retro-entry {
-    display: flex;
-  }
-  .patterns-head .retro-entry + .retro-entry {
-    margin-left: 0;
   }
 }

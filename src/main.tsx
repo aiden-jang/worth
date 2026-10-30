@@ -15,6 +15,11 @@ import './product.css';
 import './cabinet.css';
 import './details.css';
 import './cabinet-edition.css';
+import './landing-cabinet.css';
+import './completion.css';
+import './archive-tools.css';
+import './everyday.css';
+import './workspace.css';
 
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } },
@@ -28,12 +33,3 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
-
-import './landing-cabinet.css';
-
-import './completion.css';
-
-import './archive-tools.css';
-
-import './everyday.css';
-import './workspace.css';

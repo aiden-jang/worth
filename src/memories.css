@@ -146,29 +146,6 @@
   .preference-grid > article {
     padding: 20px;
   }
-  .collection-action-tray .opinion-slip-verdict {
-    display: grid;
-    grid-template-columns: 60px 1fr;
-    column-gap: 14px;
-    align-items: center;
-    padding: 14px 0;
-  }
-  .collection-action-tray .opinion-slip-verdict > .call-face,
-  .collection-action-tray .opinion-slip-verdict > .undecided-slips {
-    width: 60px;
-    height: 60px;
-    grid-row: 1/3;
-  }
-  .collection-action-tray .opinion-slip-verdict > strong {
-    font-size: 29px;
-    text-align: left;
-  }
-  .collection-action-tray .opinion-slip-verdict > span {
-    text-align: left;
-  }
-  .collection-action-tray {
-    padding-bottom: 20px;
-  }
 }
 
 .month-memory {
@@ -313,9 +290,6 @@
   padding: 12px 0;
   border-top: 1px solid #38392f;
 }
-.experience-entry {
-  margin: 12px 0;
-}
 .month-memory div {
   min-width: 0;
 }
@@ -382,21 +356,6 @@
 
 .memory-check {
   min-height: 44px;
-}
-
-.pattern-more-tools {
-  margin: 8px 0 0;
-}
-.pattern-more-tools > summary {
-  min-height: 44px;
-  display: list-item;
-  cursor: pointer;
-  padding: 12px 0;
-}
-.pattern-more-tools > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 16px;
 }
 
 .exercise-records button {
