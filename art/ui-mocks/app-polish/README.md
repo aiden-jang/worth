@@ -46,4 +46,8 @@ presentation layouts. Public policy/help and the separate offline entry share
 readable type and controls while retaining their own navigation and privacy copy.
 Reference icons and artwork are schematic; production keeps its actual assets.
 
+Phone utility menus sit 84px plus the device safe area above the viewport bottom,
+with 20px side insets and internal scrolling. This keeps long saved-view forms
+clear of the persistent navigation. Desktop menus remain anchored to their trigger.
+
 Implementation captures and checks are in [the app-wide review](../../ui-qa/app-polish/README.md).

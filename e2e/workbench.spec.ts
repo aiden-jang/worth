@@ -31,7 +31,7 @@ test('a stale sandbox refreshes the current ranking and never overwrites it', as
 test('saved views and context orders survive reload without changing the main ranking', async ({
   page,
   archive,
-}) => {
+}, info) => {
   archive.items[0].id = '22222222-2222-4222-8222-222222222222';
   archive.items[1].id = '33333333-3333-4333-8333-333333333333';
   archive.items[1].wantToTry = true;
@@ -41,6 +41,17 @@ test('saved views and context orders survive reload without changing the main ra
   await page.getByRole('combobox', { name: 'Browse collection' }).selectOption('want');
   await page.getByText('Saved views', { exact: true }).click();
   await page.getByRole('textbox', { name: 'View name', exact: true }).fill('Next weekend');
+  if (info.project.name === 'phone') {
+    const menu = (await page.locator('.entry-options-panel').boundingBox())!,
+      navigation = (await page.getByRole('navigation', { name: 'Quick navigation' }).boundingBox())!;
+    expect(menu.y + menu.height, 'saved-view controls stay above phone navigation').toBeLessThanOrEqual(
+      navigation.y - 8,
+    );
+  }
+  if (process.env.WORTH_CAPTURE_QA)
+    await page.screenshot({
+      path: `${process.env.WORTH_CAPTURE_QA}/saved-view-${info.project.name}.png`,
+    });
   await page.getByRole('button', { name: 'Save current view', exact: true }).click();
   await expect(page.getByText('View saved.', { exact: true })).toBeVisible();
   await page.reload();

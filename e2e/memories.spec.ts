@@ -333,7 +333,11 @@ test('preferences link to their full supporting records and memory filters keep 
   await page.getByRole('button', { name: 'Experiences', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Experiences', exact: true })).toHaveCSS(
     'color',
-    'rgb(24, 25, 21)',
+    'rgb(240, 236, 223)',
+  );
+  await expect(page.getByRole('button', { name: 'Experiences', exact: true })).toHaveCSS(
+    'background-color',
+    'rgb(41, 42, 35)',
   );
   await page.getByRole('searchbox').fill('Brooklyn');
   if (!(await page.locator('.memory-date-options').evaluate((node) => (node as HTMLDetailsElement).open)))

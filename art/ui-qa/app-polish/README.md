@@ -34,6 +34,13 @@ Unfiled has the proper active navigation state and a smaller drawer title.
 
 ## Native dialogs and populated tools
 
+The menu follow-up keeps the complete saved-view form above phone navigation:
+[desktop](dialogs/saved-view-desktop.png) / [phone](dialogs/saved-view-phone.png).
+Collection actions ([desktop](dialogs/collection-menu-desktop.png) /
+[phone](dialogs/collection-menu-phone.png)) and recall tools
+([desktop](dialogs/recall-menu-desktop.png) / [phone](dialogs/recall-menu-phone.png))
+use the same bounded phone placement.
+
 | State            | Desktop                                                   | Phone                                                   |
 | ---------------- | --------------------------------------------------------- | ------------------------------------------------------- |
 | Add              | [Capture](dialogs/add-desktop.png)                        | [Capture](dialogs/add-phone.png)                        |
@@ -57,9 +64,12 @@ content has clearance below it. No capture implies that below-fold content is ab
 - Production keeps real icons, original artwork, counts, descriptions, account
   links and all loading/error/retry states. Reference symbols are placeholders.
 - Factual status kickers and existing return links remain where they provide
-  context. The compact collection options menu stays beside the heading on phones.
+  context. Collection options stay beside the heading and open a bounded menu on phones.
 - Look back retains its established underline tabs, distinct from the inset
   Experiences/Saved things capsule. Phone selection retains the native item sheet.
+- Long phone utility menus sit above the persistent navigation and scroll inside
+  their own bounds. This fixes a saved-view action that could fall behind the bar.
+  Desktop menus remain anchored; outside and Escape dismissal still work.
 - Settings keeps its complete export scopes, privacy explanations and limits;
   the reference uses shorter illustrative paragraphs. The order of actions changes,
   not their scope. Destructive confirmations remain explicit.
@@ -69,6 +79,12 @@ content has clearance below it. No capture implies that below-fold content is ab
   Help/policy and offline entry pages have their own headers and readable title scale.
 
 ## Verification and limits
+
+The final menu follow-up passed all 46 Chromium everyday, memory and workbench
+cases and all 14 phone WebKit memory/workbench cases. The saved-view test checks
+that the menu ends above navigation before clicking Save. The memory toggle test
+now asserts both text and background colors from the authored inset-capsule design;
+the supporting-record, date-filter and accessibility assertions are retained.
 
 The new working-page regression checks title scale and overflow on all 25 working
 states, phone field legibility, common control corners, Unfiled's active link and

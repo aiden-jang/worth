@@ -515,3 +515,9 @@ page styles into a shared entry chunk. Public policy/help and offline titles use
 48px/36px under their own headers. Ranked displays, public snapshots and exports
 retain their presentation layout. Verify both direct navigation and return to
 Home after lazy pages have loaded. No new feature or data schema is part of this pass.
+
+Phone collection, entry and recall menus float above the navigation with 20px
+side insets and an 84px plus safe-area bottom clearance. Cap their height at the
+smaller of 480px or the available viewport below the header, and scroll internally.
+Long saved-view forms must remain usable above the bottom bar; desktop menus stay
+anchored. Native dialog/sheet focus and outside/Escape dismissal remain unchanged.
