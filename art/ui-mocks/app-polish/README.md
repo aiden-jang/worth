@@ -50,4 +50,10 @@ Phone utility menus sit 84px plus the device safe area above the viewport bottom
 with 20px side insets and internal scrolling. This keeps long saved-view forms
 clear of the persistent navigation. Desktop menus remain anchored to their trigger.
 
+The Unfiled drawer uses a 16px gap after its utility row and 20px after its compact
+heading. On phones, the heading and action stack with a 16px gap and no extra
+action margin. The saved count has 16px of breathing room above one divider. Empty
+content uses 24px vertical padding, 112px artwork (64px on phones), and the shared
+compact text/action spacing. Empty lists reserve no extra space below the artwork.
+
 The capture workflow and verification limits are in [quality checks](../../../docs/QUALITY.md).

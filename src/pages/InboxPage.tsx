@@ -186,33 +186,35 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
             </section>
           )}
           {!!entries.length && !filtered.length && <p>No Unfiled finds match “{term}”.</p>}
-          <ul className="inbox-list">
-            {filtered.slice(0, limit).map((find) => (
-              <li key={find.id}>
-                <button
-                  aria-label={`Review ${find.title}`}
-                  disabled={!!pending}
-                  onClick={() => setSelected(find.id)}
-                >
-                  <span className="inbox-row-mark" aria-hidden="true">
-                    ↳
-                  </span>
-                  <span>
-                    <strong>{find.title}</strong>
-                    <small>
-                      {find.type ? `${find.type} · ` : ''}
-                      {formatRelativeTimestamp(find.createdAt)}
-                      {find.memory ? ` · Experienced ${formatDate(find.memory.happenedOn)}` : ''}
-                      {find.photo?.available ? ' · Photo' : ''}
-                      {find.wantToTry ? ' · Want to try' : ''}
-                    </small>
-                    {find.note && <span className="inbox-row-note">{find.note}</span>}
-                  </span>
-                  <span className="inbox-row-open">Review →</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {!!filtered.length && (
+            <ul className="inbox-list">
+              {filtered.slice(0, limit).map((find) => (
+                <li key={find.id}>
+                  <button
+                    aria-label={`Review ${find.title}`}
+                    disabled={!!pending}
+                    onClick={() => setSelected(find.id)}
+                  >
+                    <span className="inbox-row-mark" aria-hidden="true">
+                      ↳
+                    </span>
+                    <span>
+                      <strong>{find.title}</strong>
+                      <small>
+                        {find.type ? `${find.type} · ` : ''}
+                        {formatRelativeTimestamp(find.createdAt)}
+                        {find.memory ? ` · Experienced ${formatDate(find.memory.happenedOn)}` : ''}
+                        {find.photo?.available ? ' · Photo' : ''}
+                        {find.wantToTry ? ' · Want to try' : ''}
+                      </small>
+                      {find.note && <span className="inbox-row-note">{find.note}</span>}
+                    </span>
+                    <span className="inbox-row-open">Review →</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           {filtered.length > limit && (
             <button className="button button-outline" onClick={() => setLimit(limit + 30)}>
               Show more finds
