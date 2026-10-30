@@ -101,7 +101,8 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
         </button>
       </header>
       <p className="inbox-count">
-        {entries.length} saved {entries.length === 1 ? 'find' : 'finds'} · Private
+        {query.data && `${entries.length} saved ${entries.length === 1 ? 'find' : 'finds'} · `}
+        Private
       </p>
       {pending && (
         <section className="inbox-pending" aria-label="Pending filing">
