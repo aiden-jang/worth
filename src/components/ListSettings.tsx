@@ -103,6 +103,7 @@ export function ListSettings({
         <label>
           Name
           <input
+            autoFocus
             required
             maxLength={80}
             value={nextName}

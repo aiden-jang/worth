@@ -13,6 +13,18 @@ async function capture(page: Page, name: string, project: string) {
   });
 }
 
+test('collection settings can close immediately without the options menu covering the form', async ({
+  page,
+}) => {
+  await page.goto(`/lists/${list.id}`);
+  await collectionOptions(page);
+  await page.getByRole('button', { name: 'List settings', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+  await expect(page.getByLabel('Collection options', { exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Close settings', exact: true })).toHaveCount(0);
+});
+
 test('collections archive and unarchive without changing records or calls', async ({
   page,
   archive,

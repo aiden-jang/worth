@@ -141,11 +141,33 @@
 .cabinet-create .create-form select {
   border-radius: 12px;
 }
-.cabinet-create .create-extras {
+.cabinet-create .create-options {
+  border-block: 1px solid var(--line);
+}
+.cabinet-create .create-options > details {
   margin: 0;
-  padding: 18px 0;
+  padding: 0;
+  border: 0;
+}
+.cabinet-create .create-options > :is(details, label) + :is(details, label) {
   border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+}
+.cabinet-create .create-options > label {
+  padding-block: 16px;
+}
+.cabinet-create .create-options > details > summary {
+  min-height: 44px;
+  padding-block: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.cabinet-create .create-options > details[open] {
+  padding-bottom: 16px;
+}
+.cabinet-create .create-options > details[open] > summary {
+  margin-bottom: 8px;
 }
 .cabinet-create .create-extras > label,
 .cabinet-create .collection-cover-picker {
@@ -153,7 +175,7 @@
 }
 .cabinet-create .create-form > .button {
   align-self: flex-start;
-  border-radius: 999px;
+  border-radius: 12px;
   min-height: 44px;
 }
 .cabinet-name-ideas {

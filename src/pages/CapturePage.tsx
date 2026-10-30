@@ -465,13 +465,11 @@ export function CapturePage() {
           Clear capture draft
         </button>
       </section>
-      <p>
+      <nav className="capture-tools" aria-label="Other ways to capture">
         <Link to="/receipts">Review a receipt and choose its record links →</Link>
         <Link to="/read">Read text from a photo on this device →</Link>
-      </p>
-      <p>
         <Link to="/code">Read a barcode or look up an ISBN →</Link>
-      </p>
+      </nav>
       <details className="browser-capture-help">
         <summary>Capture from your browser</summary>
         <p>

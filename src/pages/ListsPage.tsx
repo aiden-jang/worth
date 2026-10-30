@@ -407,100 +407,106 @@ export function ListsPage() {
                   ),
                 )}
               </div>
-              {kind === 'collection' && (
-                <TemplatePicker
-                  disabled={create.isPending}
-                  onUse={(template) => {
-                    if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
-                      setTemplateToUse(template);
-                    else applyTemplate(template);
-                  }}
-                />
-              )}
-              {requestedKind === null && (
-                <label>
-                  Type
-                  <select
-                    value={kind}
-                    onChange={(event) => {
-                      const nextKind = event.target.value as ListKind;
-                      setKind(nextKind);
-                      if (nextKind === 'activity') setCoverFile(null);
+              <div className="create-options">
+                {kind === 'collection' && (
+                  <TemplatePicker
+                    disabled={create.isPending}
+                    onUse={(template) => {
+                      if (name.trim() || description.trim() || artwork || coverFile || detailText.trim())
+                        setTemplateToUse(template);
+                      else applyTemplate(template);
                     }}
-                  >
-                    <option value="collection">Collection: things you can revisit and rank</option>
-                    <option value="activity">Activity: things you log over time</option>
-                  </select>
-                </label>
-              )}
-              {kind === 'collection' && (
-                <details className="create-artwork">
-                  <summary>
-                    Artwork <span className="optional">optional</span>
-                  </summary>
-                  <CollectionArtworkPicker name={name} value={artwork} onChange={setArtwork} />
-                </details>
-              )}
-              {kind === 'collection' && (
+                  />
+                )}
+                {requestedKind === null && (
+                  <label>
+                    Type
+                    <select
+                      value={kind}
+                      onChange={(event) => {
+                        const nextKind = event.target.value as ListKind;
+                        setKind(nextKind);
+                        if (nextKind === 'activity') setCoverFile(null);
+                      }}
+                    >
+                      <option value="collection">Collection: things you can revisit and rank</option>
+                      <option value="activity">Activity: things you log over time</option>
+                    </select>
+                  </label>
+                )}
+                {kind === 'collection' && (
+                  <details className="create-artwork">
+                    <summary>
+                      Artwork <span className="optional">optional</span>
+                    </summary>
+                    <CollectionArtworkPicker name={name} value={artwork} onChange={setArtwork} />
+                  </details>
+                )}
+                {kind === 'collection' && (
+                  <details className="create-extras form-wide">
+                    <summary>
+                      Reusable details <span className="optional">optional</span>
+                    </summary>
+                    <FieldNamesInput
+                      value={detailText}
+                      onChange={setDetailText}
+                      disabled={create.isPending}
+                    />
+                  </details>
+                )}
                 <details className="create-extras form-wide">
                   <summary>
-                    Reusable details <span className="optional">optional</span>
+                    {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
+                    <span className="optional">optional</span>
                   </summary>
-                  <FieldNamesInput value={detailText} onChange={setDetailText} disabled={create.isPending} />
-                </details>
-              )}
-              <details className="create-extras form-wide">
-                <summary>
-                  {kind === 'collection' ? 'Description & cover' : 'Description'}{' '}
-                  <span className="optional">optional</span>
-                </summary>
-                <label className="form-wide">
-                  A short description <span className="optional">optional</span>
-                  <input
-                    value={description}
-                    maxLength={280}
-                    onChange={(event) => setDescription(event.target.value)}
-                    placeholder="What belongs in this list?"
-                  />
-                </label>
-                {kind === 'collection' && (
-                  <div className="form-wide collection-cover-picker">
-                    <label htmlFor="collection-cover-file">
-                      Cover photo <span className="optional">optional · private</span>
-                    </label>
+                  <label className="form-wide">
+                    A short description <span className="optional">optional</span>
                     <input
-                      id="collection-cover-file"
-                      ref={coverInput}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(event) => {
-                        setCropFile(event.target.files?.[0] ?? null);
-                        event.target.value = '';
-                      }}
+                      value={description}
+                      maxLength={280}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="What belongs in this list?"
                     />
-                    {coverPreview && (
-                      <div className="collection-cover-preview">
-                        <img src={coverPreview} alt="Selected collection cover preview" />
-                        <div>
-                          <strong>{coverFile?.name}</strong>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCoverFile(null);
-                              if (coverInput.current) coverInput.current.value = '';
-                            }}
-                          >
-                            Remove
-                          </button>
+                  </label>
+                  {kind === 'collection' && (
+                    <div className="form-wide collection-cover-picker">
+                      <label htmlFor="collection-cover-file">
+                        Cover photo <span className="optional">optional · private</span>
+                      </label>
+                      <input
+                        id="collection-cover-file"
+                        ref={coverInput}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(event) => {
+                          setCropFile(event.target.files?.[0] ?? null);
+                          event.target.value = '';
+                        }}
+                      />
+                      {coverPreview && (
+                        <div className="collection-cover-preview">
+                          <img src={coverPreview} alt="Selected collection cover preview" />
+                          <div>
+                            <strong>{coverFile?.name}</strong>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCoverFile(null);
+                                if (coverInput.current) coverInput.current.value = '';
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <small>
-                      {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
-                    </small>
-                  </div>
-                )}
-              </details>
+                      )}
+                      <small>
+                        {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
+                      </small>
+                    </div>
+                  )}
+                </details>
+              </div>
               {create.isError && <p className="form-error">{create.error.message}</p>}
               <button
                 className="button button-accent"

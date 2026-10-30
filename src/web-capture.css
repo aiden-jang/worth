@@ -18,6 +18,25 @@
   margin: 0;
   gap: 16px;
 }
+.capture-panel:not(.has-review) {
+  display: grid;
+  gap: 16px;
+}
+.capture-panel:not(.has-review) > p {
+  margin: 0;
+}
+.capture-tools {
+  display: grid;
+  gap: 8px;
+  margin-block: 24px;
+}
+.capture-tools > a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  width: fit-content;
+  max-width: 100%;
+}
 .capture-panel form > .button {
   justify-self: start;
 }

@@ -1,6 +1,6 @@
 import { ArrowLeft, GearSix, PresentationChart, ShareNetwork } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, RequestError } from '../api';
 import { ActivityView } from '../components/ActivityView';
@@ -35,6 +35,7 @@ export function ListPage() {
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const options = useRef<HTMLDetailsElement>(null);
   const [showShare, setShowShare] = useState(false);
   const [showWorkbench, setShowWorkbench] = useState(false);
   const creating = params.get('new') === '1';
@@ -117,7 +118,7 @@ export function ListPage() {
           </p>
           {list.description && <p className="list-user-description">{list.description}</p>}
         </div>
-        <details data-menu className="list-head-actions collection-options">
+        <details ref={options} data-menu className="list-head-actions collection-options">
           <summary aria-label="Collection options">•••</summary>
           <div className="collection-options-panel">
             {list.kind === 'collection' && (
@@ -151,7 +152,11 @@ export function ListPage() {
             <button
               className="icon-button settings-button"
               aria-label="List settings"
-              onClick={() => setShowSettings(true)}
+              onClick={(event) => {
+                const menu = event.currentTarget.closest('details');
+                if (menu) menu.open = false;
+                setShowSettings(true);
+              }}
             >
               <GearSix size={20} /> Settings
             </button>
@@ -183,7 +188,10 @@ export function ListPage() {
           hasCoverPhoto={list.hasCoverPhoto}
           updatedAt={list.updatedAt}
           coverRevision={list.coverRevision}
-          onClose={() => setShowSettings(false)}
+          onClose={() => {
+            setShowSettings(false);
+            options.current?.querySelector('summary')?.focus();
+          }}
           onDeleted={() => navigate('/lists')}
         />
       )}

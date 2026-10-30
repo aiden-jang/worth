@@ -96,11 +96,14 @@
   gap: 24px;
   margin-top: 28px;
 }
+.editor-form > p {
+  margin: 0;
+}
 :is(.record-form, .create-form, .settings-form) label {
   display: block;
   color: var(--paper);
   font:
-    400 13px/1.5 'DM Sans',
+    400 14px/1.5 'DM Sans',
     sans-serif;
   letter-spacing: 0;
   text-transform: none;
@@ -119,7 +122,7 @@
   min-height: 46px;
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 12px;
   background: var(--panel);
   color: var(--paper);
   font:
@@ -260,7 +263,7 @@
   line-height: 1.12;
 }
 :is(.create-panel, .settings-panel) {
-  border-radius: 10px;
+  border-radius: 22px;
   border-color: var(--line);
   background: var(--panel);
 }
@@ -974,7 +977,15 @@
   }
 }
 .settings-form .artwork-picker {
-  max-width: 528px;
+  max-width: 840px;
+}
+@media (min-width: 760px) {
+  .settings-form .artwork-objects {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  .settings-form > .button {
+    justify-self: start;
+  }
 }
 .exercise-helper {
   font-size: 13px;

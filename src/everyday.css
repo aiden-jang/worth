@@ -553,6 +553,13 @@
   font-size: 30px;
   letter-spacing: -0.7px;
 }
+.quick-entry-form {
+  gap: 16px;
+  margin-top: 0;
+}
+.quick-entry-form > .quick-entry-helper {
+  margin: 0;
+}
 .quick-entry-form > fieldset {
   display: grid;
   gap: 18px;

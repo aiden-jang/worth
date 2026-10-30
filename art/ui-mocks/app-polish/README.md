@@ -57,3 +57,9 @@ content uses 24px vertical padding, 112px artwork (64px on phones), and the shar
 compact text/action spacing. Empty lists reserve no extra space below the artwork.
 
 The capture workflow and verification limits are in [quality checks](../../../docs/QUALITY.md).
+
+Collection creation groups optional disclosures into one compact, ruled stack.
+Editor paragraphs use the form's grid gap rather than adding browser margins;
+record fields share the 14px labels and 12px corners used by other working forms.
+On wider screens, collection settings use the available width for artwork choices
+instead of stacking them in a narrow column beside unused space.
