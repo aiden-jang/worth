@@ -56,6 +56,13 @@ Collections and a compact memory offer quieter ways to browse. The regular searc
 continues to cover archived content with its existing labels and boundaries.
 The Recent section's **Search all** link opens archive search.
 
+Search filters query the chosen category across the archive. Results load in
+pages, with **Show more results** for older matches. The count describes the
+records shown; it says Showing while another page is available. A failed next
+page keeps current results and offers Retry more results. Loading more moves
+keyboard focus to the first new result. Exercise search includes explicit exercise
+entries, named measurements and older set-based records.
+
 The Collections directory groups names, artwork and counts into compact cards.
 Current/Archived remain available. Search and ordering appear for more than three
 collections, or while a saved filter/order needs to be cleared. The directory

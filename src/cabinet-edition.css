@@ -413,9 +413,8 @@
   border-color: transparent;
   background: var(--raised);
 }
-.search-scope button span {
-  font: 10px var(--mono);
-  margin-left: 6px;
+.search-more {
+  margin-top: 24px;
 }
 .search-group > a {
   min-height: 96px;

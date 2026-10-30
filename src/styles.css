@@ -1618,17 +1618,6 @@ dialog::backdrop {
   border-color: var(--line-strong);
   color: var(--paper);
 }
-.search-scope button span {
-  margin-left: 0.2rem;
-  color: var(--acid);
-}
-.search-filter-empty {
-  min-height: 100px;
-  padding: 1.2rem 0;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.8rem;
-}
 .search-group > p {
   margin: 0;
   padding: 0.9rem 0;

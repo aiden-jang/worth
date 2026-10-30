@@ -13,6 +13,7 @@ import type {
   WorkoutSession,
 } from '../src/shared/models';
 import { archiveFile, type ArchiveFile } from '../src/shared/portability';
+import { largeArchive } from './fixtures/large-archive';
 import { itemInput } from '../src/shared/validation';
 import type { InboxEntry } from '../src/shared/inbox';
 import { itemContext } from '../src/shared/item-context';
@@ -184,6 +185,61 @@ async function archiveItem(owner: string, listId: string, title: string, extra =
   expect(response.status).toBe(201);
   return ((await response.json()) as { item: Item }).item;
 }
+
+test('a year-sized archive preserves records on restore and exposes older search matches', async () => {
+  const file = largeArchive(),
+    owner = 'largearchive';
+  const restored = await planCreate('/import', owner, file);
+  expect(restored.status).toBe(201);
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect(exported.items).toHaveLength(360);
+  expect(exported.logs).toHaveLength(file.logs.length);
+  expect(exported.workoutSessions).toHaveLength(97);
+  expect(exported.inbox).toHaveLength(12);
+  const restoredAgain = await planCreate('/import', 'largearchiverestored', exported);
+  expect(restoredAgain.status).toBe(201);
+  const roundTrip = archiveFile.parse(await (await call('/export/records', 'largearchiverestored')).json());
+  const contents = (archive: ArchiveFile) => ({
+    names: archive.items.map((item) => [item.title, item.decision, item.note]).sort(),
+    logs: archive.logs
+      .map((log) => [log.title, log.happenedOn, log.exerciseSets, log.weightUnit, log.measurements])
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+    workouts: archive.workoutSessions.map((workout) => [workout.title, workout.status]).sort(),
+    inbox: archive.inbox.map((entry) => entry.title).sort(),
+  });
+  expect(contents(roundTrip)).toEqual(contents(exported));
+  expect(contents(exported)).toEqual(contents(file));
+  const matches: string[] = [];
+  let offset: number | null = 0;
+  while (offset !== null) {
+    const response = await call(`/search?q=Cafe&scope=items&offset=${offset}`, owner);
+    expect(response.status).toBe(200);
+    const page = (await response.json()) as {
+      results: { title: string; kind: string }[];
+      nextOffset: number | null;
+    };
+    expect(page.results.every((result) => result.kind === 'item')).toBe(true);
+    expect(page.results.length).toBeLessThanOrEqual(40);
+    matches.push(...page.results.map((result) => result.title));
+    expect(matches.length).toBeLessThanOrEqual(90);
+    expect(page.nextOffset).toBeDefined();
+    offset = page.nextOffset;
+  }
+  expect(new Set(matches).size).toBe(90);
+  expect(matches).toContain('Cafe by the old cinema');
+  const exercises = (await (await call('/search?q=Bench&scope=exercises', owner)).json()) as {
+    results: { title: string; exercise: boolean }[];
+    nextOffset: number | null;
+  };
+  expect(exercises.results).toHaveLength(40);
+  expect(exercises.results.every((result) => result.exercise)).toBe(true);
+  const measured = (await (await call('/search?q=Bench%20breathing&scope=exercises', owner)).json()) as {
+    results: { title: string; exercise: boolean }[];
+  };
+  expect(measured.results).toEqual([expect.objectContaining({ title: 'Bench breathing', exercise: true })]);
+  expect(await (await call('/search?q=Cafe', 'largearchiveintruder')).json()).toMatchObject({ results: [] });
+  expect((await call('/search?q=Cafe&offset=-1', owner)).status).toBe(400);
+});
 
 test('private context is owner scoped, safe to retry and preserved by merges, search and restore', async () => {
   const owner = 'contextowner';

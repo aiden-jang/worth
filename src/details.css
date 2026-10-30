@@ -1289,6 +1289,17 @@
   color: var(--muted);
   font-size: 12px;
 }
+.exercise-chart-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4px;
+  margin: -4px;
+}
+.exercise-chart-series {
+  width: 100%;
+  padding-inline: 24px;
+}
 .exercise-chart-plot {
   position: relative;
   height: 200px;
@@ -1342,7 +1353,6 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding-left: 56px;
   color: var(--muted);
   font-size: 12px;
   margin: 8px 0 18px;

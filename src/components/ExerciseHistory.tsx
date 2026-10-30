@@ -121,7 +121,7 @@ export function ExerciseHistory({
   const numeric = values.filter((value): value is number => value !== null);
   const max = Math.max(1, ...numeric);
   const min = Math.min(0, ...numeric);
-  const x = (index: number) => (entries.length === 1 ? 50 : 4 + (index / (entries.length - 1)) * 92);
+  const x = (index: number) => (entries.length === 1 ? 50 : (index / (entries.length - 1)) * 100);
   const y = (value: number) => 90 - ((value - min) / (max - min)) * 80;
   const paths: string[] = [];
   let current: string[] = [];
@@ -245,37 +245,49 @@ export function ExerciseHistory({
                     <span>{Number(((max + min) / 2).toFixed(2))}</span>
                     <span>{Number(min.toFixed(2))}</span>
                   </div>
-                  <div className="exercise-chart-plot">
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                      <path d="M0 10H100 M0 50H100 M0 90H100" className="exercise-chart-rules" />
-                      {paths
-                        .filter((path) => path.includes(' '))
-                        .map((path, i) => (
-                          <polyline key={i} points={path} className="exercise-chart-line" />
-                        ))}
-                    </svg>
-                    {values.map((value, index) =>
-                      value !== null ? (
-                        <button
-                          type="button"
-                          key={entries[index].id}
-                          className="exercise-chart-point"
-                          style={{ left: `${x(index)}%`, top: `${y(value)}%` }}
-                          aria-pressed={selectedId === entries[index].id}
-                          aria-label={`${formatDate(entries[index].happenedOn)}: ${value} ${active.unit}, entry ${index + 1}. View entry.`}
-                          title={`${formatDate(entries[index].happenedOn)} · ${value} ${active.unit}`}
-                          onClick={() => select(entries[index])}
-                        />
-                      ) : null,
-                    )}
+                  <div
+                    className="exercise-chart-scroll"
+                    tabIndex={0}
+                    role="group"
+                    aria-label="Exercise chart timeline"
+                  >
+                    <div className="exercise-chart-series" style={{ minWidth: entries.length * 48 }}>
+                      <div className="exercise-chart-plot">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                          <path d="M0 10H100 M0 50H100 M0 90H100" className="exercise-chart-rules" />
+                          {paths
+                            .filter((path) => path.includes(' '))
+                            .map((path, i) => (
+                              <polyline key={i} points={path} className="exercise-chart-line" />
+                            ))}
+                        </svg>
+                        {values.map((value, index) =>
+                          value !== null ? (
+                            <button
+                              type="button"
+                              key={entries[index].id}
+                              className="exercise-chart-point"
+                              style={{ left: `${x(index)}%`, top: `${y(value)}%` }}
+                              aria-pressed={selectedId === entries[index].id}
+                              aria-label={`${formatDate(entries[index].happenedOn)}: ${value} ${active.unit}, entry ${index + 1}. View entry.`}
+                              title={`${formatDate(entries[index].happenedOn)} · ${value} ${active.unit}`}
+                              onClick={() => select(entries[index])}
+                            />
+                          ) : null,
+                        )}
+                      </div>
+                      <div className="exercise-chart-dates" aria-hidden="true">
+                        <span>{formatDate(entries[0].happenedOn)}</span>
+                        {entries.length > 1 && (
+                          <span>{formatDate(entries[entries.length - 1].happenedOn)}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="exercise-chart-dates" aria-hidden="true">
-                  <span>{formatDate(entries[0].happenedOn)}</span>
-                  {entries.length > 1 && <span>{formatDate(entries[entries.length - 1].happenedOn)}</span>}
-                </div>
                 <p className="exercise-helper">
-                  Each point is one logged entry, oldest to newest. Select a point to see its measurements.
+                  Each point is one logged entry, oldest to newest. Scroll across if needed, or select a point
+                  to see its measurements.
                   {numeric.length === 1 ? ' One point so far; no trend yet.' : ''}
                 </p>
                 {numeric.length < entries.length && (

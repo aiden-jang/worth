@@ -25,6 +25,13 @@ Browser APIs are intercepted with synthetic archives; offline tests additionally
 exercise the built Worker and service worker. These fixtures do not enter the
 production bundle and do not establish that production authentication works.
 
+The populated-account journeys use 25 lists, 360 saved names, 694 dated entries,
+97 workouts and 12 Unfiled finds. They cover name-only capture, older search
+pages and retry, workout draft recovery, individually reachable chart points,
+unit-specific progress, JSON/Excel
+downloads and explicit restore preview. The migrated-D1 tests use the same
+synthetic archive for actual JSON export/restore and scoped search pagination.
+
 To capture a new local review, set `WORTH_CAPTURE_UI` to a temporary output directory when running
 the responsive, capsule, offline or private-space cases. Responsive captures go
 to that run’s `test-results/` directory; the other three use named subdirectories

@@ -25,6 +25,13 @@ Production adds a collapsed Exercise history directory to activity lists and Vie
 
 The implementation deliberately keeps axis/date labels in HTML at 12px and the plot at 200px high so labels remain readable on narrow screens; the standalone SVG scales with its panel. Points are accessible labeled buttons (44px phone hit targets), which focus and reveal their entry. Notes disclose without modifying user text. Nested history closes back to the unchanged exercise draft. Existing native header/rules, full dates, unit-specific choices, gap explanations, one-point/empty messages and a newest-first set index provide working-product detail beyond the three-entry reference.
 
+Dense history plots deliberately extend horizontally within the existing panel.
+Entries keep at least 48px of horizontal separation and 24px of edge clearance,
+so the 44px phone targets stay individually reachable. The axis stays beside the
+plot, date endpoints scroll with their entries, and the chronological entry index
+remains below. Small histories fill the panel as before; no entries are combined
+or discarded to fit the chart.
+
 ## Active workout flow
 
 [Flow desktop](flow.html) / [mobile](flow.html) were authored, rendered

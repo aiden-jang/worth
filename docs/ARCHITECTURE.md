@@ -207,6 +207,15 @@ on merged originals and the comparison table. Collection search includes context
 global search matches meaningful JSON scalar values rather than field names or
 default state markers. Saved filter views include optional label/stamp filters.
 
+Global search validates `scope` and `offset` through `src/shared/search.ts`.
+Each page returns at most 40 matches per included category, plus `nextOffset` when
+another page exists. Scope is applied before paging; merged names are grouped by
+their surviving record before the limit. Stable ID tie-breakers order equal dates.
+The client caches pages by term and scope and preserves visible results after a
+next-page failure. Category controls omit partial per-category counts; the result
+count describes the loaded entries. Explicit exercise mode, named-measurement
+exercises and legacy sets remain searchable independently of other activity logs.
+
 Calendar reminders are local `.ics` downloads with an explicit title/date preview,
 an all-day event and a one-day-before display alarm. Serialization escapes text
 and folds by UTF-8 octets. Person/private-note fields are not put in these files.

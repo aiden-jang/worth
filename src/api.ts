@@ -2,6 +2,7 @@ import type { ExperienceInput, MemoryFilter, MemoryPage, Preferences } from './s
 import type { SpaceSummary } from './shared/private-spaces';
 import type { HistoryPage } from './shared/taste-history';
 import type { AuthUser } from '@aidenjang/auth-client';
+import type { SearchPage, SearchScope } from './shared/search';
 import type {
   TrashEntry,
   CollectionArt,
@@ -14,7 +15,6 @@ import type {
   Log,
   Overview,
   PublicShare,
-  SearchResult,
   ShareSummary,
   WorkoutRoutine,
   WorkoutSession,
@@ -503,8 +503,12 @@ export const api = {
     ),
   revokeShare: (id: string) => request<void>(`/shares/${id}`, { method: 'DELETE' }),
   publicShare: (token: string) => request<{ share: PublicShare }>(`/public/${token}`),
-  search: (query: string, signal?: AbortSignal) =>
-    request<{ results: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}`, { signal }),
+  search: (query: string, signal?: AbortSignal, filter: { scope?: SearchScope; offset?: number } = {}) => {
+    const params = new URLSearchParams({ q: query });
+    if (filter.scope && filter.scope !== 'all') params.set('scope', filter.scope);
+    if (filter.offset) params.set('offset', String(filter.offset));
+    return request<SearchPage>(`/search?${params}`, { signal });
+  },
   uploadPhoto: (kind: 'items' | 'logs', id: string, blob: Blob, key: string) =>
     request<{ hasPhoto: boolean }>(`/${kind}/${id}/photo`, {
       method: 'PUT',
