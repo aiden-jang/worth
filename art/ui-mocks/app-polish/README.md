@@ -50,4 +50,4 @@ Phone utility menus sit 84px plus the device safe area above the viewport bottom
 with 20px side insets and internal scrolling. This keeps long saved-view forms
 clear of the persistent navigation. Desktop menus remain anchored to their trigger.
 
-Implementation captures and checks are in [the app-wide review](../../ui-qa/app-polish/README.md).
+The capture workflow and verification limits are in [quality checks](../../../docs/QUALITY.md).

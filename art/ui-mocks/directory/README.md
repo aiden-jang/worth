@@ -5,12 +5,12 @@ These references were authored, rendered and opened before applying the new
 composition. They supersede the cabinet edition's directory page, preserving
 its colors, artwork, fonts and creation flow. All fixtures are synthetic.
 
-| State                    | Desktop                            | Phone                            |
-| ------------------------ | ---------------------------------- | -------------------------------- |
-| One collection           | [Reference](sparse-desktop.png)    | [Reference](sparse-phone.png)    |
-| Collections and activity | [Reference](populated-desktop.png) | [Reference](populated-phone.png) |
-| Archived                 | [Reference](archived-desktop.png)  | [Reference](archived-phone.png)  |
-| Empty                    | [Reference](empty-desktop.png)     | [Reference](empty-phone.png)     |
+| State                    | Desktop                                 | Phone                                   |
+| ------------------------ | --------------------------------------- | --------------------------------------- |
+| One collection           | [Reference](sparse-desktop.png)         | [Reference](sparse-phone.png)           |
+| Collections and activity | [Reference](index.html?state=populated) | [Reference](index.html?state=populated) |
+| Archived                 | [Reference](index.html?state=archived)  | [Reference](index.html?state=archived)  |
+| Empty                    | [Reference](index.html?state=empty)     | [Reference](index.html?state=empty)     |
 
 The [HTML](index.html) uses `?state=sparse`, `populated`, `archived` or `empty`.
 Viewports are 1440 × 900 and 390 × 780. The sidebar and bottom navigation are
@@ -29,4 +29,4 @@ private-cover precedence. Names and descriptions wrap. The phone uses a smaller
 thumbnail and 16px form inputs. Controls remain at least 44px, with visible focus
 and reduced-motion support. No data is created or reorganized by this revision.
 
-Implementation screenshots and checks are in [directory verification](../../ui-qa/directory-polish/README.md).
+The capture workflow and verification limits are in [quality checks](../../../docs/QUALITY.md).

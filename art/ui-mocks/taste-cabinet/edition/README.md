@@ -5,18 +5,18 @@ sans-serif typography, left navigation and focused cream opinion slip. It gives 
 collection shelf an authored visual language and makes first use a complete composition.
 The standalone references were rendered and inspected before implementation.
 
-| Reference             | Desktop                                          | Mobile                                          |
-| --------------------- | ------------------------------------------------ | ----------------------------------------------- |
-| Identity sheet        | [Identity](identity-desktop.png)                 | [Identity](identity-mobile.png)                 |
-| Populated archive     | [Archive](archive-desktop.png)                   | [Archive](archive-mobile.png)                   |
-| Sparse custom archive | [Sparse](archive-sparse-desktop.png)             | [Sparse](archive-sparse-mobile.png)             |
-| Empty archive         | [Empty](archive-empty-desktop.png)               | [Empty](archive-empty-mobile.png)               |
-| Collection            | [Collection](collection-desktop.png)             | [Collection](collection-mobile.png)             |
-| Empty collection      | [Empty collection](collection-empty-desktop.png) | [Empty collection](collection-empty-mobile.png) |
-| No-call collection    | [Undecided](collection-undecided-desktop.png)    | [Undecided](collection-undecided-mobile.png)    |
-| Directory             | [Directory](directory-desktop.png)               | [Directory](directory-mobile.png)               |
-| Starter choices       | [Starters](starters-desktop.png)                 | [Starters](starters-mobile.png)                 |
-| Creation              | [Create](create-collection-desktop.png)          | [Create](create-collection-mobile.png)          |
+| Reference             | Desktop                                   | Mobile                                    |
+| --------------------- | ----------------------------------------- | ----------------------------------------- |
+| Identity sheet        | [Identity](identity.html)                 | [Identity](identity.html)                 |
+| Populated archive     | [Archive](archive.html)                   | [Archive](archive.html)                   |
+| Sparse custom archive | [Sparse](archive-sparse.html)             | [Sparse](archive-sparse.html)             |
+| Empty archive         | [Empty](archive-empty.html)               | [Empty](archive-empty.html)               |
+| Collection            | [Collection](collection.html)             | [Collection](collection.html)             |
+| Empty collection      | [Empty collection](collection-empty.html) | [Empty collection](collection-empty.html) |
+| No-call collection    | [Undecided](collection-undecided.html)    | [Undecided](collection-undecided.html)    |
+| Directory             | [Directory](directory.html)               | [Directory](directory.html)               |
+| Starter choices       | [Starters](starters.html)                 | [Starters](starters.html)                 |
+| Creation              | [Create](create-collection.html)          | [Create](create-collection.html)          |
 
 The landing retains its signature composition in the parent directory. Its character,
 colors and voice are the same identity shown here. The existing reaction family remains;
@@ -38,12 +38,12 @@ and timestamps vary in the app, and working navigation/account affordances remai
 The October 10 finishing pass extends the accepted cabinet to Search and Patterns.
 `build-finishing.py` regenerates these fixtures. Personal names wrap rather than disappear.
 
-| Screen         | Desktop                                 | Mobile                                 |
-| -------------- | --------------------------------------- | -------------------------------------- |
-| Search start   | [Reference](search-empty-desktop.png)   | [Reference](search-empty-mobile.png)   |
-| Search results | [Reference](search-results-desktop.png) | [Reference](search-results-mobile.png) |
-| Empty Patterns | [Reference](patterns-empty-desktop.png) | [Reference](patterns-empty-mobile.png) |
-| Patterns       | [Reference](patterns-desktop.png)       | [Reference](patterns-mobile.png)       |
+| Screen         | Desktop                          | Mobile                           |
+| -------------- | -------------------------------- | -------------------------------- |
+| Search start   | [Reference](search-empty.html)   | [Reference](search-empty.html)   |
+| Search results | [Reference](search-results.html) | [Reference](search-results.html) |
+| Empty Patterns | [Reference](patterns-empty.html) | [Reference](patterns-empty.html) |
+| Patterns       | [Reference](patterns.html)       | [Reference](patterns.html)       |
 
 Motion is a finite 200ms/6px entrance on opened panels and selected slips, disabled for
 reduced motion. The signature landing, settings and sharing retain their existing layout.

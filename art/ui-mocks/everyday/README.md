@@ -10,13 +10,13 @@ supersedes the earlier collections directory composition.
 The [October 30 app pass](../app-polish/README.md) supersedes shared heading,
 control and compact Home-card styling while preserving these interactions.
 
-| Flow           | Desktop                                 | Phone                                 |
-| -------------- | --------------------------------------- | ------------------------------------- |
-| Home           | [Reference](home-desktop.png)           | [Reference](home-phone.png)           |
-| Add            | [Reference](add-desktop.png)            | [Reference](add-phone.png)            |
-| Unfiled memory | [Reference](unfiled-memory-desktop.png) | [Reference](unfiled-memory-phone.png) |
-| Collection     | [Reference](collection-desktop.png)     | [Reference](collection-phone.png)     |
-| Gym            | [Reference](gym-desktop.png)            | [Reference](gym-phone.png)            |
+| Flow           | Desktop                                       | Phone                                         |
+| -------------- | --------------------------------------------- | --------------------------------------------- |
+| Home           | [Reference](index.html?screen=home)           | [Reference](index.html?screen=home)           |
+| Add            | [Reference](add-desktop.png)                  | [Reference](add-phone.png)                    |
+| Unfiled memory | [Reference](index.html?screen=unfiled-memory) | [Reference](index.html?screen=unfiled-memory) |
+| Collection     | [Reference](index.html?screen=collection)     | [Reference](index.html?screen=collection)     |
+| Gym            | [Reference](index.html?screen=gym)            | [Reference](index.html?screen=gym)            |
 
 The editable [HTML](index.html) selects a screen with `?screen=home`, `add`,
 `unfiled-memory`, `collection` or `gym`. The Unfiled-memory variant was authored

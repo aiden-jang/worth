@@ -109,9 +109,8 @@ an unavailable-photo placeholder. Excel includes the explicit experience date,
 reaction and photo availability alongside the separate saved date and overall call.
 Older backups remain supported. No new external service is used.
 
-Design references live in `art/ui-mocks/everyday`; dated implementation captures
-and verification limits live in `art/ui-qa/everyday-flow`. The Unfiled-memory
-extension is verified in [its own captures](../art/ui-qa/unfiled-memories/README.md).
+Design references live in `art/ui-mocks/everyday`; [quality checks](QUALITY.md)
+describes capture, Unfiled-memory regression coverage and verification limits.
 
 Unfiled finds participate in saved-name recall and overall-call insights. Only an
 explicit experience also appears in dated Memories and visit-reaction insights.

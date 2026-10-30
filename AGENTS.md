@@ -29,3 +29,5 @@ compositions are history where these revisions supersede them.
   type and left navigation. Warm cream is now intentional for opinion slips and ranked picks,
   not a light theme for the whole collection. The signed-out landing
   has its own simple wordmark/sign-in header and no archive sidebar.
+
+Keep generated review output out of Git; follow the [artifact policy](docs/QUALITY.md#browser-and-visual-review).

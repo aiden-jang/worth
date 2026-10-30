@@ -11,7 +11,7 @@ security headers, and no-index headers on public share URLs. A failed smoke chec
 fails the deployment job; it does not roll back an already-applied migration.
 
 The smoke script does not sign in or create production records. Browser interaction
-checks use intercepted synthetic APIs in `e2e/`; historical captures remain in `art/ui-qa/`.
+checks use intercepted synthetic APIs in `e2e/`; generated captures remain in ignored local output.
 A real signed-in phone test is still required after release.
 
 ## Operational protection

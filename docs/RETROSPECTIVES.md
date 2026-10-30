@@ -65,7 +65,7 @@ This adds no database table or backup format. Existing records/backups contain
 its source data; device cleanup removes its control draft. Public snapshots,
 booklets and existing exports retain their previous explicit content projections.
 Local QA uses real D1 owner/date/filing tests and deterministic browser fixtures;
-see [verification](../art/ui-qa/retrospective/README.md).
+see [quality checks](QUALITY.md).
 
 Calendar gap behavior follows the browser’s local Date disambiguation, documented
 in [MDN’s local date operations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate#description).

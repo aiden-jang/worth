@@ -55,8 +55,8 @@ documents behavior, while the dated QA records screenshots, checks and manual li
 The October 10 **taste cabinet** redesign responds to the user's request for a stronger visual
 identity, cleaner compositions, cute deadpan humor and an implementation that follows its mocks.
 Use [taste cabinet references](art/ui-mocks/taste-cabinet/README.md), authored and rendered before
-reworking the app. The reference HTML and running app share `src/cabinet.css`; compare the
-[implementation captures](art/ui-qa/taste-cabinet/README.md) at the same viewports.
+reworking the app. The reference HTML and running app share `src/cabinet.css`; compare fresh app captures
+at the same viewports using [quality checks](docs/QUALITY.md).
 
 This intentionally replaces the October 9 personality layout: collections now lead the archive;
 a selected collection item has a cream opinion slip alongside the list on desktop and beneath
@@ -219,8 +219,7 @@ character sit beside the headline on desktop. Keep the card straight for crisp t
 On mobile, order the headline and signup action, full-width opinion card, then example index.
 Pointer selection in the mobile example reveals the changed opinion; keyboard selection
 preserves focus. The selected call slides inside its capsule; clearing a call removes the
-selection and face. Reduced motion keeps selection changes immediate. See
-[signature verification](art/ui-qa/signature/README.md).
+selection and face. Reduced motion keeps selection changes immediate.
 
 ## Everyday interaction refinement
 
@@ -299,8 +298,8 @@ names remain reversible. Queue membership is independent of opinion and rank. Ad
 dates and visit counts extend the existing collection filter disclosure. Search includes
 exercise scope and matching note context. Optional new-record photos, account-scoped
 local draft recovery, clear saving/offline status and on-demand pages extend the accepted
-cabinet. See [product-pass QA](art/ui-qa/product-pass/README.md) for reference comparisons,
-responsive adaptations and release limits.
+cabinet. Use [quality checks](docs/QUALITY.md) for reference comparisons, responsive
+review and verification limits.
 
 ## Product completion
 
@@ -324,8 +323,7 @@ The editor uses one full-width column for identity, optional call/context and
 explicit filing, preserving a clear phone flow. A cream recovery panel contains
 only the actual uncertain filing snapshot and destination. It never invents a call
 or rank. Filing requires saved details and a deliberate keep-separate choice for
-an exact name/type match. Desktop/phone and narrow reflow verification are recorded
-in `art/ui-qa/inbox/`.
+an exact name/type match.
 
 ## Neutral activity objects
 
@@ -337,7 +335,6 @@ never receives a call, score or implied achievement. Existing headers, filters,
 routine/workout actions and record behavior remain intact. This deliberately
 extends the activity reference with the edition’s existing empty-state spacing;
 phone captures scroll to that section to show the complete illustration and CTA.
-See `art/ui-qa/activity-art/` for desktop/phone verification.
 
 ## Photo text review
 
@@ -381,7 +378,7 @@ positions remain numbered gaps; no face or call is inferred. Existing sandbox
 preview/apply behavior controls reusing an older order. Nested reason dialogs use
 the standard 22px cabinet form, 44px controls and explicit draft/conflict recovery.
 This deliberately extends the workbench without changing the primary collection
-composition. Verification captures are in `art/ui-qa/taste-history/`.
+composition.
 
 ## Connections
 
@@ -392,7 +389,7 @@ It keeps the 192px rail, 68/44px heading rhythm, shared palette, DM Sans labels,
 them. The cream diagram shows up to 12 actual neighbors, with numbered links and
 complete directional text below. It never infers a call, rank or location. Reason
 and uncertain-save dialogs retain standard drafts, explicit retry and conflicts.
-Patterns adds spaced tool links in its header, using separate 44px rows on phones; the underlying counts/call composition remains. Captures and narrow-width verification live in `art/ui-qa/connections/`.
+Patterns adds spaced tool links in its header, using separate 44px rows on phones; the underlying counts/call composition remains.
 
 ## Personal field guide
 
@@ -402,7 +399,7 @@ Collection/record choices and inclusion options pair on desktop and stack on pho
 Selected records use ruled rows with captions and labeled Earlier/Later actions.
 The existing cream booklet preview is shared, with a field-guide cover label and
 no call or rank. This is a deliberate secondary-page addition; the primary cabinet
-and name-only capture are unchanged. Captures are in `art/ui-qa/field-guide/`.
+and name-only capture are unchanged.
 
 ## Activity calendar
 
@@ -413,8 +410,7 @@ counts; phones use full-width dated rows so dates and counts remain readable at
 320px. The selected day has a ruled linked agenda on both layouts. Plans and real
 logs use distinct plain labels, without streaks, scores or inferred completion.
 Revisit dates live in the existing optional context disclosure; name-only capture
-and the independent revisit queue are unchanged. Captures belong in
-`art/ui-qa/activity-calendar/`.
+and the independent revisit queue are unchanged.
 
 ## Photo galleries
 
@@ -425,8 +421,7 @@ caption/order/cover controls; phones stack them. Source images use their own asp
 ratio so normalized arrows align with the actual pixels. Arrow labels have a readable
 list and four labeled coordinate sliders, without pointer-only editing. Before/after
 uses explicit choices, a large keyboard range and a full side-by-side alternative.
-Sources, captions and arrays do not infer calls, ranks or dates. Captures and deliberate
-layout verification belong in `art/ui-qa/photo-gallery/`.
+Sources, captions and arrays do not infer calls, ranks or dates.
 
 ## Cover collages
 
@@ -436,7 +431,7 @@ This deliberate secondary tool uses the cabinet palette, DM Sans, 22px corners a
 controls pair on desktop and stack on phones. A 1.6-ratio sketch labels layers;
 the separately prepared 1280 × 800 image is the exact save/download preview. No
 pointer-only positioning, inferred crop, call or rank is added. Sources fit inside
-manual frames and remain unchanged. Captures belong in `art/ui-qa/cover-collage/`.
+manual frames and remain unchanged.
 
 ## Private boards and trips
 

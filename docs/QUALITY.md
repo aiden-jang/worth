@@ -25,18 +25,19 @@ Browser APIs are intercepted with synthetic archives; offline tests additionally
 exercise the built Worker and service worker. These fixtures do not enter the
 production bundle and do not establish that production authentication works.
 
-Routine checks do not overwrite historical QA images. To deliberately capture a
-new review, set `WORTH_CAPTURE_UI` to a temporary output directory when running
+To capture a new local review, set `WORTH_CAPTURE_UI` to a temporary output directory when running
 the responsive, capsule, offline or private-space cases. Responsive captures go
 to that run’s `test-results/` directory; the other three use named subdirectories
 under the requested location. Feature-specific `WORTH_*_QA` flags remain available
-in their respective tests. Inspect and select evidence before adding it to `art/`.
+in their respective tests. Keep generated sets, traces and reports local or in
+short-lived CI artifacts. Commit authored references and curated README/installation
+images only. Earlier run evidence remains in Git history.
 
 Read the current [design contract](../art/ui-mocks/BUILD-CONTRACT.md) and relevant
 reference before changing a primary page. Compare desktop and phone captures with
 the reference at the same width. Inspect reflow, text wrapping, touch targets,
-keyboard focus, reduced motion, and empty/loading/error states. Dated evidence:
-[October 26 review](../art/ui-qa/audit-oct26/README.md).
+keyboard focus, reduced motion, and empty/loading/error states. Summarize findings
+and unavailable checks in the change description.
 
 Use the existing accessibility checks as regression coverage. An automated scan
 does not verify spoken announcements, logical reading order, a native share sheet

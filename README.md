@@ -61,7 +61,8 @@ in `e2e/`; they are not shipped. See [contributing](CONTRIBUTING.md) for individ
 
 See [archive tools](docs/ARCHIVE-TOOLS.md) for move, merge, recovery and export behavior.
 
-The [October 16 flow review](art/ui-qa/flow-audit-oct16/README.md) records phone journeys, shared sign-in checks, loading measurements and physical-device limits across the apps.
+See [quality checks](docs/QUALITY.md) for phone journeys, shared sign-in checks,
+visual review and physical-device limits.
 
 `ActivityView` owns browsing and editor selection. `ActivityEditor` owns drafts, saving and confirmations; controlled exercise-set, legacy measurement and named measurement fields receive only their part of the draft.
 

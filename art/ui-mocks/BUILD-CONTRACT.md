@@ -4,7 +4,7 @@
 
 User direction: stronger identity, cute dry humor, nonchalance, clean polish and fidelity between
 mocks and implementation. Read [taste-cabinet/README.md](taste-cabinet/README.md), open each named
-reference, and compare with [working captures](../ui-qa/taste-cabinet/README.md).
+reference, then compare fresh app captures using [quality checks](../../docs/QUALITY.md).
 The history below does not override this section.
 
 - Canvas `#181915`, panel `#20211c`, raised `#292a23`; text `#f0ecdf`, secondary `#aaa99b`.
@@ -49,7 +49,7 @@ Meh, a shallow Not again frown, and a tiny heart only on large Favorite faces.
 Opinion faces are ivory against the cream slip. Compact badges remain simple.
 The large opinion face settles once after a call change; pointer hover adds a slight tilt.
 Reduced motion disables both. No-call remains faceless; no call or ranking semantics change.
-See [cute pass captures](../ui-qa/cute-pass/README.md) for desktop/mobile verification.
+Use [quality checks](../../docs/QUALITY.md) for desktop/mobile verification.
 
 ## Soft characters — October 10, second cute pass
 
@@ -66,7 +66,7 @@ rank has a quiet outlined capsule. The existing composition, dark palette, typog
 plain control labels and concise dry captions remain the foundation. A single squash-and-settle
 reaction respects reduced motion. No-call stays faceless and rank remains independent.
 
-See [soft character captures](../ui-qa/soft-characters/README.md). Updated reference images
+See [quality checks](../../docs/QUALITY.md). Updated reference images
 record these intentional changes rather than silently treating them as the old mock.
 
 ## Animated reactions — October 10
@@ -79,7 +79,7 @@ Hover gives a small lean and lifted hands; call choices compress on press. All c
 motion is disabled under reduced motion, including descendants and hover. Compact row
 badges stay static, and no-call stays faceless. Layout and resting poses match the references.
 
-See [motion captures and recording](../ui-qa/animated-calls/README.md).
+See [quality checks](../../docs/QUALITY.md).
 
 ## Editorial cute — October 10, current refinement
 
@@ -96,7 +96,7 @@ of total padding height. Other card and layout dimensions stay consistent.
 
 Arrival reactions run for 800ms with gentler amplitude; one blink ends within 3.2 seconds.
 Hands and heart settle earlier. Motion stays finite and respects reduced motion. Reference
-HTML and PNGs are updated; [verification](../ui-qa/editorial-cute/README.md) includes the
+HTML and PNGs are updated; [quality checks](../../docs/QUALITY.md) includes the
 three calls, desktop/mobile layouts and motion recording.
 
 ## Signature composition — October 10, current target
@@ -113,7 +113,7 @@ activation retains focus. Reduced motion uses immediate scrolling. The call trac
 dark selected pill, sliding in 280ms. No-call hides the pill and character. Text labels,
 pressed states, reversible choices and rank independence remain unchanged.
 
-See [signature captures and recording](../ui-qa/signature/README.md). Updated static
+See [quality checks](../../docs/QUALITY.md). Updated static
 references reflect this arrangement; private pages retain their established compositions.
 
 ## Everyday interaction refinement — October 10
@@ -125,7 +125,7 @@ Selected rows retain the raised surface on hover. Existing factual status messag
 arrow by 2px and scale the cover to 1.025 on fine-pointer hover or keyboard focus. Reduced
 motion keeps them still; touch devices do not get a sticky animated hover. Resting layouts
 and all call, rank, capture and privacy semantics remain unchanged. See
-[interaction verification](../ui-qa/interaction-polish/README.md).
+[quality checks](../../docs/QUALITY.md).
 
 ## Cabinet edition — October 10, current target
 
@@ -159,7 +159,7 @@ the earlier photographic starter covers and generic empty-state layouts.
 ## October 9 personality refinement — historical override
 
 The user requests more fun, dry humor, nonchalance, and a clean, polished, tasteful UI.
-Use [personality-refinement](../ui-qa/personality-refinement/README.md) as the current reference.
+Use the current authored references linked in [the index](README.md).
 This supersedes the earlier refinement where they differ:
 
 - Canvas `#111110`, panels `#181816`, raised surfaces `#1d1c19`, rust `#a54a3f`.
@@ -176,8 +176,7 @@ This supersedes the earlier refinement where they differ:
 
 ## October 9 coherence refinement — retained foundation
 
-The user's latest request prioritizes **overall polish and coherence**. Use the exact working
-screens in [product-refinement](../ui-qa/product-refinement/README.md) as the current composition.
+The user's latest request prioritizes **overall polish and coherence**. Use the authored [composition references](README.md).
 These documented changes supersede the older generated dimensions and landing composition:
 
 - DM Sans headings: 56px desktop / 40px mobile; landing headline 84px / 58px.
@@ -193,19 +192,6 @@ These documented changes supersede the older generated dimensions and landing co
 
 Compare at 1440 × 900 and 390 × 780, then check 320, 430, and 768px for wrapping/overflow.
 The generated references below remain historical foundation, not conflicting requirements.
-
-## Historical generated references and viewports
-
-| Screen             | Reference                                                          | Saved image | Comparison viewport |
-| ------------------ | ------------------------------------------------------------------ | ----------- | ------------------- |
-| Desktop landing    | [worth-landing-desktop-v3.png](worth-landing-desktop-v3.png)       | 1586 × 992  | 1440 × 900          |
-| Mobile landing     | [worth-landing-mobile-v3.png](worth-landing-mobile-v3.png)         | 887 × 1774  | 390 × 780           |
-| Archive home       | [worth-archive-home-v6.png](worth-archive-home-v6.png)             | 1586 × 992  | 1440 × 900          |
-| Desktop collection | [worth-collection-desktop-v5.png](worth-collection-desktop-v5.png) | 1586 × 992  | 1440 × 900          |
-| Mobile collection  | [worth-collection-mobile-v5.png](worth-collection-mobile-v5.png)   | 887 × 1774  | 390 × 780           |
-
-Normalize references proportionally. Do not stretch them. Also inspect mobile at 320px and
-430px for wrapping, readable labels, and overflow.
 
 ## Shared visual system
 
@@ -392,7 +378,7 @@ queue and optional capture-photo controls inside the existing detail areas, and 
 visit filters inside the existing disclosure. Mobile filters stack at <=360px; wider
 phones use two columns. Continue 44px targets, native scrolling dialogs, account-only
 records and factual workout/draft/offline copy. Intentional integrations are recorded
-in [product pass QA](../ui-qa/product-pass/README.md).
+in [quality checks](../../docs/QUALITY.md).
 
 ## Product completion — October 10
 
@@ -411,7 +397,7 @@ copy only in the corresponding reference images. Preserve their composition, fon
 spacing, palette and faces. Landing supporting copy/footer, empty archive helper/footer,
 Search helper/no-result title, Patterns helper/empty summaries, creation description
 placeholder, Settings subtitle, Help intro and shortcut title have changed deliberately.
-No layouts or stored user content change. See [copy QA](../ui-qa/voice-pass/README.md).
+No layouts or stored user content change. See [quality checks](../../docs/QUALITY.md).
 
 ## Repository polish — October 15
 

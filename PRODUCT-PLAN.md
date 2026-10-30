@@ -62,8 +62,8 @@ exhaustive certification of product readiness.
 
 Implemented the five product-facing gaps and four further source gaps. Settings
 includes photo-inclusive backup and atomic restore in addition to records export,
-with a 32 MB / 5,000-record / 500-list / 200-photo limit. Source behavior, owner
-boundaries and desktop/mobile verification are documented in art/ui-qa/completion.
+with a 32 MB / 5,000-record / 500-list / 200-photo limit. Source behavior and owner boundaries are documented in [architecture](docs/ARCHITECTURE.md);
+[quality checks](docs/QUALITY.md) describes verification.
 Restore retry keys survive a reload on this device until completion or cleanup.
 
 Added static HTML security headers, account-scoped request limits and automatic

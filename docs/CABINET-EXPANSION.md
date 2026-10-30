@@ -1,5 +1,8 @@
 # Cabinet expansion
 
+Verification follows [quality checks](QUALITY.md). Per-run audit records, test totals
+and screenshots remain in Git history. The feature and data contracts below remain current.
+
 The user approved the full feature brainstorm on October 15, 2026. This document
 tracks that scope across several releases. A listed feature is not a shipping
 claim. Each feature needs working persistence where applicable, recovery/error
@@ -111,14 +114,6 @@ of the other sections are complete merely because this plan has been written.
 
 ## Local verification of the first group
 
-78 tests across 21 files and all 41 browser checks passed locally. Formatting,
-ESLint/hooks, unused-code checks, Worker/TypeScript checks and production build
-passed. All 12 final focused browser checks passed after correcting phone button contrast
-and adding context-load confirmation. Captures and deliberate layout additions are in
-[workbench QA](../art/ui-qa/cabinet-tools/README.md). These changes are on the
-separate feature branch and have not been deployed. All unchecked entries above
-remain unfinished.
-
 ## Second implementation: private context
 
 The item editor adds an optional context disclosure after the existing note/dates.
@@ -135,11 +130,6 @@ context. Incomplete URLs, prices and unnamed detail drafts can recover locally.
 Calendar downloads contain a reviewed title/date and a one-day-before alarm; the
 user imports them into a calendar. Worth does not send notifications.
 
-82 tests and all 47 browser checks passed locally, with a successful typecheck and
-production build. Desktop/phone screenshots are reviewed in
-[private-context QA](../art/ui-qa/private-context/README.md). This group remains on
-the feature branch and has not been deployed.
-
 ## Third implementation: booklets and recommendation cards
 
 Booklets & cards in Workbench prepares a self-contained HTML booklet from up to
@@ -149,14 +139,6 @@ chosen record and the user's own message, with optional recipient, collection na
 and photo. Preparation happens on the device. Edits invalidate old files and
 failed photos can be retried without losing choices. Export drafts recover on
 this device for seven days. Native share cancellation never triggers a download.
-
-85 tests, formatting, lint, unused-code checks and the production build passed
-locally. All eight new export browser journeys passed serially. The full browser
-run passed 53 of 55 cases; the two timed-out cases passed on subsequent runs.
-Further interrupted workbench/storage cases passed serially too. Six A5 PDF pages
-(in-app and standalone) were rendered and visually reviewed. Desktop/phone captures
-and scope limits are in [publishing QA](../art/ui-qa/publishing/README.md).
-This remains on the separate branch, without a pull request or deployment.
 
 ## Fourth implementation: personal shelves
 
@@ -172,12 +154,6 @@ merged and trashed record references are omitted from responses and exports.
 Ranks and calls stay independent. This is a secondary Workbench presentation,
 preserving the existing primary collection composition.
 
-All 87 tests, formatting, lint, unused-code checks and the production build
-passed locally. The final full browser run passed all 61 journeys serially,
-including shelf Axe, draft/conflict recovery and narrow/long-name layouts. Eight reviewed desktop/phone
-captures are in [shelf QA](../art/ui-qa/shelf/README.md). The larger unchecked scope
-above remains unfinished. These features have not been deployed.
-
 ## Fifth implementation: reviewed capture
 
 Import & capture accepts CSV with explicit column mapping, exact record previews
@@ -191,11 +167,7 @@ The import transaction binds its result to the owner, active collection, exact
 payload and retry key. A frozen device draft is written before the request starts;
 an interrupted response can recover and retry without recreating saved records.
 Real D1 tests cover 100-record saves and a parent trashed before the transaction.
-All 95 tests, formatting, lint, unused-code and production build checks passed.
-The final full browser run passed all 69 journeys, including draft/retry recovery,
-Axe and narrow/long-content layouts. Reviewed desktop/phone captures and limitations are
-in [capture QA](../art/ui-qa/reviewed-capture/README.md). General existing-record
-duplicate review is completed separately below; import checks alone did not complete it.
+General existing-record duplicate review is completed separately below.
 
 This work remains on the feature branch. Nothing in this tracker claims that the
 unchecked web features or on-device recognition are finished.
@@ -214,12 +186,6 @@ choices and reviews. Record-opening actions protect unfinished sandbox changes
 and comparison rounds. The item note label now correctly distinguishes public
 ranking links from opt-in booklet exports.
 
-All 98 tests and core checks passed locally. The final full browser run passed
-all 79 journeys, including ten duplicate-review cases covering Axe, conflicts,
-revisit focus, new-member review and long/narrow layouts. Reviewed captures and limits are in
-[duplicate QA](../art/ui-qa/duplicates/README.md). The larger unfinished scope
-remains tracked above.
-
 ## Seventh implementation: collection archiving
 
 Collection settings can archive/unarchive a collection independently of Trash.
@@ -235,13 +201,6 @@ activities are rejected. Archive-only updates touch supplied fields and cannot
 overwrite a concurrent rename/artwork change. Unsaved settings block the action;
 failed saves recover in place. Directory status supports Back navigation. Current
 empty copy points to Archived without claiming records disappeared.
-
-All 101 tests and core checks passed locally. The full browser regression passed
-all 87 journeys; all eight archiving cases passed again against the final copy/build.
-Final formatting/lint checks passed. Eight desktop/phone captures were reviewed
-alongside the cabinet references; see [archiving QA](../art/ui-qa/collection-archiving/README.md).
-This work remains local on the feature branch. The unchecked scope above,
-including web capture integrations and on-device recognition, is unfinished.
 
 ## Eighth implementation: private visit details
 
@@ -260,12 +219,7 @@ read/write-interval guard; this is not a claim of new activity sync conflict UI.
 
 Context follows original logs through merges, moves, Trash and backup ID remapping.
 Old logs/backups remain empty; no earlier reaction is fabricated. Activity entries
-reject nonempty collection visit context. All 104 tests and core checks passed
-locally. The full browser regression passed 95 journeys; all eight visit-detail
-cases passed again after the final spacing adjustment. The final build, formatting
-and lint passed, and all four desktop/phone captures were visually reviewed in
-[visit QA](../art/ui-qa/visit-context/README.md). The larger unchecked scope remains
-unfinished, including web capture integrations and on-device recognition.
+reject nonempty collection visit context.
 
 ## Scope correction: website only
 
@@ -294,13 +248,6 @@ backups; template-only restore is supported. A capacity failure rolls back the
 entire restore, including records and its receipt. All-data deletion clears both
 templates and retry receipts. Older backups default to no templates.
 
-All 110 unit/component/API checks passed, including real D1 concurrency and
-rollback tests. The full 111-journey browser regression passed. Desktop/phone
-captures, narrow-width checks and Axe are recorded in
-[collection setup QA](../art/ui-qa/collection-templates/README.md). The larger
-unchecked web feature list remains unfinished. Work remains on the separate
-branch; no push, pull request, merge or deployment was made.
-
 ## Tenth implementation: reviewed web capture and private shortcuts
 
 `/capture` receives a reviewed name, source and optional note, including incoming
@@ -326,13 +273,6 @@ writes if Accounts changes user in another tab. The old app shell is hidden and
 a document reload opens a fresh cache; delayed requests retain the old account
 binding. Metadata/public snapshots remain independent. This protects drafts and
 uncertain saves without claiming to complete full offline reading or queued sync.
-
-All 117 core tests passed, including real D1 account-mismatch checks. The full
-129-journey browser regression passed after correcting cream-button hover contrast.
-Desktop/phone captures, keyboard review focus, Axe and 320/430/768px reflow checks
-are recorded in [web capture QA](../art/ui-qa/web-capture/README.md). The Inbox,
-history, OCR, offline sync and other unchecked web features remain unfinished.
-No push, pull request, merge, installation or deployment was performed.
 
 ## Eleventh implementation: web Inbox
 
@@ -360,14 +300,6 @@ supports old version 1 files and new version 2 Inbox-only files, remaps IDs and 
 receipt on capacity failure. Purge cannot resurrect a late creation/filing retry;
 all-data deletion clears both Inbox and its operation receipts.
 
-All 126 tests across 30 files, formatting, lint, unused-code checks, TypeScript
-and the production build passed. The full 149-journey browser regression passed;
-subsequent isolated recovery fixes passed 40 capture/Inbox journeys and all 22
-final Inbox journeys. The versioned backup change then passed six affected
-legacy/new-format restore and reflow journeys. Twelve desktop/phone captures
-were visually reviewed, with Axe and 320/430/768px checks recorded in
-[Inbox QA](../art/ui-qa/inbox/README.md).
-
 History, OCR, full offline sync, relationships, additional artwork/sharing
 features and all other unchecked scope remain unfinished. Nothing is pushed or
 deployed.
@@ -380,12 +312,6 @@ first-exercise guidance. Both are authored SVG objects, static, decorative and
 faceless. No score, call or achievement is inferred, and no data model changes.
 The activity shortcut also respects open dialogs, preventing an underlying log
 editor from opening behind Inbox or another modal.
-
-Lint, unused-code checks, TypeScript and production build passed. Both desktop/
-phone interaction and Axe journeys passed, followed by all five broader layout
-regressions at 320, 390, 430, 768 and 1440px. Four captures were inspected in
-[activity artwork QA](../art/ui-qa/activity-art/README.md). Other unchecked
-features remain unfinished; this work remains local to the feature branch.
 
 ## Thirteenth implementation: on-device photo text
 
@@ -404,15 +330,6 @@ account, without placing private words in a URL. Draft owners remain fixed durin
 metadata transitions. The build prepares local assets and supplied notices; its
 CSP allows self-hosted WebAssembly without JavaScript string evaluation.
 
-All 134 tests across 33 files, formatting, lint, unused-code checks, TypeScript
-and the production build passed. The full browser regression passed all 165
-journeys. Real-engine PNG/JPEG reading, WebP cancellation, failed assets, manual
-fallback, blocked storage, account boundaries, Axe and narrow reflow are covered.
-Reviewed desktop/phone captures are in [photo text QA](../art/ui-qa/photo-text/README.md).
-Receipt attachment/line-to-record mapping, full offline sync and all other
-unchecked web scope remain unfinished. This is local feature-branch work, with
-no native companion, push, pull request or deployment.
-
 ## Fourteenth implementation: barcode and ISBN capture
 
 Read a code decodes EAN-8/EAN-13/UPC-A photos in a bounded on-device browser worker,
@@ -428,14 +345,6 @@ existing account-bound capture flow. No record/call/rank is inferred or saved
 here. Owner-scoped text drafts recover for seven days; photos do not. Failed or
 unsupported reading, no match, provider errors, offline lookup and cancellation
 retain the manual path. Account recovery aborts both lookup and decoding.
-
-All 139 tests across 35 files, core/build checks and the full 177-journey browser
-regression passed. A separate live browser lookup confirmed the real provider,
-CSP and omitted private headers without auto-applying a title. The dependency
-audit found no known vulnerabilities. Ten inspected desktop/phone captures and
-recovery/accessibility/reflow checks are in [code capture QA](../art/ui-qa/code-capture/README.md).
-The remaining unchecked web scope is still unfinished. No native app, push,
-pull request, merge or deployment was performed.
 
 ## Fifteenth implementation: quiet period retrospectives
 
@@ -463,15 +372,6 @@ date. The broad run exposed an activity test reloading before close navigation
 finished; it now waits for the hidden dialog and clean route rather than sleeping
 or weakening checks.
 
-All 144 core tests across 36 files, formatting, lint, unused-code checks, TypeScript
-and the production build passed. All 14 focused retrospective/activity journeys
-then passed, followed by the complete 189-journey desktop/phone regression. Ten
-final captures were visually inspected against the Patterns/cabinet references;
-see [retrospective QA](../art/ui-qa/retrospective/README.md) for Axe, reflow, recovery
-and calendar cases. Ranking/opinion history and all other unchecked web scope
-remain unfinished. This work is committed locally on the separate branch, without
-native apps, push, pull request, merge, remote CI or deployment.
-
 ## Sixteenth implementation: future ranking and opinion history
 
 Workbench → Taste history records future old/new ranking and call changes in the
@@ -496,15 +396,6 @@ snapshot. Restore accepts versions 1/2/3, remaps all references and preserves ga
 dates and reasons without creating extra events. History exports support 10,000
 changes and 16 MB of history within existing backup constraints; oversized history
 returns an explicit error without omitting events. Public projections are unchanged.
-
-All 149 core tests across 37 files passed, including real D1 capacity/ownership,
-visit guards, moves, Trash and restore checks. Formatting, lint, unused-code checks,
-TypeScript and production build passed. All eight focused desktop/phone browser
-journeys passed, including Axe, 320/430/768px reflow and draft/conflict recovery.
-Ten captures were visually inspected; see [history QA](../art/ui-qa/taste-history/README.md).
-The complete 197-journey desktop/phone browser regression then passed. This group is committed locally.
-All other unchecked web features remain unfinished. Work stays on the separate
-branch, without native code, push, pull request, merge or deployment.
 
 ## Seventeenth implementation: private record connections
 
@@ -533,13 +424,6 @@ failure rolls back all records and its receipt; freeing space permits the same
 restore retry. Public projections remain unchanged. A small history editor fix
 also compares a recovered draft against newly loaded saved details.
 
-All 154 tests across 38 files and core checks passed, including real D1 ownership,
-retries, loop rejection, removal, source details, capacity and atomic restore.
-All 18 focused desktop/phone connections/history checks passed, including Axe,
-long names and 320/430/768px reflow. The complete 207-case browser regression passed. Six focused capture checks and two final entry-point journeys then passed after the last visual fixes. All 18 final captures were inspected; see [connections QA](../art/ui-qa/connections/README.md). This group is committed locally.
-Other unchecked web features remain unfinished. This remains local feature-branch
-work, without native apps, push, pull request, merge or deployment.
-
 ## Eighteenth implementation: personal field guides
 
 Patterns → Field guide assembles up to 12 records across owned collections in a
@@ -555,16 +439,6 @@ Blocked storage, route changes and account switches have explicit recovery. The
 shared photo exporter now checks image dimensions before decode and reencodes
 displayed pixels without original EXIF/XMP, leaving stored sources untouched.
 Visible photo content is not redacted. There is no schema or backup version change.
-
-All 158 core tests across 39 files passed in a one-worker run after the initial
-parallel run hit process-start and timeout failures. Formatting, lint and unused-code
-checks and the production build passed. Both final entry/export journeys then
-passed again against the final build. All 18 focused guide/publishing browser journeys passed, including Axe, narrow
-reflow, draft recovery, exact projection, metadata removal and account cancellation.
-Eight captures and every page of the actual three-page A5 PDF were inspected; see
-[field-guide QA](../art/ui-qa/field-guide/README.md). The remaining unchecked web
-features are still unfinished. Work remains local on the separate feature branch,
-without native apps, push, pull request, merge or deployment.
 
 ## Nineteenth implementation: revisit plans and activity calendar
 
@@ -582,16 +456,6 @@ a day focuses its loaded agenda, with a direct return to the month. Failed refre
 feedback stays beside the day controls and identifies retained entries. Context
 backs up through the existing format, with no migration/version change; old files
 default to no plan. Public/export projections keep their existing scope.
-
-All 162 core tests across 40 files passed with one worker. Real D1 cases cover
-privacy, actual log/plan separation, snoozed/original dates, complete counts and
-stable pagination, archive/Trash, Inbox filing and backup ID remapping. Formatting,
-lint, unused-code checks, TypeScript and production builds passed. All 12 focused
-calendar/context journeys passed, then six calendar cases passed twice after the
-last focus/retry/return refinements. Axe, 320/430/768px reflow and all ten final
-captures were inspected; see [calendar QA](../art/ui-qa/activity-calendar/README.md).
-Other unchecked web features remain unfinished. This work remains local on the
-separate branch, without native apps, push, pull request, merge or deployment.
 
 ## Twentieth implementation: photo galleries and comparisons
 
@@ -615,15 +479,6 @@ restore old single-photo formats. Records-only restores retain metadata while
 clearly identifying absent image files. Stored sources stay unchanged by captions,
 arrows and comparisons; uploads may resize before storage. Existing public and
 opt-in export projections remain selected-cover-only and omit gallery metadata.
-
-All 168 core tests across 41 files passed, with formatting, lint, unused-code,
-TypeScript and production build checks. The complete 237-case desktop/phone
-regression passed, followed by all 14 final gallery journeys. Real D1 cases cover
-migration, immutable retries, owner/capacity/revision guards, source removal and
-backup integrity. Axe, narrow reflow, recovery and all 16 final captures are recorded
-in [gallery QA](../art/ui-qa/photo-gallery/README.md). The remaining unchecked web
-features stay unfinished. Work remains local to the separate branch, without
-native code, push, pull request, merge or deployment.
 
 ## Twenty-first implementation: manual cover collages
 
@@ -649,15 +504,6 @@ unrelated collection edits and cover removal cannot permit a stale replacement.
 Identical current bytes can confirm an exact retry without another write. Cover
 cache URLs use the counter. It resets with fresh IDs on restore; saved covers and
 sources retain format 5 backup support, with no public projection change.
-
-All 173 core tests across 42 files and core checks passed. The complete 249-case
-browser regression passed; after the last navigation refinement all 14 focused
-collage journeys passed against the final build. These include Axe, exact downloaded/
-uploaded bytes, source reload, recovery, conflicts, failed review images, account
-changes, 320/430/768px reflow, browser Back, closing focus and measured touch targets.
-All 14 final captures were inspected; see [collage QA](../art/ui-qa/cover-collage/README.md).
-Remaining unchecked web features stay unfinished. Work remains local to the separate
-branch, without native code, push, pull request, merge or deployment.
 
 ## Twenty-second implementation: private boards and trip replay
 
@@ -687,17 +533,6 @@ all data and its receipt on capacity failure. Board-only backups work. A shared
 creation guard also prevents client-chosen board/gallery IDs from colliding with
 other backup record kinds, including Trash. Exact prior retries still work.
 
-The full 181-test core regression passed before the final schema/identity
-additions; all 21 final affected board/gallery/schema checks then passed against
-real D1. The suite now contains 183 tests. Formatting, lint, unused-code checks,
-Worker/TypeScript checks and the production build passed. All 16 desktop/phone
-board journeys passed across the final runs: 14 in the main run, then the two
-desktop cases rerun serially after Chrome timed out during page setup. No test
-assertion or timeout was weakened. Captures and deliberate layout additions are
-in [board QA](../art/ui-qa/memory-boards/README.md). This group is committed locally.
-All other unchecked web features remain unfinished. Work stays on the separate
-branch without native apps, push, pull request, merge, remote CI or deployment.
-
 ## Twenty-third implementation: reviewed receipts
 
 Capture → Receipts supports on-device English text recognition, manual text,
@@ -720,17 +555,6 @@ read reviews with their sources, preserve originally entered record names,
 normalize moved/missing links, restore fresh IDs without extra linked records,
 validate optional image bytes, and roll back the whole restore on capacity failure.
 All-data deletion clears receipts and tombstones. Public snapshots remain unchanged.
-
-The 192-test full core regression passed; 16 final affected receipt/model/restore
-checks passed after original-name preservation was added. All 18 final desktop
-and phone receipt journeys passed, including real local OCR, exact attachment
-bytes/pixels, uncertain-save reload, missing device copies, blocked storage,
-account changes, stopped preparation, missing sources, restore and Axe/reflow.
-Two existing gallery recovery journeys also passed with the shared photo-draft
-hook. Lint, unused-code checks, Worker/TypeScript checks and the production build
-passed. Desktop/phone captures were inspected against the cabinet; deliberate
-extensions are in [receipt QA](../art/ui-qa/receipts/README.md).
-Five unchecked web groups remain. This work stays local on the separate branch.
 
 ## Twenty-fourth implementation: activity plans and measurements
 
@@ -762,17 +586,6 @@ and identity. Saved-plan comparisons ask before replacing a draft and keep its
 previous text readable while open. New log drafts retain their original revision
 through reloads; older unversioned drafts remain copyable and block stale saves.
 
-The complete 201-test core suite passed, followed by all 16 final affected draft,
-history and model checks after correcting time-only Save. All 12 desktop/phone
-activity journeys passed across the final runs: ten together and the two recovered
-log cases after fixing test field lookup and old-draft setup timing. The two final
-history journeys also passed after the last copy correction. No timeout or behavior
-assertion was weakened. Formatting, lint, unused-code checks, Worker/TypeScript and
-production builds passed. Twenty desktop/phone captures were inspected against
-the cabinet references; deliberate extensions are in [activity QA](../art/ui-qa/activity-plans/README.md).
-Four unchecked web groups remain. This group is committed locally on the separate
-branch, without native apps, push, pull request, merge, remote CI or deployment.
-
 ## Time capsule implementation
 
 Web-only capsules store a fixed message and up to six explicitly reviewed owned
@@ -783,13 +596,6 @@ timezone. Opened capsules can explicitly compare the same fields with current
 sources; removed originals never erase the fixed copy. Raw owner backups include
 unopened contents, with visible privacy copy. Version 9 restores fresh identities,
 closed/opened state, missing-source flags and full/records-only photo behavior.
-
-Capsule verification: all 211 core tests across 46 files passed; 37 affected
-browser journeys passed across capsules, boards and galleries, plus two future-date
-and blocked-storage journeys. The single skipped phone case repeats the desktop
-320/430/768px sweep. Desktop/phone and narrow/tablet captures were inspected in
-`art/ui-qa/capsules`. Private collaboration, two-person choices and full offline
-reading/sync remain the three unchecked groups.
 
 ## Private collaboration and two-person choices
 
@@ -804,7 +610,7 @@ choices stay absent from responses and exports until both reveal.
 Format 10 preserves current authorized shared text, private copies and revealed
 participant outcomes as inactive archives with fresh IDs. Invitations, live access
 and unrevealed choices do not restore. Capsule-only and shared-copy-only files have
-explicit previews. See `art/ui-qa/private-spaces` for verification and scope.
+explicit previews.
 
 Collaboration verification completed: the full 215-test suite passed, followed by
 two targeted real-D1 regression checks. Ten private-space browser journeys and

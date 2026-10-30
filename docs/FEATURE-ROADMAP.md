@@ -6,7 +6,7 @@ rankings and revisit plans. New features should remain optional.
 ## First release: archive tools
 
 Shipped in commit `4a1e9e8` on main. CI, CodeQL, migration, deployment and live checks passed.
-See [behavior and limits](ARCHIVE-TOOLS.md) and [visual verification](../art/ui-qa/archive-tools/README.md).
+See [behavior and limits](ARCHIVE-TOOLS.md) and [quality checks](QUALITY.md).
 
 - Want to try in capture, details, selection actions and browsing, with local draft recovery.
 - Move items with original photos, notes, merged records and visits.
