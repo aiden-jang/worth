@@ -1,555 +1,135 @@
 # Worth design direction
 
-Worth is a private record of what someone tried, did, kept, and decided not to repeat. It is not a social feed, a productivity game, or a polished version of someone else's life.
+Worth is a private place to remember what someone tried, did and liked. Capture
+should feel complete with a name alone. Notes, photos, dates, types, calls,
+rankings and workout measurements are optional context.
 
-The product has three jobs:
+## Current references
 
-- **Collect** things worth finding again.
-- **Log** what happened with enough context to make it useful later.
-- **Rank** what held up, what did not, and what to revisit.
+The [reference index](art/ui-mocks/README.md) identifies the maintained compositions.
+The [build contract](art/ui-mocks/BUILD-CONTRACT.md) owns exact tokens, dimensions,
+responsive behavior and motion. [VOICE.md](VOICE.md) owns copy and character rules.
+Keep these documents about the current app; Git retains superseded designs and
+completed implementation plans.
 
-## Everyday flow — October 28
+## Everyday flow
 
-The user found the completed feature set too complex and approved a connected
-simplification of first use, capture, Home, collections, recall and Gym. The
-[everyday references](art/ui-mocks/everyday/README.md) supersede the corresponding
-cabinet compositions. Shared dark olive, cream, butter, fonts and reaction artwork
-remain. This revision changes hierarchy and interaction rather than adding features.
+Home leads with search and recent records, including Unfiled. Collections and a
+compact memory follow. Someone can save without first creating or organizing a
+collection. Use actual records and useful empty states, without sample private data.
 
-Home leads with search and recent records, including Unfiled. There is no requirement
-to create or organize a collection before saving. Add is one consistently named,
-owner-scoped composer with an explicit destination. Its default is the current
-active list when open, otherwise Unfiled; it never silently uses a last-used list.
-The name is the only capture requirement. Add details offers an explicit dated
-experience, thought, reaction and one private photo, including in Unfiled. Saving
-a name or photo alone never implies a visit. Activity entries show their date.
-The Unfiled-memory extension below supersedes the initial text-only capture scope.
+Add opens one name-first composer and states its destination. Use the current
+active list when open; otherwise use Unfiled, independently of previous choices.
+Add details offers an explicit dated experience, thought, reaction and private
+photo. Saving a name or photo alone never implies a visit or an opinion.
+Successful capture restores focus after saving so another name can follow.
+Interrupted saves retain their exact retry identity and account-scoped draft.
 
-Primary navigation is Home, Collections and Look back, with search, Unfiled and
-personal activity/collection shortcuts as utilities. Phones keep the three primary
-links and Add in a persistent safe-area bar, plus search and account navigation in
-the header. Content and status panels clear that bar. Desktop retains the 192px rail.
+Primary navigation is Home, Collections and Look back. Search, Unfiled and personal
+shortcuts are utilities. Desktop uses the 192px rail; phones use the persistent
+safe-area navigation and Add bar, plus search/account access in the header.
+Content, status panels and menus must clear that bar.
 
-Collection contents follow a compact identity header, name capture and one browse /
-search / filter row. Collection settings, sharing and Ranking & tools are contextual;
-batch capture, Want to try capture, experiences, selection and saved views sit in
-Entry options. A completed name-only save returns focus for another name without
-opening a detail view. Desktop selection uses the cream slip; phone selection opens
-a native, scrolling sheet with proper focus return, leaving list positions unchanged.
-Add experience and Edit are its main actions; ranking, notes and queues disclose.
+Look back combines Memories and Insights. Keep search visible and disclose dates,
+list/archive filters, period shortcuts and specialized tools. Insights initially
+shows three real preference groups, with expansion for the rest. Counts use
+recorded calls and explain their denominators. Activity progress stays separate.
+[Everyday behavior](docs/EVERYDAY.md) and [memory/progress](docs/REMEMBER.md) define
+these flows. Existing direct routes remain usable.
 
-Look back combines Memories and Insights. Search remains visible; date, list and
-archive filters and period shortcuts disclose. Insights initially shows three real
-preference groups, with an explicit expansion for the rest, compact recorded-call
-counts and separate activity progress links. Legacy routes remain directly usable.
-Gym puts current visits and Resume / Finish first. Routines, progress and past
-search disclose below them; past visits are collapsed. Past filters never hide an
-active visit. Setup and Save as routine sit in the visit's own options menu. Rest
-timers disclose without changing their existing countdown behavior.
+## Collections
 
-The authored references precede implementation. [Everyday flow](docs/EVERYDAY.md)
-documents behavior, while the dated QA records screenshots, checks and manual limits.
+The directory has one compact header, actual counts, New collection and a quiet
+New activity action. One toolbar groups Current/Archived and optional search/order.
+Keep filters visible for more than three collections or an active query/nondefault
+order, and through filtering for the rest of that visit. Mixed kinds have section
+headings; one kind does not repeat the page title.
 
-## Current build reference
+A collection opens with identity, name capture and one browse/search/filter row.
+Settings, sharing and Ranking & tools are contextual. Entry options discloses
+batch capture, Want to try, experiences, selection and saved views. Unranked items
+remain accessible. Desktop selection uses a cream opinion slip; phone selection
+uses a native scrolling sheet with focus return and stable list positions.
+Add experience and Edit lead; ranking, notes and queues disclose.
 
-The October 10 **taste cabinet** redesign responds to the user's request for a stronger visual
-identity, cleaner compositions, cute deadpan humor and an implementation that follows its mocks.
-Use [taste cabinet references](art/ui-mocks/taste-cabinet/README.md), authored and rendered before
-reworking the app. The reference HTML and running app share `src/cabinet.css`; compare fresh app captures
-at the same viewports using [quality checks](docs/QUALITY.md).
+Private uploaded covers take precedence over optional built-in artwork. Automatic
+art uses exact starter-name matching or a monogram; explicit saved object/palette
+choices remain available. Artwork never implies a call, a rank or a memory.
 
-This intentionally replaces the October 9 personality layout: collections now lead the archive;
-a selected collection item has a cream opinion slip alongside the list on desktop and beneath
-its row on mobile. The current signed-out landing uses a centered headline and three illustrated folders;
-its interactive example has an index and opinion slip below the hero. The latest
-illustrated-landing and plainspoken-copy sections of the build contract supersede
-earlier landing compositions. The dark olive canvas, warm paper and butter accent form one consistent system.
-There are no paper textures, fake analytics or mandatory opinions.
+## Calls and personality
 
-Typography is existing DM Sans, mostly 400–500, with DM Mono for small structural labels.
-The desktop rail is 192px; signed-in titles are 68px and mobile collection titles are 50px.
-Cream cards and dialogs have 22px corners, shelf images 16px, standard buttons 12px.
-Call choices share one inset capsule track; primary signup/archive actions use capsules. The exact tokens and
-responsive behavior are in the build contract. Earlier mock sets remain historical.
+Rank describes comparison inside one collection. Favorite, Meh and Not again are
+independent, reversible calls; no-call is separate. Never infer one from rank,
+queue membership or a missing choice. Storage retains `favorite`, `meh`,
+`would_not_again` and `null` throughout editors, filters, backups and summaries.
 
-## Personality and voice
+The slip shows one actual call, character and dry caption. No-call stays faceless
+with Undecided / No opinion required. Call buttons keep text, pressed states and
+visible focus; color and expression are never the only indicators.
 
-`Your taste. A place to keep it.` states the landing's point. The product line is
-`Keep what you try. Rank what you like.` / `The meh can stay.`. The archive says `The archive.` and
-`Good finds. Mixed feelings.`. A small deadpan face accompanies `Opinions may vary. Yours, mostly.`.
+Matte butter, sage and clay characters have distinct soft silhouettes, fine ink
+gestures and faint blush. Large characters may react briefly and settle; row
+badges stay still. Reduced motion disables character movement and hover transforms.
+Humor is about subjective taste, never habits, spending, bodies or performance.
+Functional labels, errors, account access, privacy and deletion remain literal.
 
-The opinion slip expresses one actual call with a face and a short caption: `Yes, again.`,
-`It was a thing.`, or `Once was plenty.`. An item without a call says `Undecided.` / `No opinion required.`
-and has no opinion face. Three plain, labeled buttons make the choice reversible.
-The large face replaces repeated face graphics on those buttons; compact row faces remain.
-The second cute pass gives reactions distinct soft silhouettes: slouched Meh, pear-shaped
-Favorite and an asymmetric Not again. Large faces have tiny feet and expressive hands;
-Favorite keeps a small warm-brown heart. Matte butter, sage and clay fills replace dark body outlines;
-finer features and faint blush give the characters a quieter expression.
-Brief arrival reactions, simplified gestures, a floating heart and one slow blink respect reduced motion. The larger illustrations and
-rounder cards keep the established composition; no-call remains faceless.
+## Signed-out landing
 
-[VOICE.md](VOICE.md) defines the copy and boundaries. Preserve user-written text. Functional
-labels, account access, errors, deletion, privacy and sharing stay factual. Cute expressions
-are reaction glyphs, not a chatty mascot. Use humor about taste, never the person's habits or body.
+Use a simple wordmark/sign-in header, centered headline, signup and three
+illustrated folders: Drinks, Midnight snacks and Questionable purchases. A
+clearly labeled example slip accompanies the folders; the working example follows
+the hero. Desktop pairs its index with the opinion slip; phones put the index first.
+Long names and category tabs wrap.
 
-## Capture should stay lightweight
+Demo edits remain local and transient. New names are unranked/no-call. No API
+writes, invented testimonials, private-account fixtures or fabricated analytics.
+Footer Help and policy links remain accessible before account creation.
 
-Worth must work for someone who only wants to remember a name and, sometimes, where it stands. The fastest
-useful flow is: add a name → optionally rank it → leave. Notes, photos, dates, types, personal calls, and
-revisit history are optional layers of context, never requirements for creating or keeping a record.
+## Workouts and activity
 
-Every primary screen should preserve this low-effort path. Detail views can invite richer reflection without
-making the archive feel like a journal that needs to be filled out.
+Current visits and Resume / Finish lead. Routines, progress and past visits disclose
+below; past filters never hide an active visit. Setup and Save as routine belong
+to the visit's options. Rest timers disclose without changing their countdown.
+Exercise logging is name-first with optional context and explicit original units.
 
-The memory shelf adds a small reason to browse: a real entry, its original details
-and a Pull a memory action. The month count is secondary to the thing remembered.
-Faceless slips introduce an empty shelf; an actual reaction or photo belongs only
-to its source. This deliberately extends the archive reference's cream cards.
-One brief reveal settles immediately with reduced motion. Sparse entries remain
-complete; there are no streaks, missing-field prompts or completion scores.
+A routine snapshots planned names into a fresh dated visit, never completed logs
+or inferred results. Editing/deleting a routine preserves prior visits. Only saved
+exercise entries contribute to actual counts. Previous sets are a reference;
+copying them is explicit and replacing a filled draft requires confirmation.
 
-The October 27 logging simplification keeps the dated experience composer name-first:
-today's date is visible in a compact disclosure, and three optional one-tap reaction
-choices reuse the cabinet capsule. Saved-name selection and extra context open on
-demand. Activity date/workout selection and blank notes also disclose; the selected
-date and workout remain readable in the summary. Saved or restored notes stay open.
-These intentionally shorten the original editor reference without adding required
-fields, inferring opinions, or changing name-only collection capture.
+Progress shows real entries, separate same-day visits and exact sets/notes.
+Keep kg/lb separate, bodyweight distinct from zero and legacy measurements readable.
+Do not invent trends or score someone's activity. The [workout references](art/ui-mocks/taste-cabinet/workouts/README.md)
+cover sessions, routines and progress; [capabilities](docs/FEATURES.md) links the
+other maintained tools.
 
-## Core idea
+## Supporting tools and data ownership
 
-The central interaction is a personal measure of value. A person can rank a wine, a movie, a restaurant, a car, or any other collection item without pretending those rankings are objective.
+Use the shared compact working-page frame for Search, Unfiled, capture, Look back,
+creation and Settings. Optional tools disclose their complexity. Native dialogs
+scroll within the viewport, preserve unfinished work and restore focus on close.
+Source/review tools pair dark input with cream reviewed output; phones stack them.
+Original photos keep their aspect ratio and keyboard alternatives to manipulation.
 
-Rank order and a personal call are separate. Rank says how items compare. An optional call
-says Favorite, Meh, or Not again. The app must never infer a call from rank position.
+Settings leads with downloads and restore, followed by recovery and device cleanup.
+Excel and JSON scope, backup limits, restore preview and deletion consequences stay
+visible. Worth-only deletion remains separate from shared-account deletion.
 
-- **Favorite** for what they would choose again.
-- **Meh** for a deliberately neutral opinion. This is distinct from leaving no call.
-- **Not again** for what they would skip next time; the shorter label retains the existing
-  Would not again meaning.
+Public snapshots expose a fixed collection name and ranked titles/types. Calls,
+notes, dates, history and private photos stay out. Booklets, cards, field guides
+and other exports have explicit inclusion choices and exact previews; downloaded
+copies cannot be revoked. Never broaden an existing link's privacy scope silently.
 
-No call deletes a record. Keeping an ordinary or disappointing experience is useful context.
-The running app accepts `favorite`, `meh`, `would_not_again`, and `null`. Migration 0005
-preserves existing records and their relationships while adding the explicit neutral call.
-
-Use "worth" as a question, not a claim: what was this worth to the person who logged it?
-
-## Signed-out landing page
-
-Small wordmark and Sign in; no archive navigation. A centered two-line headline and
-signup lead into three illustrated folders. Below, tabs switch Drinks, Midnight snacks
-and Questionable purchases while preserving transient edits in the working example. The selected item controls the slip.
-Name-only capture adds an unranked item with no call. Demo state never writes to the API.
-`EXAMPLE` and the explanatory footnote remain visible; no testimonials or invented statistics.
-
-Mobile puts the headline and signup first, then illustrated folders and the example index/slip. The slip
-has no rotation. Footer: `Meh is a complete sentence.` and one concise product scope line.
-
-## Signed-in home
-
-Left navigation: Archive, Collections, Activity, Patterns, Search. The home leads with a visual
-collection shelf, then recently filed records and one cream top-ranked pick. Rank is explicitly
-within that pick's collection. Use the user's current data; never invent a Favorite from rank.
-Without rankings, show an unranked prompt; without collections, show actual activity instead.
-
-Private uploaded covers take precedence. Only exact Drinks, Movies, Places and Cars starter
-names get eligible bundled art. Other lists use layered monogram slips on a subdued field. Home shows up
-to six directories; View all opens the complete directory. Empty accounts have useful creation actions.
-Patterns keeps factual counts and recall. A cream panel shows actual Favorite / Meh / Not again counts, with proportional bars across recorded calls only. It does not turn those calls into a score.
-
-## Collection composition
-
-Title, actual count and user description, then quiet Show list / Share / settings. The list
-column contains name-only capture and one toolbar combining browse views and Search/Filter.
-Filters disclose existing options instead of adding permanent rows. Unranked items stay accessible.
-
-At widths over 960px the selected item appears in a 310px side slip (275px below 1180px).
-At 681–960px it follows the index. At 680px and below, the same slip appears beneath the selected
-row in normal flow; the desktop copy is hidden from both view and the accessibility tree.
-Rank, Note, Revisit and Details retain their original behavior. Escape clears selection.
-
-## Details and secondary screens
-
-`src/details.css` carries the cabinet tokens into editors, creation/settings, Patterns,
-private ranked display and public snapshots. The old ranked-display rules have been removed.
-Item details use the same `OpinionSlip` component and actual collection rank as the index.
-Desktop pairs editable fields with the cream slip; mobile stacks identity, call, notes and Save.
-Dates, photos and activity measurements use optional disclosures; saved values remain visible.
-Forms scroll inside native dialogs and preserve unsaved-change confirmations.
-
-The sharing preview uses cream paper with only the titles and types that the link will expose.
-Creating a link is an explicit action after that preview. Revoke and expiration remain factual.
-Private Show list and public snapshots use the same readable rank index and collection-scoped
-cream top pick. The private ranked display's pick is always rank one, never inferred from a call.
-Secondary screenshots and interaction checks are in the current QA directory.
-
-## Data ownership
-
-People can download records-only JSON or a photo-inclusive backup. Archived collections remain included; Trash is excluded. Restore creates new private records, preserves relationships and never restores public links. Export and sharing previews must state exactly which private content is included.
-
-## Visual rules
-
-| Use                     | Direction                                                        |
-| ----------------------- | ---------------------------------------------------------------- |
-| Canvas / panel / raised | `#181915` / `#20211c` / `#292a23`                                |
-| Text / secondary        | `#f0ecdf` / `#aaa99b`                                            |
-| Opinion slip            | `#eae5d5` with dark ink and readable muted copy                  |
-| Primary action / state  | Butter `#e8dc9d`, dark text on filled actions                    |
-| Rules                   | `#38392f`, stronger `#737566`                                    |
-| Layout                  | Open collection shelf, single working list, focused opinion slip |
-| Motion                  | Brief character reactions, one blink, then still; reduced motion |
-
-Avoid glossy effects, neon, gradients, texture, social mechanics and fabricated data. Cream
-slips are intentional flat contrast, not simulated paper material. Keep all control labels
-readable and useful without an illustration, hover or color cue.
+Unfiled memories and photos transfer atomically when filed. Recognition stays
+on-device; optional ISBN lookup requires a deliberate request. Offline copies and
+private collaboration retain their documented account, conflict and recovery
+boundaries. See [architecture](docs/ARCHITECTURE.md) and [capabilities](docs/FEATURES.md).
 
 ## Verification
 
-Open the corresponding composition reference before implementation. Capture and inspect at
-1440 × 900 and 390 × 780; check 320, 430 and 768px for reflow and overflow. Compare structure,
-spacing, faces, capture, state and typography, allowing actual record content to vary.
-Exercise calls, clearing, ranking independence, name-only capture, filters, empty states and
-mobile navigation. Report deliberate deviations and limits; passing tests alone is insufficient.
-
-## Signature landing refinement
-
-The latest user request strengthens the first view: a 400px opinion card and 192 × 176px
-character sit beside the headline on desktop. Keep the card straight for crisp typography.
-On mobile, order the headline and signup action, full-width opinion card, then example index.
-Pointer selection in the mobile example reveals the changed opinion; keyboard selection
-preserves focus. The selected call slides inside its capsule; clearing a call removes the
-selection and face. Reduced motion keeps selection changes immediate.
-
-## Everyday interaction refinement
-
-Capture fields use the shared 12px control corners and a butter border while focused.
-Save/call/rank feedback remains factual in a small dark confirmation panel. A selected row
-retains its selected surface on hover. Collection links acknowledge hover and keyboard focus
-with a small arrow movement and cover scale; reduced motion keeps both still. There is no
-change to the resting composition, stored data or required capture fields.
-
-After successful single or batch capture, restore input focus after the pending state clears
-so another name can be added immediately.
-
-## Cabinet edition
-
-The approved art-direction plan extends the characters' visual craft into the collection
-shelf and first-use journey. Current [edition references](art/ui-mocks/taste-cabinet/edition/README.md)
-include an identity sheet, empty/sparse/populated archives, empty/selected collections and
-creation. Authored category objects replace photographic starter covers; private uploaded
-covers remain first. Custom names receive layered monogram artwork. The archive and
-directory use one shared cover object. The empty archive pairs its dry headline with a
-cream brand illustration; empty collections and undecided slips use faceless paper art.
-Creation pairs name-first capture with a live artwork preview. Suggestions fill names only,
-and the first saved collection opens with capture focused. No opinions, ranks, descriptions
-or sample records are invented.
-
-## Cabinet finishing pass
-
-Search and Patterns now use the edition's faceless paper empty states. Search uses the
-same rounded controls and labeled capsules as the collection; results and recall titles
-wrap so a personal name is readable. Clearing search restores the field's focus. Empty
-Patterns opens a creation draft, never a prefilled archive. Existing recorded-call counts
-and bars remain factual. Opened dialogs, settings and selected slips settle with a brief
-200ms/6px entrance; reduced motion keeps them still. Settings and sharing keep their
-accepted compositions and factual visibility/destructive copy. The signature landing
-is verified with its interactive examples and retains its accepted composition.
-
-## Illustrated landing cabinet
-
-The user rejected the prior signed-out composition and asked for a stronger visual idea.
-The current [landing reference](art/ui-mocks/taste-cabinet/landing-cabinet/README.md)
-centers `Your taste. A place to keep it.` over three staggered illustrated folders and a
-small explicitly labeled example Meh slip. Signup remains prominent. A separate working
-example sits below the hero; mobile shows its index before the opinion slip. This supersedes
-earlier landing layouts only. The accepted private cabinet screens remain current.
-
-The landing now illustrates Drinks, Midnight snacks and Questionable purchases, using a
-cup, snack bag and shopping bag. The working example uses the same topics. Long names
-wrap instead of shrinking; the accepted three-folder layout and cream Meh slip remain.
-
-## Personal tools
-
-Collections now support an optional saved object and palette choice. Automatic keeps the existing starter-name/monogram fallback; private uploaded covers remain first. Creation previews the selection, and settings save it alongside name and description. See [personal tools references](art/ui-mocks/taste-cabinet/personal-tools/README.md).
-
-Activity supports an explicit Exercise mode. One dated entry records one exercise and its ordered sets, with separate reps and optional weight in kg/lb. History summarizes actual set count, total reps and weight range; the editor shows every set. Repeating copies measurements into a new draft with today's date and no note. Legacy aggregate measurements remain editable and preserved. Switching to Activity confirms removal of entered draft sets. These records remain private and exportable; no scores or activity judgments are introduced.
-
-## Workout visits and recall
-
-An activity list can hold explicit workout sessions: a named/date visit grouping multiple exercise entries. Start a visit, then add its exercises; existing entries can be assigned from their editor. Separate visits on the same date remain separate. Session rename/date edits are supported; removing a grouping keeps its exercises intact. Exports include workout sessions and each log's relationship.
-
-Exercise logging shows the latest earlier matching entry from this activity list. Current-visit entries and future records are excluded, including later same-day entries when editing history. Original units are kept beside corresponding sets. Use previous sets explicitly copies measurements and unit; replacing filled draft sets asks for confirmation. The [workout references](art/ui-mocks/taste-cabinet/workouts/README.md) retain the cabinet compositions.
-
-## Reusable workout routines
-
-Activity lists can save a named, ordered exercise lineup and start a fresh dated visit from it. Each visit snapshots the names, then offers an unlogged checklist; opening a name sets up blank reps/weight with last time available for reference. Only saving an exercise creates a log and contributes to workout counts. Editing/deleting a routine preserves existing visits, and Save as routine opens an editable draft from a workout. Routine and visit plans are private and exportable. See [routine references](art/ui-mocks/taste-cabinet/workouts/README.md#reusable-routines) for the shelf and deliberate integration differences.
-
-## Exercise history and progress
-
-A collapsed exercise directory and a set-editor action open read-only history for a normalized exercise name in the current activity list. Charts show total individually recorded reps or the heaviest logged weight per entry, keeping kg/lb separate and bodyweight/legacy gaps visible. Each point reveals its exact sets; history includes preserved notes and older measurements. Same-day visits remain separate. Empty and single-entry states avoid invented trends. Opening and closing history preserves an unfinished exercise draft. See [exercise progress references](art/ui-mocks/taste-cabinet/workouts/README.md#exercise-history-and-progress) for the cabinet composition and accessibility adaptations.
-
-## Product flow completion
-
-Workout visits now have explicit Active / Finished states, resumable exercise drafts,
-an optional rest timer, save-and-next logging, and a factual saved-set recap. A visit's
-planned names can be reordered or swapped without editing its source routine; skipped
-names remain reversible. Queue membership is independent of opinion and rank. Added
-dates and visit counts extend the existing collection filter disclosure. Search includes
-exercise scope and matching note context. Optional new-record photos, account-scoped
-local draft recovery, clear saving/offline status and on-demand pages extend the accepted
-cabinet. Use [quality checks](docs/QUALITY.md) for reference comparisons, responsive
-review and verification limits.
-
-## Product completion
-
-[Settings and data](art/ui-mocks/taste-cabinet/completion/README.md) extend the cabinet
-with export/backup, restore preview, device cleanup and explicit Worth deletion.
-Privacy, Terms and Help are public, use the simple landing wordmark header, and
-keep factual readable copy. Footer links make them available before account creation.
-Existing cabinet screens retain their accepted compositions. The contact destination
-was supplied by the user; shared-account deletion remains clearly separate.
-
-## Unfiled Inbox
-
-Inbox extends the cabinet with a private unfiled directory. It retains the 192px
-rail, 68/50px page title, shared faceless paper empty art, ruled rows and optional
-name-only capture. Navigation opens a native scrolling drawer over the current
-page; a normal `/inbox` link also supports full-page and modified-click navigation.
-The drawer uses 50/42px headings and 22px corners like the existing secondary tools.
-This is a deliberate extension of the current edition references, not a native app.
-
-The editor uses one full-width column for identity, optional call/context and
-explicit filing, preserving a clear phone flow. A cream recovery panel contains
-only the actual uncertain filing snapshot and destination. It never invents a call
-or rank. Filing requires saved details and a deliberate keep-separate choice for
-an exact name/type match.
-
-## Neutral activity objects
-
-Empty activity logs now use an authored notebook and pencil in the shared cabinet
-empty-state composition. An empty workout visit uses a smaller bottle and folded
-towel beside its existing first-exercise guidance. These static, faceless objects
-keep the cabinet palette and remain hidden from assistive technology. Activity
-never receives a call, score or implied achievement. Existing headers, filters,
-routine/workout actions and record behavior remain intact. This deliberately
-extends the activity reference with the edition’s existing empty-state spacing;
-phone captures scroll to that section to show the complete illustration and CTA.
-
-## Photo text review
-
-Read a photo extends the existing capture composition: a dark source panel and
-cream text-review panel share the 68/44px header, 22px corners and 44px controls.
-Below 960px the source precedes review. Read text is editable, a name is chosen
-explicitly, and a private note is folded until requested or already populated.
-Inputs/labels use DM Sans; structural overlines keep DM Mono. Cream labels and
-focus rings use dark ink for contrast. There is no fake source preview, inferred
-opinion, automatic save or external processing. This is a deliberate extension
-of capture and the cabinet’s secondary tools. Captures focus the source/review
-section when the full phone flow exceeds one viewport.
-
-## Barcode and book capture
-
-Read a code deliberately reuses the photo reader’s dark source/cream review
-composition, the existing cabinet rail, 68/44px title rhythm, 22px panels and
-44px controls. A small authored faceless barcode slip accompanies an empty source;
-it identifies the tool without inventing a product or opinion. Metadata uses
-readable ruled/proportional text and stacks at phone widths. Book lookup is an
-optional disclosure; ordinary manual naming remains visible. This is a web-only
-extension of the reader/capture references, not a native camera application.
-
-## Quiet retrospectives
-
-Patterns adds one secondary Look back link beneath its description; the existing
-totals and call composition are retained. The private period page uses the same
-192px rail, 68/44px secondary headings, ruled totals and faceless empty paper.
-A 22px dark form holds explicit dates/list scope. Two readable record groups sit
-side by side on desktop and stack on phone. These are chronological groups, not
-ranked lists or performance cards. No call face is shown because old opinions
-are not known. This deliberate Patterns extension keeps private notes absent
-until requested and leaves long names readable.
-
-## Taste history
-
-Workbench adds a secondary Taste history tool with ruled event rows, explicit
-before-date/changes filters and optional reason editors. Expanded rankings use
-three cream before/after/current columns on desktop, stacked on phones. Missing
-positions remain numbered gaps; no face or call is inferred. Existing sandbox
-preview/apply behavior controls reusing an older order. Nested reason dialogs use
-the standard 22px cabinet form, 44px controls and explicit draft/conflict recovery.
-This deliberately extends the workbench without changing the primary collection
-composition.
-
-## Connections
-
-Patterns → Connections deliberately extends the secondary cabinet with a private
-relationship form, a faceless numbered constellation and ruled readable link rows.
-It keeps the 192px rail, 68/44px heading rhythm, shared palette, DM Sans labels,
-22px panels and 44px controls. Desktop pairs source/target choices; phones stack
-them. The cream diagram shows up to 12 actual neighbors, with numbered links and
-complete directional text below. It never infers a call, rank or location. Reason
-and uncertain-save dialogs retain standard drafts, explicit retry and conflicts.
-Patterns adds spaced tool links in its header, using separate 44px rows on phones; the underlying counts/call composition remains.
-
-## Personal field guide
-
-Patterns → Field guide adds a secondary multi-collection editor, using the cabinet
-rail, dark canvas, 68/44px heading rhythm, 22px bordered groups and 44px controls.
-Collection/record choices and inclusion options pair on desktop and stack on phones.
-Selected records use ruled rows with captions and labeled Earlier/Later actions.
-The existing cream booklet preview is shared, with a field-guide cover label and
-no call or rank. This is a deliberate secondary-page addition; the primary cabinet
-and name-only capture are unchanged.
-
-## Activity calendar
-
-Patterns → Activity calendar is a deliberate secondary cabinet addition. It keeps
-the dark canvas, 192px rail, 68/44px title rhythm, DM Sans, bordered 12px controls
-and 44px targets. Desktop dates form a seven-column ordered grid with neutral
-counts; phones use full-width dated rows so dates and counts remain readable at
-320px. The selected day has a ruled linked agenda on both layouts. Plans and real
-logs use distinct plain labels, without streaks, scores or inferred completion.
-Revisit dates live in the existing optional context disclosure; name-only capture
-and the independent revisit queue are unchanged.
-
-## Photo galleries
-
-Manage photos opens a secondary native scrolling dialog from the established Photo
-disclosure. It keeps the dark cabinet, 22px corners, DM Sans, 44px controls and the
-existing cream opinion slip in the parent editor. Desktop source previews pair with
-caption/order/cover controls; phones stack them. Source images use their own aspect
-ratio so normalized arrows align with the actual pixels. Arrow labels have a readable
-list and four labeled coordinate sliders, without pointer-only editing. Before/after
-uses explicit choices, a large keyboard range and a full side-by-side alternative.
-Sources, captions and arrays do not infer calls, ranks or dates.
-
-## Cover collages
-
-Workbench opens a separate scrolling collage dialog over its existing composition.
-This deliberate secondary tool uses the cabinet palette, DM Sans, 22px corners and
-44px targets. Available photos use a three-column shelf, two on phones; coordinate
-controls pair on desktop and stack on phones. A 1.6-ratio sketch labels layers;
-the separately prepared 1280 × 800 image is the exact save/download preview. No
-pointer-only positioning, inferred crop, call or rank is added. Sources fit inside
-manual frames and remain unchanged.
-
-## Private boards and trips
-
-Patterns → Boards extends the secondary-page cabinet: 68px desktop / 44px phone
-headings, a wrapping two-column directory, disclosed filters that keep saved boards
-above the phone fold, four small authored faceless objects,
-dark 22px cards and labeled 44px controls. Moment, shortlist, evening and trip are
-explicit kinds rather than inferred activity. The scrolling native editor uses
-disclosed source choices, literal dates and keyboard Earlier/Later ordering. Source
-calls and ranks stay outside the board.
-
-Trip replay deliberately uses a single cream stop ticket with dark text and
-muted #626456 labels. Previous/Next, a readable full index and the complete entry
-list remain available. Optional Play advances once through the entered sequence;
-it stops when hidden, and reduced motion removes ticket arrival animation. This
-is an intentional supporting composition, not a replacement for the collection
-index/opinion-slip reference. Long names and unavailable-source explanations wrap;
-phone cards and source controls stack. See the board QA captures for verification.
-
-## Reviewed receipts
-
-Receipts extends the on-device photo-text composition with a dark source pane and
-a cream review pane, followed by dark line cards. The cabinet rail, 68px/44px
-headings, DM Sans/Mono, 22px panels and labeled 44px controls remain. Cream controls
-use dark ink and #626456 labels, including hover and keyboard focus. The literal
-line fields and record choices stack at phone widths. This is an intentional
-advanced capture page, while everyday record capture stays name-only.
-
-The prepared image has a distinct heading, exact full-size preview, explicit
-inclusion/readability choices and manual removal. Preparation moves focus to
-that preview; restored drafts do not move focus automatically. The directory's
-small faceless receipt object uses authored SVG rather than an opinion character.
-Saved line text is independent of a current linked title. No inferred spending
-analysis, purchase date or call is added.
-
-## Richer activity plans
-
-The routine shelf, activity header and native editors retain the workout cabinet
-references. Optional target plans extend the existing editor disclosure, with
-separate dark cards for each chosen exercise, two fluid field columns and a single
-column at 320px. Targets are labeled planned and never populate actual result
-fields. Time/distance-only entries use named measurements after removing blank sets.
-A separate saved-plan panel makes conflict comparison deliberate and keeps the
-previous draft readable. No original reference composition is replaced.
-
-Exercise names are managed inside the existing collapsed history directory. Alias
-history displays preferred group names while retaining each recorded name in its
-entry. Literal measurement/unit choices reuse the existing accessible chart; missing
-units leave gaps and negative recorded values extend its axis below zero. No call
-faces, activity scores, unit conversions or automatic completion are introduced.
-
-## Time capsules
-
-Capsules deliberately extend the secondary Boards composition with a faceless,
-repo-native envelope. Keep the rail, dark cabinet, 68px desktop/44px phone titles,
-22px cards and 44px controls. A cream message appears only after explicit opening.
-A short entrance settles once; reduced motion stays still. Source review is a
-native scrolling dialog with named field checkboxes, original photo previews and
-an exact chosen-fields preview. Calls and ranks are independent. The composer
-allows a name/date without sources; optional notes/photos never become implicit.
-Closed cards expose names, dates and counts only. Owner backup scope remains
-visible because opening dates are app-level access rules.
-
-## Private spaces
-
-Shared spaces extend the cabinet's secondary pages: 68px desktop/44px phone
-headings, ruled sections, 22px cards, familiar source picker and native review.
-Two authored flat tickets introduce collaboration without adding a call face.
-Text-only sharing has an exact preview and explicit Share action; notes and
-measurements follow selected source fields, with notes off by default. Invitation
-secrets are displayed for manual copying. Role, copy/revocation consequences and
-shared note conflicts use factual copy. This-or-that uses two labeled choices,
-a separate confirmed Reveal and a factual two-person result. No results or shared
-calls are inferred. Private copies use a readable, disconnected archive view.
-
-## Offline device copy
-
-The standalone `/offline/` page deliberately uses a simple wordmark/back header
-in place of the connected archive rail. Its public shell must open without the
-authenticated application. Keep cabinet canvas/panel/butter tokens, 68px desktop /
-44px phone heading, 12px controls and 22px confirmations. A faceless flat folder
-and lock identify a private device copy. Pending saves, connected/offline state,
-copy date, passphrase scope and unsaved text stay factual and visible. Name-only
-Inbox capture remains possible; notes are optional. Read text through a searchable
-collection/Inbox index, with separate call/rank labels and explicit note queuing.
-No stored records or queued requests are inferred from decorative artwork.
-
-## Collections directory — October 29
-
-The user identified an unbalanced sparse directory. The new
-[directory references](art/ui-mocks/directory/README.md) replace its earlier
-composition. One header and toolbar lead to compact cards with integrated artwork,
-name and metadata. Search/order controls are useful for a larger collection set;
-active saved filters keep them reachable even in a sparse set. Current/Archived
-stay visible. Mixed collections/activity get simple section titles; one kind does
-not repeat the page title. The empty state retains its working starter choices.
-Home artwork and collection contents retain their existing composition. Directory
-styles now live together instead of competing across historical skins.
-
-## Shared app composition — October 30
-
-The user requested the compact directory treatment throughout Worth. A fresh
-desktop/phone audit of working routes preceded the [app references](art/ui-mocks/app-polish/README.md).
-The shared page frame now owns the 48px/36px title rhythm, readable insets,
-header spacing and content/footer balance. Superseded heading declarations were
-removed from the historical skins and supporting page styles. Screen-specific
-cards, forms and artwork remain in their own stylesheets.
-
-Functional form labels use sentence-case DM Sans; phone text fields use at least
-16px to avoid small-text focus zoom. Controls share rounded corners, visible focus
-and usable targets. Home uses compact horizontal collection cards and a smaller
-first-save invitation. Search, Unfiled, Look back, creation, capture, supporting
-tools and Settings use the same working-page scale. The Unfiled drawer also uses
-the compact dialog heading scale. Settings presents downloads and restore before
-recovery and device housekeeping, retaining its privacy explanations and limits.
-
-The public Help/policy pages and standalone offline page receive readable title
-and control sizing under their own headers. Ranked displays, public snapshots,
-exported/printable objects and the signed-out landing keep their presentation
-compositions. Actual data, optional input, call/rank independence, archive behavior,
-privacy scopes and native sheet/dialog interactions remain the product contract.
+Before changing a page, open its current reference. Compare desktop 1440 × 900 and
+phone 390 × 780, plus 320, 430 and 768px for wrapping. Inspect actual data, empty/
+loading/error states, keyboard focus, long names, native sheets and reduced motion.
+Keep private review fixtures out of production. Explain deliberate deviations and
+unavailable device checks; automated tests alone do not establish visual fidelity.
+Use [quality checks](docs/QUALITY.md) for the current workflow and coverage.

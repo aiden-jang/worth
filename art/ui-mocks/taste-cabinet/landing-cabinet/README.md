@@ -1,12 +1,11 @@
 # Illustrated cabinet landing
 
-The user rejected the earlier signed-out landing and requested a stronger visual idea.
-This composition uses a centered headline and a staggered trio of illustrated collection
+This signed-out composition uses a centered headline and a staggered trio of illustrated collection
 folders, with an explicitly labeled Cold brew / EXAMPLE Meh slip. The interactive example
 is a separate section below the hero. Private archive layouts remain current.
 
 - [Desktop](landing-desktop.png), [mobile](landing-mobile.png), [editable mock](landing.html).
-- Source: `../build-landing-cabinet.py`; composition: `src/landing-cabinet.css`.
+- Maintain the editable HTML directly; production composition is in `src/landing-cabinet.css`.
 - DM Sans/DM Mono and the accepted cabinet palette. Maximum width 1232px; desktop insets
   40px, mobile 20px. Headline maximum 92px, mobile 43–72px. Three straight folder objects
   have staggered heights and native category artwork. No raster shadows or textures.

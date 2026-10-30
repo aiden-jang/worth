@@ -177,8 +177,8 @@ not touch the main ranking, calls or list recency.
 Reads omit absent/trashed/merged/moved items from context orders. Export includes
 workspace state only for active lists and remaps context item IDs on restore; old
 backups default to empty tools. Deleting all data cascades through the containing
-lists. Public snapshots retain their fixed title/type-only payload. See the
-[expansion tracker](CABINET-EXPANSION.md) for the integrated web scope and dated implementation notes.
+lists. Public snapshots retain their fixed title/type-only payload. See
+[capabilities](FEATURES.md) for the maintained feature overview.
 
 ## Private item context
 

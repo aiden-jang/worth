@@ -23,7 +23,7 @@ as the app; all fixtures are synthetic and save nothing.
 
 ## Editable specialized references
 
-- [Cabinet edition](edition/README.md): opinion slips, creation and secondary states.
+- [Identity and creation](edition/README.md): category artwork and the creation preview.
 - [Personal artwork and exercises](personal-tools/README.md).
 - [Workout sessions, routines and progress](workouts/README.md).
 - [Settings and product boundaries](completion/README.md).

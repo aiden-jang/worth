@@ -40,8 +40,9 @@ CI browser job uploads its HTML report, screenshots and traces for seven days.
 Run `pnpm exec playwright show-report` or `pnpm exec playwright show-trace <trace.zip>`.
 
 Keep comments for non-obvious invariants, recovery or tradeoffs. Avoid comments that
-repeat the code. Historical design/QA artifacts remain under `art/`; they are not
-production fixtures. Never commit `.dev.vars`, credentials, private exports or real QA records.
+repeat the code. Keep current authored references under `art/`; remove superseded
+plans and compositions. Generated QA output stays local and never becomes a
+production fixture. Never commit `.dev.vars`, credentials, private exports or real QA records.
 
 See [quality and visitor review](docs/QUALITY.md) for the review matrix, fixture
 boundaries and checks that require a real device.

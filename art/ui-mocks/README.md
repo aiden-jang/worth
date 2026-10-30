@@ -8,8 +8,8 @@ Use these current authored sources in order:
 4. [Taste cabinet](taste-cabinet/README.md): identity, artwork, landing and specialized content.
 
 The [build contract](BUILD-CONTRACT.md) supplies tokens and responsive behavior;
-[voice](../../VOICE.md) supplies copy constraints. Later revisions override older
-compositions where they overlap.
+[voice](../../VOICE.md) supplies copy constraints. Each linked source owns its named
+surface. Remove superseded compositions rather than maintaining parallel targets.
 
 Representative desktop/phone PNGs remain for the app-wide patterns, sparse directory,
 Add and signed-out landing. Other states retain editable HTML; open it at the documented

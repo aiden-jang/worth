@@ -82,15 +82,15 @@ owner-scoped records and bounded private photos; shared Accounts verifies sessio
 Public links expose a fixed snapshot, never live private notes, dates, history or photos.
 Downloaded images and exported backups cannot be revoked and should be kept private.
 
-The accepted cabinet compositions and historical QA live in `art/`; latest sections of
-the build contract take precedence over earlier designs. Installed-app shortcuts open
+Current authored compositions live in [the reference index](art/ui-mocks/README.md);
+the build contract defines one maintained design. Installed-app shortcuts open
 capture or the workout chooser. Manifest previews live in `public/screenshots/`.
 
 Pushing a verified commit to `main` triggers CI and the existing automatic deployment. See [DEPLOY.md](DEPLOY.md)
 before using any manual release or remote database command.
 
 [Quality and visitor review](docs/QUALITY.md) describes the current verification
-boundaries and links to dated visual evidence.
+boundaries and the local visual-review workflow.
 
 Offline preparation is verified against the built local Worker (the same server
 used by browser tests). The development server does not install a persistent

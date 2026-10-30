@@ -54,7 +54,9 @@ revoked after any restoration. Review all shares if restoring an older database.
 
 ## User data portability and deletion
 
-Settings offers records-only JSON and photo-inclusive JSON backups. Restore is
+Settings offers records-only JSON and photo-inclusive JSON backups. Exports use
+schema version 11; restore accepts versions 1–11 and rejects unsupported future
+formats. Restore is
 validated, previewed and atomic, creates fresh private list/record IDs, preserves
 calls/ranks/notes/measurements and relationships, and does not recreate shares.
 Limits: 32 MB file, 5,000 total records, 500 lists, 200 photos/covers. Files above
@@ -94,9 +96,8 @@ The web expansion added additive migrations `0012` (collection
 workspace/revision), `0013` (private item context/revision) and `0014` (collection
 archive flag). Apply all pending migrations before deploying its Worker. Archiving
 keeps the existing non-Trash read views and does not revoke public links. The
-feature tracker preserves dated local verification from the former feature branch.
-That web expansion was integrated into main in `cefcf56`; verify current CI and
-deployment against the release commit rather than those historical notes.
+architecture guide describes the maintained data contracts. Verify CI and
+deployment against the actual release commit.
 Migration `0015` adds private visit context and log revisions; older logs default
 to empty context and no earlier reactions are inferred.
 
@@ -106,8 +107,7 @@ revision conflicts, template creation/retry/removal and template-based creation.
 A template copies only the setup shown in its preview; it creates no records.
 Check records and photo backup round trips, including a template-only file and a
 restore that would exceed the owner's 50-template limit. The latter must leave
-both records and the import receipt unchanged. This migration replaces a removed,
-local-only native-widget experiment; that experiment was never deployed.
+both records and the import receipt unchanged.
 
 Web capture adds `/capture`, `/quick`, text/link manifest share-target metadata and
 private PWA shortcuts; it needs no extra migration beyond the template migration
@@ -131,7 +131,7 @@ metadata remain usable independently of that header.
 - Exercise Inbox draft reopen, stale revision/reload, unranked filing, and lost-reply retry after reload.
 - Check Trash/Undo, 30-day purge, Inbox-only restore with fresh IDs, and full-capacity rollback.
 - Confirm private search links and account changes do not expose a previous account’s finds.
-- Check new version 2 exports, version 1/2 restore, and rejection of unsupported future backup formats.
+- Check current exports, older Inbox backup restore and rejection of unsupported future formats.
 - Inspect drawer/full-page/editor/empty states at desktop and phone sizes, plus 320/430/768px reflow.
 
 ### Photo text reading
@@ -166,8 +166,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Verify Workbench → Taste history, before/after/current comparison and explicit
   sandbox preview/apply; moved/merged/trashed records must retain appropriate gaps.
 - Check optional private reasons/visits, stale revision recovery and device drafts.
-- Taste history introduced version 3. Current exports use version 10; restore accepts versions 1–10 and remaps history
-  references without creating extra change events. Future versions beyond the current reader fail.
+- Restore must remap history references without creating extra change events and reject unsupported future formats.
 - Restore supports 10,000 history changes and 16 MB of history within the existing 32 MB/batch limits.
   No automatic review reminders, new public projection or native code is included.
 
@@ -180,8 +179,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
   fail without partial writes. The diagram has a complete readable alternative.
 - Verify uncertain-save retry/check, stale reason reload, removal confirmation,
   archived labels and links retained through moves/merge/Trash recovery.
-- Connections introduced version 4; current exports use version 10. Restore accepts versions 1–10 and rejects later formats.
-  Connections restore with fresh IDs and canonicalized pairs. A capacity error
+- Connections restore with fresh IDs and canonicalized pairs. A capacity error
   rolls back the entire restore and can retry after freeing space.
 
 ## Personal field guides
@@ -216,7 +214,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Test Manage photos, caption/arrow saves, explicit cover clearing/selection,
   ordering, upload retry after a lost response, and confirmed original removal.
   A late retry of a removed upload must never recreate it.
-- Current exports use version 10; restore accepts 1–10. Check all originals and their
+- Check all originals and their
   metadata round-trip, selected caches rebuild, old single-photo files still work,
   and records-only restores preserve metadata with unavailable original states.
 - Check keyboard comparison and side-by-side views, narrow dialogs, blocked storage,
@@ -232,7 +230,7 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 - Test lost replies, stale versions, current-cover review, and delayed preparation
   cancellation. A retry after cover removal must not recreate it.
 - Check draft recovery, unavailable sources, blocked storage, account changes and
-  narrow dialogs. Full backups retain covers and source assets through format 5;
+  narrow dialogs. Full backups retain covers and source assets;
   collage layouts stay on the device. Cover revision counters reset on fresh-ID restore.
 
 ### Private boards and trips
@@ -277,8 +275,8 @@ Do not describe these current-record recaps as past opinion/ranking snapshots.
 
 ## Capsules, private spaces and offline text
 
-- Apply additive migrations 0025–0027 before serving these routes. Format 10
-  accepts 1–10, preserves fixed capsule contents/photos/opening state and restores
+- Apply additive migrations 0025–0027 before serving these routes. Backup restore
+  preserves fixed capsule contents/photos/opening state and restores
   collaboration only as disconnected private copies. Unopened capsule contents
   are intentionally included in owner backups. Invitations/hidden choices never
   restore. Check capsule-only and shared-copy-only restore previews.
