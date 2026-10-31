@@ -34,6 +34,10 @@ Look back combines Memories and Insights. Keep search visible and disclose dates
 list/archive filters, period shortcuts and specialized tools. Insights initially
 shows three real preference groups, with expansion for the rest. Counts use
 recorded calls and explain their denominators. Activity progress stays separate.
+Cards lead with a factual observation, retain all three call counts and identify
+tied or small samples. Shared methodology appears once; the overall-call distribution
+discloses under Archive totals. This refines the Insights content within the existing
+Look back composition, without changing its counts or sources.
 [Everyday behavior](docs/EVERYDAY.md) and [memory/progress](docs/REMEMBER.md) define
 these flows. Existing direct routes remain usable.
 

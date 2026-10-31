@@ -778,9 +778,6 @@
 .recall-insights .preference-insights {
   margin-top: 0;
 }
-.recall-insights .preference-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
 .recall-totals {
   border-block: 1px solid var(--line);
   margin-top: 24px;

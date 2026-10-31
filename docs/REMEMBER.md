@@ -72,14 +72,19 @@ the browser on request; it does not send records to a spreadsheet service.
 
 ## Read your preferences
 
-Look back → Insights shows three groups first, with Show all for up to 12 collection, collection/type or collection/label groups with the most
-recorded calls. Collection summaries work without types or labels, including
+Look back → Insights shows three groups first, with Show all for up to 12 collection,
+type, label or brand groups with the most recorded calls. Collection summaries work without types or labels, including
 name-only entries with an explicit visit reaction. Overall-call groups count records; visit-reaction groups count
-explicit visits and are labeled separately. Both use current types and labels.
-Favorite counts use only rated records or visits in that group as the denominator;
-no call stays separate from Meh. Small samples are explicitly identified. Each
+explicit visits and are labeled separately. Both use current details.
+Each card leads with the most-recorded call and its exact count out of rated
+things or visits. Tied calls appear as a mix. A compact breakdown keeps Favorite,
+Meh and Not again visible. Unrated entries stay outside that denominator and
+separate from Meh. Small samples are explicitly identified. Each
 group links to its complete, paginated supporting records, including unrated names.
 Archived and trashed records are excluded from these summaries.
+
+A shared note explains what the counts mean. Archive totals holds the complete overall-call
+distribution and raw archive counts, so the first view stays focused on preferences.
 
 Favorites with an explicit visit more than 90 days ago can resurface, using the
 last logged date rather than assuming you have not visited. Never-visited saved

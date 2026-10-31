@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { api } from '../api';
 import { formatDate } from '../format';
+import type { PreferenceGroup } from '../shared/memories';
 import '../memories.css';
 
 export function PreferenceInsights() {
@@ -11,12 +12,8 @@ export function PreferenceInsights() {
   return (
     <section className="preference-insights" aria-labelledby="preference-heading">
       <header>
-        <p className="overline">WHAT HELD UP</p>
         <h2 id="preference-heading">What you like.</h2>
-        <p>
-          Your recorded opinions, with the entries behind them. Overall calls and visit reactions stay
-          separate.
-        </p>
+        <p>Your recorded calls, with the entries behind them.</p>
       </header>
       {query.isPending && <p role="status">Reading your preferences…</p>}
       {query.isError && (
@@ -30,54 +27,12 @@ export function PreferenceInsights() {
       {query.data && (
         <>
           <div className="preference-grid">
-            {(allGroups ? query.data.groups : query.data.groups.slice(0, 3)).map((group) => {
-              const rated = group.favorite + group.meh + group.notAgain;
-              return (
-                <article key={`${group.listId}:${group.kind}:${group.basis}:${group.name}`}>
-                  <p className="overline">
-                    {group.listName} · {group.kind === 'brand' ? 'brand · ' : ''}
-                    {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
-                  </p>
-                  <h3>
-                    {group.kind === 'collection'
-                      ? group.listId === 'inbox'
-                        ? 'Your unfiled finds'
-                        : 'Across this collection'
-                      : group.name}
-                  </h3>
-                  <p>
-                    <strong>
-                      {group.favorite} of {rated}
-                    </strong>{' '}
-                    rated{' '}
-                    {group.basis === 'visits'
-                      ? rated === 1
-                        ? 'visit was'
-                        : 'visits were'
-                      : rated === 1
-                        ? 'record is'
-                        : 'records are'}{' '}
-                    marked Favorite.
-                  </p>
-                  <p>
-                    {group.meh} Meh · {group.notAgain} Not again · {group.unrated}{' '}
-                    {group.basis === 'visits' ? 'without a reaction' : 'without a call'}
-                  </p>
-                  <p className="exercise-helper">
-                    {rated < 3
-                      ? 'A small sample. Still collecting.'
-                      : group.basis === 'visits'
-                        ? 'Based on recorded visit reactions and current details.'
-                        : 'Based on your current calls, not inferred from rankings.'}
-                  </p>
-                  <Link
-                    to={`/patterns/remember?${new URLSearchParams({ mode: group.basis === 'visits' ? 'visits' : 'saved', list: group.listId, ...(group.kind === 'collection' ? {} : { [group.kind]: group.name }) })}`}
-                  >
-                    See supporting records →
-                  </Link>
-                </article>
-              );
-            })}
+            {(allGroups ? query.data.groups : query.data.groups.slice(0, 3)).map((group) => (
+              <PreferenceCard
+                key={`${group.listId}:${group.kind}:${group.basis}:${group.name}`}
+                group={group}
+              />
+            ))}
           </div>
           {query.data.groups.length > 3 && (
             <button
@@ -90,9 +45,15 @@ export function PreferenceInsights() {
             </button>
           )}
           {!query.data.groups.length && (
-            <p>
-              A few overall calls or visit reactions will appear here. Types and labels can add detail later.
-              Unrated records stay unrated.
+            <div className="preference-empty">
+              <p>No calls to summarize yet. Your saved things are still here.</p>
+              <Link to="/patterns/remember?mode=saved">Browse saved things →</Link>
+            </div>
+          )}
+          {!!query.data.groups.length && (
+            <p className="preference-method">
+              Based on current calls and details, independently of rankings. Overall calls describe saved
+              things; visit reactions describe individual experiences.
             </p>
           )}
           {!!query.data.returns.length && (
@@ -129,5 +90,70 @@ export function PreferenceInsights() {
         </>
       )}
     </section>
+  );
+}
+
+function PreferenceCard({ group }: { group: PreferenceGroup }) {
+  const calls = [
+    { label: 'Favorite', count: group.favorite },
+    { label: 'Meh', count: group.meh },
+    { label: 'Not again', count: group.notAgain },
+  ];
+  const rated = group.favorite + group.meh + group.notAgain;
+  const highest = Math.max(...calls.map((call) => call.count));
+  const leading = calls.filter((call) => call.count === highest);
+  const noun =
+    group.basis === 'visits' ? (rated === 1 ? 'visit' : 'visits') : rated === 1 ? 'thing' : 'things';
+  const scope =
+    group.kind === 'collection'
+      ? 'Collection'
+      : `${group.listName} · ${{ brand: 'Brand', type: 'Type', label: 'Label' }[group.kind]}`;
+  return (
+    <article>
+      <header>
+        <p className="preference-scope">
+          {scope} · {group.basis === 'visits' ? 'Visit reactions' : 'Overall calls'}
+        </p>
+        <h3>{group.kind === 'collection' ? group.listName : group.name}</h3>
+      </header>
+      <p className="preference-observation">
+        {!rated ? (
+          'No calls recorded yet.'
+        ) : leading.length === 1 ? (
+          <>
+            You marked{' '}
+            <strong>
+              {leading[0].count} of {rated}
+            </strong>{' '}
+            rated {noun} {leading[0].label}.
+          </>
+        ) : (
+          <>
+            A mix of calls across <strong>{rated}</strong> rated {noun}.
+          </>
+        )}
+      </p>
+      <dl className="preference-counts">
+        {calls.map((call) => (
+          <div key={call.label}>
+            <dt>{call.label}</dt>
+            <dd>{call.count}</dd>
+          </div>
+        ))}
+      </dl>
+      {((rated > 0 && rated < 3) || group.unrated > 0) && (
+        <p className="preference-note">
+          {rated > 0 && rated < 3 && 'A small sample'}
+          {rated > 0 && rated < 3 && group.unrated > 0 && ' · '}
+          {group.unrated > 0 &&
+            `${group.unrated} ${group.basis === 'visits' ? 'without a reaction' : 'without a call'}`}
+        </p>
+      )}
+      <Link
+        to={`/patterns/remember?${new URLSearchParams({ mode: group.basis === 'visits' ? 'visits' : 'saved', list: group.listId, ...(group.kind === 'collection' ? {} : { [group.kind]: group.name }) })}`}
+      >
+        See supporting records →
+      </Link>
+    </article>
   );
 }

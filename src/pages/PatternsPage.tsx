@@ -78,13 +78,6 @@ export function PatternsPage() {
               ) : (
                 <>
                   <PreferenceInsights />
-                  <CallDistribution
-                    counts={{
-                      favorite: data.favoriteCount,
-                      meh: data.mehCount,
-                      would_not_again: data.notAgainCount,
-                    }}
-                  />
                   <details className="recall-totals">
                     <summary>Archive totals</summary>
                     <dl>
@@ -101,6 +94,13 @@ export function PatternsPage() {
                         <dd>{data.revisitCount}</dd>
                       </div>
                     </dl>
+                    <CallDistribution
+                      counts={{
+                        favorite: data.favoriteCount,
+                        meh: data.mehCount,
+                        would_not_again: data.notAgainCount,
+                      }}
+                    />
                   </details>
                 </>
               )}

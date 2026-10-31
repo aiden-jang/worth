@@ -148,7 +148,9 @@ test('brand insights disclose the sample and link to the exact supporting brand 
   );
   await page.goto('/patterns?view=insights');
   const group = page.locator('.preference-grid article').filter({ hasText: 'Harbor' });
-  await expect(group).toContainText('1 of 2');
+  await expect(group).toContainText('A mix of calls across 2 rated things.');
+  await expect(group.locator('.preference-counts > div').nth(0)).toHaveText('Favorite1');
+  await expect(group.locator('.preference-counts > div').nth(1)).toHaveText('Meh1');
   await expect(group).toContainText('2 without a call');
   await expect(group).toContainText('A small sample');
   await group.getByRole('link', { name: 'See supporting records' }).click();

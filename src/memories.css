@@ -87,23 +87,91 @@
   border-top: 1px solid #38392f;
   padding-top: 28px;
 }
+.preference-insights > header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.preference-insights > header :is(h2, p) {
+  margin: 0;
+}
 .preference-insights h2 {
-  font-size: 32px;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.preference-insights > header > p:last-child {
+  max-width: 76ch;
+  color: var(--muted);
 }
 .preference-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 16px;
 }
 .preference-grid > article {
-  border: 1px solid #38392f;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: 22px;
-  padding: 24px;
+  padding: 20px;
   overflow-wrap: anywhere;
 }
+.preference-grid p {
+  margin: 0;
+}
+.preference-scope,
+.preference-note,
+.preference-method {
+  font-size: 13px;
+  color: var(--muted);
+}
 .preference-grid h3 {
-  font-size: 25px;
-  margin: 12px 0;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  margin: 8px 0 0;
+}
+.preference-observation {
+  font-size: 18px;
+}
+.preference-observation strong {
+  font-weight: 500;
+  color: var(--acid);
+}
+.preference-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin: 0;
+}
+.preference-counts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.preference-counts dd {
+  font-size: 20px;
+  margin: 4px 0 0;
+}
+.preference-grid > article > a {
+  align-self: start;
+  margin-top: auto;
+  font-size: 14px;
+}
+.preference-grid + .button {
+  margin-top: 20px;
+}
+.preference-method {
+  margin: 16px 0 0;
+}
+.preference-empty p {
+  margin: 0;
 }
 .preference-returns article {
   padding: 14px 0;
@@ -150,8 +218,9 @@
     grid-template-columns: 1fr;
     gap: 6px;
   }
-  .preference-grid > article {
-    padding: 20px;
+  .preference-insights h2,
+  .preference-grid h3 {
+    font-size: 22px;
   }
 }
 
