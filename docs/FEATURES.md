@@ -53,6 +53,10 @@
 - Arrange saved photos into a private cover collage, with keyboard positioning,
   optional captions, exact preview, local download and reviewed cover replacement.
 - Save reusable collection detail names and private setup templates for new, empty collections.
+- Add optional brand/maker, type, variant, size and price/currency from Add details.
+  Product starters offer these together; Places keeps location first. Suggestions come
+  from the current collection. Filter by brand, save that view, and inspect brand preference
+  counts with supporting records. These private details stay out of public ranking links/images.
 - Choose optional illustrated starters in New collection or an empty archive, including skincare,
   haircare, makeup, fragrance, food and snacks, recipes, clothing and gear, shows, and experiences. A starter supplies only a name;
   automatic artwork follows the exact name and private covers or explicit artwork take precedence.

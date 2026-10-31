@@ -131,7 +131,7 @@ test('revisit dates and snooze save through normal revision-checked context with
   archive.items[0].context = { ...emptyItemContext, revisit: { on: '2026-10-17', snoozedUntil: null } };
   await page.goto(`/lists/${list.id}?focus=item:coffee`);
   const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });
-  await editor.locator('summary').filter({ hasText: 'A little more context' }).click();
+  await editor.locator('summary').filter({ hasText: 'More context' }).click();
   await editor.locator('summary').filter({ hasText: 'Plan a revisit' }).click();
   await editor.getByLabel('Snooze until (optional)', { exact: true }).fill(day);
   await editor.getByLabel('Snooze until (optional)', { exact: true }).scrollIntoViewIfNeeded();
@@ -146,7 +146,7 @@ test('revisit dates and snooze save through normal revision-checked context with
   expect(archive.items[0].revisitQueued).toBeFalsy();
   await page.goto(`/lists/${list.id}?focus=item:coffee`);
   const again = page.getByRole('dialog', { name: 'Coffee', exact: true });
-  await again.locator('summary').filter({ hasText: 'A little more context' }).click();
+  await again.locator('summary').filter({ hasText: 'More context' }).click();
   await again.locator('summary').filter({ hasText: 'Plan a revisit' }).click();
   await again.getByRole('button', { name: 'Clear snooze', exact: true }).click();
   await expect(again.getByLabel('Revisit on', { exact: true })).toHaveValue('2026-10-17');

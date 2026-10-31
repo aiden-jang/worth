@@ -29,6 +29,7 @@ import { ItemSheet } from './ItemSheet';
 import { SavedViews } from './SavedViews';
 import { FilingMoment } from './FilingMoment';
 import type { SavedViewFilters } from '../shared/workspace';
+import { brandKey, itemBrand, itemDetailSuggestions } from '../shared/item-details';
 
 type CaptureDraft = { title: string; batchTitles: string; batchMode: boolean; wantToTry?: boolean };
 
@@ -100,6 +101,7 @@ export function CollectionView({
     'all',
   );
   const [type, setType] = useViewPreference(`collection:${list.id}:type`, 'all');
+  const [brand, setBrand] = useViewPreference(`collection:${list.id}:brand`, '');
   const [label, setLabel] = useViewPreference(`collection:${list.id}:label`, '');
   const [stamp, setStamp] = useViewPreference(`collection:${list.id}:stamp`, '');
   const [rankFilter, setRankFilter] = useViewPreference<RankFilter>(
@@ -197,6 +199,7 @@ export function CollectionView({
       setAddedBefore('');
       setVisits('all');
       setType('all');
+      setBrand('');
       setLabel('');
       setStamp('');
       setRankFilter('all');
@@ -231,6 +234,7 @@ export function CollectionView({
       setAddedBefore('');
       setVisits('all');
       setType('all');
+      setBrand('');
       setLabel('');
       setStamp('');
       setRankFilter('all');
@@ -302,8 +306,9 @@ export function CollectionView({
   });
   const rankedIds = new Set(list.rankedIds);
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
+  const brands = itemDetailSuggestions(items, 'brand');
   const hasAdvancedFilters =
-    Boolean(label || stamp) ||
+    Boolean(label || stamp || brand) ||
     Boolean(addedSince || addedBefore || visits !== 'all') ||
     type !== 'all' ||
     rankFilter !== 'all' ||
@@ -318,6 +323,7 @@ export function CollectionView({
     sort,
   });
   const visible = ordered.filter((item) => {
+    if (brand && brandKey(itemBrand(item.context)) !== brandKey(brand)) return false;
     if (label && !item.context?.labels.includes(label)) return false;
     if (stamp && !item.context?.stamps.includes(stamp)) return false;
     const added = new Date(item.createdAt).toLocaleDateString('en-CA');
@@ -502,6 +508,18 @@ export function CollectionView({
 
           {showFilters && (
             <div className="collection-advanced-filters" id="collection-filters">
+              {(brands.length > 0 || brand) && (
+                <label>
+                  <span>Brand or maker</span>
+                  <select value={brand} onChange={(event) => setBrand(event.target.value)}>
+                    <option value="">Any brand</option>
+                    {brand && !brands.includes(brand) && <option>{brand}</option>}
+                    {brands.map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {types.length > 0 && (
                 <label>
                   <span>Type</span>
@@ -613,6 +631,7 @@ export function CollectionView({
                     setAddedBefore('');
                     setVisits('all');
                     setType('all');
+                    setBrand('');
                     setLabel('');
                     setStamp('');
                     setRankFilter('all');
@@ -745,6 +764,7 @@ export function CollectionView({
                           browse,
                           search,
                           type,
+                          brand,
                           rankFilter,
                           decisionFilter,
                           sort,
@@ -759,6 +779,7 @@ export function CollectionView({
                           setBrowse(filters.browse);
                           setSearch(filters.search);
                           setType(filters.type);
+                          setBrand(filters.brand ?? '');
                           setRankFilter(filters.rankFilter);
                           setDecisionFilter(filters.decisionFilter);
                           setSort(filters.sort);

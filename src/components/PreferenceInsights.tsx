@@ -35,7 +35,8 @@ export function PreferenceInsights() {
               return (
                 <article key={`${group.listId}:${group.kind}:${group.basis}:${group.name}`}>
                   <p className="overline">
-                    {group.listName} · {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
+                    {group.listName} · {group.kind === 'brand' ? 'brand · ' : ''}
+                    {group.basis === 'visits' ? 'visit reactions' : 'overall calls'}
                   </p>
                   <h3>
                     {group.kind === 'collection'
@@ -66,7 +67,7 @@ export function PreferenceInsights() {
                     {rated < 3
                       ? 'A small sample. Still collecting.'
                       : group.basis === 'visits'
-                        ? 'Based on recorded visit reactions and current types/labels.'
+                        ? 'Based on recorded visit reactions and current details.'
                         : 'Based on your current calls, not inferred from rankings.'}
                   </p>
                   <Link

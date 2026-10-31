@@ -11,7 +11,7 @@ import type { Item } from '../shared/models';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CallChoices } from './PersonalCall';
 
-const draftSchema = experienceInput.extend({
+const draftSchema = experienceInput.safeExtend({
   title: z.string().max(120),
   pending: experienceInput.nullable(),
 });

@@ -56,6 +56,13 @@ Private uploaded covers take precedence over optional built-in artwork. Automati
 art uses exact starter-name matching or a monogram; explicit saved object/palette
 choices remain available. Artwork never implies a call, a rank or a memory.
 
+Optional item details sit together under Add details. Product starters offer brand,
+variant, size and price/currency; Places offers location. Other collections can
+explicitly add product details. Name-only capture stays complete. Brand and size
+reuse private custom details, and variants/prices reuse their existing storage.
+Only filled facts appear on the selected slip. Brand filters and preference groups
+use recorded details/calls, with supporting records and honest sample counts.
+
 ## Calls and personality
 
 Rank describes comparison inside one collection. Favorite, Meh and Not again are

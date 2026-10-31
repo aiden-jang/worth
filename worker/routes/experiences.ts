@@ -61,9 +61,18 @@ export function registerExperienceRoutes(api: Hono<AppEnv>) {
           ? [
               db
                 .prepare(
-                  'INSERT INTO items(id,list_id,owner_id,title,type,created_at,updated_at) VALUES(?,?,?,?,?,?,?)',
+                  'INSERT INTO items(id,list_id,owner_id,title,type,context_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
                 )
-                .bind(itemId, list.id, owner, input.title, input.type, now, now),
+                .bind(
+                  itemId,
+                  list.id,
+                  owner,
+                  input.title,
+                  input.type,
+                  JSON.stringify(input.itemContext ?? {}),
+                  now,
+                  now,
+                ),
             ]
           : []),
         db

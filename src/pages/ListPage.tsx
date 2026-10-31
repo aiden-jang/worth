@@ -248,6 +248,7 @@ export function ListPage() {
               key={`${listId}:${creating ? 'new' : selected?.id}`}
               listId={listId}
               item={creating ? null : selected}
+              collectionName={list.name}
               rank={selected ? list.rankedIds.indexOf(selected.id) + 1 || undefined : undefined}
               items={items}
               logs={logs}

@@ -2,6 +2,7 @@ import type { Hono } from 'hono';
 import type { AppEnv } from '../context';
 import { ApiError, requireList } from '../data';
 import { memoryFilter, type MemoryRecord, type PreferenceGroup } from '../../src/shared/memories';
+import { itemBrandSql } from '../item-details';
 
 export function registerMemoryRoutes(api: Hono<AppEnv>) {
   api.get('/memories', async (c) => {
@@ -18,7 +19,7 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
         : `SELECT g.id,i.id AS itemId,g.list_id AS listId,l.name AS listName,COALESCE(i.title,NULLIF(g.title,''),'Untitled visit') AS title,g.note,g.happened_on AS date,CASE WHEN l.kind='collection' THEN 'visit' ELSE 'activity' END AS kind,json_extract(g.context_json,'$.location') AS location,json_extract(g.context_json,'$.order') AS "order",json_extract(g.context_json,'$.reaction') AS reaction,EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id=g.id) AS hasPhoto,COALESCE(i.type,'') AS type,COALESCE(i.context_json,'{}') AS context_json,g.created_at AS sortTime FROM active_logs g JOIN active_lists l ON l.id=g.list_id AND l.owner_id=g.owner_id LEFT JOIN record_items original ON original.id=g.item_id AND original.owner_id=g.owner_id LEFT JOIN active_items i ON i.id=COALESCE(original.merged_into_id,original.id) AND i.owner_id=g.owner_id AND i.list_id=g.list_id WHERE g.owner_id=? AND (?='1' OR l.archived=0)
           UNION ALL SELECT e.id,NULL AS itemId,NULL AS listId,'Unfiled' AS listName,json_extract(e.payload_json,'$.title') AS title,COALESCE(json_extract(e.payload_json,'$.note'),'') AS note,json_extract(e.payload_json,'$.memory.happenedOn') AS date,'unfiled-visit' AS kind,json_extract(e.payload_json,'$.context.location') AS location,'' AS "order",json_extract(e.payload_json,'$.memory.reaction') AS reaction,EXISTS(SELECT 1 FROM inbox_photos p WHERE p.inbox_id=e.id AND p.owner_id=e.owner_id AND p.removed_at IS NULL AND p.data IS NOT NULL) AS hasPhoto,COALESCE(json_extract(e.payload_json,'$.type'),'') AS type,COALESCE(json_extract(e.payload_json,'$.context'),'{}') AS context_json,e.created_at AS sortTime FROM inbox_entries e WHERE e.owner_id=? AND e.trashed_at IS NULL AND json_extract(e.payload_json,'$.memory.happenedOn') IS NOT NULL`;
     const pattern = `%${f.q.replace(/[\\%_]/g, '\\$&')}%`;
-    const sql = `WITH memories AS (${source}) SELECT * FROM memories WHERE (?='' OR listId=? OR (?='inbox' AND kind IN ('unfiled','unfiled-visit'))) AND (?='' OR date>=?) AND (?='' OR date<=?) AND (?='' OR type=?) AND (?='' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value=?)) AND (?='' OR title LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\' OR "order" LIKE ? ESCAPE '\\')`;
+    const sql = `WITH memories AS (${source}) SELECT * FROM memories WHERE (?='' OR listId=? OR (?='inbox' AND kind IN ('unfiled','unfiled-visit'))) AND (?='' OR date>=?) AND (?='' OR date<=?) AND (?='' OR type=?) AND (?='' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value=?)) AND (?='' OR ${itemBrandSql('context_json')}=? COLLATE NOCASE) AND (?='' OR title LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\' OR "order" LIKE ? ESCAPE '\\')`;
     const args = [
       owner,
       f.archived,
@@ -34,6 +35,8 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
       f.type,
       f.label,
       f.label,
+      f.brand,
+      f.brand,
       f.q,
       pattern,
       pattern,
@@ -87,7 +90,8 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
           SELECT list_id AS listId,listName,'collection' AS kind,basis,listName AS name,decision FROM facts
           UNION ALL SELECT list_id,listName,'type',basis,type,decision FROM facts WHERE type<>''
           UNION ALL SELECT i.list_id,i.listName,'label',i.basis,label.value,i.decision FROM facts i JOIN json_each(i.context_json,'$.labels') label WHERE label.type='text' AND label.value<>''
-        ) SELECT listId,listName,kind,basis,name,SUM(decision='favorite') AS favorite,SUM(decision='meh') AS meh,SUM(decision='would_not_again') AS notAgain,SUM(decision IS NULL) AS unrated FROM groups GROUP BY listId,listName,kind,basis,name HAVING COUNT(decision)>0 ORDER BY COUNT(decision) DESC,listName,kind,basis,name LIMIT 12`,
+          UNION ALL SELECT i.list_id,i.listName,'brand',i.basis,${itemBrandSql('i.context_json')},i.decision FROM facts i WHERE ${itemBrandSql('i.context_json')}<>''
+        ) SELECT listId,listName,kind,basis,name,SUM(decision='favorite') AS favorite,SUM(decision='meh') AS meh,SUM(decision='would_not_again') AS notAgain,SUM(decision IS NULL) AS unrated FROM groups GROUP BY listId,listName,kind,basis,CASE WHEN kind='brand' THEN lower(name) ELSE name END HAVING COUNT(decision)>0 ORDER BY COUNT(decision) DESC,listName,kind,basis,name LIMIT 12`,
       ).bind(owner, owner, owner),
       c.env.DB.prepare(
         `SELECT i.id AS itemId,i.list_id AS listId,i.title,COUNT(*) AS visits,COALESCE(SUM(json_extract(g.context_json,'$.reaction')='favorite'),0) AS favorites,MAX(g.happened_on) AS lastDate FROM active_logs g JOIN record_items original ON original.id=g.item_id AND original.owner_id=g.owner_id JOIN active_items i ON i.id=COALESCE(original.merged_into_id,original.id) AND i.owner_id=g.owner_id AND i.list_id=g.list_id JOIN active_lists l ON l.id=g.list_id AND l.owner_id=g.owner_id WHERE g.owner_id=? AND l.archived=0 GROUP BY i.id HAVING COUNT(*)>=2 ORDER BY COUNT(*) DESC,lastDate DESC,i.id LIMIT 6`,

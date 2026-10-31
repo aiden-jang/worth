@@ -18,6 +18,8 @@ import { PhotoControl } from './PhotoControl';
 import { ItemContextEditor } from './ItemContextEditor';
 import { VisitContextReadout } from './VisitContext';
 import { emptyItemContext } from '../shared/item-context';
+import { collectionDetailProfile, hasItemDetails } from '../shared/item-details';
+import { ItemDetailsFields } from './ItemDetailsFields';
 
 const emptyItem: ItemInput = {
   context: emptyItemContext,
@@ -33,6 +35,7 @@ const emptyItem: ItemInput = {
 
 export function ItemEditor({
   listId,
+  collectionName = '',
   item,
   rank,
   items,
@@ -44,6 +47,7 @@ export function ItemEditor({
   onCreated,
 }: {
   listId: string;
+  collectionName?: string;
   item: Item | null;
   rank?: number;
   items: Item[];
@@ -82,7 +86,6 @@ export function ItemEditor({
   const history = logs.filter(
     (log) => log.itemId === item?.id || item?.mergedIds?.includes(log.itemId ?? ''),
   );
-  const typeSuggestions = Array.from(new Set(items.map((entry) => entry.type).filter(Boolean))).sort();
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
   const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim()) || Boolean(photo);
 
@@ -290,23 +293,6 @@ export function ItemEditor({
                 placeholder="The thing you want to remember"
               />
             </label>
-            <label>
-              Type <span className="optional">optional</span>
-              <input
-                maxLength={60}
-                value={form.type}
-                list={`item-types-${listId}`}
-                onChange={(event) => setForm({ ...form, type: event.target.value })}
-                placeholder="Whiskey, wine, film…"
-              />
-              {typeSuggestions.length > 0 && (
-                <datalist id={`item-types-${listId}`}>
-                  {typeSuggestions.map((suggestion) => (
-                    <option key={suggestion} value={suggestion} />
-                  ))}
-                </datalist>
-              )}
-            </label>
           </div>
           <OpinionSlip
             className="record-call"
@@ -319,6 +305,29 @@ export function ItemEditor({
             <p className="record-call-hint">Optional. Tap the selected call to clear it.</p>
           </OpinionSlip>
           <div className="record-notes">
+            <details
+              className="record-extras item-basic-details"
+              open={hasItemDetails(item?.type, item?.context)}
+            >
+              <summary>
+                Add details <span>optional</span>
+              </summary>
+              <ItemDetailsFields
+                collectionName={collectionName}
+                type={form.type}
+                context={form.context ?? emptyItemContext}
+                items={items}
+                onChange={(type, context) => setForm({ ...form, type, context })}
+              />
+              <ItemContextEditor
+                listId={listId}
+                value={form.context}
+                onChange={(context) => setForm({ ...form, context })}
+                title={form.title}
+                basics
+                locationInBasics={collectionDetailProfile(collectionName) === 'place'}
+              />
+            </details>
             <label className="capture-want">
               <input
                 type="checkbox"
@@ -361,12 +370,6 @@ export function ItemEditor({
                 </label>
               </div>
             </details>
-            <ItemContextEditor
-              listId={listId}
-              value={form.context}
-              onChange={(context) => setForm({ ...form, context })}
-              title={form.title}
-            />
             {item && (form.expectedContextRevision ?? 0) !== (item.contextRevision ?? 0) && (
               <div role="alert">
                 <p>Saved context changed elsewhere. Your context draft is still here.</p>

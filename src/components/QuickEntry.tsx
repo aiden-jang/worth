@@ -21,6 +21,9 @@ import {
 import type { ListSummary } from '../shared/models';
 import { CallChoices } from './PersonalCall';
 import { ConfirmDialog } from './ConfirmDialog';
+import { emptyItemContext } from '../shared/item-context';
+import { hasItemDetails, itemIdentity } from '../shared/item-details';
+import { ItemDetailsFields } from './ItemDetailsFields';
 
 export function QuickEntry({
   lists,
@@ -42,6 +45,8 @@ export function QuickEntry({
   const initial: QuickEntryDraft = {
     listId: initialListId,
     title: initialTitle,
+    type: '',
+    context: emptyItemContext,
     itemId: null,
     note: '',
     decision: null,
@@ -61,19 +66,21 @@ export function QuickEntry({
   const target = lists.find((list) => list.id === form.listId && !list.archived);
   const activity = form.pending?.kind === 'activity' || target?.kind === 'activity';
   const collection = target?.kind === 'collection';
+  const itemDetails = hasItemDetails(form.type, form.context);
+  const [detailsOpen, setDetailsOpen] = useState(
+    Boolean(form.note || form.decision || form.wantToTry || form.experienced || itemDetails),
+  );
   const names = useQuery({
     queryKey: ['items', form.listId],
     queryFn: () => api.items(form.listId),
-    enabled: collection && form.experienced,
+    enabled: collection && (form.experienced || detailsOpen),
   });
   const matchingNames = (names.data?.items ?? []).filter(
     (item) => item.title.trim().toLocaleLowerCase() === form.title.trim().toLocaleLowerCase(),
   );
   const ready = form.listId === 'inbox' || !!target;
   const [discard, setDiscard] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(
-    Boolean(form.note || form.decision || form.wantToTry || form.experienced),
-  );
+  const [switching, setSwitching] = useState<Partial<QuickEntryDraft> | null>(null);
   useEffect(() => {
     if (photo.file) setDetailsOpen(true);
   }, [photo.file]);
@@ -165,6 +172,8 @@ export function QuickEntry({
                   happenedOn: form.happenedOn,
                   note: form.note,
                   context: { reaction: form.decision },
+                  type: form.type ?? '',
+                  ...(!form.itemId && itemDetails ? { itemContext: form.context } : {}),
                 }),
               }
             : form.listId === 'inbox'
@@ -172,6 +181,8 @@ export function QuickEntry({
                   kind: 'inbox',
                   item: inboxPayload.parse({
                     title: form.title,
+                    type: form.type ?? '',
+                    context: form.context,
                     note: form.note,
                     decision: form.experienced ? null : form.decision,
                     wantToTry: form.wantToTry,
@@ -185,6 +196,8 @@ export function QuickEntry({
                   listId: form.listId,
                   item: itemInput.parse({
                     title: form.title,
+                    type: form.type ?? '',
+                    context: form.context,
                     note: form.note,
                     decision: form.decision,
                     wantToTry: form.wantToTry,
@@ -206,7 +219,9 @@ export function QuickEntry({
       setValidation(
         error instanceof Error && !('issues' in error)
           ? error.message
-          : 'Check the name and date before saving.',
+          : error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues)
+            ? String(error.issues[0]?.message ?? 'Check your details before saving.')
+            : 'Check the name and details before saving.',
       );
       setDetailsOpen(true);
     } finally {
@@ -259,8 +274,8 @@ export function QuickEntry({
               Save in
               <select
                 value={form.listId}
-                onChange={(event) =>
-                  edit({
+                onChange={(event) => {
+                  const patch = {
                     listId: event.target.value,
                     itemId: null,
                     experienced:
@@ -275,8 +290,14 @@ export function QuickEntry({
                     )
                       ? false
                       : form.wantToTry,
-                  })
-                }
+                  };
+                  if (
+                    itemDetails &&
+                    lists.some((list) => list.id === event.target.value && list.kind === 'activity')
+                  )
+                    setSwitching({ ...patch, type: '', context: emptyItemContext });
+                  else edit(patch);
+                }}
               >
                 <option value="inbox">Unfiled — choose a collection later</option>
                 {!ready && <option value={form.listId}>Unavailable collection — choose another</option>}
@@ -314,6 +335,16 @@ export function QuickEntry({
               className="quick-entry-details"
             >
               <summary>Add details</summary>
+              {!activity && !form.itemId && (
+                <ItemDetailsFields
+                  key={form.listId}
+                  collectionName={target?.name}
+                  type={form.type ?? ''}
+                  context={form.context ?? emptyItemContext}
+                  items={names.data?.items ?? []}
+                  onChange={(type, context) => edit({ type, context })}
+                />
+              )}
               {!activity && (
                 <>
                   {(collection || form.listId === 'inbox') && (
@@ -403,10 +434,20 @@ export function QuickEntry({
                           type="button"
                           key={item.id}
                           className="button button-outline"
-                          onClick={() => edit({ itemId: item.id, title: item.title })}
+                          onClick={() => {
+                            const patch = {
+                              itemId: item.id,
+                              title: item.title,
+                              type: '',
+                              context: emptyItemContext,
+                            };
+                            if (itemDetails) setSwitching(patch);
+                            else edit(patch);
+                          }}
                         >
                           Use saved {item.title}
                           {item.type ? ` · ${item.type}` : ''}
+                          {itemIdentity(item) ? ` · ${itemIdentity(item)}` : ''}
                         </button>
                       ))}
                       <p className="quick-entry-helper">
@@ -498,6 +539,18 @@ export function QuickEntry({
             draft.operationId.current = crypto.randomUUID();
             save.reset();
             setDiscard(false);
+          }}
+        />
+      )}
+      {switching && (
+        <ConfirmDialog
+          title="Leave these item details behind?"
+          description="This choice uses a saved name or an activity entry. Your unsaved item details will be cleared."
+          confirmLabel="Switch and clear details"
+          onClose={() => setSwitching(null)}
+          onConfirm={() => {
+            edit(switching);
+            setSwitching(null);
           }}
         />
       )}

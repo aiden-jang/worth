@@ -24,7 +24,7 @@ test('private context saves, filters by personal labels and downloads an explici
   await page.getByRole('textbox', { name: 'Recommended by', exact: true }).fill('Mina');
   await page.getByRole('textbox', { name: 'After trying it', exact: true }).fill('Tell Mina about it');
   await page.getByRole('textbox', { name: 'Source link', exact: true }).fill('https://example.test/find');
-  await page.getByRole('textbox', { name: 'Version or edition', exact: true }).fill('Second edition');
+  await page.getByLabel('Version or edition', { exact: true }).fill('Second edition');
   if (process.env.WORTH_CONTEXT_QA) {
     await page.getByRole('textbox', { name: 'Why I saved this', exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({
@@ -34,7 +34,7 @@ test('private context saves, filters by personal labels and downloads an explici
   await page.getByText('Labels and stamps', { exact: true }).click();
   await page.getByRole('textbox', { name: 'Personal labels', exact: true }).fill('comfort watch');
   await page.getByRole('textbox', { name: 'Personal stamps', exact: true }).fill('worth the detour');
-  await page.getByText('Purchase and ownership', { exact: true }).click();
+  await page.getByRole('button', { name: 'Add product details', exact: true }).click();
   await page.getByRole('spinbutton', { name: 'Price paid', exact: true }).fill('0');
   await page.getByRole('textbox', { name: 'Currency', exact: true }).fill('usd');
   await page.getByText('Borrowed or lent', { exact: true }).click();
@@ -82,7 +82,7 @@ test('unfinished source, price and custom details survive draft reload', async (
   await page.getByText('Custom details', { exact: true }).click();
   await page.getByRole('button', { name: 'Add a custom detail', exact: true }).click();
   await page.getByRole('textbox', { name: 'Detail value 1', exact: true }).fill('Still writing');
-  await page.getByText('Purchase and ownership', { exact: true }).click();
+  await page.getByRole('button', { name: 'Add product details', exact: true }).click();
   await page.getByRole('spinbutton', { name: 'Price paid', exact: true }).fill('12');
   await page.reload();
   await details(page);

@@ -2,6 +2,8 @@ import { ArrowRight } from '@phosphor-icons/react';
 import type { Item } from '../shared/models';
 import { OpinionSlip } from './OpinionSlip';
 import { CallBadge } from './PersonalCall';
+import { itemIdentity } from '../shared/item-details';
+import { ItemDetailsReadout } from './ItemDetailsReadout';
 
 type IndexProps = {
   sheet?: boolean;
@@ -55,6 +57,7 @@ export function IndexRows({ items, ranks, selectedId, onSelect, selection, sheet
               >
                 <strong>{item.title}</strong>
                 {item.type && <span>{item.type}</span>}
+                {itemIdentity(item) && <small className="item-brand">{itemIdentity(item)}</small>}
                 {item.wantToTry && <small className="want-label">Want to try</small>}
               </button>
               {item.decision && <CallBadge value={item.decision} />}
@@ -98,6 +101,7 @@ export function ItemActions({
       disabled={decisionPending}
       onChange={(value) => onDecide(item, value)}
     >
+      <ItemDetailsReadout item={item} />
       <div className="collection-tray-actions">
         <button
           type="button"

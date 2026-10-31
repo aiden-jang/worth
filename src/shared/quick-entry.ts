@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { itemInput, logInput } from './validation';
 import { experienceInput } from './memories';
 import { inboxPayload } from './inbox';
+import { itemContextDraft } from './item-context';
 
 const destination = z.union([z.literal('inbox'), z.string().uuid()]);
 const attachment = { photoKey: z.string().uuid().optional() };
@@ -28,6 +29,8 @@ export const quickEntryDraft = z
   .object({
     listId: destination,
     title: z.string().max(120),
+    type: z.string().max(60).optional(),
+    context: itemContextDraft.optional(),
     itemId: z.string().uuid().nullable().default(null),
     note: z.string().max(4000),
     decision: z.enum(['favorite', 'meh', 'would_not_again']).nullable(),

@@ -31,6 +31,7 @@ const savedViewFilters = z
     browse: z.enum(['all', 'kept', 'want', 'queue', 'revisited', 'not-opened-lately']),
     search: z.string().max(200),
     type: z.string().max(60),
+    brand: z.string().max(240).optional(),
     rankFilter: z.enum(['all', 'top5', 'top10', 'unranked']),
     decisionFilter: z.enum(['all', 'none', 'favorite', 'meh', 'would_not_again']),
     sort: z.enum(['rank', 'recent', 'name', 'times']),

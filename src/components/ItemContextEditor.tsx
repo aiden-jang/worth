@@ -1,6 +1,7 @@
 import { SuggestedDetails } from './CollectionFields';
 import { useState } from 'react';
 import { calendarReminder, emptyItemContext, type ItemContext } from '../shared/item-context';
+import { detailField } from '../shared/item-details';
 
 function downloadReminder(title: string, date: string) {
   const url = URL.createObjectURL(
@@ -18,11 +19,15 @@ export function ItemContextEditor({
   onChange,
   title,
   listId,
+  basics = false,
+  locationInBasics = false,
 }: {
   value: ItemContext | undefined;
   onChange: (context: ItemContext) => void;
   title: string;
   listId?: string;
+  basics?: boolean;
+  locationInBasics?: boolean;
 }) {
   const context = {
     ...emptyItemContext,
@@ -62,7 +67,8 @@ export function ItemContextEditor({
   return (
     <details className="record-extras item-context">
       <summary>
-        A little more context <span>{hasContext ? 'saved details · private' : 'optional · private'}</span>
+        {basics ? 'More context' : 'A little more context'}{' '}
+        <span>{hasContext ? 'details · private' : 'optional · private'}</span>
       </summary>
       <p>Keep what helps you remember. These details are never included in public ranking links.</p>
       <label>
@@ -80,17 +86,19 @@ export function ItemContextEditor({
           Open source link ↗
         </a>
       )}
-      {textFields.map(([key, label, limit, placeholder]) => (
-        <label key={key}>
-          {label}
-          <input
-            value={context[key]}
-            maxLength={limit}
-            placeholder={placeholder}
-            onChange={(event) => onChange({ ...context, [key]: event.target.value })}
-          />
-        </label>
-      ))}
+      {textFields
+        .filter(([key]) => !(basics && key === 'version') && !(locationInBasics && key === 'location'))
+        .map(([key, label, limit, placeholder]) => (
+          <label key={key}>
+            {label}
+            <input
+              value={context[key]}
+              maxLength={limit}
+              placeholder={placeholder}
+              onChange={(event) => onChange({ ...context, [key]: event.target.value })}
+            />
+          </label>
+        ))}
       <details className="record-extras">
         <summary>Plan a revisit</summary>
         <p>
@@ -181,51 +189,54 @@ export function ItemContextEditor({
             onChange={(fields) => onChange({ ...context, fields })}
           />
         )}
-        {context.fields.map((field, index) => (
-          <div className="context-field" key={index}>
-            <label>
-              Detail name {index + 1}
-              <input
-                value={field.name}
-                maxLength={40}
-                onChange={(event) =>
-                  onChange({
-                    ...context,
-                    fields: context.fields.map((other, slot) =>
-                      slot === index ? { ...other, name: event.target.value } : other,
-                    ),
-                  })
+        {context.fields.map((field, index) =>
+          basics &&
+          (field === detailField(context, 'brand') || field === detailField(context, 'size')) ? null : (
+            <div className="context-field" key={index}>
+              <label>
+                Detail name {index + 1}
+                <input
+                  value={field.name}
+                  maxLength={40}
+                  onChange={(event) =>
+                    onChange({
+                      ...context,
+                      fields: context.fields.map((other, slot) =>
+                        slot === index ? { ...other, name: event.target.value } : other,
+                      ),
+                    })
+                  }
+                  placeholder="Director, size, neighborhood…"
+                />
+              </label>
+              <label>
+                Detail value {index + 1}
+                <input
+                  value={field.value}
+                  maxLength={240}
+                  onChange={(event) =>
+                    onChange({
+                      ...context,
+                      fields: context.fields.map((other, slot) =>
+                        slot === index ? { ...other, value: event.target.value } : other,
+                      ),
+                    })
+                  }
+                />
+              </label>
+              <button
+                type="button"
+                className="button button-outline"
+                aria-label={`Remove detail ${index + 1}`}
+                onClick={() =>
+                  onChange({ ...context, fields: context.fields.filter((_, slot) => slot !== index) })
                 }
-                placeholder="Director, size, neighborhood…"
-              />
-            </label>
-            <label>
-              Detail value {index + 1}
-              <input
-                value={field.value}
-                maxLength={240}
-                onChange={(event) =>
-                  onChange({
-                    ...context,
-                    fields: context.fields.map((other, slot) =>
-                      slot === index ? { ...other, value: event.target.value } : other,
-                    ),
-                  })
-                }
-              />
-            </label>
-            <button
-              type="button"
-              className="button button-outline"
-              aria-label={`Remove detail ${index + 1}`}
-              onClick={() =>
-                onChange({ ...context, fields: context.fields.filter((_, slot) => slot !== index) })
-              }
-            >
-              Remove detail
-            </button>
-          </div>
-        ))}
+              >
+                Remove detail
+              </button>
+            </div>
+          ),
+        )}
         <button
           type="button"
           className="button button-outline"
@@ -266,41 +277,43 @@ export function ItemContextEditor({
             />
           </label>
         </div>
-        <div className="date-pair">
-          <label>
-            Price paid
-            <input
-              type="number"
-              min="0"
-              max="1000000000"
-              step="any"
-              value={context.purchase.price ?? ''}
-              onChange={(event) =>
-                onChange({
-                  ...context,
-                  purchase: {
-                    ...context.purchase,
-                    price: event.target.value === '' ? null : Number(event.target.value),
-                  },
-                })
-              }
-            />
-          </label>
-          <label>
-            Currency
-            <input
-              value={context.purchase.currency}
-              maxLength={3}
-              placeholder="USD"
-              onChange={(event) =>
-                onChange({
-                  ...context,
-                  purchase: { ...context.purchase, currency: event.target.value.toUpperCase() },
-                })
-              }
-            />
-          </label>
-        </div>
+        {!basics && (
+          <div className="date-pair">
+            <label>
+              Price paid
+              <input
+                type="number"
+                min="0"
+                max="1000000000"
+                step="any"
+                value={context.purchase.price ?? ''}
+                onChange={(event) =>
+                  onChange({
+                    ...context,
+                    purchase: {
+                      ...context.purchase,
+                      price: event.target.value === '' ? null : Number(event.target.value),
+                    },
+                  })
+                }
+              />
+            </label>
+            <label>
+              Currency
+              <input
+                value={context.purchase.currency}
+                maxLength={3}
+                placeholder="USD"
+                onChange={(event) =>
+                  onChange({
+                    ...context,
+                    purchase: { ...context.purchase, currency: event.target.value.toUpperCase() },
+                  })
+                }
+              />
+            </label>
+          </div>
+        )}
         <label>
           Ownership status
           <select

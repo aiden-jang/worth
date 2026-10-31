@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { logInput } from './validation';
 import { visitContext } from './visit-context';
 import type { ItemDecision } from './models';
+import { itemContext } from './item-context';
 
 export const experienceInput = z
   .object({
@@ -11,8 +12,13 @@ export const experienceInput = z
     happenedOn: logInput.shape.happenedOn,
     note: z.string().trim().max(4000).default(''),
     context: visitContext.prefault({}),
+    itemContext: itemContext.optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => !value.itemId || !value.itemContext,
+    'Edit the saved item to change its product details.',
+  );
 export type ExperienceInput = z.infer<typeof experienceInput>;
 
 export const memoryFilter = z
@@ -24,6 +30,7 @@ export const memoryFilter = z
     q: z.string().trim().max(120).default(''),
     type: z.string().max(60).default(''),
     label: z.string().max(32).default(''),
+    brand: z.string().trim().max(240).default(''),
     archived: z.enum(['0', '1']).default('0'),
     offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
   })
@@ -51,7 +58,7 @@ export interface MemoryPage {
 export interface PreferenceGroup {
   listId: string;
   listName: string;
-  kind: 'collection' | 'type' | 'label';
+  kind: 'collection' | 'type' | 'label' | 'brand';
   basis: 'records' | 'visits';
   name: string;
   favorite: number;

@@ -19,6 +19,7 @@ import type { InboxEntry } from '../src/shared/inbox';
 import { itemContext } from '../src/shared/item-context';
 import { emptyCollectionShelf } from '../src/shared/workspace';
 import { addGalleryPhoto } from '../worker/photo-gallery';
+import type { Preferences, MemoryPage } from '../src/shared/memories';
 
 vi.mock('@aidenjang/auth-client', () => ({
   resolveSession: async (request: Request) => {
@@ -6665,4 +6666,73 @@ test('older Unfiled editors preserve a memory and filing rejects a revision chan
   const backup = archiveFile.parse(await (await call('/export/backup', owner)).json());
   expect(archiveFile.safeParse({ ...backup, photos: [] }).success).toBe(false);
   expect(archiveFile.safeParse({ ...backup, schemaVersion: 10 }).success).toBe(false);
+});
+
+test('product details survive experiences and backups while brand evidence keeps unrated records separate and owner scoped', async () => {
+  const owner = 'productdetails';
+  const list = await archiveCollection(owner, 'Skincare');
+  const context = itemContext.parse({
+    version: 'Unscented',
+    fields: [
+      { name: 'Brand', value: 'Harbor' },
+      { name: 'Size', value: '50 ml' },
+    ],
+    purchase: { price: 0, currency: 'USD' },
+  });
+  await archiveItem(owner, list.id, 'Daily lotion', { decision: 'favorite', type: 'Lotion', context });
+  await archiveItem(owner, list.id, 'Night lotion', {
+    decision: 'meh',
+    context: { fields: [{ name: 'Company', value: 'harbor' }] },
+  });
+  await archiveItem(owner, list.id, 'Untried lotion', {
+    context: { fields: [{ name: 'Maker', value: 'Harbor' }] },
+  });
+  await archiveItem(owner, list.id, 'Another brand', {
+    decision: 'favorite',
+    context: { fields: [{ name: 'Brand', value: 'Elsewhere' }] },
+  });
+  const input = {
+    itemId: null,
+    title: 'A small sample',
+    type: 'Lotion',
+    happenedOn: '2026-10-31',
+    context: { reaction: 'favorite' },
+    itemContext: context,
+  };
+  const key = crypto.randomUUID();
+  const response = await saveExperience(owner, list.id, input, key);
+  expect(response.status).toBe(201);
+  const saved = (await response.json()) as { item: Item; log: Log };
+  expect(saved.item.context).toEqual(context);
+  expect(saved.item.decision).toBeNull();
+  expect(await (await saveExperience(owner, list.id, input, key)).json()).toEqual(saved);
+  expect((await saveExperience(owner, list.id, { ...input, itemId: saved.item.id })).status).toBe(400);
+  const preferences = (await (await call('/preferences', owner)).json()) as Preferences;
+  expect(
+    preferences.groups.find(
+      (group) => group.kind === 'brand' && group.basis === 'records' && group.name.toLowerCase() === 'harbor',
+    ),
+  ).toMatchObject({ favorite: 1, meh: 1, notAgain: 0, unrated: 2 });
+  expect(
+    preferences.groups.find(
+      (group) => group.kind === 'brand' && group.basis === 'visits' && group.name.toLowerCase() === 'harbor',
+    ),
+  ).toMatchObject({ favorite: 1, meh: 0, unrated: 0 });
+  const recall = (await (await call('/memories?mode=saved&brand=HARBOR', owner)).json()) as MemoryPage;
+  expect(recall.total).toBe(4);
+  expect(recall.records.map((record) => record.title)).not.toContain('Another brand');
+  expect(
+    (
+      (await call('/memories?mode=saved&brand=Harbor', 'productintruder').then((result) =>
+        result.json(),
+      )) as MemoryPage
+    ).total,
+  ).toBe(0);
+  expect(
+    ((await call('/preferences', 'productintruder').then((result) => result.json())) as Preferences).groups,
+  ).toEqual([]);
+  const exported = archiveFile.parse(await (await call('/export/records', owner)).json());
+  expect((await planCreate('/import', 'productsrestored', exported)).status).toBe(201);
+  const restored = archiveFile.parse(await (await call('/export/records', 'productsrestored')).json());
+  expect(restored.items.find((item) => item.title === 'Daily lotion')?.context).toEqual(context);
 });

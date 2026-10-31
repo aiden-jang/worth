@@ -52,7 +52,8 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
     filter.list ||
     filter.archived === '1' ||
     filter.type ||
-    filter.label,
+    filter.label ||
+    filter.brand,
   );
   function clearFilters() {
     setParams({ mode: filter.mode }, { replace: true });
@@ -116,12 +117,19 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
           filter.archived === '1' ||
           filter.list ||
           filter.type ||
-          filter.label,
+          filter.label ||
+          filter.brand,
         )}
       >
         <summary>
           Filters
-          {filter.from || filter.to || filter.list || filter.archived === '1' || filter.type || filter.label
+          {filter.from ||
+          filter.to ||
+          filter.list ||
+          filter.archived === '1' ||
+          filter.type ||
+          filter.label ||
+          filter.brand
             ? ' · On'
             : ''}
         </summary>
@@ -167,6 +175,14 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
             />
             Include archived lists
           </label>
+          <label>
+            Brand or maker
+            <input
+              maxLength={240}
+              value={filter.brand}
+              onChange={(event) => update({ brand: event.target.value })}
+            />
+          </label>
         </div>
         <div className="memory-shortcuts">
           {(['month', 'last-month', 'year'] as const).map((period, index) => (
@@ -183,10 +199,10 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
           </button>
         </div>
       </details>
-      {(filter.type || filter.label) && (
+      {(filter.type || filter.label || filter.brand) && (
         <p>
-          Supporting records for {filter.type || filter.label}. All reactions, including no reaction, are
-          included.
+          Supporting records for {filter.type || filter.label || filter.brand}. All reactions, including no
+          reaction, are included.
         </p>
       )}
       {!parsed.success && <p role="alert">Choose real dates, with the end on or after the start.</p>}
