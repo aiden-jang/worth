@@ -100,6 +100,7 @@ test('an image uses saved ranking order and only the previewed public fields', a
   );
   const file = createObjectURL.mock.calls.at(-1)![0];
   expect(saveRankingImage).toHaveBeenCalledWith(file);
+  expect(renderRankingImage).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByText('Preview image', { exact: true }));
   expect(screen.getByRole('img', { name: 'Ranking image for Drinks' })).toHaveAttribute(
     'src',

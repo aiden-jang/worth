@@ -37,9 +37,9 @@ export function ShareDialog({
     () => ({
       title: list.name,
       artwork: list.artwork,
-      entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
+      entries: ranked.slice(0, 5).map(({ title, type }) => ({ title, type })),
     }),
-    [list.name, list.artwork, preview],
+    [list.name, list.artwork, ranked],
   );
   const activeShares = (shares.data?.shares ?? []).filter(
     (share) => !share.revokedAt && share.expiresAt > Date.now(),
