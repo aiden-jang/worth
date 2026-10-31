@@ -20,6 +20,7 @@ import './completion.css';
 import './archive-tools.css';
 import './everyday.css';
 import './workspace.css';
+import './dialog-save.css';
 
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } },

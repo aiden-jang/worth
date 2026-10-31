@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
@@ -521,17 +522,20 @@ function WorkoutEditor({
               <p className="exercise-helper">Changing the date also moves every exercise in this workout.</p>
             )}
           </fieldset>
-          {save.isError && (
-            <p className="form-error" role="alert">
-              {save.error.message}
-            </p>
-          )}
-          <button
-            className="button button-accent"
-            disabled={save.isPending || legacyDraft || (Boolean(workout) && !changed)}
-          >
-            {save.isPending ? 'Saving…' : workout ? 'Save workout' : 'Create workout'}
-          </button>
+
+          <DialogSaveFooter>
+            {save.isError && (
+              <p className="form-error" role="alert">
+                {save.error.message}
+              </p>
+            )}
+            <button
+              className="button button-accent"
+              disabled={save.isPending || legacyDraft || (Boolean(workout) && !changed)}
+            >
+              {save.isPending ? 'Saving…' : workout ? 'Save workout' : 'Create workout'}
+            </button>
+          </DialogSaveFooter>
         </form>
         {workout && (
           <SavedPlanReview

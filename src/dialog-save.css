@@ -1,0 +1,48 @@
+.dialog-save-footer:where(:not(.record-save, .data-actions)) {
+  display: contents;
+}
+.record-form .dialog-save-footer > .button {
+  justify-self: start;
+}
+.quick-entry-dialog .editor-inner > .quick-entry-helper {
+  margin: 16px 0 8px;
+}
+@media (max-width: 680px), (max-width: 1024px) and (pointer: coarse) {
+  dialog.has-dialog-save {
+    top: var(--save-viewport-top, 0px);
+    bottom: var(--save-viewport-bottom, 0px);
+    max-height: calc(var(--save-viewport-height, 100dvh) - 24px);
+    scroll-padding-block: 12px var(--save-footer-space, 100px);
+  }
+  .has-dialog-save .dialog-save-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    grid-column: 1 / -1;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--ink);
+  }
+  .has-dialog-save .dialog-save-footer > .button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    white-space: normal;
+    margin: 0;
+  }
+  .has-dialog-save .dialog-save-footer > :is(p, [role='status']) {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .has-dialog-save .quick-entry-details {
+    border-bottom: 0;
+  }
+}

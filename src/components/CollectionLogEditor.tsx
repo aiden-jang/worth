@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -165,22 +166,25 @@ export function CollectionLogEditor({
               {draft.status}
             </p>
           )}
-          {save.isError && (
-            <p className="form-error" role="alert">
-              {save.error.message}
-            </p>
-          )}
+
           {save.isError && (
             <button type="button" className="button button-outline" onClick={() => setConfirmReload(true)}>
               Reload saved visit
             </button>
           )}
-          <button
-            className="button button-accent"
-            disabled={!happenedOn || !hasChanges || save.isPending || reload.isPending}
-          >
-            Save changes
-          </button>
+          <DialogSaveFooter>
+            {save.isError && (
+              <p className="form-error" role="alert">
+                {save.error.message}
+              </p>
+            )}
+            <button
+              className="button button-accent"
+              disabled={!happenedOn || !hasChanges || save.isPending || reload.isPending}
+            >
+              Save changes
+            </button>
+          </DialogSaveFooter>
         </form>
         {confirmReload && (
           <ConfirmDialog

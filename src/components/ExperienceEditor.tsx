@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -280,14 +281,17 @@ export function ExperienceEditor({
           {form.pending && (
             <p>This save is fixed for a safe retry. Check your collection before discarding it.</p>
           )}
-          {save.isError && (
-            <p role="alert" className="form-error">
-              {save.error.message}
-            </p>
-          )}
-          <button className="button button-accent" disabled={save.isPending || !form.title.trim()}>
-            {save.isPending ? 'Saving…' : form.pending ? 'Retry save' : 'Save experience'}
-          </button>
+
+          <DialogSaveFooter>
+            {save.isError && (
+              <p role="alert" className="form-error">
+                {save.error.message}
+              </p>
+            )}
+            <button className="button button-accent" disabled={save.isPending || !form.title.trim()}>
+              {save.isPending ? 'Saving…' : form.pending ? 'Retry save' : 'Save experience'}
+            </button>
+          </DialogSaveFooter>
         </form>
         {discard && (
           <ConfirmDialog

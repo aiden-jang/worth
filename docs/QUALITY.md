@@ -50,6 +50,10 @@ Use the existing accessibility checks as regression coverage. An automated scan
 does not verify spoken announcements, logical reading order, a native share sheet
 or usability for a real visitor.
 
+Mobile save cases exercise short windows and resized/panned visual viewports,
+focused-field clearance, retry errors and nested confirmations. These browser
+simulations do not replace physical iPhone/Android keyboard checks.
+
 ## Visitor journeys
 
 Use a local synthetic account for the following pass:

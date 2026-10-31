@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { Trash, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -479,14 +480,7 @@ export function ActivityEditor({
               )}
             </>
           )}
-          {save.isError && (
-            <p className="form-error" role="alert">
-              {draft.savedId.current
-                ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
-                : ''}
-              {save.error.message}
-            </p>
-          )}
+
           {!log && activeWorkout && (
             <label className="next-exercise-choice">
               <input
@@ -497,24 +491,34 @@ export function ActivityEditor({
               Continue to next exercise after saving
             </label>
           )}
-          <button
-            className="button button-accent"
-            disabled={
-              !online ||
-              unversionedDraft ||
-              !photoDraft.ready ||
-              !form.title.trim() ||
-              save.isPending ||
-              Boolean(log && !hasLogChanges) ||
-              Boolean(
-                exerciseMode &&
-                !form.exerciseSets?.length &&
-                !(form.measurements?.length && activityMeasurements.safeParse(form.measurements).success),
-              )
-            }
-          >
-            {save.isPending ? 'Saving…' : log ? 'Save changes' : 'Save log'}
-          </button>
+          <DialogSaveFooter>
+            {save.isError && (
+              <p className="form-error" role="alert">
+                {draft.savedId.current
+                  ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
+                  : ''}
+                {save.error.message}
+              </p>
+            )}
+            <button
+              className="button button-accent"
+              disabled={
+                !online ||
+                unversionedDraft ||
+                !photoDraft.ready ||
+                !form.title.trim() ||
+                save.isPending ||
+                Boolean(log && !hasLogChanges) ||
+                Boolean(
+                  exerciseMode &&
+                  !form.exerciseSets?.length &&
+                  !(form.measurements?.length && activityMeasurements.safeParse(form.measurements).success),
+                )
+              }
+            >
+              {save.isPending ? 'Saving…' : log ? 'Save changes' : 'Save log'}
+            </button>
+          </DialogSaveFooter>
         </form>
         {log && (
           <details className="record-extras record-photo" open={log.hasPhoto}>

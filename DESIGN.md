@@ -118,6 +118,11 @@ scroll within the viewport, preserve unfinished work and restore focus on close.
 Source/review tools pair dark input with cream reviewed output; phones stack them.
 Original photos keep their aspect ratio and keyboard alternatives to manipulation.
 
+Core capture, item, Unfiled, experience and workout dialogs keep their primary save
+reachable on phones and compact touch screens. The footer stays inside its form,
+shows retry errors, and leaves room for focused controls. Dialogs follow the visible
+viewport when a keyboard reduces it; desktop actions keep their normal flow.
+
 Settings leads with downloads and restore, followed by recovery and device cleanup.
 Excel and JSON scope, backup limits, restore preview and deletion consequences stay
 visible. Worth-only deletion remains separate from shared-account deletion.

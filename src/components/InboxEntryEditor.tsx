@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -410,7 +411,12 @@ export function InboxEntryEditor({
             {captureIssueText(parsed.error.issues)}
           </p>
         )}
-        <div className="data-actions">
+        <DialogSaveFooter className="data-actions">
+          {save.isError && (
+            <p className="form-error" role="alert">
+              {save.error.message}
+            </p>
+          )}
           <button
             className="button button-accent"
             disabled={
@@ -433,7 +439,7 @@ export function InboxEntryEditor({
           >
             Reload saved details
           </button>
-        </div>
+        </DialogSaveFooter>
         {draft.form.pending && (
           <p>This save is waiting for confirmation. Retry checks the same details and photo.</p>
         )}
@@ -444,11 +450,7 @@ export function InboxEntryEditor({
         </p>
       )}
       {status && <p role="status">{status}</p>}
-      {save.isError && (
-        <p className="form-error" role="alert">
-          {save.error.message}
-        </p>
-      )}
+
       <section className="inbox-filing" aria-label="File this find">
         <p className="overline">GIVE IT A PLACE</p>
         <h3>File when you’re ready.</h3>

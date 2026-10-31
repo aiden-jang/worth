@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -393,7 +394,7 @@ export function ItemEditor({
               )}
             </div>
           )}
-          <div className="record-save">
+          <DialogSaveFooter className="record-save">
             {save.isError && (
               <p className="form-error" role="alert">
                 {draft.savedId.current
@@ -420,7 +421,7 @@ export function ItemEditor({
               </span>
             )}
             {save.isSuccess && !hasItemChanges && <span role="status">Saved.</span>}
-          </div>
+          </DialogSaveFooter>
         </form>
         {item && (
           <details className="record-extras record-photo" open={item.hasPhoto}>

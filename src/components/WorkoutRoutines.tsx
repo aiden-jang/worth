@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -349,17 +350,20 @@ function RoutineEditor({
               </>
             )}
           </fieldset>
-          {save.isError && (
-            <p className="form-error" role="alert">
-              {save.error.message}
-            </p>
-          )}
-          <button
-            className="button button-accent"
-            disabled={save.isPending || legacyDraft || (Boolean(routine) && !starting && !changed)}
-          >
-            {save.isPending ? 'Saving…' : starting ? 'Start workout' : 'Save routine'}
-          </button>
+
+          <DialogSaveFooter>
+            {save.isError && (
+              <p className="form-error" role="alert">
+                {save.error.message}
+              </p>
+            )}
+            <button
+              className="button button-accent"
+              disabled={save.isPending || legacyDraft || (Boolean(routine) && !starting && !changed)}
+            >
+              {save.isPending ? 'Saving…' : starting ? 'Start workout' : 'Save routine'}
+            </button>
+          </DialogSaveFooter>
         </form>
         {routine && (
           <SavedPlanReview

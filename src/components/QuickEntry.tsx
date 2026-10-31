@@ -1,3 +1,4 @@
+import { DialogSaveFooter } from './DialogSaveFooter';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -478,48 +479,51 @@ export function QuickEntry({
               </label>
             )}
           </fieldset>
-          {!online && (
-            <p role="status">You’re offline. Your draft stays on this device. Reconnect to save.</p>
-          )}
           {form.pending && (
             <p className="quick-entry-helper">
               This save is waiting for confirmation. Retry to check the same entry.
             </p>
           )}
-          {(save.isError || validation) && (
-            <p role="alert" className="form-error">
-              {save.error?.message ?? validation}
-            </p>
-          )}
+
           {(draft.status.includes('restored') || draft.status.includes('could not')) && (
             <p role="status" className="draft-state">
               {draft.status}
             </p>
           )}
-          <button
-            className="button button-accent quick-entry-save"
-            disabled={!online || preparing || !photo.ready || save.isPending || (!ready && !form.pending)}
-          >
-            {preparing
-              ? 'Preparing photo…'
-              : save.isPending
-                ? 'Saving…'
-                : form.pending
-                  ? 'Retry save'
-                  : 'Save'}
-          </button>
-          <p className="quick-entry-helper">A name is enough. You can add more later.</p>
-          {(form.title || form.pending) && (
+          <DialogSaveFooter>
+            {!online && (
+              <p role="status">You’re offline. Your draft stays on this device. Reconnect to save.</p>
+            )}
+            {(save.isError || validation) && (
+              <p role="alert" className="form-error">
+                {save.error?.message ?? validation}
+              </p>
+            )}
             <button
-              type="button"
-              className="quick-entry-discard"
-              disabled={save.isPending}
-              onClick={() => setDiscard(true)}
+              className="button button-accent quick-entry-save"
+              disabled={!online || preparing || !photo.ready || save.isPending || (!ready && !form.pending)}
             >
-              Clear draft
+              {preparing
+                ? 'Preparing photo…'
+                : save.isPending
+                  ? 'Saving…'
+                  : form.pending
+                    ? 'Retry save'
+                    : 'Save'}
             </button>
-          )}
+          </DialogSaveFooter>
         </form>
+        <p className="quick-entry-helper">A name is enough. You can add more later.</p>
+        {(form.title || form.pending) && (
+          <button
+            type="button"
+            className="quick-entry-discard"
+            disabled={save.isPending}
+            onClick={() => setDiscard(true)}
+          >
+            Clear draft
+          </button>
+        )}
       </div>
       {discard && (
         <ConfirmDialog
