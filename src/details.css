@@ -354,6 +354,28 @@
 .share-create {
   width: 100%;
 }
+.ranking-image-export {
+  margin: 24px 0;
+}
+.ranking-image-preview > summary {
+  padding: 12px 0;
+}
+.ranking-image-preview > img {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 12px auto 20px;
+  border-radius: var(--radius-control);
+}
+.ranking-image-export .share-explainer {
+  margin: 12px 0 16px;
+}
+.ranking-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .created-link input {
   width: 100%;
 }

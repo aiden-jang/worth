@@ -5,6 +5,9 @@ import { api, RequestError } from '../src/api';
 import { ShareDialog } from '../src/components/ShareDialog';
 import type { Item, ListDetail } from '../src/shared/models';
 
+// Canvas preparation is covered by the ranking-image tests; these cases exercise link recovery.
+vi.mock('../src/components/RankingImageExport', () => ({ RankingImageExport: () => null }));
+
 const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
 beforeEach(() => {

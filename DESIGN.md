@@ -119,6 +119,9 @@ Public snapshots expose a fixed collection name and ranked titles/types. Calls,
 notes, dates, history and private photos stay out. Booklets, cards, field guides
 and other exports have explicit inclusion choices and exact previews; downloaded
 copies cannot be revoked. Never broaden an existing link's privacy scope silently.
+Ranking images keep their full-width title and cream ranked list. A compact,
+matching built-in illustration sits above the title; private uploaded covers are
+excluded. The optional image preview, download and native share use one prepared PNG.
 
 Unfiled memories and photos transfer atomically when filed. Recognition stays
 on-device; optional ISBN lookup requires a deliberate request. Offline copies and

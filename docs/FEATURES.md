@@ -42,7 +42,9 @@
 - Add private item/log photos and collection covers, or choose optional built-in artwork.
   Artwork includes ramen, sneaker, plant and camera objects in sage, clay and butter.
 - Present a private ranking, create a seven-day revocable snapshot link, or download/share
-  a ranking image. Only the collection name and ranked titles/types leave the archive.
+  a ranking image. Links expose only the collection name and ranked titles/types. Ranking
+  images add matching built-in artwork when available, with an exact optional preview;
+  preview, download and native sharing use the same prepared image. Private covers stay private.
 - Keep private finds in Unfiled (stored as Inbox), optionally add an experienced date, reaction and one photo, recover interrupted saves, then file into a collection unranked without losing the memory.
 - Read English printed text from a photo on-device, edit it, then review a name and optional note before saving. No photo upload or external AI processing is used for recognition.
 - Review receipt text on-device, attach an exact checked image copy if you choose, and map each line to an existing record or an explicitly named new unranked record. Receipt removal leaves sources intact.

@@ -4,9 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import type { Item, ListDetail } from '../shared/models';
 import { rankedItems } from '../shared/ranking';
-import { saveRankingImage } from '../shared/ranking-image';
 import { ConfirmDialog } from './ConfirmDialog';
-import { RankingImageShare } from './RankingImageShare';
+import { RankingImageExport } from './RankingImageExport';
 
 function expiryLabel(expiresAt: number): string {
   const days = Math.max(0, Math.ceil((expiresAt - Date.now()) / 86_400_000));
@@ -28,8 +27,6 @@ export function ShareDialog({
   const client = useQueryClient();
   const [limit, setLimit] = useState<5 | 10 | 'all'>(5);
   const [link, setLink] = useState('');
-  const [imageStatus, setImageStatus] = useState('');
-  const [savingImage, setSavingImage] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
   const [shareToRevoke, setShareToRevoke] = useState<string | null>(null);
@@ -37,8 +34,12 @@ export function ShareDialog({
   const ranked = useMemo(() => rankedItems(list, items), [list, items]);
   const preview = useMemo(() => (limit === 'all' ? ranked : ranked.slice(0, limit)), [limit, ranked]);
   const imageData = useMemo(
-    () => ({ title: list.name, entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })) }),
-    [list.name, preview],
+    () => ({
+      title: list.name,
+      artwork: list.artwork,
+      entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
+    }),
+    [list.name, list.artwork, preview],
   );
   const activeShares = (shares.data?.shares ?? []).filter(
     (share) => !share.revokedAt && share.expiresAt > Date.now(),
@@ -109,7 +110,8 @@ export function ShareDialog({
           </button>
         </div>
         <p className="share-explainer">
-          Only ranked titles and types are shared. Calls, notes, photos, dates, and history stay private.
+          Links include the collection name and ranked titles and types. Calls, notes, photos, dates, and
+          history stay private.
         </p>
         <label className="share-limit">
           Include
@@ -143,32 +145,7 @@ export function ShareDialog({
           ))}
           {!preview.length && <p>Rank an item first, then it can appear here.</p>}
         </div>
-        <button
-          className="button button-outline"
-          disabled={!preview.length || savingImage}
-          onClick={async () => {
-            setSavingImage(true);
-            setImageStatus('');
-            try {
-              await saveRankingImage({
-                title: list.name,
-                entries: preview.slice(0, 5).map(({ title, type }) => ({ title, type })),
-              });
-              setImageStatus('Download started.');
-            } catch {
-              setImageStatus('Couldn’t save the image. Try again.');
-            } finally {
-              setSavingImage(false);
-            }
-          }}
-        >
-          {savingImage ? 'Preparing image…' : 'Save ranking image'}
-        </button>
-        <p className="share-explainer">
-          Image: collection name and up to five ranked titles and types. Downloaded images cannot be revoked.
-        </p>
-        <p role="status">{imageStatus}</p>
-        <RankingImageShare data={imageData} />
+        <RankingImageExport data={imageData} />
         {link ? (
           <div className="created-link">
             <p>

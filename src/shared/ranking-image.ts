@@ -1,12 +1,17 @@
+import type { CollectionArt } from './models';
+import { starterCollectionCover } from './starter-covers';
+
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+const wordSegmenter = new Intl.Segmenter(undefined, { granularity: 'word' });
 const charactersOf = (text: string) => Array.from(segmenter.segment(text), ({ segment }) => segment);
 
 export interface RankingImage {
   title: string;
   entries: { title: string; type: string }[];
+  artwork?: CollectionArt | null;
 }
 
-export async function renderRankingImage({ title, entries }: RankingImage) {
+export async function renderRankingImage({ title, entries, artwork }: RankingImage) {
   await document.fonts.ready;
   const canvas = document.createElement('canvas');
   canvas.width = 1080;
@@ -16,6 +21,37 @@ export async function renderRankingImage({ title, entries }: RankingImage) {
   if (!ctx) throw new Error('Image creation is unavailable in this browser.');
   ctx.fillStyle = '#181915';
   ctx.fillRect(0, 0, 1080, canvas.height);
+  const source = starterCollectionCover(title, artwork);
+  if (
+    typeof source === 'string' &&
+    /^\/art\/(?:starter-covers|collection-choices)\/[a-z0-9-]+\.svg$/.test(source)
+  ) {
+    const illustration = new Image();
+    illustration.src = source;
+    let timer: number | undefined;
+    try {
+      await Promise.race([
+        illustration.decode(),
+        new Promise<never>((_, reject) => {
+          timer = window.setTimeout(() => reject(new Error('Artwork could not load.')), 5000);
+        }),
+      ]);
+      ctx.save();
+      try {
+        ctx.beginPath();
+        ctx.roundRect(808, 48, 200, 125, 18);
+        ctx.clip();
+        ctx.drawImage(illustration, 808, 48, 200, 125);
+      } finally {
+        ctx.restore();
+      }
+    } catch {
+      // A missing decorative asset must not prevent downloading the ranking.
+    } finally {
+      window.clearTimeout(timer);
+      illustration.src = '';
+    }
+  }
   ctx.fillStyle = '#e8dc9d';
   ctx.font = '500 32px "DM Sans", sans-serif';
   ctx.fillText('worth', 72, 100);
@@ -60,18 +96,10 @@ export async function renderRankingImage({ title, entries }: RankingImage) {
   return blob;
 }
 
-export async function saveRankingImage(data: RankingImage) {
-  const blob = await renderRankingImage(data);
-  const { title } = data;
-  const url = URL.createObjectURL(blob);
+export function saveRankingImage(file: File) {
+  const url = URL.createObjectURL(file);
   const anchor = document.createElement('a');
-  const name =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 64) || 'ranking';
-  anchor.download = `worth-${name}-${new Date().toISOString().slice(0, 10)}.png`;
+  anchor.download = file.name;
   anchor.href = url;
   document.body.appendChild(anchor);
   anchor.click();
@@ -88,22 +116,24 @@ function drawLines(
   lineHeight: number,
   maxLines: number,
 ) {
-  const characters = charactersOf(text);
+  const pieces = Array.from(wordSegmenter.segment(text), ({ segment }) => segment).flatMap((piece) =>
+    ctx.measureText(piece).width > width ? charactersOf(piece) : [piece],
+  );
   let line = '',
     row = 0;
-  while (characters.length) {
-    const character = characters.shift()!;
-    if (ctx.measureText(line + character).width > width) {
+  for (const piece of pieces) {
+    const next = line + piece;
+    if (line && ctx.measureText(next.trimEnd()).width > width) {
       if (row === maxLines - 1) {
+        line = next.trimEnd();
         while (ctx.measureText(line + '…').width > width) line = charactersOf(line).slice(0, -1).join('');
-        ctx.fillText(line + '…', x, y + row * lineHeight);
+        ctx.fillText(line.trimEnd() + '…', x, y + row * lineHeight);
         return;
       }
-      ctx.fillText(line, x, y + row * lineHeight);
+      ctx.fillText(line.trimEnd(), x, y + row * lineHeight);
       row += 1;
-      line = '';
-    }
-    line += character;
+      line = piece.trimStart();
+    } else line = next;
   }
-  if (line) ctx.fillText(line, x, y + row * lineHeight);
+  if (line) ctx.fillText(line.trimEnd(), x, y + row * lineHeight);
 }
