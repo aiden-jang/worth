@@ -333,6 +333,7 @@ test('an applied calendar survives a device-zone change and midnight clock gaps 
 });
 
 test('blocked device storage does not prevent a private period read', async ({ page, archive }) => {
+  await page.clock.setFixedTime(new Date('2026-11-02T12:00:00Z'));
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => {
       throw new Error('Storage blocked');
