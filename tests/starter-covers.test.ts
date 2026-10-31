@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { starterCollectionCover } from '../src/shared/starter-covers';
+import { starterActivityCover, starterCollectionCover } from '../src/shared/starter-covers';
 
 describe('starterCollectionCover', () => {
   test('keeps the named starter collections visually recognizable after creation', () => {
@@ -12,6 +12,16 @@ describe('starterCollectionCover', () => {
     expect(starterCollectionCover('Food & snacks')).toBe('/art/collection-choices/snack-clay.svg');
     expect(starterCollectionCover('Recipes')).toBe('/art/starter-covers/recipes.svg');
     expect(starterCollectionCover('Clothing & gear')).toBe('/art/starter-covers/clothing.svg');
+    for (const name of ['Haircare', 'Makeup', 'Shows', 'Experiences', 'Books', 'Music', 'Games'])
+      expect(starterCollectionCover(name)).toBe(`/art/starter-covers/${name.toLowerCase()}.svg`);
+  });
+
+  test('activity artwork stays neutral and exact-name matched', () => {
+    expect(starterActivityCover(' Gym ')).toBe('/art/starter-covers/gym.svg');
+    expect(starterActivityCover('RUNS')).toBe('/art/collection-choices/sneaker-sage.svg');
+    expect(starterActivityCover('Upkeep')).toBe('/art/starter-covers/upkeep.svg');
+    expect(starterActivityCover('Books')).toBeNull();
+    expect(starterActivityCover('My workouts')).toBeNull();
   });
 
   test('does not invent a cover for a personal collection', () => {

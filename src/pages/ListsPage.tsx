@@ -17,7 +17,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useViewPreference } from '../hooks/useViewPreference';
 import type { CollectionArt, ListKind } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
-import { starterCollectionCover } from '../shared/starter-covers';
+import { starterActivityCover, starterCollectionCover } from '../shared/starter-covers';
 import { collectionStarters as suggestions } from '../shared/collection-starters';
 import { CollectionStarters } from '../components/CollectionStarters';
 
@@ -613,7 +613,11 @@ function EmptyListScope({
             <div className="cabinet-directory-picture">
               <CollectionArtwork
                 name={suggestion.name}
-                cover={suggestion.kind === 'collection' ? starterCollectionCover(suggestion.name) : null}
+                cover={
+                  suggestion.kind === 'activity'
+                    ? starterActivityCover(suggestion.name)
+                    : starterCollectionCover(suggestion.name)
+                }
                 neutral={suggestion.kind === 'activity'}
               />
             </div>

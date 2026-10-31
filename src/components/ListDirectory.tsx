@@ -7,7 +7,7 @@ import { api } from '../api';
 import { formatRelativeTimestamp } from '../format';
 import type { ListSummary } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
-import { starterCollectionCover } from '../shared/starter-covers';
+import { starterActivityCover, starterCollectionCover } from '../shared/starter-covers';
 import { CollectionArtwork } from './CollectionArtwork';
 
 export type CollectionOrder = 'recent' | 'name' | 'items' | 'ranked' | 'favorites';
@@ -146,7 +146,11 @@ export function ListDirectory({
               key={list.id}
             >
               <span className="directory-index" aria-hidden="true">
-                {Array.from(list.name.trim())[0] || '·'}
+                {starterActivityCover(list.name) ? (
+                  <img src={starterActivityCover(list.name)!} alt="" />
+                ) : (
+                  Array.from(list.name.trim())[0] || '·'
+                )}
               </span>
               <span className="directory-name">
                 <strong>{list.name}</strong>

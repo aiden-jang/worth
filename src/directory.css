@@ -342,6 +342,12 @@
   min-width: 0;
   flex: 1;
 }
+.directory-index img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
 .directory-name strong {
   display: block;
   font-size: 18px;

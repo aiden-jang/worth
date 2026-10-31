@@ -14,8 +14,10 @@ Suggestions fill only the name, without inventing descriptions, calls or records
 New collection keeps its illustrated starter choices in an optional, closed
 “Choose a starter” disclosure after Name. Choosing one closes the disclosure and
 returns focus to Name, preserving any personal description, photo or artwork choice.
-Skincare, Fragrance, Food & snacks, Recipes and Clothing & gear use the same
-automatic category art in creation, first-use suggestions and saved collections.
+Every collection starter uses the same automatic category art in creation,
+first-use suggestions and saved collections. Haircare, Makeup, Shows and Experiences
+extend the optional name-only choices. Gym, Runs and Upkeep use neutral object
+art in first-use suggestions and activity directory rows, without reaction faces.
 The identity sheet is an authored component reference, not a production screen.
 
 View at 1440 × 900 and 390 × 780. Compare implementation captures using

@@ -1,9 +1,22 @@
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { test, expect } from './fixtures';
+import { test, expect, list } from './fixtures';
 
-const added = ['Skincare', 'Fragrance', 'Food & snacks', 'Recipes', 'Clothing & gear'];
+const added = [
+  'Skincare',
+  'Fragrance',
+  'Food & snacks',
+  'Recipes',
+  'Clothing & gear',
+  'Haircare',
+  'Makeup',
+  'Shows',
+  'Experiences',
+  'Books',
+  'Music',
+  'Games',
+];
 
 async function capture(page: Page, name: string, project: string) {
   if (!process.env.WORTH_STARTERS_QA) return;
@@ -22,7 +35,7 @@ test('starters remain available in a populated archive and create only an empty 
   const choices = page.getByRole('group', { name: 'Collection starters', exact: true });
   await expect(choices).toBeHidden();
   await toggle.click();
-  await expect(choices.getByRole('button')).toHaveCount(12);
+  await expect(choices.getByRole('button')).toHaveCount(16);
   for (const starter of added) {
     const button = choices.getByRole('button', { name: starter, exact: true });
     await expect(button).toBeVisible();
@@ -106,5 +119,38 @@ test('first-use starters offer the same artwork without creating data on selecti
     'src',
     '/art/starter-covers/recipes.svg',
   );
+  expect(archive.writes).toHaveLength(0);
+});
+
+test('activity starter objects stay decorative in the directory and first-use choices', async ({
+  page,
+  archive,
+}, info) => {
+  archive.extraLists = ['Gym', 'Runs', 'Upkeep'].map((name) => ({
+    ...structuredClone(list),
+    id: crypto.randomUUID(),
+    name,
+    kind: 'activity',
+    itemCount: 0,
+    logCount: 0,
+  }));
+  await page.goto('/lists?kind=activity');
+  await expect(page.locator('.activity-directory-grid img')).toHaveCount(3);
+  await expect
+    .poll(() =>
+      page
+        .locator('.activity-directory-grid img')
+        .evaluateAll((images: HTMLImageElement[]) => images.every((image) => image.naturalWidth > 0)),
+    )
+    .toBe(true);
+  await capture(page, 'activities', info.project.name);
+  await page.route('**/api/lists', (route) => route.fulfill({ json: { lists: [] } }));
+  await page.reload();
+  await expect(page.locator('.list-suggestions img')).toHaveCount(3);
+  await capture(page, 'activity-starters', info.project.name);
+  await page.getByRole('button', { name: 'Gym activity', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Gym');
+  await expect(page.getByRole('button', { name: 'Create activity', exact: true })).toBeVisible();
+  await expect(page.locator('.call-face')).toHaveCount(0);
   expect(archive.writes).toHaveLength(0);
 });
