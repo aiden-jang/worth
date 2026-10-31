@@ -18,6 +18,8 @@ import { useViewPreference } from '../hooks/useViewPreference';
 import type { CollectionArt, ListKind } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
 import { starterCollectionCover } from '../shared/starter-covers';
+import { collectionStarters as suggestions } from '../shared/collection-starters';
+import { CollectionStarters } from '../components/CollectionStarters';
 
 import {
   CollectionDirectoryControls,
@@ -43,39 +45,6 @@ function savedCollectionOrder(): CollectionOrder {
     ? value
     : 'recent';
 }
-
-const suggestions: { name: string; kind: ListKind; description: string; cover?: string }[] = [
-  {
-    name: 'Drinks',
-    kind: 'collection',
-    description: 'Wines, whiskeys, and the occasional good idea.',
-    cover: '/art/starter-covers/drinks-v2.svg',
-  },
-  {
-    name: 'Movies',
-    kind: 'collection',
-    description: 'The ones you would watch again.',
-    cover: '/art/starter-covers/movies-v2.svg',
-  },
-  {
-    name: 'Places',
-    kind: 'collection',
-    description: 'Restaurants and stops worth remembering.',
-    cover: '/art/starter-covers/places-v2.svg',
-  },
-  {
-    name: 'Cars',
-    kind: 'collection',
-    description: 'The ones you owned, drove, or loved.',
-    cover: '/art/starter-covers/cars-v2.svg',
-  },
-  { name: 'Books', kind: 'collection', description: 'The ones worth lending out.' },
-  { name: 'Music', kind: 'collection', description: 'Albums and songs you keep returning to.' },
-  { name: 'Games', kind: 'collection', description: 'The ones that stayed with you.' },
-  { name: 'Gym', kind: 'activity', description: 'Exercises, sets, reps, and weight.' },
-  { name: 'Runs', kind: 'activity', description: 'Distance, pace, and when you went.' },
-  { name: 'Upkeep', kind: 'activity', description: 'Haircuts, nails, and other little resets.' },
-];
 
 export function ListsPage() {
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
@@ -389,10 +358,10 @@ export function ListsPage() {
                   required
                 />
               </label>
-              <div className="cabinet-name-ideas" role="group" aria-label="Name suggestions">
-                <span>A few ideas</span>
-                {(kind === 'collection' ? ['Drinks', 'Movies', 'Books'] : ['Gym', 'Runs', 'Upkeep']).map(
-                  (idea) => (
+              {kind === 'activity' && (
+                <div className="cabinet-name-ideas" role="group" aria-label="Name suggestions">
+                  <span>A few ideas</span>
+                  {['Gym', 'Runs', 'Upkeep'].map((idea) => (
                     <button
                       key={idea}
                       type="button"
@@ -404,10 +373,20 @@ export function ListsPage() {
                     >
                       {idea}
                     </button>
-                  ),
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
               <div className="create-options">
+                {kind === 'collection' && (
+                  <CollectionStarters
+                    name={name}
+                    disabled={create.isPending}
+                    onChoose={(next) => {
+                      setName(next);
+                      nameInput.current?.focus();
+                    }}
+                  />
+                )}
                 {kind === 'collection' && (
                   <TemplatePicker
                     disabled={create.isPending}
@@ -634,7 +613,7 @@ function EmptyListScope({
             <div className="cabinet-directory-picture">
               <CollectionArtwork
                 name={suggestion.name}
-                cover={suggestion.cover}
+                cover={suggestion.kind === 'collection' ? starterCollectionCover(suggestion.name) : null}
                 neutral={suggestion.kind === 'activity'}
               />
             </div>

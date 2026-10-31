@@ -11,6 +11,11 @@ Primary flows use the [current reference index](../../README.md).
 Private uploaded covers take precedence. Automatic artwork uses eligible exact
 starter names or monogram slips; explicit artwork selections remain available.
 Suggestions fill only the name, without inventing descriptions, calls or records.
+New collection keeps its illustrated starter choices in an optional, closed
+“Choose a starter” disclosure after Name. Choosing one closes the disclosure and
+returns focus to Name, preserving any personal description, photo or artwork choice.
+Skincare, Fragrance, Food & snacks, Recipes and Clothing & gear use the same
+automatic category art in creation, first-use suggestions and saved collections.
 The identity sheet is an authored component reference, not a production screen.
 
 View at 1440 × 900 and 390 × 780. Compare implementation captures using

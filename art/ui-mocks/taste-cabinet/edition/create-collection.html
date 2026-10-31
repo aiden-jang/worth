@@ -18,6 +18,7 @@
     rel="stylesheet"
     href="../../../../src/cabinet-edition.css"
   />
+  <link rel="stylesheet" href="../../../../src/starters.css" />
   <body>
     <div class="app-shell app-shell-dark">
       <aside class="app-rail">
@@ -59,10 +60,78 @@
             </div>
             <div class="cabinet-create-layout">
               <form class="create-form">
-                <label>Name<input value="Books" placeholder="Whiskey, movies, runs…" /></label>
-                <div class="cabinet-name-ideas">
-                  <span>A few ideas</span><button type="button">Drinks</button
-                  ><button type="button">Movies</button><button type="button">Books</button>
+                <label>Name<input value="Skincare" placeholder="Whiskey, movies, runs…" /></label>
+                <div class="create-options">
+                  <details class="collection-starters">
+                    <summary>Choose a starter <span class="optional">optional</span></summary>
+                    <div class="collection-starter-grid" role="group" aria-label="Collection starters">
+                      <button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/drinks-v2.svg" alt="" />
+                        </div>
+                        <span>Drinks</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/places-v2.svg" alt="" />
+                        </div>
+                        <span>Places</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="true">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/skincare.svg" alt="" />
+                        </div>
+                        <span>Skincare</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/fragrance.svg" alt="" />
+                        </div>
+                        <span>Fragrance</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/collection-choices/snack-clay.svg" alt="" />
+                        </div>
+                        <span>Food &amp; snacks</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/recipes.svg" alt="" />
+                        </div>
+                        <span>Recipes</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/clothing.svg" alt="" />
+                        </div>
+                        <span>Clothing &amp; gear</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/movies-v2.svg" alt="" />
+                        </div>
+                        <span>Movies</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork cabinet-monogram" data-tone="sage">
+                          <span class="monogram-sheet"></span><span class="monogram-letter">B</span
+                          ><span class="monogram-orbit"></span>
+                        </div>
+                        <span>Books</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork cabinet-monogram" data-tone="sage">
+                          <span class="monogram-sheet"></span><span class="monogram-letter">M</span
+                          ><span class="monogram-orbit"></span>
+                        </div>
+                        <span>Music</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork cabinet-monogram" data-tone="sage">
+                          <span class="monogram-sheet"></span><span class="monogram-letter">G</span
+                          ><span class="monogram-orbit"></span>
+                        </div>
+                        <span>Games</span></button
+                      ><button class="collection-starter" type="button" aria-pressed="false">
+                        <div class="collection-artwork">
+                          <img src="../../../../public/art/starter-covers/cars-v2.svg" alt="" />
+                        </div>
+                        <span>Cars</span>
+                      </button>
+                    </div>
+                    <p class="muted">Places includes restaurants, cafés and other stops.</p>
+                  </details>
                 </div>
                 <details class="create-extras">
                   <summary>Description &amp; cover <span class="optional">optional</span></summary>
@@ -71,11 +140,10 @@
               </form>
               <aside class="cabinet-create-preview" aria-label="Collection preview">
                 <p class="overline">YOUR COLLECTION</p>
-                <div class="collection-artwork cabinet-monogram" data-tone="sage">
-                  <span class="monogram-sheet"></span><span class="monogram-letter">B</span
-                  ><span class="monogram-orbit"></span>
+                <div class="collection-artwork">
+                  <img src="../../../../public/art/starter-covers/skincare.svg" alt="" />
                 </div>
-                <h3>Books</h3>
+                <h3>Skincare</h3>
                 <p>A name is enough. The rest can wait.</p>
               </aside>
             </div>

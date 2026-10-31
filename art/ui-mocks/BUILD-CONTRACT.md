@@ -96,7 +96,9 @@ Search, Unfiled, creation, readers and other tools use the same working-page
 scale. Search and personal names wrap; clearing search restores focus. Empty
 states use faceless paper or neutral objects, factual guidance and a useful action.
 Creation is name-first with optional description/artwork and a live preview;
-suggestions fill only the name. No invented records, ranks or descriptions.
+the optional Choose a starter disclosure fills only the name, closes on selection
+and returns focus to Name. Existing descriptions, private covers and artwork choices
+stay intact. No invented records, ranks or descriptions.
 
 Settings presents downloads and restore first. Backup scope/limits, exact restore
 preview, device cleanup and deletion consequences remain visible. Sharing has a
