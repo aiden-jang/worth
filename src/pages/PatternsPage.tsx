@@ -8,6 +8,7 @@ import type { ItemDecision } from '../shared/models';
 import { PreferenceInsights } from '../components/PreferenceInsights';
 import { CallFace } from '../components/PersonalCall';
 import { CabinetEmptyState } from '../components/CabinetEmptyState';
+import { ArchiveIllustration } from '../components/ArchiveIllustration';
 import { MemoryPage } from './MemoryPage';
 import '../retrospective.css';
 
@@ -68,6 +69,7 @@ export function PatternsPage() {
             <>
               {data.totalRecords === 0 ? (
                 <CabinetEmptyState
+                  art={<ArchiveIllustration kind="memories" />}
                   title="Too soon to tell."
                   description="Your saved opinions and activity will appear here."
                 >

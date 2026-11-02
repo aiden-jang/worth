@@ -5,6 +5,7 @@ import { MagnifyingGlass, ArrowUpRight, X } from '@phosphor-icons/react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { CabinetEmptyState } from '../components/CabinetEmptyState';
+import { ArchiveIllustration } from '../components/ArchiveIllustration';
 import type { SearchResult } from '../shared/models';
 import { searchScope, type SearchScope } from '../shared/search';
 
@@ -123,6 +124,7 @@ export function SearchPage() {
       </div>
       {term.length < 2 ? (
         <CabinetEmptyState
+          art={<ArchiveIllustration kind="search" />}
           title="Somewhere in here."
           description="Search names and notes. Two characters will do."
         />
@@ -171,6 +173,7 @@ export function SearchPage() {
             )
           ) : (
             <CabinetEmptyState
+              art={<ArchiveIllustration kind="search" />}
               title="It’s being elusive."
               description={
                 scope === 'all'

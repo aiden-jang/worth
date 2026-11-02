@@ -23,6 +23,10 @@ exercise comparison. Its source stays selected for the visit while refreshed cal
 update in place. Pull a memory remains explicit. Sparse accounts use an invitation;
 aggregate preferences and exercise results use neutral artwork rather than an inferred call.
 
+Search invitations and no-match states use a small paper-and-magnifier illustration;
+empty Insights uses an archive folder. These static decorative vectors extend the
+existing quiet-state composition and palette without implying a saved photo or call.
+
 Add opens one name-first composer and states its destination. Use the current
 active list when open; otherwise use Unfiled, independently of previous choices.
 Add details offers an explicit dated experience, thought, reaction and private
