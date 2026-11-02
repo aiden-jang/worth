@@ -25,14 +25,26 @@ A real signed-in phone test is still required after release.
 - Worker observability is enabled in `wrangler.jsonc`. Application errors log the
   request path and error message, not intentional record/photo dumps. Inspect
   Cloudflare's errors, CPU, D1 storage and quota metrics when investigating a failure.
-- Configure/verify provider alerts in the authenticated Cloudflare dashboard;
-  dashboard alert delivery and account/plan settings were not accessible here.
+- Configure provider alerts in the authenticated Cloudflare dashboard and verify
+  a test reaches its destination. Logs alone do not send alerts. Use an external
+  uptime check as well: traffic-based error alerts cannot detect an idle outage.
 
 ## Recovery procedure
 
 Verify the actual Cloudflare account plan, D1 Time Travel retention and available
 bookmarks before relying on recovery: [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
 This repository does not prove that a production recovery drill has succeeded.
+
+For a safe provider recovery rehearsal, create a separate, unbound D1 database
+within the account's existing allowance. Seed only synthetic records with two
+owners, a photo relationship and known image bytes. Save its current bookmark,
+change the fixture, and verify those changes. Save an undo bookmark, restore that
+test database to its original bookmark, then compare the record values,
+ownership, relationship and exact image bytes. Verify the database name before
+every write or restore. Remove the temporary database after the drill with
+operator approval. Time Travel restores a database in place; it does not clone a
+production bookmark into a different database. This rehearsal checks the provider
+mechanism, not the live application's full schema or signed-in recovery journey.
 
 For an incident:
 
