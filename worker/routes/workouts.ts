@@ -5,8 +5,14 @@ import type { AppEnv } from '../context';
 import { ApiError, listWorkouts, requireList, requireWorkout, requireRoutine } from '../data';
 import { readJson } from '../http';
 import { activityListGuard, createPlanRecord, planFailure, planGuard } from '../activity-plans';
+import { readHomeProgress } from '../home-progress';
 
 export function registerWorkoutRoutes(api: Hono<AppEnv>): void {
+  api.get('/home-progress', async (c) => {
+    return c.json({
+      progress: await readHomeProgress(c.env.DB, c.get('ownerId'), new Date().toISOString().slice(0, 10)),
+    });
+  });
   api.get('/lists/:listId/workouts', async (c) => {
     const list = await requireList(c.env.DB, c.get('ownerId'), c.req.param('listId'));
     if (list.kind !== 'activity')

@@ -4,6 +4,8 @@ import { Link } from 'react-router';
 import { api } from '../api';
 import { formatDate } from '../format';
 import type { PreferenceGroup } from '../shared/memories';
+import { summarizePreference, preferenceRecordsHref } from '../shared/preference-summary';
+import { PreferenceObservation } from './PreferenceObservation';
 import '../memories.css';
 
 export function PreferenceInsights() {
@@ -94,16 +96,7 @@ export function PreferenceInsights() {
 }
 
 function PreferenceCard({ group }: { group: PreferenceGroup }) {
-  const calls = [
-    { label: 'Favorite', count: group.favorite },
-    { label: 'Meh', count: group.meh },
-    { label: 'Not again', count: group.notAgain },
-  ];
-  const rated = group.favorite + group.meh + group.notAgain;
-  const highest = Math.max(...calls.map((call) => call.count));
-  const leading = calls.filter((call) => call.count === highest);
-  const noun =
-    group.basis === 'visits' ? (rated === 1 ? 'visit' : 'visits') : rated === 1 ? 'thing' : 'things';
+  const { calls, rated } = summarizePreference(group);
   const scope =
     group.kind === 'collection'
       ? 'Collection'
@@ -117,21 +110,7 @@ function PreferenceCard({ group }: { group: PreferenceGroup }) {
         <h3>{group.kind === 'collection' ? group.listName : group.name}</h3>
       </header>
       <p className="preference-observation">
-        {!rated ? (
-          'No calls recorded yet.'
-        ) : leading.length === 1 ? (
-          <>
-            You marked{' '}
-            <strong>
-              {leading[0].count} of {rated}
-            </strong>{' '}
-            rated {noun} {leading[0].label}.
-          </>
-        ) : (
-          <>
-            A mix of calls across <strong>{rated}</strong> rated {noun}.
-          </>
-        )}
+        <PreferenceObservation group={group} />
       </p>
       <dl className="preference-counts">
         {calls.map((call) => (
@@ -149,11 +128,7 @@ function PreferenceCard({ group }: { group: PreferenceGroup }) {
             `${group.unrated} ${group.basis === 'visits' ? 'without a reaction' : 'without a call'}`}
         </p>
       )}
-      <Link
-        to={`/patterns/remember?${new URLSearchParams({ mode: group.basis === 'visits' ? 'visits' : 'saved', list: group.listId, ...(group.kind === 'collection' ? {} : { [group.kind]: group.name }) })}`}
-      >
-        See supporting records →
-      </Link>
+      <Link to={preferenceRecordsHref(group)}>See supporting records →</Link>
     </article>
   );
 }

@@ -1,7 +1,7 @@
 import { WorkoutProgress } from './WorkoutProgress';
 import { ArrowRight, Plus } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { api } from '../api';
 import type { ExerciseAliases } from '../shared/activity-plans';
@@ -43,8 +43,10 @@ export function ActivityView({
   onNew: (workoutId?: string, exercise?: string) => void;
 }) {
   const [routeParams, setRouteParams] = useSearchParams();
+  const startWorkout = useRef<HTMLButtonElement>(null);
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
+  const noWorkoutDataError = workoutsQuery.isError && !workoutsQuery.data;
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [editingAliases, setEditingAliases] = useState(false);
   const [routineSeed, setRoutineSeed] = useState<RoutineDraft | null>(null);
@@ -85,7 +87,7 @@ export function ActivityView({
     (latest, log) => (!latest || log.happenedOn > latest.happenedOn ? log : latest),
     null,
   );
-  const ungrouped = visible.filter((log) => !log.workoutId || workoutsQuery.isError);
+  const ungrouped = visible.filter((log) => !log.workoutId || noWorkoutDataError);
   const hasFilters = Boolean(query.trim()) || sort !== 'newest' || period !== 'all';
 
   useEffect(() => {
@@ -161,9 +163,10 @@ export function ActivityView({
     >
       <div className="activity-primary-actions">
         <button
+          ref={startWorkout}
           type="button"
           className="button button-accent"
-          disabled={workoutsQuery.isPending || workoutsQuery.isError}
+          disabled={workoutsQuery.isPending || noWorkoutDataError}
           onClick={() => setCreatingWorkout(true)}
         >
           <Plus size={18} /> Start workout
@@ -172,7 +175,13 @@ export function ActivityView({
           <Plus size={18} /> Add activity
         </button>
       </div>
-      {workoutsQuery.isError ? (
+      {workoutsQuery.isError && workoutsQuery.data && (
+        <p className="error-banner" role="alert">
+          Couldn’t refresh workouts. Your saved view is still here.{' '}
+          <button onClick={() => void workoutsQuery.refetch()}>Try again</button>
+        </p>
+      )}
+      {noWorkoutDataError ? (
         <p className="error-banner" role="alert">
           Couldn't load workouts. <button onClick={() => void workoutsQuery.refetch()}>Try again</button>
         </p>
@@ -180,6 +189,10 @@ export function ActivityView({
         <p className="loading-line">Loading workouts…</p>
       ) : (
         <WorkoutSessions
+          aliases={aliases.groups}
+          onHistory={setHistoryTitle}
+          onShowAll={clearFilters}
+          onDismissSummary={() => startWorkout.current?.focus()}
           afterActive={
             <>
               {lastLog && !workouts.some((workout) => workout.status === 'active') && (

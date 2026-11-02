@@ -54,6 +54,11 @@ Mobile save cases exercise short windows and resized/panned visual viewports,
 focused-field clearance, retry errors and nested confirmations. These browser
 simulations do not replace physical iPhone/Android keyboard checks.
 
+Home and workout-completion cases cover stable source selection, refreshed counts,
+source links, failed/confirmed finishes, incomplete totals, history access, focus,
+filter recovery and narrow layouts. Migrated-D1 tests exercise private Home evidence
+and verify original photo bytes after record restoration in an isolated local database.
+
 ## Visitor journeys
 
 Use a local synthetic account for the following pass:

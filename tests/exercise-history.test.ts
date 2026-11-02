@@ -29,6 +29,16 @@ const entry = (id: string, extra: Partial<Log> = {}): Log => ({
   ...extra,
 });
 
+test('long recorded histories compare exact sets without argument-count limits', () => {
+  const logs = Array.from({ length: 5000 }, (_, index) =>
+    entry('prior-' + index, {
+      exerciseSets: Array.from({ length: 40 }, () => ({ weight: 40, reps: 8 })),
+    }),
+  );
+  logs.push(entry('latest', { exerciseSets: [{ weight: 40, reps: 10 }] }));
+  expect(exerciseImprovement(logs)).toEqual({ weight: 40, unit: 'kg', reps: 10, previous: 8 });
+});
+
 test('volume requires complete weighted sets and never treats bodyweight or missing reps as zero', () => {
   expect(exerciseValue(entry('a'), 'volume:kg')).toBe(760);
   expect(exerciseValue(entry('a'), 'volume:lb')).toBeNull();

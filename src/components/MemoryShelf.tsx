@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { api } from '../api';
@@ -15,6 +15,10 @@ import { CallFace } from './PersonalCall';
 import { BlankSlips } from './BlankSlips';
 import { decisionLabel } from '../shared/decisions';
 import { formatDate, today } from '../format';
+import { initialHomeHighlight, type HomeHighlight } from '../shared/home-highlights';
+import { preferenceKey, preferenceRecordsHref } from '../shared/preference-summary';
+import { PreferenceObservation } from './PreferenceObservation';
+import { ActivityIllustration } from './ActivityIllustration';
 import '../memories.css';
 
 async function pullMemory(previous?: MemoryRecord | null): Promise<MemoryRecord | null> {
@@ -42,27 +46,133 @@ export function MemoryShelf() {
     queryKey: ['patterns', 'memories', 'month', filter.from, filter.to],
     queryFn: () => api.memories(filter),
   });
-  const [pulled, setPulled] = useState<MemoryRecord | null | undefined>(undefined);
+  const preferences = useQuery({
+    queryKey: ['patterns', 'preferences'],
+    queryFn: api.preferences,
+    retry: false,
+  });
+  const progressQuery = useQuery({
+    queryKey: ['patterns', 'home-progress'],
+    queryFn: ({ signal }) => api.homeProgress(signal),
+    retry: false,
+  });
+  const [highlight, setHighlight] = useState<HomeHighlight | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const date = today();
+  useEffect(() => {
+    if (
+      highlight ||
+      query.isPending ||
+      query.isFetching ||
+      preferences.isPending ||
+      preferences.isFetching ||
+      progressQuery.isPending ||
+      progressQuery.isFetching
+    )
+      return;
+    setHighlight(
+      initialHomeHighlight(
+        date,
+        query.data?.records[0] ?? null,
+        preferences.data?.groups ?? [],
+        progressQuery.data?.progress ?? null,
+      ),
+    );
+  }, [
+    date,
+    highlight,
+    query.isPending,
+    query.isFetching,
+    query.data,
+    preferences.isPending,
+    preferences.isFetching,
+    preferences.data,
+    progressQuery.isPending,
+    progressQuery.isFetching,
+    progressQuery.data,
+  ]);
+  const memory = highlight?.kind === 'memory' ? highlight.record : null;
+  const first = memory
+    ? (query.data?.records.find((record) => record.id === memory.id && record.kind === memory.kind) ?? memory)
+    : null;
   const draw = useMutation({
-    mutationFn: () => pullMemory(pulled ?? query.data?.records[0]),
+    mutationFn: () => pullMemory(first),
     onSuccess: (record) => {
-      setPulled(record);
+      setHighlight({ kind: 'memory', record });
+      setRevealed(true);
     },
   });
-  const revealed = pulled !== undefined;
-  const first = revealed ? pulled : query.data?.records[0];
+  if (!highlight)
+    return (
+      <section className="month-memory" aria-label="Memory shelf">
+        <p role="status">Opening a little of your archive…</p>
+      </section>
+    );
+  const preference =
+    highlight.kind === 'preference'
+      ? preferences.data?.groups.find((group) => preferenceKey(group) === preferenceKey(highlight.group))
+      : null;
+  const progress =
+    highlight.kind === 'progress' && progressQuery.data?.progress?.logId === highlight.progress.logId
+      ? progressQuery.data.progress
+      : null;
+  const changed = highlight.kind !== 'memory' && !preference && !progress;
+  const title = preference
+    ? preference.kind === 'collection'
+      ? preference.listName
+      : preference.name
+    : (progress?.title ??
+      first?.title ??
+      (changed ? 'Your archive changed.' : revealed ? 'A little empty in here.' : 'Fancy a little rummage?'));
+  const href = preference
+    ? preferenceRecordsHref(preference)
+    : progress
+      ? `/lists/${progress.listId}?focus=log:${progress.logId}`
+      : first
+        ? memorySourceHref(first)
+        : null;
   return (
     <section className="month-memory" aria-label="Memory shelf">
       <div className="memory-keepsake">
         <p className="overline">
-          {revealed
-            ? 'A LITTLE FROM YOUR ARCHIVE'
-            : `A LITTLE OF ${new Date().toLocaleDateString(undefined, { month: 'long' }).toUpperCase()}`}
+          {preference
+            ? 'FROM YOUR CALLS'
+            : progress
+              ? 'FROM YOUR WORKOUTS'
+              : revealed || changed
+                ? 'A LITTLE FROM YOUR ARCHIVE'
+                : `A LITTLE OF ${new Date().toLocaleDateString(undefined, { month: 'long' }).toUpperCase()}`}
         </p>
-        <h2 className="memory-draw-title" key={first ? `${first.kind}:${first.id}` : 'invitation'}>
-          {first?.title ?? (revealed ? 'A little empty in here.' : 'Fancy a little rummage?')}
+        <h2 className="memory-draw-title" key={`${highlight.kind}:${title}`}>
+          {title}
         </h2>
-        {first ? (
+        {preference ? (
+          <>
+            <p className="memory-source">
+              {preference.listName} · {preference.basis === 'visits' ? 'Visit reactions' : 'Overall calls'}
+            </p>
+            <p>
+              <PreferenceObservation group={preference} />
+            </p>
+            {preference.unrated > 0 && (
+              <p className="memory-source">
+                {preference.unrated} {preference.basis === 'visits' ? 'without a reaction' : 'without a call'}
+              </p>
+            )}
+          </>
+        ) : progress ? (
+          <>
+            <p className="memory-source">
+              {progress.listName} · {progress.workoutTitle} · {formatDate(progress.happenedOn)}
+            </p>
+            <p>
+              <strong>
+                {progress.weight} {progress.unit} × {progress.reps} reps
+              </strong>
+            </p>
+            <p>Previous recorded best at this weight: {progress.previous} reps.</p>
+          </>
+        ) : first ? (
           <>
             <p className="memory-source">
               {first.listName} · {isSavedMemory(first) ? 'Saved ' : ''}
@@ -85,9 +195,11 @@ export function MemoryShelf() {
           </>
         ) : (
           <p>
-            {revealed
-              ? 'Save a name in a collection. It can turn up here later.'
-              : 'Pull a saved name or a past entry. See what turns up.'}
+            {changed
+              ? 'Pull a memory to find something else in your archive.'
+              : revealed
+                ? 'Save a name in a collection. It can turn up here later.'
+                : 'Pull a saved name or a past entry. See what turns up.'}
           </p>
         )}
         <div className="memory-draw-actions">
@@ -102,7 +214,11 @@ export function MemoryShelf() {
             <Shuffle size={18} aria-hidden="true" />{' '}
             {draw.isPending ? 'Looking…' : revealed ? 'Another memory' : 'Pull a memory'}
           </button>
-          {first && <Link to={memorySourceHref(first)}>Open memory →</Link>}
+          {href && (
+            <Link to={href}>
+              {preference ? 'See supporting records →' : progress ? 'View recorded sets →' : 'Open memory →'}
+            </Link>
+          )}
         </div>
         {draw.isPending && <p role="status">Looking through your archive…</p>}
         {draw.isError && <p role="alert">Memories couldn’t load. Try pulling again.</p>}
@@ -111,14 +227,16 @@ export function MemoryShelf() {
             {first ? `Pulled ${first.title}.` : 'No saved memories yet.'}
           </p>
         )}
-        {!!query.data?.total && (
+        {highlight.kind === 'memory' && !!query.data?.total && (
           <p className="memory-month-footer">
             {query.data.total} dated {query.data.total === 1 ? 'entry' : 'entries'} this month.{' '}
             <Link to={`/patterns/remember?from=${filter.from}&to=${filter.to}`}>Open this month →</Link>
           </p>
         )}
       </div>
-      {first?.hasPhoto ? (
+      {progress ? (
+        <ActivityIllustration kind="workout" />
+      ) : first?.hasPhoto ? (
         <img src={memoryPhotoHref(first)} alt={`Saved photo for ${first.title}`} loading="lazy" />
       ) : first?.reaction ? (
         <CallFace value={first.reaction} />

@@ -15,7 +15,11 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { ExerciseLineup } from './ExerciseLineup';
 import { RestTimer } from './RestTimer';
 import { ActivityIllustration } from './ActivityIllustration';
+import { WorkoutCompletion } from './WorkoutCompletion';
+import { recordedWorkoutTotals } from '../shared/workout-summary';
+import type { ExerciseAlias } from '../shared/activity-plans';
 import '../activity-illustrations.css';
+import '../workout-completion.css';
 
 export function WorkoutSessions({
   listId,
@@ -31,7 +35,15 @@ export function WorkoutSessions({
   creating,
   onCloseCreate,
   afterActive,
+  aliases,
+  onHistory,
+  onShowAll,
+  onDismissSummary,
 }: {
+  aliases: ExerciseAlias[];
+  onHistory: (title: string) => void;
+  onShowAll: () => void;
+  onDismissSummary: () => void;
   afterActive?: ReactNode;
   creating: boolean;
   onCloseCreate: () => void;
@@ -47,17 +59,27 @@ export function WorkoutSessions({
   onOpen: (log: Log) => void;
 }) {
   const client = useQueryClient();
+  const [finishedId, setFinishedId] = useState<string | null>(null);
+  const [pastOpen, setPastOpen] = useState(false);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+  const finishedHeading = useRef<HTMLHeadingElement>(null);
   const update = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.updateWorkout>[1] }) =>
       api.updateWorkout(id, {
         ...patch,
         expectedRevision: workouts.find((workout) => workout.id === id)?.revision ?? 0,
       }),
-    onSuccess: ({ workout }) => {
+    onSuccess: ({ workout }, { patch }) => {
       client.setQueryData<{ workouts: WorkoutSession[] }>(['workouts', listId], (current) => ({
         workouts: (current?.workouts ?? []).map((value) => (value.id === workout.id ? workout : value)),
       }));
       void client.invalidateQueries({ queryKey: ['workouts', listId] });
+      void client.invalidateQueries({ queryKey: ['patterns'] });
+      if (patch.status === 'finished' && workout.status === 'finished') setFinishedId(workout.id);
+      else if (patch.status === 'active' && workout.status === 'active') {
+        if (finishedId === workout.id) setFinishedId(null);
+        setReviewId(workout.id);
+      }
     },
   });
   const [editing, setEditing] = useState<WorkoutSession | null>(null);
@@ -81,6 +103,35 @@ export function WorkoutSessions({
     );
   const active = filtered.filter((workout) => workout.status === 'active');
   const past = filtered.filter((workout) => workout.status !== 'active');
+  const finishedWorkout = workouts.find(
+    (workout) => workout.id === finishedId && workout.status === 'finished',
+  );
+  const finishedWorkoutId = finishedWorkout?.id;
+  useEffect(() => {
+    if (!finishedWorkoutId) return;
+    const frame = requestAnimationFrame(() => {
+      finishedHeading.current?.focus({ preventScroll: true });
+      finishedHeading.current?.scrollIntoView({
+        block: 'nearest',
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [finishedWorkoutId]);
+  useEffect(() => {
+    if (!reviewId) return;
+    const frame = requestAnimationFrame(() => {
+      const node = document.getElementById(`workout-heading-${reviewId}`);
+      if (!node) return;
+      node.focus({ preventScroll: true });
+      node.scrollIntoView({
+        block: 'nearest',
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+      setReviewId(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reviewId, workouts, query, periodStart, sort, pastOpen]);
   function renderWorkout(workout: WorkoutSession) {
     const entries = logs
       .filter((log) => log.workoutId === workout.id)
@@ -102,11 +153,7 @@ export function WorkoutSessions({
       workout.status === 'active'
         ? entries
         : entries.filter((log) => visibleLogs.some((entry) => entry.id === log.id));
-    const sets = entries.reduce((sum, entry) => sum + (entry.exerciseSets?.length ?? 0), 0);
-    const reps = entries.reduce(
-      (sum, entry) => sum + (entry.exerciseSets ?? []).reduce((n, set) => n + (set.reps ?? 0), 0),
-      0,
-    );
+    const { setCount: sets, reps } = recordedWorkoutTotals(entries);
     return (
       <article className="workout-card" key={workout.id}>
         <div className="workout-card-heading">
@@ -146,9 +193,9 @@ export function WorkoutSessions({
         </div>
         <p className="workout-count">
           {entries.length} {entries.length === 1 ? 'exercise' : 'exercises'} logged ·{' '}
-          {entries.length && !sets
+          {!sets
             ? 'No individual sets recorded'
-            : `${sets} ${sets === 1 ? 'set' : 'sets'} · ${reps} ${reps === 1 ? 'rep' : 'reps'}`}
+            : `${sets} ${sets === 1 ? 'set' : 'sets'} · ${reps === null ? 'Rep counts incomplete' : `${reps} ${reps === 1 ? 'rep' : 'reps'}`}`}
           {shown.length !== entries.length ? ` · ${shown.length} shown` : ''}
         </p>
         <div className="routine-actions">
@@ -298,13 +345,36 @@ export function WorkoutSessions({
           <h2>Current workout{active.length > 1 ? 's' : ''}</h2>
         </div>
       )}
-      {!filtered.length && workouts.length > 0 && (
-        <p className="workout-empty">No workouts match these filters.</p>
+      {!filtered.length && workouts.length > 0 && !finishedWorkout && (
+        <p className="workout-empty">No past workouts match these filters.</p>
       )}
       {active.map(renderWorkout)}
+      {finishedWorkout && (
+        <WorkoutCompletion
+          workout={finishedWorkout}
+          logs={logs}
+          workouts={workouts}
+          aliases={aliases}
+          headingRef={finishedHeading}
+          onHistory={onHistory}
+          onDismiss={() => {
+            setFinishedId(null);
+            onDismissSummary();
+          }}
+          onReview={() => {
+            onShowAll();
+            setPastOpen(true);
+            setReviewId(finishedWorkout.id);
+          }}
+        />
+      )}
       {afterActive}
       {past.length > 0 && (
-        <details className="past-workouts">
+        <details
+          className="past-workouts"
+          open={pastOpen}
+          onToggle={(event) => setPastOpen(event.currentTarget.open)}
+        >
           <summary>
             Past workouts <span>{past.length}</span>
           </summary>

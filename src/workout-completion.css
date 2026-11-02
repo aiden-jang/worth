@@ -1,0 +1,97 @@
+.workout-completion {
+  margin: 24px 0;
+  padding: 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: var(--panel);
+  overflow-wrap: anywhere;
+}
+.workout-completion > header {
+  display: flex;
+  align-items: start;
+  gap: 16px;
+}
+.workout-completion > header > div {
+  flex: 1;
+  min-width: 0;
+}
+.workout-completion > header > svg {
+  width: 72px;
+  height: 64px;
+  flex: none;
+}
+.workout-completion h2 {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  margin: 8px 0;
+}
+.workout-completion p {
+  margin: 0;
+  line-height: 1.6;
+}
+.workout-completion header p:last-child {
+  color: var(--muted);
+  font-size: 14px;
+}
+.workout-completion-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  gap: 6px 16px;
+  padding-block: 20px;
+  margin: 20px 0;
+  border-block: 1px solid var(--line);
+}
+.workout-completion-totals > div {
+  display: contents;
+}
+.workout-completion-totals dt {
+  grid-row: 1;
+  font-size: 13px;
+  color: var(--muted);
+}
+.workout-completion-totals dd {
+  grid-row: 2;
+  font-size: 24px;
+  margin: 0;
+}
+.workout-completion-progress {
+  display: grid;
+  gap: 20px;
+  margin: 20px 0;
+}
+.workout-completion-progress h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+.workout-completion-progress p {
+  margin: 8px 0 12px;
+}
+.workout-completion > .button {
+  margin-top: 16px;
+}
+.workout-completion .button {
+  white-space: normal;
+  min-height: 44px;
+}
+@media (max-width: 680px) {
+  .workout-completion {
+    padding: 20px;
+  }
+  .workout-completion h2 {
+    font-size: 22px;
+  }
+  .workout-completion > header {
+    gap: 8px;
+  }
+  .workout-completion > header > svg {
+    width: 48px;
+    height: 44px;
+  }
+  .workout-completion-totals {
+    column-gap: 10px;
+  }
+}

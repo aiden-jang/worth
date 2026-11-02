@@ -264,6 +264,11 @@
   flex-shrink: 0;
   color: #34382d;
 }
+.month-memory > .activity-illustration {
+  width: 100px;
+  height: 90px;
+  flex: none;
+}
 .month-memory .memory-source,
 .month-memory .memory-month-footer {
   color: #626456;
@@ -390,6 +395,10 @@
   }
   .month-memory > .memory-blank-slips {
     width: 64px;
+  }
+  .month-memory > .activity-illustration {
+    width: 64px;
+    height: 64px;
   }
 }
 

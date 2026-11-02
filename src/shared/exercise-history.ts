@@ -1,20 +1,37 @@
 import type { Log, WorkoutSession } from './models';
 import { exerciseKey, exerciseGroup, exerciseGroupKey, type ExerciseAlias } from './activity-plans';
 
-const isExerciseEntry = (log: Log): boolean =>
+export type ExerciseEvidence = Pick<
+  Log,
+  | 'id'
+  | 'listId'
+  | 'itemId'
+  | 'title'
+  | 'happenedOn'
+  | 'createdAt'
+  | 'workoutId'
+  | 'exercise'
+  | 'exerciseSets'
+  | 'weightUnit'
+  | 'sets'
+  | 'reps'
+>;
+
+const isExerciseEntry = (log: ExerciseEvidence): boolean =>
   !log.itemId && Boolean(log.exercise || log.exerciseSets?.length || log.sets || log.reps);
 
-export function exerciseHistory(
-  logs: Log[],
+export function exerciseHistory<T extends ExerciseEvidence>(
+  logs: T[],
   listId: string,
   title: string,
-  workouts: WorkoutSession[] = [],
+  workouts: Pick<WorkoutSession, 'id' | 'createdAt'>[] = [],
   aliases: ExerciseAlias[] = [],
-): Log[] {
+): T[] {
   const name = exerciseGroupKey(title, aliases);
   if (!exerciseKey(title)) return [];
   const visits = new Map(workouts.map((workout) => [workout.id, workout.createdAt]));
-  const visitTime = (log: Log) => (log.workoutId ? visits.get(log.workoutId) : undefined) ?? log.createdAt;
+  const visitTime = (log: ExerciseEvidence) =>
+    (log.workoutId ? visits.get(log.workoutId) : undefined) ?? log.createdAt;
   return logs
     .filter(
       (log) => log.listId === listId && isExerciseEntry(log) && exerciseGroupKey(log.title, aliases) === name,
@@ -81,20 +98,23 @@ export function exerciseRepRecords(logs: Log[], unit: 'kg' | 'lb') {
   return [...best.values()].sort((a, b) => a.reps - b.reps);
 }
 
-export function exerciseImprovement(logs: Log[]) {
+export function exerciseImprovement(logs: Pick<Log, 'exerciseSets' | 'weightUnit'>[]) {
   const latest = logs.at(-1);
   if (!latest) return null;
   const unit = latest.weightUnit ?? 'kg';
+  const best = new Map<number, number>();
+  for (const log of logs.slice(0, -1)) {
+    if ((log.weightUnit ?? 'kg') !== unit) continue;
+    for (const set of log.exerciseSets ?? []) {
+      if (set.weight === null || set.reps === null) continue;
+      best.set(set.weight, Math.max(best.get(set.weight) ?? set.reps, set.reps));
+    }
+  }
   for (const set of latest.exerciseSets ?? []) {
     if (set.weight === null || set.reps === null) continue;
-    const previous = logs
-      .slice(0, -1)
-      .filter((log) => (log.weightUnit ?? 'kg') === unit)
-      .flatMap((log) => log.exerciseSets ?? [])
-      .filter((old) => old.weight === set.weight && old.reps !== null)
-      .map((old) => old.reps!);
-    if (previous.length && set.reps > Math.max(...previous))
-      return { weight: set.weight, reps: set.reps, previous: Math.max(...previous), unit };
+    const previous = best.get(set.weight);
+    if (previous !== undefined && set.reps > previous)
+      return { weight: set.weight, reps: set.reps, previous, unit };
   }
   return null;
 }

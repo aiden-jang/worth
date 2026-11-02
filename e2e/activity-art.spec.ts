@@ -43,7 +43,8 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   ];
   await page.reload();
   const workout = page.locator('.workout-card');
-  await expect(workout).toContainText('0 exercises logged · 0 sets · 0 reps');
+  await expect(workout).toContainText('0 exercises logged · No individual sets recorded');
+  await expect(workout).not.toContainText('Rep counts incomplete');
   await expect(workout).toContainText('Add the first exercise to this visit.');
   await workout.scrollIntoViewIfNeeded();
   await capture(page, 'empty-workout', info.project.name);

@@ -366,6 +366,10 @@ export const api = {
   overview: () => request<Overview>('/overview'),
   patterns: () => request<ArchivePatterns>('/patterns'),
   preferences: () => request<Preferences>('/preferences'),
+  homeProgress: (signal?: AbortSignal) =>
+    request<{ progress: import('./shared/workout-summary').HomeProgress | null }>('/home-progress', {
+      signal,
+    }),
   memories: (filter: MemoryFilter, signal?: AbortSignal) =>
     request<MemoryPage>(
       `/memories?${new URLSearchParams(Object.entries(filter).map(([key, value]) => [key, String(value)]))}`,

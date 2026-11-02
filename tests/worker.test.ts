@@ -1798,6 +1798,9 @@ test('backup restores relationships and photos privately, and all-data deletion 
   expect(restored.logs.find((g) => g.title === 'Row')?.workoutId).toBe(restored.workoutSessions[0].id);
   expect(restored.logs.find((g) => g.title === 'Row')?.exerciseSets).toEqual([{ reps: 8, weight: 40 }]);
   expect((restored.items[0] as (typeof restored.items)[number] & { hasPhoto: boolean }).hasPhoto).toBe(true);
+  const restoredPhoto = await call(`/items/${restored.items[0].id}/photo`, 'recipient');
+  expect(restoredPhoto.status).toBe(200);
+  expect(new Uint8Array(await restoredPhoto.arrayBuffer())).toEqual(new Uint8Array(photo));
   expect(
     (await restore({ ...backup, items: [{ ...backup.items[0], listId: crypto.randomUUID() }] }, 'invalid'))
       .status,
@@ -6735,4 +6738,116 @@ test('product details survive experiences and backups while brand evidence keeps
   expect((await planCreate('/import', 'productsrestored', exported)).status).toBe(201);
   const restored = archiveFile.parse(await (await call('/export/records', 'productsrestored')).json());
   expect(restored.items.find((item) => item.title === 'Daily lotion')?.context).toEqual(context);
+});
+
+test('Home progress uses exact saved sets and aliases from a recent finished owned workout', async () => {
+  const owner = 'homeprogress';
+  const date = new Date().toISOString().slice(0, 10);
+  const prior = new Date(Date.parse(date + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Gym', kind: 'activity' })
+  ).json()) as { list: ListDetail };
+  expect(
+    (
+      await call(`/lists/${list.id}/exercise-aliases`, owner, 'PUT', {
+        groups: [{ id: crypto.randomUUID(), name: 'Row', aliases: ['Cable row'] }],
+        expectedRevision: 0,
+      })
+    ).status,
+  ).toBe(200);
+  await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    title: 'Cable row',
+    happenedOn: prior,
+    exerciseSets: [{ weight: 40, reps: 8 }],
+    weightUnit: 'kg',
+  });
+  await call(`/lists/${list.id}/logs`, owner, 'POST', {
+    title: 'Row',
+    happenedOn: prior,
+    exerciseSets: [{ weight: 40, reps: 30 }],
+    weightUnit: 'lb',
+  });
+  const { workout } = (await (
+    await call(`/lists/${list.id}/workouts`, owner, 'POST', {
+      title: 'Morning visit',
+      happenedOn: date,
+    })
+  ).json()) as { workout: WorkoutSession };
+  const { log } = (await (
+    await call(`/lists/${list.id}/logs`, owner, 'POST', {
+      title: 'Row',
+      happenedOn: date,
+      workoutId: workout.id,
+      exerciseSets: [{ weight: 40, reps: 10 }],
+      weightUnit: 'kg',
+      note: 'PRIVATE WORKOUT NOTE',
+    })
+  ).json()) as { log: Log };
+  expect(await (await call('/home-progress', owner)).json()).toEqual({ progress: null });
+  const finish = await call(`/workouts/${workout.id}`, owner, 'PATCH', {
+    status: 'finished',
+    expectedRevision: workout.revision ?? 0,
+  });
+  expect(finish.status).toBe(200);
+  const response = await call('/home-progress', owner);
+  expect(response.status).toBe(200);
+  const value = await response.json();
+  expect(value).toMatchObject({
+    progress: {
+      listId: list.id,
+      listName: 'Gym',
+      workoutId: workout.id,
+      workoutTitle: 'Morning visit',
+      logId: log.id,
+      title: 'Row',
+      weight: 40,
+      unit: 'kg',
+      reps: 10,
+      previous: 8,
+      happenedOn: date,
+    },
+  });
+  expect(JSON.stringify(value)).not.toContain('PRIVATE WORKOUT NOTE');
+  expect(await (await call('/home-progress', 'homeintruder')).json()).toEqual({ progress: null });
+  expect((await call('/home-progress', null)).status).toBe(401);
+  await platform.env.DB.prepare('UPDATE lists SET archived=1 WHERE id=?').bind(list.id).run();
+  expect(await (await call('/home-progress', owner)).json()).toEqual({ progress: null });
+  await platform.env.DB.prepare('UPDATE lists SET archived=0 WHERE id=?').bind(list.id).run();
+  expect((await call(`/logs/${log.id}`, owner, 'DELETE')).status).toBe(204);
+  expect(await (await call('/home-progress', owner)).json()).toEqual({ progress: null });
+});
+
+test('Home progress excludes future and old workouts and never invents a comparison from a first entry', async () => {
+  const owner = 'homeprogressdates';
+  const date = new Date().toISOString().slice(0, 10);
+  const { list } = (await (
+    await call('/lists', owner, 'POST', { name: 'Gym', kind: 'activity' })
+  ).json()) as { list: ListDetail };
+  for (const offset of [-40, 0, 1]) {
+    const happenedOn = new Date(Date.parse(date + 'T00:00:00Z') + offset * 86400000)
+      .toISOString()
+      .slice(0, 10);
+    if (offset !== 0) {
+      const earlier = new Date(Date.parse(happenedOn + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+      await call(`/lists/${list.id}/logs`, owner, 'POST', {
+        title: 'A different exercise ' + offset,
+        happenedOn: earlier,
+        exerciseSets: [{ weight: 40, reps: 8 }],
+      });
+    }
+    const { workout } = (await (
+      await call(`/lists/${list.id}/workouts`, owner, 'POST', { title: 'Visit', happenedOn })
+    ).json()) as { workout: WorkoutSession };
+    await call(`/lists/${list.id}/logs`, owner, 'POST', {
+      title: 'A different exercise ' + offset,
+      happenedOn,
+      workoutId: workout.id,
+      exerciseSets: [{ weight: 40, reps: 10 }],
+    });
+    await call(`/workouts/${workout.id}`, owner, 'PATCH', {
+      status: 'finished',
+      expectedRevision: workout.revision ?? 0,
+    });
+    expect(await (await call('/home-progress', owner)).json()).toEqual({ progress: null });
+  }
 });

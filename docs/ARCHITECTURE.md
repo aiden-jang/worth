@@ -978,8 +978,19 @@ independent of enjoyment. Results are not sent to traffic analytics or external 
 
 `src/shared/exercise-history.ts` derives complete weighted volume and exact
 rep-count records from saved sets; units and missing values remain explicit.
-`WorkoutProgress` counts finished sessions, while `MemoryShelf` initially summarizes dated
-entries in the current local-calendar month. Both are read-only views. See
+`src/shared/workout-summary.ts` reuses that history ordering and comparison for Home
+and the confirmed-finish summary. Totals distinguish missing individual sets/reps
+from zero. `worker/home-progress.ts` selects the latest finished active-list workout
+within 30 UTC days and projects only exercise evidence and visit times from its
+complete activity history. No notes, gallery metadata or full history leave that
+read-only endpoint. `src/shared/preference-summary.ts` supplies the same observation
+and supporting filters to Home and Insights.
+
+`WorkoutProgress` counts finished sessions. `MemoryShelf` chooses one real monthly
+memory, eligible recorded preference or sourced exercise comparison per Home visit.
+Selection remains stable across query refreshes; matching preference/progress facts
+update, and unavailable sources have an explicit changed state. Pull a memory keeps
+the existing paginated draw and original photos/reactions. All are read-only views. See
 [product behavior and limitations](REMEMBER.md).
 
 Unfiled finds participate in saved-name recall and overall-call insights. Only an

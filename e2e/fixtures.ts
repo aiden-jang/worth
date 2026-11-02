@@ -473,6 +473,7 @@ export async function mockArchive(page: Page): Promise<State> {
       });
     if (path === '/memories') return reply({ records: [], total: 0, nextOffset: null });
     if (path === '/preferences') return reply({ groups: [], returns: [], rediscover: [] });
+    if (path === '/home-progress') return reply({ progress: null });
     if (path === '/patterns')
       return reply({
         totalRecords: state.items.length,

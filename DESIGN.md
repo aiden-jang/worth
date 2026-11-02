@@ -18,6 +18,11 @@ Home leads with search and recent records, including Unfiled. Collections and a
 compact memory follow. Someone can save without first creating or organizing a
 collection. Use actual records and useful empty states, without sample private data.
 
+The existing Home memory slot may also show a recorded preference or an exact
+exercise comparison. Its source stays selected for the visit while refreshed calls
+update in place. Pull a memory remains explicit. Sparse accounts use an invitation;
+aggregate preferences and exercise results use neutral artwork rather than an inferred call.
+
 Add opens one name-first composer and states its destination. Use the current
 active list when open; otherwise use Unfiled, independently of previous choices.
 Add details offers an explicit dated experience, thought, reaction and private
@@ -109,6 +114,11 @@ exercise entries contribute to actual counts. Previous sets are a reference;
 copying them is explicit and replacing a filled draft requires confirmation.
 
 Progress shows real entries, separate same-day visits and exact sets/notes.
+Confirmed Finish reveals one compact result summary and moves focus to its heading.
+It counts saved entries and individual sets, leaves incomplete rep totals explicit,
+and links comparisons to exercise history. Review workout clears past filters and
+opens the actual recap; dismiss returns focus to Start workout. These additions
+extend the current workout composition and Home card without introducing another screen.
 Keep kg/lb separate, bodyweight distinct from zero and legacy measurements readable.
 Do not invent trends or score someone's activity. The [workout references](art/ui-mocks/taste-cabinet/workouts/README.md)
 cover sessions, routines and progress; [capabilities](docs/FEATURES.md) links the

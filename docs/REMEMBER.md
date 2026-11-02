@@ -122,6 +122,17 @@ the selected period. Group only genuinely comparable exercise names; different
 machines or setups can have different meanings. The chart keeps one equally
 spaced point per recorded entry, not an elapsed-time axis or fitness score.
 
+Finishing a workout reveals a compact summary of saved entries and individual sets.
+Missing sets or rep counts leave the total incomplete, including legacy aggregate
+entries. Up to three exact same-weight, same-unit rep improvements link to exercise
+history. Their baseline uses the retained earlier entries in the same exercise
+group, with the same visit/date order as the chart. An empty visit has no inferred results.
+
+Home can surface one of these comparisons from the most recent finished workout
+within 30 UTC days. It reads the complete exercise evidence for that activity on
+the server and returns only the observation and source identifiers. Future dates,
+archived lists and Trash are excluded. A first entry creates no comparison.
+
 ## Design integration
 
 The October 28 everyday flow supersedes the earlier dense primary layout. Look

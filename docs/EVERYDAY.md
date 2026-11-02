@@ -56,6 +56,14 @@ Collections and a compact memory offer quieter ways to browse. The regular searc
 continues to cover archived content with its existing labels and boundaries.
 The Recent section's **Search all** link opens archive search.
 
+The existing memory card can also show a preference with at least three recorded
+calls and a single most-recorded call, or an exact rep improvement from the most
+recent finished workout in the last 30 UTC days. Each links to its supporting
+entries. The chosen source stays stable during the Home visit; refreshed counts
+update that source instead of choosing another. If its facts change out of the
+available summary, the card offers another memory. Pull a memory keeps the existing
+full-archive draw. No eligible observation produces an invitation rather than sample data.
+
 Search filters query the chosen category across the archive. Results load in
 pages, with **Show more results** for older matches. The count describes the
 records shown; it says Showing while another page is available. A failed next
@@ -110,6 +118,14 @@ timer opens its existing controls.
 Previous exercise sets remain references. Copying them is explicit; no weights,
 reps, units, target completion or exercise results are inferred. Separate same-day
 visits, legacy measurements, source routines and conflict protection are preserved.
+
+After a confirmed Finish, the saved-visit summary shows actual entries and individual
+sets. A complete rep total requires individual sets and reps for every logged entry.
+Exact comparisons open the existing exercise history. Review workout clears past
+filters, expands the original recap and focuses its heading. Dismiss returns to
+Start workout. Failed finish requests retain the active view and offer retry.
+If refreshing workouts fails after a confirmed save, the cached view and finish
+summary remain available beside a refresh retry. Saved entries retain their workout grouping.
 
 ## Data and verification
 
