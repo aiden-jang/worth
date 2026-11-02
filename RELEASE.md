@@ -77,10 +77,11 @@ inform the chunk sizes: [D1 limits](https://developers.cloudflare.com/d1/platfor
 The records-only export remains available for larger archives; it excludes photos.
 
 Worth deletion is implemented inside Worth and leaves the shared account and other
-apps alone. The published shared accounts policy offers account deletion by contact;
-Worth has no automatic shared-account deletion cascade. Do not claim
-that shared account deletion automatically cascades to Worth. For a request to
-remove both, arrange Worth data removal and shared-account removal, and verify both.
+apps alone. Accounts offers self-service identity export and deletion on its account
+page. Identity deletion does not cascade to Worth or the other apps. To remove both,
+export any wanted data and remove Worth's data before deleting the Accounts identity;
+recreating an account with the same email creates a different user ID and does not
+restore access to the old data. Verify both removals separately.
 Do not email anyone or delete their data merely as a verification exercise.
 
 ## Remaining external verification
@@ -88,7 +89,7 @@ Do not email anyone or delete their data merely as a verification exercise.
 - Confirm the exact merged commit has passing core/browser/security checks, deployment and live smoke checks.
 - Real signed-in phone session, session expiration, photos, export and share revocation.
 - Authenticated Cloudflare plan, recovery availability, alerting and edge abuse controls.
-- Shared account deletion integration; product copy and contact flow explicitly avoid assuming it.
+- Requests covering both Worth data and the Accounts identity: verify each removal separately.
 
 ## Archive tools migration
 
