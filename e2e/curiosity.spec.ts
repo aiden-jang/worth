@@ -64,7 +64,7 @@ test('a memory draw reaches beyond the first page, avoids an immediate repeat an
   await expect(shelf).toContainText('Found the essay collection');
   await expect(shelf.getByRole('link', { name: 'Open memory →', exact: true })).toHaveAttribute(
     'href',
-    `/lists/${list.id}?focus=log:entry-50`,
+    `/lists/${list.id}?focus=log:entry-50&view=1`,
   );
   expect(reads.some((url) => url.searchParams.get('offset') === '50')).toBe(true);
   await capture(page, 'memory-draw', info.project.name);
@@ -120,7 +120,7 @@ test('saved names can be rediscovered without inventing a visit, and empty or fa
   await expect(shelf.locator('.call-face')).toHaveCount(0);
   await expect(shelf.getByRole('link', { name: 'Open memory →', exact: true })).toHaveAttribute(
     'href',
-    `/lists/${list.id}?focus=item:coffee`,
+    `/lists/${list.id}?focus=item:coffee&view=1`,
   );
   outcome = 'failure';
   await shelf.getByRole('button', { name: 'Another memory', exact: true }).click();

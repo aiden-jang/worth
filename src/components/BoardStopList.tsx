@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { boardReferenceKey, type BoardSource, type BoardStop } from '../shared/memory-boards';
@@ -83,7 +84,7 @@ function BoardStopCard({
       {entry.note && <p className="board-stop-note">{entry.note}</p>}
       {source ? (
         <p className="board-stop-source">
-          <Link to={`/lists/${source.listId}?focus=${source.kind}:${source.currentId}`}>
+          <Link to={recordHref(source.listId, source.kind, source.currentId)}>
             Open linked {source.kind === 'log' ? 'visit' : 'record'}: {source.title} →
           </Link>
           {source.archived && <span>Archived collection</span>}

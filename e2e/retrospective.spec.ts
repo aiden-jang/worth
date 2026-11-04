@@ -126,7 +126,7 @@ test('a chosen period reads real groups without writes or inferred old calls, an
   await expect(page.getByText('PRIVATE kept note', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'An unfiled find', exact: false })).toHaveAttribute(
     'href',
-    '/inbox?focus=unfiled-test',
+    '/inbox?focus=unfiled-test&view=1',
   );
   await capture(page, 'results', info.project.name, '.retro-results');
   expect(

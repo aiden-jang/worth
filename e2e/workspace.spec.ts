@@ -51,6 +51,25 @@ test('working pages keep shared type, readable fields and stable cards after nav
     await page.goto(path);
     await expect(page.locator('main h1')).toHaveCSS('font-size', phone ? '36px' : '48px');
     await page.evaluate(() => document.fonts.ready);
+    if (name === 'create') {
+      const submit = page.getByRole('button', { name: 'Create collection', exact: true });
+      await expect(submit).toBeInViewport();
+      const bounds = await submit.boundingBox();
+      const options = await page.locator('.create-options').boundingBox();
+      expect(bounds!.y + bounds!.height).toBeLessThan(options!.y);
+      const reusable = page.locator('summary').filter({ hasText: 'Reusable details' });
+      await reusable.click();
+      await page.getByRole('textbox', { name: 'Reusable detail names', exact: true }).fill('Brand\nBrand');
+      await reusable.click();
+      await expect(page.getByRole('alert').filter({ visible: true })).toContainText(
+        'Use each detail name once.',
+      );
+      await expect(submit).toBeDisabled();
+      await reusable.click();
+      await page.getByRole('textbox', { name: 'Reusable detail names', exact: true }).fill('');
+      await reusable.click();
+      await expect(submit).toBeEnabled();
+    }
     if (name === 'inbox')
       await expect(page.locator('.main-nav a[href="/inbox"]')).toHaveAttribute('aria-current', 'page');
     expect(

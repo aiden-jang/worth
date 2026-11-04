@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, MagnifyingGlass, Plus } from '@phosphor-icons/react';
@@ -44,7 +45,11 @@ export function ArchivePage() {
         : `Updated ${formatRelativeTimestamp(entry.recordedAt)}`,
       time: entry.recordedAt,
       decision: entry.recordKind === 'item' ? entry.decision : null,
-      href: `/lists/${entry.listId}?focus=${entry.recordKind === 'log' ? `log:${entry.id}` : `item:${entry.itemId ?? entry.id}`}`,
+      href: recordHref(
+        entry.listId,
+        entry.recordKind,
+        entry.recordKind === 'log' ? entry.id : (entry.itemId ?? entry.id),
+      ),
     })),
     ...(inbox.data?.entries ?? []).map((entry) => ({
       id: `inbox:${entry.id}`,
@@ -55,7 +60,7 @@ export function ArchivePage() {
         : `Saved ${formatRelativeTimestamp(entry.createdAt)}`,
       time: entry.createdAt,
       decision: entry.decision,
-      href: `/inbox?focus=${entry.id}`,
+      href: recordHref(null, 'inbox', entry.id),
     })),
   ]
     .sort((a, b) => b.time - a.time)

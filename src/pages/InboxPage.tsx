@@ -1,11 +1,13 @@
 import { requestAddEntry } from '../shared/quick-entry';
+import { recordHref } from '../shared/record-links';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { api } from '../api';
 import { BlankSlips } from '../components/BlankSlips';
 import { InboxEntryEditor } from '../components/InboxEntryEditor';
+import { RecordDetails } from '../components/RecordDetails';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useDraft } from '../hooks/useDraft';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -38,6 +40,15 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
   const [params, setParams] = useSearchParams();
   const focus = z.string().uuid().safeParse(params.get('focus'));
   const [selected, setSelected] = useState<string | null>(!drawer && focus.success ? focus.data : null);
+  const focusId = focus.success ? focus.data : null;
+  const [reading, setReading] = useState(!drawer && params.get('view') === '1');
+  const routeView = params.get('view');
+  useEffect(() => {
+    if (!drawer) {
+      setSelected(focusId);
+      setReading(routeView === '1');
+    }
+  }, [drawer, focusId, routeView]);
   const [term, setTerm] = useState(''),
     [limit, setLimit] = useState(30);
   const [discard, setDiscard] = useState(false);
@@ -85,7 +96,19 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
     if (!drawer && params.has('focus')) {
       const next = new URLSearchParams(params);
       next.delete('focus');
+      next.delete('view');
       setParams(next, { replace: true });
+    }
+  }
+  function openFind(id: string, view: boolean) {
+    setSelected(id);
+    setReading(view);
+    if (!drawer) {
+      const next = new URLSearchParams(params);
+      next.set('focus', id);
+      if (view) next.set('view', '1');
+      else next.delete('view');
+      setParams(next);
     }
   }
   return (
@@ -139,9 +162,7 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
       {saved && (
         <p role="status">
           “{saved.title}” filed.{' '}
-          <Link
-            to={`/lists/${saved.listId}?focus=${saved.logId ? `log:${saved.logId}` : `item:${saved.id}`}`}
-          >
+          <Link to={recordHref(saved.listId, saved.logId ? 'log' : 'item', saved.logId ?? saved.id)}>
             Open filed record →
           </Link>
         </p>
@@ -190,11 +211,11 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
           {!!filtered.length && (
             <ul className="inbox-list">
               {filtered.slice(0, limit).map((find) => (
-                <li key={find.id}>
+                <li key={find.id} data-inbox-id={find.id}>
                   <button
-                    aria-label={`Review ${find.title}`}
+                    aria-label={`View ${find.title}`}
                     disabled={!!pending}
-                    onClick={() => setSelected(find.id)}
+                    onClick={() => openFind(find.id, true)}
                   >
                     <span className="inbox-row-mark" aria-hidden="true">
                       ↳
@@ -210,7 +231,17 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
                       </small>
                       {find.note && <span className="inbox-row-note">{find.note}</span>}
                     </span>
-                    <span className="inbox-row-open">Review →</span>
+                    <span className="inbox-row-open" aria-hidden="true">
+                      ↗
+                    </span>
+                  </button>
+                  <button
+                    className="inbox-row-edit"
+                    aria-label={`Edit ${find.title}`}
+                    disabled={!!pending}
+                    onClick={() => openFind(find.id, false)}
+                  >
+                    Edit
                   </button>
                 </li>
               ))}
@@ -223,20 +254,34 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
           )}
         </>
       )}
-      {selected && query.data && !pending && (
-        <InboxEntryEditor
+      {selected && entry && reading && !pending ? (
+        <RecordDetails
           key={selected}
-          id={selected}
-          entry={entry}
+          record={{ kind: 'inbox', entry }}
+          listName="Unfiled"
           onClose={closeEditor}
-          onFile={(current, target) => {
-            const next = { pending: { entry: current, targetId: target.id, targetName: target.name } };
-            draft.checkpoint(next);
-            closeEditor();
-            file.mutate(next.pending);
-          }}
+          onEdit={() => openFind(selected, false)}
         />
+      ) : (
+        selected &&
+        query.data &&
+        (!reading || (!query.isFetching && !query.isError)) &&
+        !pending && (
+          <InboxEntryEditor
+            key={selected}
+            id={selected}
+            entry={entry}
+            onClose={closeEditor}
+            onFile={(current, target) => {
+              const next = { pending: { entry: current, targetId: target.id, targetName: target.name } };
+              draft.checkpoint(next);
+              closeEditor();
+              file.mutate(next.pending);
+            }}
+          />
+        )
       )}
+      {selected && reading && !entry && query.isFetching && <p role="status">Opening saved find…</p>}
       {discard && (
         <ConfirmDialog
           title="Discard this filing receipt?"

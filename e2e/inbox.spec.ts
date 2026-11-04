@@ -45,6 +45,9 @@ test('a name can wait in Unfiled without any collection and capture retries safe
   await page.reload();
   await page.getByRole('button', { name: 'Retry same capture', exact: true }).click();
   await page.getByRole('link', { name: 'Open Unfiled find →', exact: true }).click();
+  const reader = page.getByRole('dialog', { name: 'Only a name', exact: true });
+  await expect(reader.getByRole('textbox')).toHaveCount(0);
+  await reader.getByRole('button', { name: 'Edit', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await expect(editor.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Only a name');
   expect(archive.inbox).toHaveLength(1);
@@ -69,7 +72,7 @@ test('Unfiled details preserve optional context and unfinished drafts before fil
   await editor.getByRole('combobox', { name: 'Destination collection', exact: true }).selectOption(list.id);
   await expect(editor.getByRole('button', { name: 'File in collection', exact: true })).toBeDisabled();
   await editor.getByRole('button', { name: 'Close find', exact: true }).click();
-  await page.getByRole('button', { name: /A tiny illustrated book/ }).click();
+  await page.getByRole('button', { name: 'Edit A tiny illustrated book', exact: true }).click();
   await expect(editor.getByRole('textbox', { name: 'Private note', exact: true })).toHaveValue(
     'Keep the cloth cover.',
   );
@@ -157,7 +160,7 @@ test('Unfiled opens over a collection and Trash Undo works inside the drawer', a
   await expect(drawer).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`));
   await capture(page, 'drawer', info.project.name);
-  await drawer.getByRole('button', { name: /A tiny illustrated book/ }).click();
+  await drawer.getByRole('button', { name: 'Edit A tiny illustrated book', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await editor.getByRole('button', { name: 'Move find to Trash', exact: true }).click();
   await page
@@ -166,7 +169,9 @@ test('Unfiled opens over a collection and Trash Undo works inside the drawer', a
     .click();
   await expect(drawer.getByRole('complementary', { name: 'Deletion recovery' })).toBeVisible();
   await drawer.getByRole('button', { name: 'Undo', exact: true }).click();
-  await expect(drawer.getByRole('button', { name: /A tiny illustrated book/ })).toBeVisible();
+  await expect(
+    drawer.getByRole('button', { name: 'View A tiny illustrated book', exact: true }),
+  ).toBeVisible();
   expect(archive.inbox).toHaveLength(1);
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
@@ -185,7 +190,7 @@ test('empty Unfiled and long unfiled names reflow without invented calls', async
   archive.inbox = [find('A very long saved find with an edition and a location '.repeat(2).slice(0, 120))];
   await page.reload();
   await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('Sam');
-  await expect(page.getByRole('button', { name: /A very long saved find/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^View A very long saved find/ })).toBeVisible();
   await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('No such find');
   await expect(page.getByText('No Unfiled finds match “No such find”.', { exact: true })).toBeVisible();
   await page.getByRole('searchbox', { name: 'Find in Unfiled', exact: true }).fill('');
@@ -193,7 +198,7 @@ test('empty Unfiled and long unfiled names reflow without invented calls', async
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
-  await page.getByRole('button', { name: /A very long saved find/ }).click();
+  await page.getByRole('button', { name: /^Edit A very long saved find/ }).click();
   for (const width of [320, 430, 768]) {
     await page.setViewportSize({ width, height: 900 });
     expect(

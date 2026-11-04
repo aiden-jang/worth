@@ -1,4 +1,5 @@
 import { DialogSaveFooter } from './DialogSaveFooter';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { Trash, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -115,11 +116,13 @@ export function ActivityEditor({
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const hasLogChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
   const hasUnsavedChanges = hasLogChanges || Boolean(photo);
+  useModalDialog(dialog, () =>
+    [...document.querySelectorAll<HTMLElement>('[data-log-id]')]
+      .find((row) => row.dataset.logId === log?.id)
+      ?.querySelector<HTMLElement>('button'),
+  );
   useEffect(() => {
-    const node = dialog.current;
-    node?.showModal();
-    node?.querySelector<HTMLInputElement>('input[list]')?.focus();
-    return () => node?.close();
+    dialog.current?.querySelector<HTMLInputElement>('input[list]')?.focus();
   }, []);
   const save = useMutation({
     mutationFn: async () => {

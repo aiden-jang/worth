@@ -87,6 +87,19 @@ Want to try and revisit queue actions. Preview sheets also offer Edit and Add
 experience. Calls change in the editor only after Save; closing an unchanged
 preview writes nothing.
 
+Home, search, memory and tool links open saved records for reading. **Edit** switches
+to the existing editor, including any unfinished device draft; browsing always
+shows the saved version. Details include private notes/context, available photos
+and captions, and the actual dated experiences or recorded sets. Unfiled rows
+have separate **View** and **Edit** actions. Closing details returns focus without
+saving; a closed activity deep link stays closed after reload. Existing editor
+URLs remain usable.
+
+New collections and activities need only a name. **Create** comes before the
+optional starter, artwork and detail sections. On an empty Gym page, **Start
+workout** and **Add activity** remain the two entry points; optional tools follow
+the invitation. With an active workout, **Resume workout** gets priority.
+
 **Collection options** contains sharing, presentation, settings and **Ranking &
 tools** (the existing Workbench). **Entry options** contains batch capture, Want
 to try capture, dated experiences, bulk selection and saved filter views. Each

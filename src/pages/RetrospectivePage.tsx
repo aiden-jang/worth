@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
@@ -354,8 +355,8 @@ function RecordGroup({
               <Link
                 to={
                   record.kind === 'inbox'
-                    ? `/inbox?focus=${record.id}`
-                    : `/lists/${record.listId}?focus=${record.kind === 'item' ? 'item' : 'log'}:${record.id}`
+                    ? recordHref(null, 'inbox', record.id)
+                    : recordHref(record.listId, record.kind === 'item' ? 'item' : 'log', record.id)
                 }
               >
                 {record.title} <span aria-hidden="true">→</span>

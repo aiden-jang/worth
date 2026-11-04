@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Shuffle } from '@phosphor-icons/react';
@@ -127,7 +128,7 @@ export function MemoryShelf() {
   const href = preference
     ? preferenceRecordsHref(preference)
     : progress
-      ? `/lists/${progress.listId}?focus=log:${progress.logId}`
+      ? recordHref(progress.listId, 'log', progress.logId)
       : first
         ? memorySourceHref(first)
         : null;

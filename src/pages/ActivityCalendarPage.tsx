@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -227,8 +228,8 @@ export function ActivityCalendarPage() {
                   <Link
                     to={
                       entry.kind === 'inbox'
-                        ? `/inbox?focus=${entry.id}`
-                        : `/lists/${entry.listId}?focus=${entry.kind === 'revisit' ? 'item' : 'log'}:${entry.id}`
+                        ? recordHref(null, 'inbox', entry.id)
+                        : recordHref(entry.listId, entry.kind === 'revisit' ? 'item' : 'log', entry.id)
                     }
                   >
                     {entry.title} →

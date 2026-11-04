@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { boardReferenceKey, type BoardView } from '../shared/memory-boards';
@@ -144,7 +145,7 @@ export function BoardReplay({ board }: { board: BoardView }) {
         )}
         {entry.note && <p className="board-stop-note">{entry.note}</p>}
         {source ? (
-          <Link to={`/lists/${source.listId}?focus=${source.kind}:${source.currentId}`}>
+          <Link to={recordHref(source.listId, source.kind, source.currentId)}>
             Open linked {source.kind === 'log' ? 'visit' : 'record'}: {source.title}
             {source.archived ? ' · Archived' : ''} →
           </Link>

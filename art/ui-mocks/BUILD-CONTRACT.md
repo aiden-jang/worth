@@ -92,6 +92,15 @@ experience, ranking, notes and queues. Preview sheets retain Edit and Add experi
 as navigation to explicit editors. This separates browsing from changes while
 keeping existing tools reachable. Unranked items remain accessible.
 
+Saved-record links outside the collection index use the same read-first semantics:
+a native details dialog shows saved information and an explicit Edit action.
+Unfiled rows expose View and Edit separately. Readers preserve notes, context,
+photo captions, individual sets and measurements without inferring missing values.
+Legacy editor links and draft recovery remain supported. The name-only creation
+action deliberately precedes optional sections, keeping it visible on phones.
+Empty activity invitations precede optional tools; Resume is primary when a
+workout is active. Navigation remains available while page code loads.
+
 Item editors use a compact cream call card: the character sits beside its call and
 caption, followed by the same three choices. The editor deliberately omits repeated
 name/type and rank metadata from that card; the heading and Name field identify the

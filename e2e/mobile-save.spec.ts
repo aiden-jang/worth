@@ -229,7 +229,7 @@ test('activity logging keeps Save reachable with optional details open and saves
   await page.route('**/api/lists/*/routines', (route) => route.fulfill({ json: { routines: [] } }));
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto('/lists/' + list.id);
-  await page.getByRole('button', { name: 'Add first log', exact: true }).click();
+  await page.getByRole('button', { name: 'Add activity', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'What happened?', exact: true });
   await dialog.getByLabel('What', { exact: true }).fill('Evening mobility');
   await dialog.locator('summary').filter({ hasText: 'More details' }).click();

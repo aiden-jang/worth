@@ -22,7 +22,8 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   await expect(empty.getByRole('heading', { name: 'Nothing here yet.', exact: true })).toBeVisible();
   await empty.scrollIntoViewIfNeeded();
   await capture(page, 'empty-log', info.project.name);
-  await empty.getByRole('button', { name: 'Add first log', exact: true }).click();
+  await expect(empty.getByRole('button')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Add activity', exact: true }).click();
   const log = page.getByRole('dialog', { name: 'What happened?', exact: true });
   await expect(log).toBeVisible();
   await log.getByRole('button', { name: 'Close', exact: true }).click();
@@ -42,6 +43,9 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
     },
   ];
   await page.reload();
+  await expect(page.getByRole('button', { name: 'Start workout', exact: true })).toHaveClass(
+    /button-outline/,
+  );
   const workout = page.locator('.workout-card');
   await expect(workout).toContainText('0 exercises logged · No individual sets recorded');
   await expect(workout).not.toContainText('Rep counts incomplete');

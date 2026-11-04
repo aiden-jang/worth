@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { loginUrl } from '@aidenjang/auth-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -455,7 +456,11 @@ export function CapturePage() {
         {saved && (
           <p>
             <Link
-              to={saved.listId ? `/lists/${saved.listId}?focus=item:${saved.id}` : `/inbox?focus=${saved.id}`}
+              to={
+                saved.listId
+                  ? recordHref(saved.listId, 'item', saved.id)
+                  : recordHref(null, 'inbox', saved.id)
+              }
             >
               {saved.listId ? 'Open saved record →' : 'Open Unfiled find →'}
             </Link>

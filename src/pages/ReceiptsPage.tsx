@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -190,7 +191,7 @@ export function ReceiptPage() {
                     <p>Created record name in this review: {line.createdName}</p>
                   )}
                   {source ? (
-                    <Link to={`/lists/${source.listId}?focus=item:${source.id}`}>
+                    <Link to={recordHref(source.listId, 'item', source.id)}>
                       Open {line.createdHere || line.mapping.mode === 'create' ? 'created' : 'linked'} record:{' '}
                       {source.title}
                       {source.archived ? ' · Archived' : ''} →

@@ -336,8 +336,11 @@ test('unfiled recall keeps its scope across memory types and opens the original 
   await capture(page, 'recall-unfiled', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const source = page.getByRole('link', { name: 'The window-seat bookshop ↗', exact: true });
-  await expect(source).toHaveAttribute('href', `/inbox?focus=${id}`);
+  await expect(source).toHaveAttribute('href', `/inbox?focus=${id}&view=1`);
   await source.click();
+  const reader = page.getByRole('dialog', { name: 'The window-seat bookshop', exact: true });
+  await expect(reader.getByRole('textbox')).toHaveCount(0);
+  await reader.getByRole('button', { name: 'Edit', exact: true }).click();
   await expect(
     page
       .getByRole('dialog', { name: 'Keep the details.', exact: true })

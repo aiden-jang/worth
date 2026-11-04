@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { reportAnalytics } from '../../analytics/browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -537,9 +538,13 @@ export function OfflinePage() {
                     href={
                       op.kind === 'capture'
                         ? '/inbox'
-                        : op.recordKind === 'inbox'
+                        : !op.recordKind || !op.recordId || op.recordKind === 'inbox'
                           ? '/inbox'
-                          : `/lists/${vault.snapshot.records.find((r) => r.id === op.recordId)?.listId ?? ''}?focus=${op.recordKind}:${op.recordId}`
+                          : recordHref(
+                              vault.snapshot.records.find((r) => r.id === op.recordId)?.listId ?? '',
+                              op.recordKind,
+                              op.recordId,
+                            )
                     }
                     target="_blank"
                     rel="noopener noreferrer"

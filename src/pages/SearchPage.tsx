@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -229,10 +230,10 @@ function SearchGroup({ label, results }: { label: string; results: SearchResult[
           key={resultKey(result)}
           to={
             result.kind === 'inbox'
-              ? `/inbox?focus=${result.id}`
+              ? recordHref(null, 'inbox', result.id)
               : result.kind === 'list'
                 ? `/lists/${result.listId}`
-                : `/lists/${result.listId}?focus=${result.kind}:${result.id}`
+                : recordHref(result.listId, result.kind, result.id)
           }
         >
           <span>

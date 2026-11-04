@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { Link } from 'react-router';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -143,7 +144,7 @@ export function ReceiptMapping({
               {currentItem ? (
                 <>
                   Current choice: {currentItem.title}.{' '}
-                  <Link to={`/lists/${currentItem.listId}?focus=item:${currentItem.id}`}>
+                  <Link to={recordHref(currentItem.listId, 'item', currentItem.id)}>
                     Review chosen record →
                   </Link>
                 </>

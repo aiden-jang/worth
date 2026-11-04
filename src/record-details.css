@@ -1,0 +1,184 @@
+.record-reader {
+  width: min(900px, calc(100% - 32px));
+}
+.record-reader-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0;
+}
+.record-reader-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 28px;
+  align-items: start;
+}
+.record-reader-content {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+.record-reader-content > p {
+  margin: 0;
+}
+.record-reader-content h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.record-reader-type,
+.record-reader-date {
+  color: var(--muted);
+}
+.record-reader .item-detail-readout dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+.record-reader-note p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.record-reader-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+}
+.record-reader-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0;
+}
+.record-reader-dates dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.record-reader-dates dd {
+  margin: 6px 0 0;
+}
+.record-reader-photo {
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.record-reader .record-reader-call {
+  padding: 20px;
+}
+.record-reader .record-reader-call .opinion-slip-verdict {
+  margin: 12px 0 0;
+  padding-block: 12px;
+}
+.record-reader-rank {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 12px 0 0;
+  color: #626456;
+}
+.record-reader-history {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.record-reader-history h3 span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.record-reader-history ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.record-reader-history-link {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--paper);
+  min-height: 44px;
+}
+.record-reader-history-link time {
+  color: var(--muted);
+  font-size: 12px;
+}
+.record-reader-history-link span {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.record-reader-sets {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+}
+.record-reader-sets caption {
+  text-align: left;
+  margin-bottom: 12px;
+}
+.record-reader-sets :is(th, td) {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+}
+.record-reader-photos {
+  display: grid;
+  gap: 16px;
+}
+.record-reader-content:empty {
+  display: none;
+}
+.record-reader-layout:has(> .record-reader-content:empty) {
+  display: block;
+}
+@media (min-width: 681px) {
+  .record-reader:has(.record-reader-content:empty) {
+    width: min(520px, calc(100% - 32px));
+  }
+}
+@media (max-width: 680px) {
+  .record-reader {
+    width: calc(100% - 24px);
+  }
+  .record-reader-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .record-reader-content {
+    width: 100%;
+  }
+  .record-reader .record-reader-call {
+    width: 100%;
+    order: -1;
+  }
+  .record-reader .record-reader-call .opinion-slip-verdict {
+    display: grid;
+    min-height: 0;
+    height: auto;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 6px 16px;
+    text-align: left;
+  }
+  .record-reader .record-reader-call .opinion-slip-verdict > :is(.call-face, .undecided-slips) {
+    grid-row: 1 / 3;
+    width: 72px;
+    height: 72px;
+    margin: 0;
+  }
+  .record-reader .record-reader-call .opinion-slip-verdict strong {
+    align-self: end;
+    font-size: 28px;
+    margin: 0;
+  }
+  .record-reader .record-reader-call .opinion-slip-verdict > span {
+    align-self: start;
+    margin: 0;
+  }
+}

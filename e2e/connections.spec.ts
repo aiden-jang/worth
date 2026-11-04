@@ -148,7 +148,7 @@ test('reviewed connections preserve records and their constellation has a readab
   await expect(page.locator('.connection-constellation')).toContainText('1 of 1 neighbors shown');
   await expect(
     page.locator('.connection-constellation').getByRole('link', { name: 'Tea', exact: true }),
-  ).toHaveAttribute('href', `/lists/${list.id}?focus=item:${b}`);
+  ).toHaveAttribute('href', `/lists/${list.id}?focus=item:${b}&view=1`);
   await capture(page, 'constellation', info.project.name, '.connections-saved');
   const violations = await new AxeBuilder({ page }).analyze();
   expect(violations.violations).toEqual([]);

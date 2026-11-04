@@ -1,7 +1,8 @@
+import { useModalDialog } from '../hooks/useModalDialog';
 import { DialogSaveFooter } from './DialogSaveFooter';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { api } from '../api';
@@ -176,11 +177,11 @@ export function InboxEntryEditor({
       setPreparing(false);
     }
   }
-  useEffect(() => {
-    const node = dialog.current;
-    node?.showModal();
-    return () => node?.close();
-  }, []);
+  useModalDialog(dialog, () =>
+    [...document.querySelectorAll<HTMLElement>('[data-inbox-id]')]
+      .find((row) => row.dataset.inboxId === id)
+      ?.querySelector<HTMLElement>('button'),
+  );
   function edit(patch: Partial<InboxPayload>) {
     draft.setForm({ item: { ...item, ...patch }, revision });
     save.reset();

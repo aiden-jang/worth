@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { logoutUrl } from '@aidenjang/auth-client';
@@ -193,8 +194,8 @@ export function AppShell({
   const collectionActive = location.pathname === '/lists' || /^\/lists\/[^/]+$/.test(location.pathname);
   const savedHref = saved
     ? saved.kind === 'inbox'
-      ? `/inbox?focus=${saved.id}`
-      : `/lists/${saved.listId}?focus=${saved.kind}:${saved.id}`
+      ? recordHref(null, 'inbox', saved.id)
+      : recordHref(saved.listId, saved.kind, saved.id)
     : '/';
   return (
     <div className="app-shell app-shell-dark everyday-shell">

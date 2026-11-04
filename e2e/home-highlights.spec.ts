@@ -200,7 +200,7 @@ test('Home progress shows the recorded unit, comparison and source while staying
   await expect(shelf).toContainText('Previous recorded best at this weight: 8 reps.');
   await expect(shelf.getByRole('link', { name: 'View recorded sets', exact: false })).toHaveAttribute(
     'href',
-    `/lists/${list.id}?focus=log:current`,
+    `/lists/${list.id}?focus=log:current&view=1`,
   );
   await expect(shelf.locator('.call-face')).toHaveCount(0);
   await shelf.scrollIntoViewIfNeeded();

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { recordHref } from './record-links';
 import { logInput } from './validation';
 import { visitContext } from './visit-context';
 import type { ItemDecision } from './models';
@@ -84,8 +85,12 @@ export function isSavedMemory(record: MemoryRecord) {
 }
 export function memorySourceHref(record: MemoryRecord) {
   return record.kind === 'unfiled' || record.kind === 'unfiled-visit'
-    ? `/inbox?focus=${record.id}`
-    : `/lists/${record.listId}?focus=${record.kind === 'saved' ? `item:${record.itemId ?? record.id}` : `log:${record.id}`}`;
+    ? recordHref(null, 'inbox', record.id)
+    : recordHref(
+        record.listId,
+        record.kind === 'saved' ? 'item' : 'log',
+        record.kind === 'saved' ? (record.itemId ?? record.id) : record.id,
+      );
 }
 export function memoryPhotoHref(record: MemoryRecord) {
   const kind =

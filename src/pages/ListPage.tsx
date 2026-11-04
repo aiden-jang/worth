@@ -7,6 +7,8 @@ import { ActivityView } from '../components/ActivityView';
 import { CollectionView } from '../components/CollectionView';
 import { CollectionWorkbench } from '../components/CollectionWorkbench';
 import { ItemEditor } from '../components/ItemEditor';
+import { RecordDetails } from '../components/RecordDetails';
+import { CollectionLogEditor } from '../components/CollectionLogEditor';
 import { ListSettings } from '../components/ListSettings';
 import { ShareDialog } from '../components/ShareDialog';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -44,6 +46,7 @@ export function ListPage() {
   const focusNoteComposer = params.get('note') === '1';
   const focusCapture = params.get('capture') === '1';
   const focusLogId = focus?.startsWith('log:') ? focus.slice('log:'.length) : null;
+  const reading = params.get('view') === '1' && !creating && !focusLogComposer && !focusNoteComposer;
 
   useEffect(() => {
     setSelectedId(focus?.startsWith('item:') ? focus.slice('item:'.length) : null);
@@ -243,23 +246,60 @@ export function ListPage() {
               }}
             />
           )}
-          {(creating || selected) && (
-            <ItemEditor
-              key={`${listId}:${creating ? 'new' : selected?.id}`}
-              listId={listId}
-              item={creating ? null : selected}
-              collectionName={list.name}
-              items={items}
-              logs={logs}
-              focusLogId={focusLogId}
-              focusLogComposer={focusLogComposer}
-              focusNoteComposer={focusNoteComposer}
+          {reading && (selected || focusedLog) ? (
+            <RecordDetails
+              key={focusedLog?.id ?? selected!.id}
+              listName={list.name}
+              record={
+                focusedLog
+                  ? { kind: 'log', log: focusedLog, item: selected ?? undefined }
+                  : {
+                      kind: 'item',
+                      item: selected!,
+                      logs,
+                      rank: list.rankedIds.indexOf(selected!.id) + 1 || undefined,
+                    }
+              }
               onClose={closeEditor}
-              onCreated={(id) => {
-                setParams({}, { replace: true });
-                setSelectedId(id);
+              onEdit={() => {
+                const next = new URLSearchParams(params);
+                if (focusedLog) next.set('view', 'edit');
+                else next.delete('view');
+                setParams(next, { replace: true });
               }}
+              onRevisit={
+                selected && !focusedLog
+                  ? () => setParams({ focus: `item:${selected.id}`, log: '1' })
+                  : undefined
+              }
+              onOpenLog={(id) => setParams({ focus: `log:${id}`, view: '1' })}
             />
+          ) : focusedLog && params.get('view') === 'edit' ? (
+            <CollectionLogEditor
+              key={focusedLog.id}
+              listId={listId}
+              log={focusedLog}
+              onClose={() => setParams({ focus: `log:${focusedLog.id}`, view: '1' }, { replace: true })}
+            />
+          ) : (
+            (creating || selected) && (
+              <ItemEditor
+                key={`${listId}:${creating ? 'new' : selected?.id}`}
+                listId={listId}
+                item={creating ? null : selected}
+                collectionName={list.name}
+                items={items}
+                logs={logs}
+                focusLogId={focusLogId}
+                focusLogComposer={focusLogComposer}
+                focusNoteComposer={focusNoteComposer}
+                onClose={closeEditor}
+                onCreated={(id) => {
+                  setParams({}, { replace: true });
+                  setSelectedId(id);
+                }}
+              />
+            )
           )}
           {showShare && (
             <ShareDialog key={list.id} list={list} items={items} onClose={() => setShowShare(false)} />

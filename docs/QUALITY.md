@@ -65,6 +65,12 @@ source links, failed/confirmed finishes, incomplete totals, history access, focu
 filter recovery and narrow layouts. Migrated-D1 tests exercise private Home evidence
 and verify original photo bytes after record restoration in an isolated local database.
 
+Saved-record cases cover read-only search/recall links, explicit Edit with draft
+recovery, same-page Unfiled navigation after capture, exact set/measurement display,
+closing deep links, and focus return. Shell cases delay or fail a page's code to
+verify that navigation stays available during loading and Home can recover from
+failure. Creation checks keep the name-only submit action before optional sections.
+
 ## Visitor journeys
 
 Use a local synthetic account for the following pass:

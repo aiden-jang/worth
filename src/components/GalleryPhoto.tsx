@@ -5,11 +5,20 @@ export function GalleryPhoto({
   recordId,
   entry,
   number,
+  showCaption = false,
 }: {
   kind: 'items' | 'logs';
   recordId: string;
   entry: GalleryEntry;
   number: number;
+  showCaption?: boolean;
 }) {
-  return <AnnotatedPhoto src={`/api/${kind}/${recordId}/photos/${entry.id}`} entry={entry} number={number} />;
+  return (
+    <AnnotatedPhoto
+      src={`/api/${kind}/${recordId}/photos/${entry.id}`}
+      entry={entry}
+      number={number}
+      showCaption={showCaption}
+    />
+  );
 }

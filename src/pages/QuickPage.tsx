@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -253,7 +254,7 @@ export function QuickPage() {
                     <ol>
                       {ranked.map((item) => (
                         <li key={item.id}>
-                          <Link to={`/lists/${chosen.id}?focus=item:${item.id}`}>
+                          <Link to={recordHref(chosen.id, 'item', item.id)}>
                             {item.title}
                             <span>{item.type || 'No type'}</span>
                           </Link>
@@ -306,7 +307,7 @@ function SavedFind({ items, listId }: { items: Item[]; listId: string }) {
           <p className="overline">FROM YOUR COLLECTION</p>
           <h2>{item.title}</h2>
           <p>{item.type || 'No type'}</p>
-          <Link className="button button-outline" to={`/lists/${listId}?focus=item:${item.id}`}>
+          <Link className="button button-outline" to={recordHref(listId, 'item', item.id)}>
             Open record
           </Link>
         </article>

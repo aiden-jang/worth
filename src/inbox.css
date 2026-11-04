@@ -39,11 +39,14 @@
 }
 .inbox-list li {
   border-top: 1px solid #38392f;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
 }
 .inbox-list li:last-child {
   border-bottom: 1px solid #38392f;
 }
-.inbox-list button {
+.inbox-list li > button:first-child {
   width: 100%;
   text-align: left;
   display: grid;
@@ -56,6 +59,16 @@
   color: #f0ecdf;
   border: 0;
   min-height: 88px;
+}
+.inbox-list .inbox-row-edit {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  border-radius: 8px;
 }
 .inbox-list button:hover,
 .inbox-list button:focus-visible {
@@ -265,7 +278,7 @@
     max-height: calc(100dvh - 20px);
     padding: 20px;
   }
-  .inbox-list button {
+  .inbox-list li > button:first-child {
     grid-template-columns: 16px minmax(0, 1fr);
     gap: 10px;
     padding: 20px 2px;

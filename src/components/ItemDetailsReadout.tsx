@@ -1,7 +1,7 @@
 import type { Item } from '../shared/models';
 import { detailField, itemBrand, pricePaid } from '../shared/item-details';
 
-export function ItemDetailsReadout({ item }: { item: Item }) {
+export function ItemDetailsReadout({ item }: { item: Pick<Item, 'context'> }) {
   const facts = [
     ['Brand / maker', itemBrand(item.context)],
     ['Variant / edition', item.context?.version],

@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useBlocker } from 'react-router';
@@ -223,7 +224,7 @@ export function ConnectionsPage() {
 }
 function RecordLink({ record }: { record: ConnectedRecord }) {
   return (
-    <Link to={`/lists/${record.listId}?focus=item:${record.currentId}`}>
+    <Link to={recordHref(record.listId, 'item', record.currentId)}>
       {record.title}
       {record.detail && <small className="connection-record-detail">{record.detail}</small>}
     </Link>

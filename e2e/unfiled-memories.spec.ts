@@ -95,6 +95,10 @@ test('an outing can keep its date, thought and photo without a collection and op
   await expect(page.getByAltText('Saved photo for Noodles by the window')).toBeVisible();
   await capture(page, 'memory-recall', info.project.name);
   await page.getByRole('link', { name: 'Noodles by the window ↗', exact: true }).click();
+  const reader = page.getByRole('dialog', { name: 'Noodles by the window', exact: true });
+  await expect(reader.getByRole('textbox')).toHaveCount(0);
+  await expect(reader.getByAltText('Saved photo for Noodles by the window')).toBeVisible();
+  await reader.getByRole('button', { name: 'Edit', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await expect(editor.getByLabel('When', { exact: true })).toHaveValue('2025-02-11');
   await expect(editor.getByAltText('Saved photo for Noodles by the window')).toBeVisible();
@@ -247,7 +251,7 @@ test('filing an Unfiled memory keeps its visit link and a lost reply retries the
   await pending.getByRole('button', { name: 'Retry same filing', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Open filed record →', exact: true })).toHaveAttribute(
     'href',
-    `/lists/${list.id}?focus=log:${archive.logs[0].id}`,
+    `/lists/${list.id}?focus=log:${archive.logs[0].id}&view=1`,
   );
   expect(archive.logs).toHaveLength(1);
   expect(archive.inbox).toHaveLength(0);

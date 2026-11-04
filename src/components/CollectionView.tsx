@@ -3,7 +3,7 @@ import { ExperienceEditor } from './ExperienceEditor';
 import '../memories.css';
 import { ArrowRight, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { api, RequestError } from '../api';
 import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
@@ -256,6 +256,11 @@ export function CollectionView({
     },
   });
 
+  const [rankFocus, setRankFocus] = useState<{
+    itemId: string;
+    opener: HTMLElement;
+    revision: number | null;
+  } | null>(null);
   const rank = useMutation({
     mutationFn: ({ item, position }: { item: Item; position: number | null }) =>
       api.rank(list.id, moveRank(list.rankedIds, item.id, position), list.rankRevision),
@@ -273,24 +278,27 @@ export function CollectionView({
         await client.invalidateQueries({ queryKey: ['list', list.id] });
       }
     },
-    onSettled: (_data, _error, { item }, context) => {
+    onSettled: (data, _error, { item }, context) => {
       if (context?.opener?.closest<HTMLElement>('.collection-index-row')?.dataset.itemId !== item.id) return;
-      requestAnimationFrame(() => {
-        if (
-          document.querySelector('dialog[open]') ||
-          (document.activeElement !== document.body && document.activeElement !== context.opener)
-        )
-          return;
-        const row = [...document.querySelectorAll<HTMLElement>('.collection-index-row')].find(
-          (node) => node.dataset.itemId === item.id,
-        );
-        const target = row?.querySelector<HTMLElement>('.collection-row-options > summary');
-        target?.focus({ preventScroll: true });
-        // A keyed row can retain focus while moving outside the viewport.
-        target?.scrollIntoView({ block: 'center' });
-      });
+      setRankFocus({ itemId: item.id, opener: context.opener, revision: data?.list.rankRevision ?? null });
     },
   });
+  useLayoutEffect(() => {
+    if (!rankFocus || (rankFocus.revision !== null && list.rankRevision !== rankFocus.revision)) return;
+    setRankFocus(null);
+    if (
+      document.querySelector('dialog[open]') ||
+      (document.activeElement !== document.body && document.activeElement !== rankFocus.opener)
+    )
+      return;
+    const row = [...document.querySelectorAll<HTMLElement>('.collection-index-row')].find(
+      (node) => node.dataset.itemId === rankFocus.itemId,
+    );
+    const target = row?.querySelector<HTMLElement>('.collection-row-options > summary');
+    target?.focus({ preventScroll: true });
+    // Follow the row after the saved ranking has reached the rendered list.
+    target?.scrollIntoView({ block: 'center', behavior: 'instant' });
+  }, [rankFocus, list.rankRevision]);
 
   const queue = useMutation({
     mutationFn: (item: Item) => api.updateItem(item.id, { revisitQueued: !item.revisitQueued }),

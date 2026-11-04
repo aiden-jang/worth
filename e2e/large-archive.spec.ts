@@ -48,9 +48,9 @@ test('a populated archive keeps quick capture and older search results reachable
     .filter({ hasText: 'Cafe by the old cinema' });
   await original.click();
   await expect(page).toHaveURL(new RegExp(`focus=item:${file.items[0].id}`));
-  await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
-    'Cafe by the old cinema',
-  );
+  const saved = page.getByRole('dialog', { name: 'Cafe by the old cinema', exact: true });
+  await expect(saved.getByRole('textbox')).toHaveCount(0);
+  await expect(saved.getByRole('heading', { name: 'Cafe by the old cinema', exact: true })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole('button', { name: 'Items', exact: true })).toHaveAttribute(
     'aria-pressed',

@@ -1,4 +1,5 @@
 import { DialogSaveFooter } from './DialogSaveFooter';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -86,11 +87,9 @@ export function QuickEntry({
     if (photo.file) setDetailsOpen(true);
   }, [photo.file]);
   const [validation, setValidation] = useState('');
+  useModalDialog(dialog);
   useEffect(() => {
-    const node = dialog.current;
-    node?.showModal();
     name.current?.focus();
-    return () => node?.close();
   }, []);
   const save = useMutation({
     mutationFn: async ({

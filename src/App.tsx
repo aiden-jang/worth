@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loginUrl, signupUrl } from '@aidenjang/auth-client';
 import { ProductLinks } from './components/ProductLinks';
 import { InfoPage } from './pages/InfoPage';
-import { Route, Routes, ScrollRestoration, useLocation } from 'react-router';
+import { Link, Route, Routes, ScrollRestoration, useLocation } from 'react-router';
 import { api, bindPageAccount } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
 import { OpinionSlip } from './components/OpinionSlip';
@@ -92,7 +92,7 @@ export function App() {
   const { pathname } = useLocation();
   usePageAnalytics(pageForPath(pathname), pathname);
   return (
-    <PageBoundary>
+    <PageBoundary path={pathname}>
       <ScrollRestoration getKey={pageScrollKey} storageKey="worth:scroll-positions" />
       <AppUpdate />
       <Suspense
@@ -114,10 +114,13 @@ export function App() {
   );
 }
 
-class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+class PageBoundary extends Component<{ children: ReactNode; path: string }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  componentDidUpdate(previous: Readonly<{ children: ReactNode; path: string }>) {
+    if (previous.path !== this.props.path && this.state.failed) this.setState({ failed: false });
   }
   render() {
     return this.state.failed ? (
@@ -127,6 +130,9 @@ class PageBoundary extends Component<{ children: ReactNode }, { failed: boolean 
         <button className="button button-accent" onClick={() => window.location.reload()}>
           Reload page
         </button>
+        <Link className="button button-outline" to="/">
+          Back to Home
+        </Link>
       </main>
     ) : (
       this.props.children
@@ -160,37 +166,45 @@ function PrivateApp() {
     <AccountChanged email={session.data.user.email} />
   ) : session.data?.user ? (
     <AppShell user={session.data.user} authOrigin={authOrigin}>
-      <Routes>
-        <Route path="/" element={<ArchivePage />} />
-        <Route path="/lists" element={<ListsPage />} />
-        <Route path="/lists/:listId" element={<ListPage />} />
-        <Route path="/lists/:listId/show" element={<ShowPage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/patterns" element={<PatternsPage />} />
-        <Route path="/patterns/remember" element={<MemoryPage />} />
-        <Route path="/patterns/boards" element={<BoardsPage />} />
-        <Route path="/patterns/boards/:id" element={<BoardPage />} />
-        <Route path="/patterns/calendar" element={<ActivityCalendarPage />} />
-        <Route path="/patterns/field-guide" element={<FieldGuidePage />} />
-        <Route path="/patterns/connections" element={<ConnectionsPage />} />
-        <Route path="/patterns/look-back" element={<RetrospectivePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/spaces" element={<SpacesPage />} />
-        <Route path="/spaces/invite/:inviteId" element={<SpaceInvitePage />} />
-        <Route path="/spaces/:id" element={<SpacePage />} />
-        <Route path="/capsules" element={<CapsulesPage />} />
-        <Route path="/capsules/new" element={<CapsuleComposePage />} />
-        <Route path="/capsules/:id" element={<CapsulePage />} />
-        <Route path="/receipts" element={<ReceiptsPage />} />
-        <Route path="/receipts/new" element={<ReceiptCapturePage />} />
-        <Route path="/receipts/:id" element={<ReceiptPage />} />
-        <Route path="/read" element={<PhotoTextPage />} />
-        <Route path="/code" element={<CodeCapturePage />} />
-        <Route path="/inbox" element={<InboxPage />} />
-        <Route path="/capture" element={<CapturePage />} />
-        <Route path="/quick" element={<QuickPage />} />
-        <Route path="*" element={<InfoPage kind="missing" />} />
-      </Routes>
+      <Suspense
+        fallback={
+          <main className="page-width loading-line" role="status">
+            Opening page…
+          </main>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<ArchivePage />} />
+          <Route path="/lists" element={<ListsPage />} />
+          <Route path="/lists/:listId" element={<ListPage />} />
+          <Route path="/lists/:listId/show" element={<ShowPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/patterns" element={<PatternsPage />} />
+          <Route path="/patterns/remember" element={<MemoryPage />} />
+          <Route path="/patterns/boards" element={<BoardsPage />} />
+          <Route path="/patterns/boards/:id" element={<BoardPage />} />
+          <Route path="/patterns/calendar" element={<ActivityCalendarPage />} />
+          <Route path="/patterns/field-guide" element={<FieldGuidePage />} />
+          <Route path="/patterns/connections" element={<ConnectionsPage />} />
+          <Route path="/patterns/look-back" element={<RetrospectivePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/spaces" element={<SpacesPage />} />
+          <Route path="/spaces/invite/:inviteId" element={<SpaceInvitePage />} />
+          <Route path="/spaces/:id" element={<SpacePage />} />
+          <Route path="/capsules" element={<CapsulesPage />} />
+          <Route path="/capsules/new" element={<CapsuleComposePage />} />
+          <Route path="/capsules/:id" element={<CapsulePage />} />
+          <Route path="/receipts" element={<ReceiptsPage />} />
+          <Route path="/receipts/new" element={<ReceiptCapturePage />} />
+          <Route path="/receipts/:id" element={<ReceiptPage />} />
+          <Route path="/read" element={<PhotoTextPage />} />
+          <Route path="/code" element={<CodeCapturePage />} />
+          <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/capture" element={<CapturePage />} />
+          <Route path="/quick" element={<QuickPage />} />
+          <Route path="*" element={<InfoPage kind="missing" />} />
+        </Routes>
+      </Suspense>
       <TrashNotice />
     </AppShell>
   ) : location.pathname === '/capture' ? (

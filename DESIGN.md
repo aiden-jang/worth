@@ -70,6 +70,22 @@ action and an options menu for Add experience, rank, notes and queues. Preview s
 retain Edit and Add experience as navigation to explicit editors. Browsing never
 changes a call; the item editor saves its changes explicitly.
 
+Links to saved records from Home, search, recall and the optional tools open a
+read-only details dialog. It shows saved text, context, photos and experiences;
+Edit opens the existing draft-aware editor. Unfiled rows have distinct View and
+Edit actions. Existing editor links still work. Closing a reader writes nothing
+and returns focus to its row, or the page heading when the source is elsewhere.
+Activity deep links clear when closed so refresh cannot reopen a dismissed record.
+Name-only readers stay compact and omit empty history groups, while Add experience
+remains available for collection records.
+
+Create collection/activity places its submit action immediately after the name
+and suggestions, before optional sections. This deliberately brings the promised
+name-only path into view on phones. An active workout gives Resume priority over
+starting another; the empty invitation appears before optional workout tools.
+Lazy page loading keeps the signed-in navigation visible, and failed pages offer
+Reload and a route back to Home.
+
 Private uploaded covers take precedence over optional built-in artwork. Automatic
 art uses exact starter-name matching or a monogram; explicit saved object/palette
 choices remain available. Artwork never implies a call, a rank or a memory.

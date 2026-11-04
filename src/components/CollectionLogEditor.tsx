@@ -1,7 +1,8 @@
+import { useModalDialog } from '../hooks/useModalDialog';
 import { DialogSaveFooter } from './DialogSaveFooter';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { formatDate } from '../format';
 import { useDraft } from '../hooks/useDraft';
@@ -47,11 +48,7 @@ export function CollectionLogEditor({
   const cleanNote = note.trim();
   const hasChanges = JSON.stringify({ ...form, note: cleanNote }) !== JSON.stringify(baseline);
 
-  useEffect(() => {
-    const node = dialog.current;
-    node?.showModal();
-    return () => node?.close();
-  }, []);
+  useModalDialog(dialog);
 
   const save = useMutation({
     mutationFn: () =>

@@ -1,3 +1,4 @@
+import { recordHref } from '../shared/record-links';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -64,7 +65,7 @@ export function PreferenceInsights() {
               <p>Returning often and liking something are separate signals.</p>
               {query.data.returns.map((record) => (
                 <article key={record.itemId}>
-                  <Link to={`/lists/${record.listId}?focus=item:${record.itemId}`}>
+                  <Link to={recordHref(record.listId, 'item', record.itemId)}>
                     <strong>{record.title}</strong>
                   </Link>
                   <p>
@@ -81,7 +82,7 @@ export function PreferenceInsights() {
               <p>No visit logged in the last 90 days. A few names to remember.</p>
               {query.data.rediscover.map((record) => (
                 <article key={record.itemId}>
-                  <Link to={`/lists/${record.listId}?focus=item:${record.itemId}`}>
+                  <Link to={recordHref(record.listId, 'item', record.itemId)}>
                     <strong>{record.title}</strong>
                   </Link>
                   <p>Last logged {formatDate(record.lastDate)}</p>

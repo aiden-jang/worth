@@ -376,6 +376,18 @@ export function ListsPage() {
                   ))}
                 </div>
               )}
+              {create.isError && <p className="form-error">{create.error.message}</p>}
+              {kind === 'collection' && !detailNames.success && (
+                <p className="form-error" role="alert">
+                  Reusable details: {detailNames.error.issues[0]?.message}
+                </p>
+              )}
+              <button
+                className="button button-accent"
+                disabled={create.isPending || (kind === 'collection' && !detailNames.success)}
+              >
+                {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
+              </button>
               <div className="create-options">
                 {kind === 'collection' && (
                   <CollectionStarters
@@ -486,13 +498,6 @@ export function ListsPage() {
                   )}
                 </details>
               </div>
-              {create.isError && <p className="form-error">{create.error.message}</p>}
-              <button
-                className="button button-accent"
-                disabled={create.isPending || (kind === 'collection' && !detailNames.success)}
-              >
-                {create.isPending ? 'Creating…' : `Create ${kind}`} <ArrowRight size={18} />
-              </button>
             </form>
             {kind === 'collection' && (
               <aside className="cabinet-create-preview" aria-label="Collection preview">

@@ -1,4 +1,5 @@
 import { DialogSaveFooter } from './DialogSaveFooter';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { X } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -70,11 +71,9 @@ export function ExperienceEditor({
         log.happenedOn <= form.happenedOn,
     )
     .sort((a, b) => b.happenedOn.localeCompare(a.happenedOn) || b.createdAt - a.createdAt)[0];
+  useModalDialog(dialog);
   useEffect(() => {
-    const node = dialog.current;
-    node?.showModal();
     (nameInput.current ?? savedName.current)?.focus();
-    return () => node?.close();
   }, []);
   const save = useMutation({
     mutationFn: () => {

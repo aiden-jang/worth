@@ -11,6 +11,7 @@ import { useViewPreference } from '../hooks/useViewPreference';
 import type { Log, WorkoutSession } from '../shared/models';
 import { formatActivityMetric } from '../shared/workouts';
 import { ActivityEditor } from './ActivityEditor';
+import { RecordDetails } from './RecordDetails';
 import { ActivityIllustration } from './ActivityIllustration';
 import { CabinetEmptyState } from './CabinetEmptyState';
 import { ExerciseDirectory, ExerciseHistory } from './ExerciseHistory';
@@ -46,6 +47,7 @@ export function ActivityView({
   const startWorkout = useRef<HTMLButtonElement>(null);
   const workoutsQuery = useQuery({ queryKey: ['workouts', listId], queryFn: () => api.workouts(listId) });
   const workouts = workoutsQuery.data?.workouts ?? [];
+  const hasActiveWorkout = workouts.some((workout) => workout.status === 'active');
   const noWorkoutDataError = workoutsQuery.isError && !workoutsQuery.data;
   const [historyTitle, setHistoryTitle] = useState<string | null>(null);
   const [editingAliases, setEditingAliases] = useState(false);
@@ -57,6 +59,7 @@ export function ActivityView({
     initialWorkout ?? workouts.find((workout) => workout.id === routeParams.get('workout')) ?? null;
   const restoredExercise = initialExercise || routeParams.get('exercise') || '';
   const [selected, setSelected] = useState<Log | null>(null);
+  const [reading, setReading] = useState(routeParams.get('view') === '1');
   const [repeatLog, setRepeatLog] = useState<Log | null>(null);
   const [query, setQuery] = useViewPreference(`activity:${listId}:query`, '');
   const [sort, setSort] = useViewPreference<'newest' | 'oldest' | 'name'>(
@@ -114,14 +117,17 @@ export function ActivityView({
     setRepeatLog(null);
     setInitialWorkout(null);
     setInitialExercise('');
-    if (newOpen) onCloseNew();
+    if (newOpen || focusLogId) onCloseNew();
   }
 
   useEffect(() => {
     if (!focusLogId) return;
     const log = logs.find((entry) => entry.id === focusLogId);
-    if (log) setSelected(log);
-  }, [focusLogId, logs]);
+    if (log) {
+      setSelected(log);
+      setReading(routeParams.get('view') === '1');
+    }
+  }, [focusLogId, logs, routeParams]);
 
   useEffect(() => {
     const openNewLog = (event: KeyboardEvent) => {
@@ -166,7 +172,7 @@ export function ActivityView({
         <button
           ref={startWorkout}
           type="button"
-          className="button button-accent"
+          className={`button ${hasActiveWorkout ? 'button-outline' : 'button-accent'}`}
           disabled={workoutsQuery.isPending || noWorkoutDataError}
           onClick={() => setCreatingWorkout(true)}
         >
@@ -176,6 +182,13 @@ export function ActivityView({
           <Plus size={18} /> Add activity
         </button>
       </div>
+      {!logs.length && !workouts.length && !workoutsQuery.isPending && !noWorkoutDataError && (
+        <CabinetEmptyState
+          art={<ActivityIllustration />}
+          title="Nothing here yet."
+          description="Start a workout, or keep a single activity entry. Routines are optional."
+        />
+      )}
       {workoutsQuery.isError && workoutsQuery.data && (
         <p className="error-banner" role="alert">
           Couldn’t refresh workouts. Your saved view is still here.{' '}
@@ -303,7 +316,10 @@ export function ActivityView({
           query={query}
           periodStart={periodStart}
           sort={sort}
-          onOpen={setSelected}
+          onOpen={(log) => {
+            setReading(false);
+            setSelected(log);
+          }}
           onSaveRoutine={(workout, entries) => {
             const names = [
               ...(workout.plannedExercises ?? []),
@@ -330,28 +346,15 @@ export function ActivityView({
         />
       )}
       {ungrouped.length > 0 && workouts.length > 0 && <p className="activity-month">OTHER LOGS</p>}
-      {!visible.length && !workouts.length ? (
-        <CabinetEmptyState
-          art={!logs.length ? <ActivityIllustration /> : undefined}
-          title={logs.length ? 'Nothing matches.' : 'Nothing here yet.'}
-          description={
-            logs.length
-              ? 'Try another search.'
-              : 'Start a workout, or keep a single activity entry. Routines are optional.'
-          }
-        >
-          {!logs.length && (
-            <button className="button button-dark" onClick={() => onNew()}>
-              <Plus size={17} /> Add first log
-            </button>
-          )}
-          {logs.length > 0 && hasFilters && (
+      {!visible.length && !workouts.length && logs.length > 0 ? (
+        <CabinetEmptyState title="Nothing matches." description="Try another search.">
+          {hasFilters && (
             <button className="button button-outline" type="button" onClick={clearFilters}>
               Clear filters
             </button>
           )}
         </CabinetEmptyState>
-      ) : (
+      ) : ungrouped.length > 0 ? (
         <div className="activity-rows">
           {ungrouped.map((log, index) => {
             const previous = ungrouped[index - 1];
@@ -361,12 +364,18 @@ export function ActivityView({
             return (
               <Fragment key={log.id}>
                 {showMonth && <p className="activity-month">{month}</p>}
-                <article className="activity-row">
+                <article className="activity-row" data-log-id={log.id}>
                   <span className="activity-date">
                     {formatElapsedDays(log.happenedOn)}
                     <small>{formatDate(log.happenedOn)}</small>
                   </span>
-                  <button className="activity-main" onClick={() => setSelected(log)}>
+                  <button
+                    className="activity-main"
+                    onClick={() => {
+                      setReading(true);
+                      setSelected(log);
+                    }}
+                  >
                     <strong>{log.title}</strong>
                     <small>{formatActivityMetric(log) || log.note || 'View detail'}</small>
                   </button>
@@ -389,7 +398,7 @@ export function ActivityView({
             );
           })}
         </div>
-      )}
+      ) : null}
       {historyTitle && (
         <ExerciseHistory
           aliases={aliases.groups}
@@ -401,30 +410,46 @@ export function ActivityView({
           onClose={() => setHistoryTitle(null)}
         />
       )}
-      {(newOpen || selected) && (!routeParams.get('workout') || !workoutsQuery.isPending) && (
-        <ActivityEditor
-          aliases={aliases.groups}
-          key={selected?.id ?? `new-${repeatLog?.id ?? restoredWorkout?.id ?? 'blank'}-${restoredExercise}`}
-          listId={listId}
-          log={newOpen ? null : selected}
-          repeatLog={repeatLog}
-          existingTitles={logs.map((entry) => entry.title)}
-          logs={logs}
-          workouts={
-            initialWorkout && !workouts.some((workout) => workout.id === initialWorkout.id)
-              ? [initialWorkout, ...workouts]
-              : workouts
-          }
-          initialWorkout={restoredWorkout}
-          initialExercise={restoredExercise}
-          workoutsLoading={workoutsQuery.isPending || workoutsQuery.isError}
+      {selected && reading && !newOpen ? (
+        <RecordDetails
+          key={selected.id}
+          record={{ kind: 'log', log: selected }}
+          listName={listName}
           onClose={close}
-          onNext={(workout, title) => {
-            setInitialWorkout(workout);
-            setInitialExercise(title);
-            onNew(workout.id, title);
+          onEdit={() => {
+            setReading(false);
+            const next = new URLSearchParams(routeParams);
+            next.delete('view');
+            setRouteParams(next, { replace: true });
           }}
         />
+      ) : (
+        (newOpen || selected) &&
+        (!routeParams.get('workout') || !workoutsQuery.isPending) && (
+          <ActivityEditor
+            aliases={aliases.groups}
+            key={selected?.id ?? `new-${repeatLog?.id ?? restoredWorkout?.id ?? 'blank'}-${restoredExercise}`}
+            listId={listId}
+            log={newOpen ? null : selected}
+            repeatLog={repeatLog}
+            existingTitles={logs.map((entry) => entry.title)}
+            logs={logs}
+            workouts={
+              initialWorkout && !workouts.some((workout) => workout.id === initialWorkout.id)
+                ? [initialWorkout, ...workouts]
+                : workouts
+            }
+            initialWorkout={restoredWorkout}
+            initialExercise={restoredExercise}
+            workoutsLoading={workoutsQuery.isPending || workoutsQuery.isError}
+            onClose={close}
+            onNext={(workout, title) => {
+              setInitialWorkout(workout);
+              setInitialExercise(title);
+              onNew(workout.id, title);
+            }}
+          />
+        )
       )}
       {editingAliases && (
         <ExerciseAliasesEditor listId={listId} current={aliases} onClose={() => setEditingAliases(false)} />
