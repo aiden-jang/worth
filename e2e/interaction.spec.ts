@@ -1,4 +1,4 @@
-import { collectionOptions } from './navigation';
+import { collectionOptions, editItem } from './navigation';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 
@@ -44,13 +44,18 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await page.goto(`/lists/${list.id}`);
   await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   const slip = page.getByRole('region', { name: 'Your call for Coffee' }).filter({ visible: true });
-  await slip.getByRole('button', { name: 'Favorite' }).click();
-  await expect(slip.getByText('Undecided.', { exact: true })).toBeVisible();
+  await expect(slip.getByRole('button', { name: 'Favorite' })).toHaveCount(0);
+  expect(archive.writes).toEqual([]);
+  await editItem(page, 'Coffee');
+  const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });
+  await editor.getByRole('button', { name: 'Favorite', exact: true }).click();
+  await expect(editor.getByText('Undecided.', { exact: true })).toBeVisible();
+  expect(archive.items[0].decision).toBe('favorite');
+  await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(editor.getByText('Saved.', { exact: true })).toBeVisible();
   expect(archive.items[0].decision).toBeNull();
   expect(archive.list.rankedIds).toEqual(['coffee']);
-  await slip.getByRole('button', { name: 'Edit' }).click();
-  await expect(page.getByRole('dialog', { name: 'Coffee', exact: true })).toBeVisible();
-  await page.locator('.item-editor-dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
   await collectionOptions(page);
   await page.getByRole('link', { name: 'Show list' }).click();
   await expect(page.getByRole('group', { name: 'How many rankings to show' })).toBeVisible();

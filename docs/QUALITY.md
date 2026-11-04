@@ -72,7 +72,8 @@ Use a local synthetic account for the following pass:
 1. Open the signed-out landing. Try a name and a call in its labeled example;
    confirm it does not save private records. Open Help and the policy links.
 2. Enter an empty archive. Create a list and capture only a name. Add another
-   immediately, clear a call, rank independently, and find the record again.
+   immediately, preview it without writes, then use Edit to clear and save a call.
+   Rank independently from the row options, and find the record again.
 3. Search and open a result. Return with Back, open/close navigation with a
    keyboard, and check that the browser tab identifies the destination.
 4. Edit a note, cancel a destructive confirmation, then try again. Simulate a

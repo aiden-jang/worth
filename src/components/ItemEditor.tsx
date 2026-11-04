@@ -91,9 +91,27 @@ export function ItemEditor({
 
   useEffect(() => {
     const node = dialog.current;
+    const itemId = item?.id;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     node?.showModal();
-    return () => node?.close();
-  }, []);
+    return () => {
+      node?.close();
+      // Nested confirmations restore focus during cleanup, after the editor has closed.
+      window.setTimeout(() => {
+        if (node?.open || document.querySelector('dialog[open]')) return;
+        const row = itemId
+          ? [...document.querySelectorAll<HTMLElement>('.collection-index-row')].find(
+              (entry) => entry.dataset.itemId === itemId,
+            )
+          : null;
+        const target =
+          opener?.isConnected && opener !== document.body
+            ? opener
+            : row?.querySelector<HTMLElement>(':scope > button');
+        target?.focus({ preventScroll: true });
+      }, 0);
+    };
+  }, [item?.id]);
   useEffect(() => {
     const nextForm = item ? fromItem(item) : emptyItem;
     if (previousItemId.current !== item?.id) {

@@ -14,7 +14,6 @@ import {
   collectionItemTitleLimit,
 } from '../shared/collection-capture';
 import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
-import { decisionLabel } from '../shared/decisions';
 import type { Item, ListDetail } from '../shared/models';
 import {
   moveRank,
@@ -24,7 +23,7 @@ import {
   type RankFilter,
 } from '../shared/ranking';
 import { BlankSlips } from './BlankSlips';
-import { IndexRows, ItemActions } from './CollectionIndex';
+import { IndexRows, ItemPreview } from './CollectionIndex';
 import { CollectionTools } from './CollectionTools';
 import { ItemSheet } from './ItemSheet';
 import { SavedViews } from './SavedViews';
@@ -122,10 +121,10 @@ export function CollectionView({
   const [status, setStatus] = useState('');
   const [filing, setFiling] = useState({ sequence: 0, count: 0, message: '' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [phone, setPhone] = useState(() => matchMedia('(max-width: 680px)').matches);
+  const [previewInSheet, setPreviewInSheet] = useState(() => matchMedia('(max-width: 960px)').matches);
   useEffect(() => {
-    const media = matchMedia('(max-width: 680px)');
-    const change = () => setPhone(media.matches);
+    const media = matchMedia('(max-width: 960px)');
+    const change = () => setPreviewInSheet(media.matches);
     media.addEventListener('change', change);
     return () => media.removeEventListener('change', change);
   }, []);
@@ -257,34 +256,39 @@ export function CollectionView({
     },
   });
 
-  const decide = useMutation({
-    mutationFn: ({ item, decision }: { item: Item; decision: Item['decision'] }) =>
-      api.updateItem(item.id, { decision }),
-    onSuccess: ({ item }) => {
-      setStatus(
-        item.decision ? `${item.title}: ${decisionLabel(item.decision)}.` : `${item.title}: no call yet.`,
-      );
-      void client.invalidateQueries({ queryKey: ['items', list.id] });
-      void client.invalidateQueries({ queryKey: ['list', list.id] });
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-      void client.invalidateQueries({ queryKey: ['patterns'] });
-    },
-  });
-
   const rank = useMutation({
     mutationFn: ({ item, position }: { item: Item; position: number | null }) =>
       api.rank(list.id, moveRank(list.rankedIds, item.id, position), list.rankRevision),
+    onMutate: () => ({
+      opener: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    }),
     onSuccess: ({ list: next }) => {
       setStatus('Ranking saved.');
       client.setQueryData(['list', list.id], { list: next });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
-    onError: (error) => {
+    onError: async (error) => {
       if (error instanceof RequestError && error.status === 409) {
         setStatus('The ranking changed in another tab, so the latest order has been restored.');
-        void client.invalidateQueries({ queryKey: ['list', list.id] });
+        await client.invalidateQueries({ queryKey: ['list', list.id] });
       }
+    },
+    onSettled: (_data, _error, { item }, context) => {
+      if (context?.opener?.closest<HTMLElement>('.collection-index-row')?.dataset.itemId !== item.id) return;
+      requestAnimationFrame(() => {
+        if (
+          document.querySelector('dialog[open]') ||
+          (document.activeElement !== document.body && document.activeElement !== context.opener)
+        )
+          return;
+        const row = [...document.querySelectorAll<HTMLElement>('.collection-index-row')].find(
+          (node) => node.dataset.itemId === item.id,
+        );
+        const target = row?.querySelector<HTMLElement>('.collection-row-options > summary');
+        target?.focus({ preventScroll: true });
+        // A keyed row can retain focus while moving outside the viewport.
+        target?.scrollIntoView({ block: 'center' });
+      });
     },
   });
 
@@ -363,11 +367,17 @@ export function CollectionView({
   const unranked = visible.filter((item) => !rankedIds.has(item.id));
   const rankedWindow = useListWindow(
     windowScope,
-    ranked.findIndex((item) => item.id === selectedId),
+    Math.max(
+      ranked.findIndex((item) => item.id === selectedId),
+      ranked.findIndex((item) => item.id === rank.variables?.item.id),
+    ),
   );
   const unrankedWindow = useListWindow(
     windowScope,
-    unranked.findIndex((item) => item.id === selectedId),
+    Math.max(
+      unranked.findIndex((item) => item.id === selectedId),
+      unranked.findIndex((item) => item.id === rank.variables?.item.id),
+    ),
   );
   const shownRanked = ranked.slice(0, rankedWindow.count);
   const shownUnranked = unranked.slice(0, unrankedWindow.count);
@@ -433,11 +443,6 @@ export function CollectionView({
       setSelectedId(null);
       onLogRevisit(id);
     },
-    onDecide: (item: Item, decision: Item['decision']) => {
-      setStatus('');
-      decide.mutate({ item, decision });
-    },
-    decisionPending: decide.isPending,
     onRank: (item: Item, position: number | null) => {
       setStatus('');
       rank.mutate({ item, position });
@@ -530,10 +535,9 @@ export function CollectionView({
           )}
           {(want.isError ||
             queue.isError ||
-            decide.isError ||
             (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
             <p className="form-error collection-capture-error" role="alert">
-              {want.error?.message ?? queue.error?.message ?? decide.error?.message ?? rank.error?.message}
+              {want.error?.message ?? queue.error?.message ?? rank.error?.message}
             </p>
           )}
           {status && (
@@ -875,7 +879,7 @@ export function CollectionView({
                       ranks={ranks}
                       selectedId={selectedId}
                       onSelect={setSelectedId}
-                      sheet={phone}
+                      sheet={previewInSheet}
                       {...rowActions}
                     />
                   )}
@@ -890,7 +894,7 @@ export function CollectionView({
                         ranks={ranks}
                         selectedId={selectedId}
                         onSelect={setSelectedId}
-                        sheet={phone}
+                        sheet={previewInSheet}
                         {...rowActions}
                       />
                     </section>
@@ -901,12 +905,12 @@ export function CollectionView({
           </div>
         </div>
         {selectedItem &&
-          (phone ? (
+          (previewInSheet ? (
             <ItemSheet title={selectedItem.title} onClose={() => setSelectedId(null)}>
-              <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+              <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} sheet {...rowActions} />
             </ItemSheet>
           ) : (
-            <ItemActions item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+            <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
           ))}
       </div>
     </section>

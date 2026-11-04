@@ -80,9 +80,12 @@ Once visible, the controls stay open for the directory visit.
 
 Collections open with name capture, a browse selector, search and Filter. A
 name-only save returns input focus without opening details. Selecting a record
-shows its actual call in the desktop slip or a native phone sheet, leaving other
-rows in place. Add experience and Edit stay visible. More options holds rank,
-notes, Want to try and revisit queue actions.
+shows its actual call in the desktop slip or a native sheet at widths up to 960px, leaving other
+rows in place. The preview is read-only: it has no reaction choices or Unranked
+badge. Each row has Edit and an options menu for Add experience, rank, notes,
+Want to try and revisit queue actions. Preview sheets also offer Edit and Add
+experience. Calls change in the editor only after Save; closing an unchanged
+preview writes nothing.
 
 **Collection options** contains sharing, presentation, settings and **Ranking &
 tools** (the existing Workbench). **Entry options** contains batch capture, Want

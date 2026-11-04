@@ -111,8 +111,9 @@ test('collection capture stays compact and item selection does not push other en
   const slip = phone
     ? page.getByRole('dialog', { name: 'Saved item: Coffee' })
     : page.locator('.cabinet-collection-body > .opinion-slip');
-  await slip.getByRole('button', { name: 'Meh', exact: true }).click();
-  await expect.poll(() => archive.items[0].decision).toBe('meh');
+  await expect(slip.getByRole('button', { name: 'Meh', exact: true })).toHaveCount(0);
+  await expect(slip.getByText('Favorite.', { exact: true })).toBeVisible();
+  expect(archive.writes).toEqual([]);
   await capture(page, 'item', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.keyboard.press('Escape');

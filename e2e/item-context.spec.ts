@@ -2,16 +2,11 @@ import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
-import { closeItemSheet } from './navigation';
+import { closeItemSheet, editItem } from './navigation';
 
 async function details(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
-  await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
-  await page
-    .getByRole('region', { name: 'Your call for Coffee' })
-    .filter({ visible: true })
-    .getByRole('button', { name: 'Edit', exact: true })
-    .click();
+  await editItem(page, 'Coffee');
   await page.locator('.item-context > summary').click();
 }
 

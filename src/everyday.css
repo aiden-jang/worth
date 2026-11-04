@@ -448,6 +448,48 @@
 .everyday-shell .collection-index-row strong {
   font-size: 22px;
 }
+.collection-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.collection-index-row .collection-row-edit {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+}
+.collection-index-row .collection-row-edit:hover {
+  color: var(--paper);
+  background: var(--raised);
+}
+.collection-row-options .collection-rank-disclosure {
+  padding: 8px 12px;
+}
+.collection-row-options .collection-rank-disclosure > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+.collection-row-options .collection-rank-placement {
+  display: grid;
+  gap: 8px;
+  padding-block: 8px;
+  font-size: 14px;
+}
+.collection-row-options .collection-rank-placement select {
+  width: 100%;
+  min-height: 44px;
+}
+.collection-row-options button[aria-pressed='true'] {
+  background: var(--raised);
+  color: var(--acid);
+}
 .everyday-shell .opinion-slip {
   padding: 24px;
 }
@@ -470,30 +512,6 @@
 }
 .collection-tray-actions > button {
   min-height: 44px;
-}
-.item-more {
-  margin-top: 12px;
-  border-top: 1px solid #c4c2b3;
-}
-.item-more > summary {
-  cursor: pointer;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-}
-.item-more > button {
-  min-height: 44px;
-  display: block;
-  width: 100%;
-  padding: 10px 0;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  color: #24251e;
-}
-.item-more .collection-rank-disclosure {
-  padding-block: 10px;
 }
 .item-sheet {
   width: calc(100% - 24px);
@@ -820,9 +838,6 @@
 }
 @media (max-width: 960px) {
   .home-columns {
-    grid-template-columns: 1fr;
-  }
-  .everyday-shell .cabinet-collection-body:has(> .opinion-slip) {
     grid-template-columns: 1fr;
   }
   .home-browse {

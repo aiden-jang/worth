@@ -83,9 +83,14 @@ column. Phones use 96px artwork, 14px padding/gaps and 21px names. At <=360px us
 A collection has compact identity, name capture and one browse/search/filter row.
 Settings, sharing and Ranking & tools are contextual; Entry options holds batch,
 Want to try, experiences, selection and saved views. Name-only saves return input
-focus without opening details. Desktop selection uses a cream side slip; phones
-use a native scrolling sheet without moving list rows. Add experience and Edit
-lead, with ranking, notes and queues disclosed. Unranked items remain accessible.
+focus without opening details. Wide desktop selection uses a cream side slip;
+widths up to 960px use a native scrolling sheet without moving list rows or
+placing the preview below a long collection. These previews deliberately
+show saved information only: no reaction buttons, Unranked badge or options stack.
+Each row has an always-visible quiet Edit action and an options menu for Add
+experience, ranking, notes and queues. Preview sheets retain Edit and Add experience
+as navigation to explicit editors. This separates browsing from changes while
+keeping existing tools reachable. Unranked items remain accessible.
 
 Item editors use a compact cream call card: the character sits beside its call and
 caption, followed by the same three choices. The editor deliberately omits repeated

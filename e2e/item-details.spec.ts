@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
-import { closeItemSheet, entryOptions } from './navigation';
+import { closeItemSheet, editItem, entryOptions } from './navigation';
 
 test('optional product details recover drafts, preserve free purchases, and remain searchable and filterable', async ({
   page,
@@ -67,7 +67,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
       path: process.env.WORTH_ITEM_DETAILS_QA + '/selected-' + info.project.name + '.png',
       animations: 'disabled',
     });
-  await slip.getByRole('button', { name: 'Edit', exact: true }).click();
+  await editItem(page, 'Daily lotion');
   const editor = page.getByRole('dialog', { name: 'Daily lotion', exact: true });
   await expect(editor.getByLabel('Brand or maker', { exact: true })).toHaveValue('Harbor');
   await expect(editor.getByLabel('Size', { exact: true })).toHaveValue('50 ml');

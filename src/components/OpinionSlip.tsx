@@ -22,11 +22,11 @@ export function OpinionSlip({
   type: string;
   rank?: number;
   decision: ItemDecision | null;
-  onChange: (decision: ItemDecision | null) => void;
+  onChange?: (decision: ItemDecision | null) => void;
   disabled?: boolean;
   example?: boolean;
   className?: string;
-  presentation?: 'display' | 'editor';
+  presentation?: 'display' | 'editor' | 'preview';
   children?: ReactNode;
 }) {
   const Heading = headingLevel;
@@ -35,9 +35,10 @@ export function OpinionSlip({
       <div className="opinion-slip-top">
         <p className="overline">YOUR CALL{example ? ' / EXAMPLE' : ''}</p>
         {presentation === 'display' && <span>{rank ? String(rank).padStart(2, '0') : 'UNRANKED'}</span>}
+        {presentation === 'preview' && rank && <span>#{String(rank).padStart(2, '0')}</span>}
       </div>
-      {presentation === 'display' && <Heading className="opinion-slip-title">{title}</Heading>}
-      {presentation === 'display' && type && <p className="opinion-slip-type">{type}</p>}
+      {presentation !== 'editor' && <Heading className="opinion-slip-title">{title}</Heading>}
+      {presentation !== 'editor' && type && <p className="opinion-slip-type">{type}</p>}
       <div className="opinion-slip-verdict" aria-live="polite">
         {decision ? (
           <CallFace key={decision} value={decision} arms />
@@ -47,12 +48,14 @@ export function OpinionSlip({
         <strong>{decision ? `${decisionLabel(decision)}.` : 'Undecided.'}</strong>
         <span>{decision ? callAsides[decision] : 'No opinion required.'}</span>
       </div>
-      <CallChoices
-        value={decision}
-        onChange={onChange}
-        disabled={disabled}
-        label={`Your call for ${title}`}
-      />
+      {presentation !== 'preview' && onChange && (
+        <CallChoices
+          value={decision}
+          onChange={onChange}
+          disabled={disabled}
+          label={`Your call for ${title}`}
+        />
+      )}
       {children}
     </section>
   );

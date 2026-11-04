@@ -437,8 +437,7 @@
   padding-top: 18px;
   border-top: 1px solid #cbc9b8;
 }
-.opinion-slip .collection-tray-actions button,
-.opinion-slip .collection-rank-disclosure > summary {
+.opinion-slip .collection-tray-actions button {
   color: var(--ink);
   font-size: 12px;
   min-height: 34px;
@@ -449,34 +448,6 @@
 }
 .opinion-slip .collection-open-details {
   margin-left: auto;
-}
-.opinion-slip .collection-rank-disclosure[open] {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  position: static;
-}
-.opinion-slip .collection-rank-disclosure {
-  border: 0;
-  position: relative;
-  flex: none;
-}
-.opinion-slip .collection-rank-disclosure > summary {
-  display: flex;
-  align-items: center;
-  list-style: none;
-}
-.opinion-slip .collection-rank-disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-.opinion-slip .collection-rank-placement {
-  color: var(--ink);
-  padding: 6px 0;
-}
-.opinion-slip .collection-rank-placement select {
-  color: var(--ink);
-  background: var(--slip);
-  border: 1px solid transparent;
 }
 /* Collection: a single working list and one selected item. */
 .collection-list-page {
@@ -658,7 +629,7 @@
   background: var(--raised);
   box-shadow: none;
   border-radius: var(--radius-control);
-  padding-left: 12px;
+  padding-left: 0;
   border-left: 0;
 }
 .collection-index-rows li.selected .call-badge {
@@ -669,6 +640,7 @@
 }
 .collection-index-rows li:hover .collection-index-row {
   background: var(--panel);
+  padding-inline: 0 12px;
 }
 .collection-index-row .call-badge {
   font-size: 11px;
@@ -1002,8 +974,7 @@
   .opinion-slip .call-choices button {
     min-height: 44px;
   }
-  .opinion-slip .collection-tray-actions button,
-  .opinion-slip .collection-rank-disclosure > summary {
+  .opinion-slip .collection-tray-actions button {
     min-height: 44px;
   }
   .cabinet-landing {

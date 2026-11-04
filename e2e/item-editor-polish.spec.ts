@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, list, test } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
+import { editItem } from './navigation';
 
 test('item editing separates calls from ranking and keeps saving visible', async ({
   page,
@@ -17,12 +18,7 @@ test('item editing separates calls from ranking and keeps saving visible', async
     context: { ...structuredClone(emptyItemContext), fields: [{ name: 'Brand', value: 'Blue Moon' }] },
   };
   await page.goto('/lists/' + list.id);
-  await page.locator('.collection-index-row button').filter({ hasText: 'Light Citrus Wheat' }).click();
-  await page
-    .getByRole('region', { name: 'Your call for Light Citrus Wheat' })
-    .filter({ visible: true })
-    .getByRole('button', { name: 'Edit', exact: true })
-    .click();
+  await editItem(page, 'Light Citrus Wheat');
   const editor = page.getByRole('dialog', { name: 'Light Citrus Wheat', exact: true });
   const call = editor.getByRole('region', { name: 'Your call for Light Citrus Wheat' });
   const save = editor.getByRole('button', { name: 'Save changes', exact: true });
@@ -77,6 +73,10 @@ test('item editing separates calls from ranking and keeps saving visible', async
   const name = editor.getByRole('textbox', { name: 'Name', exact: true });
   await name.fill('Light Citrus Wheat revisit');
   await name.press('Enter');
-  await expect(editor.getByText('Saved.', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Light Citrus Wheat revisit', exact: true })
+      .getByText('Saved.', { exact: true }),
+  ).toBeVisible();
   expect(archive.items[0].title).toBe('Light Citrus Wheat revisit');
 });

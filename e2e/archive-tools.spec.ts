@@ -1,4 +1,4 @@
-import { entryOptions } from './navigation';
+import { editItem, entryOptions } from './navigation';
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, list } from './fixtures';
 
@@ -43,12 +43,7 @@ test('merge previews, retries and separation preserve original private notes', a
   await dialog.getByRole('button', { name: 'Merge items', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Tea Drink', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
-  await page
-    .getByRole('region', { name: 'Your call for Coffee' })
-    .filter({ visible: true })
-    .getByRole('button', { name: 'Edit' })
-    .click();
+  await editItem(page, 'Coffee');
   const originals = page.getByRole('region', { name: 'Merged originals' });
   await expect(originals.getByText('Original tea note')).toBeVisible();
   await originals.scrollIntoViewIfNeeded();

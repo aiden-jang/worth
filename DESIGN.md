@@ -61,9 +61,14 @@ headings; one kind does not repeat the page title.
 A collection opens with identity, name capture and one browse/search/filter row.
 Settings, sharing and Ranking & tools are contextual. Entry options discloses
 batch capture, Want to try, experiences, selection and saved views. Unranked items
-remain accessible. Desktop selection uses a cream opinion slip; phone selection
-uses a native scrolling sheet with focus return and stable list positions.
-Add experience and Edit lead; ranking, notes and queues disclose.
+remain accessible. Wide desktop selection uses a cream side slip; widths up to
+960px use a native scrolling sheet with focus return and stable list positions.
+The preview stays reachable without scrolling past the collection's rows.
+The selected slip is read-only: it shows the saved call, character and filled
+details without reaction buttons or an Unranked badge. Each row has a quiet Edit
+action and an options menu for Add experience, rank, notes and queues. Preview sheets
+retain Edit and Add experience as navigation to explicit editors. Browsing never
+changes a call; the item editor saves its changes explicitly.
 
 Private uploaded covers take precedence over optional built-in artwork. Automatic
 art uses exact starter-name matching or a monogram; explicit saved object/palette
@@ -137,9 +142,10 @@ Source/review tools pair dark input with cream reviewed output; phones stack the
 Original photos keep their aspect ratio and keyboard alternatives to manipulation.
 
 Core capture, item, Unfiled, experience and workout dialogs keep their primary save
-reachable on phones and compact touch screens. The footer stays inside its form,
-shows retry errors, and leaves room for focused controls. Dialogs follow the visible
-viewport when a keyboard reduces it; desktop actions keep their normal flow.
+reachable on phones and compact touch screens. Save actions remain associated with
+their form, show retry errors, and leave room for focused controls. Dialogs follow
+the visible viewport when a keyboard reduces it. The item editor also keeps its Save
+footer visible on desktop; other desktop actions retain their normal flow.
 
 Settings leads with downloads and restore, followed by recovery and device cleanup.
 Excel and JSON scope, backup limits, restore preview and deletion consequences stay

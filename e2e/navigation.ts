@@ -5,6 +5,11 @@ export async function closeItemSheet(page: Page) {
   if (await close.isVisible()) await close.click();
 }
 
+export async function editItem(page: Page, title: string) {
+  await closeItemSheet(page);
+  await page.getByRole('button', { name: `Edit ${title}`, exact: true }).click();
+}
+
 export async function collectionOptions(page: Page) {
   await closeItemSheet(page);
   const summary = page.getByLabel('Collection options', { exact: true });

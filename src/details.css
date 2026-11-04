@@ -1683,23 +1683,6 @@
   background: #20211c;
 }
 
-.collection-queue-action {
-  display: block;
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  margin: 20px 0 0;
-  border: 1px solid #c8c3b3;
-  border-radius: 12px;
-  background: transparent;
-  color: #181915;
-  font: inherit;
-  font-size: 12px;
-  text-align: left;
-}
-.collection-queue-action[aria-pressed='true'] {
-  background: #ddd8c7;
-}
 @media (max-width: 680px) {
   .workout-exercises .planned-row > button:first-child {
     align-items: flex-start;

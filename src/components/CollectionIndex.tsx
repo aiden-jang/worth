@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight } from '@phosphor-icons/react';
 import type { Item } from '../shared/models';
 import { OpinionSlip } from './OpinionSlip';
@@ -21,8 +21,6 @@ type IndexProps = {
   onOpenDetails: (id: string) => void;
   onAddNote: (id: string) => void;
   onLogRevisit: (id: string) => void;
-  onDecide: (item: Item, decision: Item['decision']) => void;
-  decisionPending: boolean;
   onRank: (item: Item, position: number | null) => void;
   rankPending: boolean;
 };
@@ -37,6 +35,7 @@ export function IndexRows({
   scope,
   total,
   onMore,
+  ...actions
 }: IndexProps & { scope: string; total: number; onMore: () => void }) {
   const rows = useRef<HTMLOListElement>(null);
   const count = items.length;
@@ -49,7 +48,7 @@ export function IndexRows({
           const selected = selectedId === item.id;
           return (
             <li className={selected ? 'selected' : ''} key={item.id}>
-              <div className="collection-index-row">
+              <div className="collection-index-row" data-item-id={item.id}>
                 {selection && (
                   <label className="collection-select">
                     <input
@@ -75,7 +74,22 @@ export function IndexRows({
                   {itemIdentity(item) && <small className="item-brand">{itemIdentity(item)}</small>}
                   {item.wantToTry && <small className="want-label">Want to try</small>}
                 </button>
-                {item.decision && <CallBadge value={item.decision} />}
+                <div className="collection-row-actions">
+                  {item.decision && <CallBadge value={item.decision} />}
+                  {!selection && (
+                    <>
+                      <button
+                        type="button"
+                        className="collection-row-edit"
+                        aria-label={`Edit ${item.title}`}
+                        onClick={() => actions.onOpenDetails(item.id)}
+                      >
+                        Edit
+                      </button>
+                      <ItemRowOptions item={item} rank={rank} {...actions} />
+                    </>
+                  )}
+                </div>
               </div>
             </li>
           );
@@ -112,7 +126,7 @@ export function IndexRows({
   );
 }
 
-export function ItemActions({
+function ItemRowOptions({
   onWant,
   wantPending,
   onQueue,
@@ -120,89 +134,165 @@ export function ItemActions({
   item,
   rank,
   rankSlots,
-  onOpenDetails,
   onAddNote,
   onLogRevisit,
-  onDecide,
-  decisionPending,
   onRank,
   rankPending,
-  className = '',
 }: Omit<IndexProps, 'items' | 'ranks' | 'selectedId' | 'onSelect'> & {
   item: Item;
   rank?: number;
-  className?: string;
 }) {
+  const menu = useRef<HTMLDetailsElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  useLayoutEffect(() => {
+    const trigger = menu.current;
+    const content = panel.current;
+    if (!open || !trigger || !content) return;
+    const position = () => {
+      if (window.innerWidth <= 680) {
+        for (const property of ['top', 'bottom', 'max-height']) content.style.removeProperty(property);
+        return;
+      }
+      const box = trigger.getBoundingClientRect();
+      const below = Math.max(0, window.innerHeight - box.bottom - 20);
+      const above = Math.max(0, box.top - 20);
+      const upward = below < Math.min(480, content.scrollHeight) && above > below;
+      content.style.top = upward ? 'auto' : 'calc(100% + 8px)';
+      content.style.bottom = upward ? 'calc(100% + 8px)' : 'auto';
+      content.style.maxHeight = Math.min(480, upward ? above : below) + 'px';
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(content);
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+    };
+  }, [open]);
+  function closeMenu() {
+    if (!menu.current) return;
+    menu.current.open = false;
+    setOpen(false);
+    menu.current.querySelector('summary')?.focus();
+  }
+  return (
+    <details
+      ref={menu}
+      data-menu
+      className="entry-options collection-row-options"
+      onToggle={(event) => {
+        if (event.target === event.currentTarget) setOpen(event.currentTarget.open);
+      }}
+    >
+      <summary aria-label={`More options for ${item.title}`}>•••</summary>
+      {open && (
+        <div className="entry-options-panel" ref={panel}>
+          <button
+            type="button"
+            aria-label={`Add experience for ${item.title}`}
+            onClick={() => {
+              closeMenu();
+              onLogRevisit(item.id);
+            }}
+          >
+            Add experience
+          </button>
+          <details className="collection-rank-disclosure">
+            <summary aria-label={`Rank ${item.title}`}>Rank</summary>
+            <label className="collection-rank-placement">
+              <span>Place</span>
+              <select
+                aria-label={`Place ${item.title} in your ranking`}
+                value={rank ?? 'none'}
+                disabled={rankPending}
+                onChange={(event) => {
+                  closeMenu();
+                  onRank(item, event.target.value === 'none' ? null : Number(event.target.value));
+                }}
+              >
+                <option value="none">Unranked</option>
+                {Array.from({ length: rankSlots }, (_, index) => (
+                  <option key={index + 1} value={index + 1}>
+                    #{String(index + 1).padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </details>
+
+          <button
+            type="button"
+            aria-label={`Add note to ${item.title}`}
+            onClick={() => {
+              closeMenu();
+              onAddNote(item.id);
+            }}
+          >
+            Add note
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(item.wantToTry)}
+            disabled={wantPending}
+            onClick={() => {
+              closeMenu();
+              onWant(item);
+            }}
+          >
+            {item.wantToTry ? 'Want to try ✓' : 'Save to Want to try'}
+          </button>
+          <button
+            type="button"
+            aria-pressed={Boolean(item.revisitQueued)}
+            disabled={queuePending}
+            onClick={() => {
+              closeMenu();
+              onQueue(item);
+            }}
+          >
+            {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
+          </button>
+        </div>
+      )}
+    </details>
+  );
+}
+
+export function ItemPreview({
+  item,
+  rank,
+  sheet,
+  onOpenDetails,
+  onLogRevisit,
+}: Pick<IndexProps, 'sheet' | 'onOpenDetails' | 'onLogRevisit'> & { item: Item; rank?: number }) {
   return (
     <OpinionSlip
-      className={className}
+      presentation="preview"
       headingLevel="h2"
       title={item.title}
       type={item.type}
       rank={rank}
       decision={item.decision}
-      disabled={decisionPending}
-      onChange={(value) => onDecide(item, value)}
     >
       <ItemDetailsReadout item={item} />
-      <div className="collection-tray-actions">
-        <button
-          type="button"
-          aria-label={`Add experience for ${item.title}`}
-          onClick={() => onLogRevisit(item.id)}
-        >
-          Add experience
-        </button>
-        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
-          Edit <ArrowRight size={15} />
-        </button>
-      </div>
-      <details className="item-more">
-        <summary>More options</summary>
-        <details className="collection-rank-disclosure">
-          <summary aria-label={`Rank ${item.title}`}>Rank</summary>
-          <label className="collection-rank-placement">
-            <span>Place</span>
-            <select
-              aria-label={`Place ${item.title} in your ranking`}
-              value={rank ?? 'none'}
-              disabled={rankPending}
-              onChange={(event) =>
-                onRank(item, event.target.value === 'none' ? null : Number(event.target.value))
-              }
-            >
-              <option value="none">Unranked</option>
-              {Array.from({ length: rankSlots }, (_, index) => (
-                <option key={index + 1} value={index + 1}>
-                  #{String(index + 1).padStart(2, '0')}
-                </option>
-              ))}
-            </select>
-          </label>
-        </details>
-
-        <button type="button" aria-label={`Add a note to ${item.title}`} onClick={() => onAddNote(item.id)}>
-          Add note
-        </button>
-        <button
-          type="button"
-          className="collection-queue-action"
-          aria-pressed={Boolean(item.wantToTry)}
-          disabled={wantPending}
-          onClick={() => onWant(item)}
-        >
-          {item.wantToTry ? 'Want to try ✓' : 'Save to Want to try'}
-        </button>
-        <button
-          type="button"
-          aria-pressed={Boolean(item.revisitQueued)}
-          className="collection-queue-action"
-          disabled={queuePending}
-          onClick={() => onQueue(item)}
-        >
-          {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
-        </button>
-      </details>
+      {sheet && (
+        <div className="collection-tray-actions">
+          <button
+            type="button"
+            aria-label={`Add experience for ${item.title}`}
+            onClick={() => onLogRevisit(item.id)}
+          >
+            Add experience
+          </button>
+          <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
+            Edit <ArrowRight size={15} />
+          </button>
+        </div>
+      )}
     </OpinionSlip>
   );
 }
