@@ -1,7 +1,8 @@
+import { useListWindow } from '../hooks/useListWindow';
 import { DialogSaveFooter } from './DialogSaveFooter';
 import { ArrowRight, Plus, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, RequestError } from '../api';
 import { planEditorDraft, exerciseKey, targetSummary } from '../shared/activity-plans';
 import { RoutineTargetsEditor } from './RoutineTargetsEditor';
@@ -63,6 +64,7 @@ export function WorkoutSessions({
   const [pastOpen, setPastOpen] = useState(false);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const finishedHeading = useRef<HTMLHeadingElement>(null);
+  const pastDetails = useRef<HTMLDetailsElement>(null);
   const update = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.updateWorkout>[1] }) =>
       api.updateWorkout(id, {
@@ -83,6 +85,19 @@ export function WorkoutSessions({
     },
   });
   const [editing, setEditing] = useState<WorkoutSession | null>(null);
+  const entriesByWorkout = useMemo(() => {
+    const groups = new Map<string, Log[]>();
+    for (const log of logs)
+      if (log.workoutId) {
+        const entries = groups.get(log.workoutId) ?? [];
+        entries.push(log);
+        groups.set(log.workoutId, entries);
+      }
+    for (const entries of groups.values()) entries.sort((a, b) => a.createdAt - b.createdAt);
+    return groups;
+  }, [logs]);
+  const visibleLogIds = new Set(visibleLogs.map((log) => log.id));
+  const visibleWorkoutIds = new Set(visibleLogs.map((log) => log.workoutId));
   const filtered = workouts
     .filter(
       (workout) =>
@@ -90,7 +105,7 @@ export function WorkoutSessions({
         ((!periodStart || workout.happenedOn >= periodStart) &&
           (!query.trim() ||
             workout.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
-            visibleLogs.some((log) => log.workoutId === workout.id) ||
+            visibleWorkoutIds.has(workout.id) ||
             workout.plannedExercises?.some((name) =>
               name.toLowerCase().includes(query.trim().toLowerCase()),
             ))),
@@ -103,6 +118,11 @@ export function WorkoutSessions({
     );
   const active = filtered.filter((workout) => workout.status === 'active');
   const past = filtered.filter((workout) => workout.status !== 'active');
+  const pastScope = JSON.stringify([listId, query, periodStart, sort]);
+  const pastWindow = useListWindow(
+    pastScope,
+    past.findIndex((workout) => workout.id === reviewId),
+  );
   const finishedWorkout = workouts.find(
     (workout) => workout.id === finishedId && workout.status === 'finished',
   );
@@ -133,9 +153,7 @@ export function WorkoutSessions({
     return () => cancelAnimationFrame(frame);
   }, [reviewId, workouts, query, periodStart, sort, pastOpen]);
   function renderWorkout(workout: WorkoutSession) {
-    const entries = logs
-      .filter((log) => log.workoutId === workout.id)
-      .sort((a, b) => a.createdAt - b.createdAt);
+    const entries = entriesByWorkout.get(workout.id) ?? [];
     const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
     const pending = (workout.plannedExercises ?? []).filter(
       (name) =>
@@ -149,10 +167,7 @@ export function WorkoutSessions({
         workout.title.toLowerCase().includes(query.trim().toLowerCase()) ||
         name.toLowerCase().includes(query.trim().toLowerCase()),
     );
-    const shown =
-      workout.status === 'active'
-        ? entries
-        : entries.filter((log) => visibleLogs.some((entry) => entry.id === log.id));
+    const shown = workout.status === 'active' ? entries : entries.filter((log) => visibleLogIds.has(log.id));
     const { setCount: sets, reps } = recordedWorkoutTotals(entries);
     return (
       <article className="workout-card" key={workout.id}>
@@ -372,13 +387,43 @@ export function WorkoutSessions({
       {past.length > 0 && (
         <details
           className="past-workouts"
+          ref={pastDetails}
+          data-window={pastScope}
           open={pastOpen}
           onToggle={(event) => setPastOpen(event.currentTarget.open)}
         >
           <summary>
             Past workouts <span>{past.length}</span>
           </summary>
-          {past.map(renderWorkout)}
+          {pastOpen && (
+            <>
+              {past.slice(0, pastWindow.count).map(renderWorkout)}
+              {past.length > pastWindow.count && (
+                <div className="archive-paging">
+                  <p role="status">
+                    Showing {pastWindow.count} of {past.length} past workouts
+                  </p>
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => {
+                      const id = past[pastWindow.count]?.id;
+                      pastWindow.showMore();
+                      requestAnimationFrame(() => {
+                        if (pastDetails.current?.open && pastDetails.current.dataset.window === pastScope) {
+                          const target = document.getElementById(`workout-heading-${id}`);
+                          target?.focus({ preventScroll: true });
+                          target?.scrollIntoView({ block: 'center' });
+                        }
+                      });
+                    }}
+                  >
+                    Show more workouts
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </details>
       )}
       {(editing || creating) && (

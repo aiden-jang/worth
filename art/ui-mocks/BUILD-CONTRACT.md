@@ -87,6 +87,13 @@ focus without opening details. Desktop selection uses a cream side slip; phones
 use a native scrolling sheet without moving list rows. Add experience and Edit
 lead, with ranking, notes and queues disclosed. Unranked items remain accessible.
 
+Large collection sections and past workouts initially draw 50 rows/cards, with
+Show more to reveal the next 50. This deliberately extends the small reference
+examples to bound rendering as archives grow. Search, counts, ranking, progress
+and exports still use the full records. Select visible applies to drawn rows;
+newly revealed rows receive keyboard focus. Closed past-workout sections do not
+mount their cards, and reviewing a finished workout reveals its original row.
+
 Look back contains Memories and Insights. Keep search visible; disclose dates,
 list/archive filters, period shortcuts and specialized tools. Initially show
 three real preference groups and an explicit expansion, with recorded-call

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { receiptInput, emptyReceipt, receiptLineSuggestions, receiptDigest } from '../src/shared/receipts';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
 import { getPlatformProxy, type PlatformProxy } from 'wrangler';
 import app from '../worker/index';
@@ -240,6 +240,52 @@ test('a year-sized archive preserves records on restore and exposes older search
   expect(measured.results).toEqual([expect.objectContaining({ title: 'Bench breathing', exercise: true })]);
   expect(await (await call('/search?q=Cafe', 'largearchiveintruder')).json()).toMatchObject({ results: [] });
   expect((await call('/search?q=Cafe&offset=-1', owner)).status).toBe(400);
+});
+
+test('a busy collection and a year of workouts retain complete source data and bounded home results', async () => {
+  const owner = 'busyarchive';
+  const file = largeArchive({ itemCount: 1000, workoutCount: 156, oneCollection: true });
+  const restored = await planCreate('/import', owner, file);
+  expect(restored.status).toBe(201);
+  const overview = (await (await call('/overview', owner)).json()) as {
+    lists: ListSummary[];
+    recent: unknown[];
+  };
+  const places = overview.lists.find((list) => list.name === 'Places')!;
+  const gym = overview.lists.find((list) => list.kind === 'activity')!;
+  const timings: Record<string, number> = {};
+  async function measured(path: string) {
+    const start = performance.now();
+    const response = await call(path, owner);
+    expect(response.status).toBe(200);
+    const result = await response.json();
+    timings[path] = performance.now() - start;
+    return result;
+  }
+  expect(places.itemCount).toBe(1000);
+  expect(overview.recent.length).toBeLessThanOrEqual(12);
+  const items = (await measured(`/lists/${places.id}/items`)) as { items: Item[] };
+  expect(items.items).toHaveLength(1000);
+  expect(items.items.find((item) => item.title === 'Cafe by the old cinema')).toMatchObject({
+    logCount: 1,
+    decision: 'favorite',
+  });
+  const workouts = (await measured(`/lists/${gym.id}/workouts`)) as { workouts: WorkoutSession[] };
+  expect(workouts.workouts).toHaveLength(157);
+  const logs = (await measured(`/lists/${gym.id}/logs`)) as { logs: Log[] };
+  expect(logs.logs.filter((log) => log.title === 'Bench press')).toHaveLength(156);
+  const preferences = (await measured('/preferences')) as Preferences;
+  expect(
+    preferences.groups.find(
+      (group) => group.kind === 'collection' && group.listId === places.id && group.basis === 'records',
+    ),
+  ).toMatchObject({ favorite: 250, meh: 250, notAgain: 250, unrated: 250 });
+  const isolated = await call(`/lists/${places.id}/items`, 'busyarchiveother');
+  expect(isolated.status).toBe(404);
+  if (process.env.WORTH_BUSY_QA) {
+    await mkdir(process.env.WORTH_BUSY_QA, { recursive: true });
+    await writeFile(`${process.env.WORTH_BUSY_QA}/database.json`, JSON.stringify(timings, null, 2));
+  }
 });
 
 test('private context is owner scoped, safe to retry and preserved by merges, search and restore', async () => {

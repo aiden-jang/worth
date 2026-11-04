@@ -1992,3 +1992,15 @@ dialog::backdrop {
     animation-iteration-count: 1 !important;
   }
 }
+
+.archive-paging {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+.archive-paging p {
+  margin: 0;
+  color: var(--muted);
+}

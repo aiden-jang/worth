@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { ArrowRight } from '@phosphor-icons/react';
 import type { Item } from '../shared/models';
 import { OpinionSlip } from './OpinionSlip';
@@ -26,46 +27,88 @@ type IndexProps = {
   rankPending: boolean;
 };
 
-export function IndexRows({ items, ranks, selectedId, onSelect, selection, sheet }: IndexProps) {
+export function IndexRows({
+  items,
+  ranks,
+  selectedId,
+  onSelect,
+  selection,
+  sheet,
+  scope,
+  total,
+  onMore,
+}: IndexProps & { scope: string; total: number; onMore: () => void }) {
+  const rows = useRef<HTMLOListElement>(null);
+  const count = items.length;
+  const ranked = ranks.has(items[0]?.id ?? '');
   return (
-    <ol className="collection-index-rows">
-      {items.map((item) => {
-        const rank = ranks.get(item.id);
-        const selected = selectedId === item.id;
-        return (
-          <li className={selected ? 'selected' : ''} key={item.id}>
-            <div className="collection-index-row">
-              {selection && (
-                <label className="collection-select">
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${item.title}`}
-                    checked={selection.ids.has(item.id)}
-                    onChange={() => selection.toggle(item.id)}
-                  />
-                </label>
-              )}
-              <span className="collection-row-rank">{rank ? String(rank).padStart(2, '0') : '—'}</span>
-              <button
-                type="button"
-                aria-expanded={selected}
-                aria-haspopup={sheet ? 'dialog' : undefined}
-                onClick={(event) => {
-                  event.currentTarget.focus();
-                  onSelect(selected ? null : item.id);
-                }}
-              >
-                <strong>{item.title}</strong>
-                {item.type && <span>{item.type}</span>}
-                {itemIdentity(item) && <small className="item-brand">{itemIdentity(item)}</small>}
-                {item.wantToTry && <small className="want-label">Want to try</small>}
-              </button>
-              {item.decision && <CallBadge value={item.decision} />}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+    <>
+      <ol className="collection-index-rows" ref={rows} data-window={scope}>
+        {items.map((item) => {
+          const rank = ranks.get(item.id);
+          const selected = selectedId === item.id;
+          return (
+            <li className={selected ? 'selected' : ''} key={item.id}>
+              <div className="collection-index-row">
+                {selection && (
+                  <label className="collection-select">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${item.title}`}
+                      checked={selection.ids.has(item.id)}
+                      onChange={() => selection.toggle(item.id)}
+                    />
+                  </label>
+                )}
+                <span className="collection-row-rank">{rank ? String(rank).padStart(2, '0') : '—'}</span>
+                <button
+                  type="button"
+                  aria-expanded={selected}
+                  aria-haspopup={sheet ? 'dialog' : undefined}
+                  onClick={(event) => {
+                    event.currentTarget.focus();
+                    onSelect(selected ? null : item.id);
+                  }}
+                >
+                  <strong>{item.title}</strong>
+                  {item.type && <span>{item.type}</span>}
+                  {itemIdentity(item) && <small className="item-brand">{itemIdentity(item)}</small>}
+                  {item.wantToTry && <small className="want-label">Want to try</small>}
+                </button>
+                {item.decision && <CallBadge value={item.decision} />}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      {total > count && (
+        <div className="archive-paging">
+          <p role="status">
+            Showing {count} of {total} {ranked ? 'ranked' : 'unranked'} items
+          </p>
+          <button
+            type="button"
+            className="button button-outline"
+            aria-label={`Show more ${ranked ? 'ranked' : 'unranked'} items`}
+            onClick={() => {
+              const firstNew = count;
+              onMore();
+              requestAnimationFrame(() => {
+                if (rows.current?.dataset.window !== scope) return;
+                const buttons = rows.current?.querySelectorAll<HTMLButtonElement>(
+                  '.collection-index-row > button',
+                );
+                const target = buttons?.[firstNew];
+                target?.focus({ preventScroll: true });
+                target?.scrollIntoView({ block: 'center' });
+              });
+            }}
+          >
+            Show more items
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -1,3 +1,4 @@
+import { useListWindow } from '../hooks/useListWindow';
 import { ExperienceEditor } from './ExperienceEditor';
 import '../memories.css';
 import { ArrowRight, X } from '@phosphor-icons/react';
@@ -326,8 +327,10 @@ export function CollectionView({
     if (brand && brandKey(itemBrand(item.context)) !== brandKey(brand)) return false;
     if (label && !item.context?.labels.includes(label)) return false;
     if (stamp && !item.context?.stamps.includes(stamp)) return false;
-    const added = new Date(item.createdAt).toLocaleDateString('en-CA');
-    if ((addedSince && added < addedSince) || (addedBefore && added > addedBefore)) return false;
+    if (addedSince || addedBefore) {
+      const added = new Date(item.createdAt).toLocaleDateString('en-CA');
+      if ((addedSince && added < addedSince) || (addedBefore && added > addedBefore)) return false;
+    }
     if (
       (visits === 'never' && item.logCount !== 0) ||
       (visits === 'once' && item.logCount !== 1) ||
@@ -341,8 +344,33 @@ export function CollectionView({
     if (browse === 'not-opened-lately') return wasOpenedLongAgo(item);
     return true;
   });
+  const windowScope = JSON.stringify([
+    list.id,
+    browse,
+    search,
+    type,
+    brand,
+    label,
+    stamp,
+    rankFilter,
+    decisionFilter,
+    sort,
+    addedSince,
+    addedBefore,
+    visits,
+  ]);
   const ranked = visible.filter((item) => rankedIds.has(item.id));
   const unranked = visible.filter((item) => !rankedIds.has(item.id));
+  const rankedWindow = useListWindow(
+    windowScope,
+    ranked.findIndex((item) => item.id === selectedId),
+  );
+  const unrankedWindow = useListWindow(
+    windowScope,
+    unranked.findIndex((item) => item.id === selectedId),
+  );
+  const shownRanked = ranked.slice(0, rankedWindow.count);
+  const shownUnranked = unranked.slice(0, unrankedWindow.count);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -650,7 +678,7 @@ export function CollectionView({
               list={list}
               items={items}
               selectedIds={selectionIds}
-              visibleIds={visible.map((i) => i.id)}
+              visibleIds={[...shownRanked, ...shownUnranked].map((i) => i.id)}
               onSelection={setSelectionIds}
               onDone={(message) => {
                 setStatus(message);
@@ -831,7 +859,10 @@ export function CollectionView({
                 <>
                   {ranked.length > 0 && (
                     <IndexRows
-                      items={ranked}
+                      scope={windowScope}
+                      items={shownRanked}
+                      total={ranked.length}
+                      onMore={rankedWindow.showMore}
                       ranks={ranks}
                       selectedId={selectedId}
                       onSelect={setSelectedId}
@@ -843,7 +874,10 @@ export function CollectionView({
                     <section className="collection-unranked" aria-labelledby="unranked-heading">
                       {ranked.length > 0 && <p id="unranked-heading">Unranked · {unranked.length}</p>}
                       <IndexRows
-                        items={unranked}
+                        scope={windowScope}
+                        items={shownUnranked}
+                        total={unranked.length}
+                        onMore={unrankedWindow.showMore}
                         ranks={ranks}
                         selectedId={selectedId}
                         onSelect={setSelectedId}

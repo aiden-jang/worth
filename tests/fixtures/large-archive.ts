@@ -7,7 +7,7 @@ const id = (n: number) =>
     : `11111111-1111-4111-8111-${n.toString(16).padStart(12, '0')}`;
 
 // Disposable test data shared by the browser journeys and real database round-trip.
-export function largeArchive() {
+export function largeArchive({ itemCount = 360, workoutCount = 96, oneCollection = false } = {}) {
   const end = Date.parse(`${today()}T12:00:00Z`);
   const time = (daysAgo: number) => end - daysAgo * 86400000;
   const day = (daysAgo: number) => new Date(time(daysAgo)).toISOString().slice(0, 10);
@@ -21,41 +21,41 @@ export function largeArchive() {
     updatedAt: time(1),
   }));
   const gym = { id: id(25), name: 'Gym', kind: 'activity', description: '', rankedIds: [], updatedAt: end };
-  const items = Array.from({ length: 360 }, (_, index) => ({
+  const items = Array.from({ length: itemCount }, (_, index) => ({
     id: id(1000 + index),
-    listId: lists[Math.floor(index / 15)].id,
+    listId: lists[oneCollection ? 0 : Math.floor((index * lists.length) / itemCount)].id,
     title:
       index === 0
         ? 'Cafe by the old cinema'
-        : `${['Cafe', 'Bookshop', 'Ramen shop', 'Market'][Math.floor(index / 90)]} ${index + 1}`,
+        : `${['Cafe', 'Bookshop', 'Ramen shop', 'Market'][Math.floor((index * 4) / itemCount)]} ${index + 1}`,
     type: 'Place',
     note: index === 0 ? 'The quiet upstairs table.' : '',
     decision: (['favorite', 'meh', 'would_not_again', null] as const)[index % 4],
-    createdAt: time(360 - index),
-    updatedAt: time(360 - index),
+    createdAt: time(itemCount - index),
+    updatedAt: time(itemCount - index),
   }));
   const visits = items.map((item, index) => ({
     id: id(2000 + index),
     listId: item.listId,
     itemId: item.id,
     title: item.title,
-    happenedOn: day(360 - index),
+    happenedOn: day(itemCount - index),
     note: index === 0 ? 'Went after the film.' : '',
     context: { location: 'Brooklyn', reaction: index % 3 === 0 ? 'favorite' : null },
-    createdAt: time(360 - index),
-    updatedAt: time(360 - index),
+    createdAt: time(itemCount - index),
+    updatedAt: time(itemCount - index),
   }));
-  const workouts = Array.from({ length: 96 }, (_, index) => ({
+  const workouts = Array.from({ length: workoutCount }, (_, index) => ({
     id: id(3000 + index),
     listId: gym.id,
     title: `Training ${index + 1}`,
-    happenedOn: day((96 - index) * 2),
+    happenedOn: day((workoutCount - index) * 2),
     status: 'finished',
     plannedExercises: ['Bench press', 'Squat', 'Row'],
     skippedExercises: [],
     targets: [],
-    createdAt: time((96 - index) * 2),
-    updatedAt: time((96 - index) * 2),
+    createdAt: time((workoutCount - index) * 2),
+    updatedAt: time((workoutCount - index) * 2),
   }));
   const exercises = workouts.flatMap((workout, index) =>
     workout.plannedExercises.map((title, exerciseIndex) => ({
@@ -102,7 +102,7 @@ export function largeArchive() {
     workoutSessions: [
       ...workouts,
       {
-        id: id(3100),
+        id: id(workoutCount > 100 ? 3900 : 3100),
         listId: gym.id,
         title: 'Today’s workout',
         happenedOn: day(0),

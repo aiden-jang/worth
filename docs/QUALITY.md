@@ -31,6 +31,12 @@ pages and retry, workout draft recovery, individually reachable chart points,
 unit-specific progress, JSON/Excel
 downloads and explicit restore preview. The migrated-D1 tests use the same
 synthetic archive for actual JSON export/restore and scoped search pagination.
+The busy-archive pass also uses 1,000 finds concentrated in one collection and 156
+completed workouts. It checks bounded row rendering, older matches, all-history
+exercise progress, visible-only bulk selection and delayed/lost-reply capture.
+Its migrated-D1 test verifies complete records and insight counts independently
+of the display window. Optional `WORTH_BUSY_QA` output stays in a temporary folder;
+local timings describe that run rather than a production speed guarantee.
 
 To capture a new local review, set `WORTH_CAPTURE_UI` to a temporary output directory when running
 the responsive, capsule, offline or private-space cases. Responsive captures go

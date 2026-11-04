@@ -68,10 +68,11 @@ export function ActivityView({
     'all',
   );
   const periodStart = activityPeriodStart(period);
+  const workoutNames = new Map(workouts.map((workout) => [workout.id, workout.title]));
   const visible = logs
     .filter(
       (log) =>
-        `${log.title} ${log.note} ${workouts.find((workout) => workout.id === log.workoutId)?.title ?? ''}`
+        `${log.title} ${log.note} ${workoutNames.get(log.workoutId ?? '') ?? ''}`
           .toLocaleLowerCase()
           .includes(query.toLocaleLowerCase()) &&
         (!periodStart || log.happenedOn >= periodStart),

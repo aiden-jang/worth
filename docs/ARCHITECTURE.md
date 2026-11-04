@@ -999,3 +999,11 @@ Saved dates remain UTC, separate from the experienced date; links open the
 original Unfiled find. Filing moves that source into its collection without
 duplicate recall. Owner scoping, Trash exclusions and 50-record pagination apply
 to both sources. Specialized calendars and period summaries remain collection-based.
+
+Collection and workout browsing use `useListWindow` to bound rendering to 50 rows
+per section until Show more is chosen. Scope changes apply to the display window;
+complete source arrays still own search, ranking, preference counts and exercise
+history. `CollectionView` owns both its windows and the visible IDs supplied to
+bulk selection. `WorkoutSessions` groups logs by visit once and mounts historical
+cards only while their disclosure is open. Revealed records receive keyboard
+focus, and explicit workout reviews reveal their own row before focusing it.
