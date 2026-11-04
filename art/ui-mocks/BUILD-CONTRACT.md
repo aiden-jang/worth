@@ -87,6 +87,15 @@ focus without opening details. Desktop selection uses a cream side slip; phones
 use a native scrolling sheet without moving list rows. Add experience and Edit
 lead, with ranking, notes and queues disclosed. Unranked items remain accessible.
 
+Item editors use a compact cream call card: the character sits beside its call and
+caption, followed by the same three choices. The editor deliberately omits repeated
+name/type and rank metadata from that card; the heading and Name field identify the
+item, while collection ordering remains independent. This keeps optional product
+fields prominent without making the reaction dominate the form. Product details
+are labeled optional once per group. The item editor's Save footer stays visible
+inside the scrolling dialog on desktop and phone, with Saved / Unsaved changes
+feedback. Other desktop form actions retain their normal flow.
+
 Large collection sections and past workouts initially draw 50 rows/cards, with
 Show more to reveal the next 50. This deliberately extends the small reference
 examples to bound rendering as archives grow. Search, counts, ranking, progress

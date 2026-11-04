@@ -34,26 +34,25 @@ export function ItemDetailsFields({
     </datalist>
   );
   return (
-    <div className={'item-detail-fields' + (product ? ' product-item-fields' : '')}>
+    <fieldset className={'item-detail-fields' + (product ? ' product-item-fields' : '')}>
+      <legend className="sr-only">
+        {product ? 'Product details (optional)' : 'Item details (optional)'}
+      </legend>
       <label>
-        <span>
-          Type <span className="optional">optional</span>
-        </span>
+        <span>Type</span>
         <input
           aria-label="Type"
           maxLength={60}
           value={type}
           list={id + 'type'}
-          placeholder="A kind that helps you find it later"
+          placeholder={typeExample(collectionName)}
           onChange={(event) => onChange(event.target.value, context)}
         />
         {suggestions('type')}
       </label>
       {product && (
         <label>
-          <span>
-            Brand or maker <span className="optional">optional</span>
-          </span>
+          <span>Brand</span>
           <input
             aria-label="Brand or maker"
             maxLength={240}
@@ -67,15 +66,13 @@ export function ItemDetailsFields({
       )}
       {(product || profile === 'general' || context.version) && (
         <label className="item-detail-variant">
-          <span>
-            {product ? 'Variant' : 'Version or edition'} <span className="optional">optional</span>
-          </span>
+          <span>{product ? 'Variant' : 'Version or edition'}</span>
           <input
             aria-label={product ? 'Variant' : 'Version or edition'}
             maxLength={120}
             value={context.version}
             list={id + 'variant'}
-            placeholder={product ? 'Flavor, shade, scent, model…' : 'The specific edition or release'}
+            placeholder={product ? 'Flavor, shade or model' : 'e.g. Second edition'}
             onChange={(event) => onChange(type, { ...context, version: event.target.value })}
           />
           {suggestions('variant')}
@@ -83,14 +80,12 @@ export function ItemDetailsFields({
       )}
       {product && (
         <label className="item-detail-size">
-          <span>
-            Size <span className="optional">optional</span>
-          </span>
+          <span>Size</span>
           <input
             aria-label="Size"
             maxLength={240}
             value={detailField(context, 'size')?.value ?? ''}
-            placeholder="50 ml, medium…"
+            placeholder="e.g. 50 ml"
             disabled={context.fields.length >= 12 && !detailField(context, 'size')}
             onChange={(event) => onChange(type, setDetailField(context, 'size', event.target.value))}
           />
@@ -105,9 +100,7 @@ export function ItemDetailsFields({
         )}
       {profile === 'place' && (
         <label>
-          <span>
-            Location <span className="optional">optional</span>
-          </span>
+          <span>Location</span>
           <input
             aria-label="Location"
             maxLength={120}
@@ -120,9 +113,7 @@ export function ItemDetailsFields({
       {product && (
         <div className="date-pair item-detail-price">
           <label>
-            <span>
-              Price paid <span className="optional">optional</span>
-            </span>
+            <span>Price paid</span>
             <input
               aria-label="Price paid"
               type="number"
@@ -164,6 +155,23 @@ export function ItemDetailsFields({
           Add product details
         </button>
       )}
-    </div>
+    </fieldset>
   );
+}
+
+function typeExample(name: string) {
+  const examples: Record<string, string> = {
+    skincare: 'e.g. Moisturizer',
+    haircare: 'e.g. Shampoo',
+    makeup: 'e.g. Lip tint',
+    fragrance: 'e.g. Eau de parfum',
+    'food & snacks': 'e.g. Chocolate',
+    'clothing & gear': 'e.g. Jacket',
+    drinks: 'e.g. Wheat beer',
+    cars: 'e.g. Coupe',
+    places: 'e.g. Cafe',
+    restaurants: 'e.g. Korean BBQ',
+    cafes: 'e.g. Coffee shop',
+  };
+  return examples[name.trim().toLowerCase()] ?? 'e.g. Coffee, book, film';
 }

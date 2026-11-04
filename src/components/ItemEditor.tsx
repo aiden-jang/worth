@@ -1,7 +1,7 @@
 import { DialogSaveFooter } from './DialogSaveFooter';
 import { PencilSimple, Plus, Trash, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { api, type ItemInput } from '../api';
 import { formatDate, today } from '../format';
 import { useConnection } from '../hooks/useConnection';
@@ -19,7 +19,7 @@ import { PhotoControl } from './PhotoControl';
 import { ItemContextEditor } from './ItemContextEditor';
 import { VisitContextReadout } from './VisitContext';
 import { emptyItemContext } from '../shared/item-context';
-import { collectionDetailProfile, hasItemDetails } from '../shared/item-details';
+import { collectionDetailProfile, hasItemDetails, hasProductDetails } from '../shared/item-details';
 import { ItemDetailsFields } from './ItemDetailsFields';
 
 const emptyItem: ItemInput = {
@@ -38,7 +38,6 @@ export function ItemEditor({
   listId,
   collectionName = '',
   item,
-  rank,
   items,
   logs,
   focusLogId,
@@ -50,7 +49,6 @@ export function ItemEditor({
   listId: string;
   collectionName?: string;
   item: Item | null;
-  rank?: number;
   items: Item[];
   logs: Log[];
   focusLogId: string | null;
@@ -60,6 +58,7 @@ export function ItemEditor({
   onCreated: (id: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const formId = useId();
   const logNoteInput = useRef<HTMLInputElement>(null);
   const itemNoteInput = useRef<HTMLTextAreaElement>(null);
   const client = useQueryClient();
@@ -273,6 +272,7 @@ export function ItemEditor({
           </button>
         </div>
         <form
+          id={formId}
           className="editor-form record-form record-layout"
           onSubmit={saveItem}
           onKeyDown={(event) => {
@@ -296,10 +296,10 @@ export function ItemEditor({
             </label>
           </div>
           <OpinionSlip
+            presentation="editor"
             className="record-call"
             title={form.title.trim() || 'This one'}
             type={form.type}
-            rank={rank}
             decision={form.decision}
             onChange={(decision) => setForm({ ...form, decision })}
           >
@@ -311,7 +311,10 @@ export function ItemEditor({
               open={hasItemDetails(item?.type, item?.context)}
             >
               <summary>
-                Add details <span>optional</span>
+                {collectionDetailProfile(collectionName) === 'product' || hasProductDetails(form.context)
+                  ? 'Product details'
+                  : 'Item details'}{' '}
+                <span>optional</span>
               </summary>
               <ItemDetailsFields
                 collectionName={collectionName}
@@ -394,34 +397,6 @@ export function ItemEditor({
               )}
             </div>
           )}
-          <DialogSaveFooter className="record-save">
-            {save.isError && (
-              <p className="form-error" role="alert">
-                {draft.savedId.current
-                  ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
-                  : ''}
-                {save.error.message}
-              </p>
-            )}
-            <button
-              className="button button-accent"
-              disabled={
-                !online ||
-                !photoDraft.ready ||
-                !form.title.trim() ||
-                save.isPending ||
-                Boolean(item && !hasItemChanges)
-              }
-            >
-              {save.isPending ? 'Saving…' : item ? 'Save changes' : 'Add item'}
-            </button>
-            {draft.status && (
-              <span className="draft-state" role="status">
-                {draft.status}
-              </span>
-            )}
-            {save.isSuccess && !hasItemChanges && <span role="status">Saved.</span>}
-          </DialogSaveFooter>
         </form>
         {item && (
           <details className="record-extras record-photo" open={item.hasPhoto}>
@@ -566,6 +541,38 @@ export function ItemEditor({
           <CollectionLogEditor log={editingLog} listId={listId} onClose={() => setEditingLog(null)} />
         )}
       </div>
+      <DialogSaveFooter className="record-save">
+        {save.isError && (
+          <p className="form-error" role="alert">
+            {draft.savedId.current
+              ? 'Record saved. Retry to finish saving changes or the photo; it will not create a duplicate. '
+              : ''}
+            {save.error.message}
+          </p>
+        )}
+        <button
+          type="submit"
+          form={formId}
+          className="button button-accent"
+          disabled={
+            !online ||
+            !photoDraft.ready ||
+            !form.title.trim() ||
+            save.isPending ||
+            Boolean(item && !hasItemChanges)
+          }
+        >
+          {save.isPending ? 'Saving…' : item ? 'Save changes' : 'Add item'}
+        </button>
+        {draft.status && (
+          <span className="draft-state" role="status">
+            {draft.status}
+          </span>
+        )}
+        {!save.isPending && !save.isError && (item || hasItemChanges) && (
+          <span role="status">{hasItemChanges ? 'Unsaved changes.' : 'Saved.'}</span>
+        )}
+      </DialogSaveFooter>
     </dialog>
   );
 }

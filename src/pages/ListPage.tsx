@@ -249,7 +249,6 @@ export function ListPage() {
               listId={listId}
               item={creating ? null : selected}
               collectionName={list.name}
-              rank={selected ? list.rankedIds.indexOf(selected.id) + 1 || undefined : undefined}
               items={items}
               logs={logs}
               focusLogId={focusLogId}

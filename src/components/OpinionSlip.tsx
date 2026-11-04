@@ -14,6 +14,7 @@ export function OpinionSlip({
   disabled = false,
   example = false,
   className = '',
+  presentation = 'display',
   children,
 }: {
   title: string;
@@ -25,6 +26,7 @@ export function OpinionSlip({
   disabled?: boolean;
   example?: boolean;
   className?: string;
+  presentation?: 'display' | 'editor';
   children?: ReactNode;
 }) {
   const Heading = headingLevel;
@@ -32,10 +34,10 @@ export function OpinionSlip({
     <section className={`opinion-slip ${className}`} aria-label={`Your call for ${title}`}>
       <div className="opinion-slip-top">
         <p className="overline">YOUR CALL{example ? ' / EXAMPLE' : ''}</p>
-        <span>{rank ? String(rank).padStart(2, '0') : 'UNRANKED'}</span>
+        {presentation === 'display' && <span>{rank ? String(rank).padStart(2, '0') : 'UNRANKED'}</span>}
       </div>
-      <Heading className="opinion-slip-title">{title}</Heading>
-      {type && <p className="opinion-slip-type">{type}</p>}
+      {presentation === 'display' && <Heading className="opinion-slip-title">{title}</Heading>}
+      {presentation === 'display' && type && <p className="opinion-slip-type">{type}</p>}
       <div className="opinion-slip-verdict" aria-live="polite">
         {decision ? (
           <CallFace key={decision} value={decision} arms />

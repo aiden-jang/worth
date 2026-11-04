@@ -421,9 +421,18 @@ export function CollectionView({
     onQueue: (item: Item) => queue.mutate(item),
     queuePending: queue.isPending,
     rankSlots: items.length,
-    onOpenDetails,
-    onAddNote,
-    onLogRevisit,
+    onOpenDetails: (id: string) => {
+      setSelectedId(null);
+      onOpenDetails(id);
+    },
+    onAddNote: (id: string) => {
+      setSelectedId(null);
+      onAddNote(id);
+    },
+    onLogRevisit: (id: string) => {
+      setSelectedId(null);
+      onLogRevisit(id);
+    },
     onDecide: (item: Item, decision: Item['decision']) => {
       setStatus('');
       decide.mutate({ item, decision });

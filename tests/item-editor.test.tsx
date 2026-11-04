@@ -53,7 +53,6 @@ test('a refreshed item or photo does not replace unsaved fields and call', () =>
       <ItemEditor
         listId={item.listId}
         item={record}
-        rank={1}
         items={[record]}
         logs={[]}
         focusLogId={null}
@@ -73,7 +72,9 @@ test('a refreshed item or photo does not replace unsaved fields and call', () =>
   expect(screen.getByLabelText(/Private note/)).toHaveValue('Still editing this.');
   expect(screen.getByRole('button', { name: 'Meh' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Meh' }));
-  expect(screen.getByRole('heading', { name: 'My next draft' })).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Your call for My next draft' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'My next draft' })).not.toBeInTheDocument();
+  expect(screen.queryByText('UNRANKED')).not.toBeInTheDocument();
   expect(screen.getByText('Undecided.')).toBeInTheDocument();
 });
 
