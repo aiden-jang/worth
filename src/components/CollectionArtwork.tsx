@@ -11,7 +11,7 @@ export function CollectionArtwork({
   if (cover)
     return (
       <div className="collection-artwork" aria-hidden="true">
-        <img src={cover} alt="" />
+        <img src={cover} width={160} height={100} alt="" />
       </div>
     );
   const letters = Array.from(name.trim());

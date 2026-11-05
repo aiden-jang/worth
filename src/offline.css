@@ -4,6 +4,19 @@
   margin: auto;
   color: #f0ecdf;
   min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.offline-page p {
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+.offline-page h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
 }
 .offline-header {
   display: flex;
@@ -29,9 +42,14 @@
 .offline-heading h1 {
   font-size: 48px;
   font-weight: 500;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
   line-height: 1.1;
-  margin: 14px 0;
+  margin: 0 0 10px;
+}
+.offline-connection {
+  color: #aaa99b;
+  font-size: 13px;
+  margin: 0 0 8px;
 }
 .offline-folder {
   width: 140px;
@@ -152,6 +170,9 @@
   }
   .offline-heading h1 {
     font-size: 36px;
+  }
+  .offline-page h2 {
+    font-size: 22px;
   }
   .offline-folder {
     width: 104px;

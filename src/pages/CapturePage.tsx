@@ -189,7 +189,6 @@ export function CapturePage() {
     <main className="light-page page-width web-capture-page">
       <header className="page-head">
         <div>
-          <p className="overline">CAPTURE</p>
           <h1>Keep a name.</h1>
           <p>A name is enough. Keep it in Unfiled now, or choose a collection before saving.</p>
         </div>

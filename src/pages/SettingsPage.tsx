@@ -115,10 +115,18 @@ export function SettingsPage() {
   return (
     <main className="data-page">
       <header className="data-heading">
-        <p className="overline">YOUR ACCOUNT / YOUR DATA</p>
         <h1>Settings.</h1>
         <p>Copies, drafts, and a little housekeeping.</p>
       </header>
+      <nav className="settings-navigation" aria-label="Settings sections">
+        <a href="#downloads">Downloads</a>
+        <a href="#restore">Restore</a>
+        <a href="#trash">Trash</a>
+        <a href="#offline-copy">Offline copy</a>
+        <a href="#device-data">Device</a>
+        <a href="#delete-data">Deletion</a>
+        <a href="#account-help">Account & help</a>
+      </nav>
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -129,7 +137,7 @@ export function SettingsPage() {
           {status}
         </p>
       )}
-      <section className="data-section">
+      <section id="downloads" className="data-section">
         <h2>Take a copy.</h2>
         <p>
           Excel opens your collections, saved things, experiences, workouts, sets, measurements, routines and
@@ -171,7 +179,7 @@ export function SettingsPage() {
           somewhere private.
         </p>
       </section>
-      <section className="data-section">
+      <section id="restore" className="data-section">
         <h2>Bring it back.</h2>
         <p>
           Restore a Worth file as new lists, templates and Unfiled finds. Review it first; your existing
@@ -338,7 +346,7 @@ export function SettingsPage() {
         )}
       </section>
       <TrashPanel />
-      <section className="data-section">
+      <section id="offline-copy" className="data-section">
         <h2>Offline copy.</h2>
         <p>
           Prepare an encrypted text copy for this browser, queue Unfiled captures and note edits, then
@@ -361,7 +369,7 @@ export function SettingsPage() {
           or home-screen link.
         </p>
       </section>
-      <section className="data-section">
+      <section id="device-data" className="data-section">
         <h2>This device.</h2>
         <p>
           Clear this account’s unfinished drafts, photo drafts and rest timers. Saved records stay in Worth.
@@ -378,7 +386,7 @@ export function SettingsPage() {
           Clear device drafts
         </button>
       </section>
-      <section className="data-section">
+      <section id="delete-data" className="data-section">
         <h2>Delete Worth data.</h2>
         <p>
           Remove your lists, Unfiled finds, records, photos, routines and shared snapshots. Your shared login
@@ -400,7 +408,7 @@ export function SettingsPage() {
           Delete all Worth data
         </button>
       </section>
-      <section className="data-section">
+      <section id="account-help" className="data-section">
         <h2>Account & help.</h2>
         <p>
           <a href="https://accounts.aidenjang.com/account">Shared account settings ↗</a> ·{' '}

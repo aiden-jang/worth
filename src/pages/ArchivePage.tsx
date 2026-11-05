@@ -1,8 +1,7 @@
 import { recordHref } from '../shared/record-links';
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, MagnifyingGlass, Plus } from '@phosphor-icons/react';
-import { Link, useNavigate } from 'react-router';
+import { ArrowRight, Plus } from '@phosphor-icons/react';
+import { Link } from 'react-router';
 import { api } from '../api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { formatDate, formatRelativeTimestamp } from '../format';
@@ -12,11 +11,10 @@ import { CollectionArtwork } from '../components/CollectionArtwork';
 import { CallBadge } from '../components/PersonalCall';
 import { BlankSlips } from '../components/BlankSlips';
 import { MemoryShelf } from '../components/MemoryShelf';
+import { HomeSearch } from '../components/HomeSearch';
 
 export function ArchivePage() {
   usePageTitle('Home');
-  const navigate = useNavigate();
-  const [search, setSearch] = useState('');
   const overview = useQuery({ queryKey: ['overview'], queryFn: api.overview });
   const inbox = useQuery({ queryKey: ['inbox'], queryFn: api.inbox });
   if (overview.isPending)
@@ -75,30 +73,7 @@ export function ArchivePage() {
           <p>A name is enough. The rest can wait.</p>
         </div>
       </header>
-      <form
-        className="home-search"
-        role="search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          navigate(`/search${search.trim() ? `?q=${encodeURIComponent(search.trim())}` : ''}`);
-        }}
-      >
-        <MagnifyingGlass size={22} aria-hidden="true" />
-        <label className="sr-only" htmlFor="home-search">
-          Find a name, place or note
-        </label>
-        <input
-          id="home-search"
-          type="search"
-          maxLength={40}
-          placeholder="Find a name, place or note"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <button type="submit" aria-label="Search saved entries">
-          <ArrowRight size={21} />
-        </button>
-      </form>
+      <HomeSearch />
       <div className="home-columns">
         <section aria-labelledby="home-recent-heading" className="home-recent">
           <header className="everyday-section-head">
@@ -190,19 +165,21 @@ export function ArchivePage() {
                 <Link to="/lists?create=1&kind=collection">Make one when you’re ready →</Link>
               </p>
             )}
-            {(inbox.data?.entries.length ?? 0) > 0 && (
-              <Link className="home-unfiled" to="/inbox">
-                <span>
-                  Unfiled <small>{inbox.data?.entries.length} saved</small>
-                </span>
-                <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-            )}
-            {!activities.length && (
-              <Link className="home-activity-invitation" to="/lists?create=1&kind=activity">
-                Track workouts or activity →
-              </Link>
-            )}
+            <div className="home-collection-utilities">
+              {(inbox.data?.entries.length ?? 0) > 0 && (
+                <Link className="home-unfiled" to="/inbox">
+                  <span>
+                    Unfiled <small>{inbox.data?.entries.length} saved</small>
+                  </span>
+                  <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              )}
+              {!activities.length && (
+                <Link className="home-activity-invitation" to="/lists?create=1&kind=activity">
+                  Track workouts or activity →
+                </Link>
+              )}
+            </div>
           </section>
           {hasMemories && <MemoryShelf />}
         </div>

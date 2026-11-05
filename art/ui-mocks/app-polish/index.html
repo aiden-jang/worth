@@ -6,12 +6,12 @@
   <style>
     @font-face {
       font-family: 'DM Sans';
-      src: url('../../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
       font-weight: 400;
     }
     @font-face {
       font-family: 'DM Sans';
-      src: url('../../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
       font-weight: 500;
     }
     * {
@@ -61,7 +61,7 @@
       color: #f0ecdf;
     }
     .content {
-      width: min(calc(100% - 88px), 1200px);
+      width: min(calc(100% - 72px), 1200px);
       margin: 0 auto;
       padding: 40px 0;
     }
@@ -75,7 +75,7 @@
     h1 {
       font-size: 48px;
       line-height: 1.1;
-      letter-spacing: -0.055em;
+      letter-spacing: -0.04em;
       font-weight: 500;
       margin: 0 0 10px;
       overflow-wrap: anywhere;
@@ -434,7 +434,8 @@
         `<div class="toolbar"><div class="actions"><button>Memories</button><button class="quiet">Insights</button></div><button>More tools</button></div><div class="segments"><button class="active">Experiences</button><button>Saved things</button></div><p class="muted" style="margin-top:16px">Dated visits and activity. Names you kept are under Saved things.</p><label>Find a name, place or note<input /></label><div class="disclosure">Filters <span>+</span></div><div class="row"><small>Oct 26</small><div><strong>Sunday at the coast</strong><small>Little outings · A walk and a good view.</small></div>↗</div>`,
       settings:
         heading('Settings.', 'Copies, drafts, and a little housekeeping.') +
-        `<section class="section form"><h2>Take a copy.</h2><p class="muted">Download your records for a spreadsheet, a backup or a fresh start.</p><div class="actions"><button class="primary">Export JSON (.json)</button><button>Export Excel (.xlsx)</button><button>Back up with photos</button></div><p class="muted" style="margin-top:16px">Records-only JSON excludes photos and covers. Keep downloaded files somewhere private.</p></section><section class="section form"><h2>Bring it back.</h2><p class="muted">Review a Worth file before restoring it as new records.</p><button>Choose backup</button></section><section class="section form"><h2>Trash.</h2><p class="muted">Restore deleted records for 30 days. Your notes and photos stay with them.</p><small>Trash is empty.</small></section>`,
+        `<nav class="actions" aria-label="Settings sections" style="margin-bottom:22px"><a href="#downloads">Downloads</a><a href="#restore">Restore</a><a href="#trash">Trash</a></nav>` +
+        `<section class="section form" id="downloads"><h2>Take a copy.</h2><p class="muted">Download your records for a spreadsheet, a backup or a fresh start.</p><div class="actions"><button class="primary">Export JSON (.json)</button><button>Export Excel (.xlsx)</button><button>Back up with photos</button></div><p class="muted" style="margin-top:16px">Records-only JSON excludes photos and covers. Keep downloaded files somewhere private.</p></section><section class="section form" id="restore"><h2>Bring it back.</h2><p class="muted">Review a Worth file before restoring it as new records.</p><button>Choose backup</button></section><section class="section form" id="trash"><h2>Trash.</h2><p class="muted">Restore deleted records for 30 days. Your notes and photos stay with them.</p><small>Trash is empty.</small></section>`,
       capture:
         heading(
           'Read a photo.',

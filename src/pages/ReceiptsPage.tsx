@@ -18,7 +18,6 @@ export function ReceiptsPage() {
     <main className="light-page page-width receipts-page">
       <header className="page-head">
         <div>
-          <p className="overline">PRIVATE REVIEWED COPIES</p>
           <h1>Receipts</h1>
           <p>Keep the useful bits.</p>
         </div>
@@ -113,8 +112,8 @@ export function ReceiptPage() {
     <main className="light-page page-width receipt-page">
       <header className="page-head">
         <div>
-          <p className="overline">PRIVATE REVIEWED RECEIPT</p>
           <h1>{receipt?.name ?? 'Receipt'}</h1>
+          <p className="page-context">Private reviewed receipt</p>
         </div>
         <Link to="/receipts">Back to Receipts →</Link>
       </header>

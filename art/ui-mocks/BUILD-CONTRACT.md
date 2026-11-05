@@ -10,22 +10,22 @@ of historical overrides. [DESIGN.md](../../DESIGN.md) explains the product flow;
 
 ## Shared system
 
-| Element                      | Target                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------- |
-| Canvas / panel / raised      | `#181915` / `#20211c` / `#292a23`                                         |
-| Text / secondary             | `#f0ecdf` / `#aaa99b`                                                     |
-| Cream slip / dark muted text | `#eae5d5` / `#626456`                                                     |
-| Primary action               | Butter `#e8dc9d` with dark text                                           |
-| Rules / strong rules         | `#38392f` / `#737566`                                                     |
-| Typography                   | Existing DM Sans, mostly 400–500; DM Mono for structural metadata         |
-| Working-page title           | 48px desktop / 36px phone, weight 500, 1.1 line height, -0.055em tracking |
-| Section heading              | Generally 24px desktop / 22px phone                                       |
-| Labels / fields              | 14px sentence-case labels; 15px desktop / 16px phone fields               |
-| Controls                     | 12px corners; ordinary action targets at least 44px                       |
-| Cards / dialogs              | 22px corners; specialized directory phone cards 18px                      |
-| Desktop navigation           | 192px rail                                                                |
-| Content insets               | 44px desktop, 28px narrow desktop, 20px phone                             |
-| Header spacing               | Start 40px desktop / 24px phone down; 28px / 24px after headers           |
+| Element                      | Target                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| Canvas / panel / raised      | `#181915` / `#20211c` / `#292a23`                                        |
+| Text / secondary             | `#f0ecdf` / `#aaa99b`                                                    |
+| Cream slip / dark muted text | `#eae5d5` / `#626456`                                                    |
+| Primary action               | Butter `#e8dc9d` with dark text                                          |
+| Rules / strong rules         | `#38392f` / `#737566`                                                    |
+| Typography                   | Existing DM Sans, mostly 400–500; DM Mono for structural metadata        |
+| Working-page title           | 48px desktop / 36px phone, weight 500, 1.1 line height, -0.04em tracking |
+| Section heading              | Generally 24px desktop / 22px phone                                      |
+| Labels / fields              | 14px sentence-case labels; 15px desktop / 16px phone fields              |
+| Controls                     | 12px corners; ordinary action targets at least 44px                      |
+| Cards / dialogs              | 22px corners; specialized directory phone cards 18px                     |
+| Desktop navigation           | 192px rail                                                               |
+| Content insets               | 36px desktop, 28px narrow desktop, 20px phone                            |
+| Header spacing               | Start 40px desktop / 24px phone down; 28px / 24px after headers          |
 
 Use flat fills without paper textures, gradients, gloss or fake analytics. Cream
 panels have dark ink and visible focus. Compact labels remain readable; never
@@ -36,6 +36,14 @@ connected app styles; keep screen-specific composition in its own stylesheet.
 The standalone offline entry owns its CSS. Public Help/policy and offline titles
 use the same readable scale under their own headers. Ranked displays, public
 snapshots, printable objects and the signed-out landing retain presentation sizing.
+
+The Home polish extends to every working page. Redundant introductions above page
+titles are omitted; saved status, access role, board kind and receipt context appear
+as readable text below the title. Settings has links to its existing sections.
+Help and policies retain their complete wording and dates, with an optional contents
+list derived from their headings. The [reading reference](app-polish/reading.html)
+defines that shared composition. Public, offline, reader and editor titles use
+the same -0.04em tracking while preserving their own presentation sizes.
 
 ## Navigation and capture
 
@@ -74,11 +82,19 @@ when there are more than three collections or an active query/nondefault order.
 Keep opened filters available for that visit through filtering/archive changes.
 Only mixed kinds need section headings.
 
-Directory cards group a 152px, 1.6-ratio image, 24px name, 13px metadata and 12px
+Directory cards group a 144px, 1.6-ratio image, 24px name, 13px metadata and 12px
 update caption. Use 16px padding, 20px gaps and 22px corners. At <=1180px use one
 column. Phones use 96px artwork, 14px padding/gaps and 21px names. At <=360px use
 80px artwork and stacked filters. Keep the original private photo framing.
 `src/directory.css` owns this composition.
+
+The approved [Home and collections polish](home-collections/README.md) defines
+those two pages: 36px desktop insets, 28px narrow desktop and 20px phone; headings
+keep the shared scale with -0.04em tracking. Home uses 18px recent names, small
+labeled call badges and a vertical shelf of horizontal thumbnail/name cards.
+Multiple phone cards use two columns; all available preview cards remain visible.
+Directory artwork is 144px on desktop, with 20px grid gaps and a 128px minimum
+card height. Phone artwork and all real counts/descriptions remain intact.
 
 A collection has compact identity, name capture and one browse/search/filter row.
 Settings, sharing and Ranking & tools are contextual; Entry options holds batch,

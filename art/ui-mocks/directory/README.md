@@ -1,6 +1,7 @@
-# Collections directory — October 29
+# Collections directory
 
-The user approved correcting the sparse directory shown in their screenshot.
+The [Home and collections polish](../home-collections/README.md) owns the current
+card geometry. These sources retain the directory’s sparse and filtered states.
 These references were authored, rendered and opened before applying the new
 composition. They supersede the cabinet edition's directory page, preserving
 its colors, artwork, fonts and creation flow. All fixtures are synthetic.

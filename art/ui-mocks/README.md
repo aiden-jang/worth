@@ -2,6 +2,10 @@
 
 Use these current authored sources in order:
 
+The [Home and collections polish](home-collections/README.md) owns the current
+Home and directory compositions. Use the following sources for their other named
+surfaces and shared behavior:
+
 1. [App-wide composition](app-polish/README.md): shared type, spacing, controls and supporting pages.
 2. [Collections directory](directory/README.md): compact cards and sparse/filtered states.
 3. [Everyday flows](everyday/README.md): lightweight capture, selection, recall and activity.

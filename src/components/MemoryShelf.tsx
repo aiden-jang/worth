@@ -135,15 +135,6 @@ export function MemoryShelf() {
   return (
     <section className="month-memory" aria-label="Memory shelf">
       <div className="memory-keepsake">
-        <p className="overline">
-          {preference
-            ? 'FROM YOUR CALLS'
-            : progress
-              ? 'FROM YOUR WORKOUTS'
-              : revealed || changed
-                ? 'A LITTLE FROM YOUR ARCHIVE'
-                : `A LITTLE OF ${new Date().toLocaleDateString(undefined, { month: 'long' }).toUpperCase()}`}
-        </p>
         <h2 className="memory-draw-title" key={`${highlight.kind}:${title}`}>
           {title}
         </h2>
@@ -203,38 +194,38 @@ export function MemoryShelf() {
                 : 'Pull a saved name or a past entry. See what turns up.'}
           </p>
         )}
-        <div className="memory-draw-actions">
-          <button
-            className="button button-dark"
-            aria-disabled={draw.isPending}
-            aria-busy={draw.isPending}
-            onClick={() => {
-              if (!draw.isPending) draw.mutate();
-            }}
-          >
-            <Shuffle size={18} aria-hidden="true" />{' '}
-            {draw.isPending ? 'Looking…' : revealed ? 'Another memory' : 'Pull a memory'}
-          </button>
-          {href && (
-            <Link to={href}>
-              {preference ? 'See supporting records →' : progress ? 'View recorded sets →' : 'Open memory →'}
-            </Link>
-          )}
-        </div>
-        {draw.isPending && <p role="status">Looking through your archive…</p>}
-        {draw.isError && <p role="alert">Memories couldn’t load. Try pulling again.</p>}
-        {draw.isSuccess && (
-          <p role="status" className="sr-only">
-            {first ? `Pulled ${first.title}.` : 'No saved memories yet.'}
-          </p>
-        )}
-        {highlight.kind === 'memory' && !!query.data?.total && (
-          <p className="memory-month-footer">
-            {query.data.total} dated {query.data.total === 1 ? 'entry' : 'entries'} this month.{' '}
-            <Link to={`/patterns/remember?from=${filter.from}&to=${filter.to}`}>Open this month →</Link>
-          </p>
+      </div>
+      <div className="memory-draw-actions">
+        <button
+          className="button button-dark"
+          aria-disabled={draw.isPending}
+          aria-busy={draw.isPending}
+          onClick={() => {
+            if (!draw.isPending) draw.mutate();
+          }}
+        >
+          <Shuffle size={18} aria-hidden="true" />{' '}
+          {draw.isPending ? 'Looking…' : revealed ? 'Another memory' : 'Pull a memory'}
+        </button>
+        {href && (
+          <Link to={href}>
+            {preference ? 'See supporting records →' : progress ? 'View recorded sets →' : 'Open memory →'}
+          </Link>
         )}
       </div>
+      {draw.isPending && <p role="status">Looking through your archive…</p>}
+      {draw.isError && <p role="alert">Memories couldn’t load. Try pulling again.</p>}
+      {draw.isSuccess && (
+        <p role="status" className="sr-only">
+          {first ? `Pulled ${first.title}.` : 'No saved memories yet.'}
+        </p>
+      )}
+      {highlight.kind === 'memory' && !!query.data?.total && (
+        <p className="memory-month-footer">
+          {query.data.total} dated {query.data.total === 1 ? 'entry' : 'entries'} this month.{' '}
+          <Link to={`/patterns/remember?from=${filter.from}&to=${filter.to}`}>Open this month →</Link>
+        </p>
+      )}
       {progress ? (
         <ActivityIllustration kind="workout" />
       ) : first?.hasPhoto ? (

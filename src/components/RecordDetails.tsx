@@ -76,10 +76,10 @@ export function RecordDetails({
       <div className="editor-inner">
         <header className="editor-head">
           <div>
-            <p className="overline">
-              {record.kind === 'log' ? 'SAVED EXPERIENCE' : 'SAVED FIND'} · {listName}
-            </p>
             <h2 id={headingId}>{title}</h2>
+            <p className="page-context">
+              {record.kind === 'log' ? 'Saved experience' : 'Saved find'} · {listName}
+            </p>
           </div>
           <button className="icon-button" aria-label="Close details" onClick={onClose}>
             <X size={22} />

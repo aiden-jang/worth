@@ -202,7 +202,7 @@ function PrivateApp() {
           <Route path="/inbox" element={<InboxPage />} />
           <Route path="/capture" element={<CapturePage />} />
           <Route path="/quick" element={<QuickPage />} />
-          <Route path="*" element={<InfoPage kind="missing" />} />
+          <Route path="*" element={<InfoPage kind="missing" embedded />} />
         </Routes>
       </Suspense>
       <TrashNotice />
@@ -286,7 +286,6 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
         </a>
       </header>
       <section className="landing-cabinet-hero" aria-labelledby="landing-title">
-        <p className="overline">YOUR TASTE, ON RECORD</p>
         <h1 id="landing-title">
           Your taste.
           <br />
@@ -314,7 +313,7 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
                 <strong>{name}</strong>
                 <small>{caption}</small>
               </span>
-              <img src={`/art/${art}`} alt="" />
+              <img src={`/art/${art}`} width="160" height="100" alt="" />
             </div>
           ))}
         </div>
@@ -472,7 +471,6 @@ function AuthProblem({ onRetry }: { onRetry: () => void }) {
     <main className="welcome welcome-error">
       <span className="brand">worth</span>
       <div className="welcome-body">
-        <p className="overline">TEMPORARILY UNAVAILABLE</p>
         <h1>Account unavailable.</h1>
         <p className="welcome-copy">We couldn’t connect to your account. Try again in a moment.</p>
         <button className="button button-accent" onClick={onRetry}>

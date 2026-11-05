@@ -24,6 +24,22 @@ async function openAdd(page: Page) {
   return page.getByRole('dialog', { name: 'Keep something.', exact: true });
 }
 
+test('Home search clears without losing focus and still searches the full archive', async ({
+  page,
+  archive,
+}) => {
+  await page.goto('/');
+  const search = page.getByRole('searchbox', { name: 'Find a name, place or note', exact: true });
+  await search.fill('cold brew');
+  await page.getByRole('button', { name: 'Clear home search', exact: true }).click();
+  await expect(search).toHaveValue('');
+  await expect(search).toBeFocused();
+  await search.fill('cold brew');
+  await search.press('Enter');
+  await expect(page).toHaveURL(/\/search\?q=cold%20brew$/);
+  expect(archive.writes).toHaveLength(0);
+});
+
 test('a first name can be saved without creating a collection, found from Home, and undone', async ({
   page,
   archive,

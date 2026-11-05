@@ -59,7 +59,6 @@ export function ConnectionsPage() {
     <main className="light-page page-width connections-page">
       <header className="page-head">
         <div>
-          <p className="overline">YOUR ARCHIVE</p>
           <h1>Connections</h1>
           <p>Keep the things in common.</p>
         </div>

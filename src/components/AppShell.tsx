@@ -272,7 +272,7 @@ export function AppShell({
         </nav>
         {(collections.length > 0 || activityShortcut) && (
           <nav className="rail-collections" aria-label="Quick access">
-            <p>QUICK ACCESS</p>
+            <p>Quick access</p>
             {activityShortcut && (
               <NavLink to={`/lists/${activityShortcut.id}`}>
                 {activityShortcut.name} <ArrowRight size={14} />

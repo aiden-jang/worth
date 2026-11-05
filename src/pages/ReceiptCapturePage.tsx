@@ -317,7 +317,6 @@ export function ReceiptCapturePage() {
     <main className="light-page page-width receipt-capture-page">
       <header className="page-head">
         <div>
-          <p className="overline">ON THIS DEVICE, THEN YOUR REVIEW</p>
           <h1>Keep a receipt.</h1>
           <p>A few lines worth keeping.</p>
         </div>

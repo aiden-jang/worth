@@ -68,7 +68,6 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
       {!embedded && (
         <header className="page-head">
           <div>
-            <p className="overline">YOUR PAPER TRAIL</p>
             <h1>Memories.</h1>
             <p>Where you went. What you tried.</p>
           </div>

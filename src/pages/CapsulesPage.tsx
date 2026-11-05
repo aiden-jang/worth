@@ -70,7 +70,6 @@ export function CapsulesPage() {
     <main className="light-page page-width capsules-page">
       <header className="page-head">
         <div>
-          <p className="overline">FOR ANOTHER DAY</p>
           <h1>Time capsules</h1>
           <p>A few things, kept as they were.</p>
         </div>
@@ -232,7 +231,6 @@ function CapsuleComposer() {
     <main className="light-page page-width capsule-compose">
       <header className="page-head">
         <div>
-          <p className="overline">FOR ANOTHER DAY</p>
           <h1>New capsule</h1>
           <p>Keep this version.</p>
         </div>
@@ -470,8 +468,8 @@ export function CapsulePage() {
     <main className="light-page page-width capsule-page">
       <header className="page-head">
         <div>
-          <p className="overline">{view ? status(view.summary) : 'PRIVATE CAPSULE'}</p>
           <h1>{view?.summary.name ?? 'Capsule'}</h1>
+          <p className="page-context">{view ? status(view.summary) : 'Private capsule'}</p>
         </div>
         <Link to="/capsules">Back to Capsules →</Link>
       </header>

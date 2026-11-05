@@ -10,15 +10,13 @@
   text-align: center;
   padding: 32px 0 0;
 }
-.landing-cabinet-hero > .overline {
-  color: var(--muted);
-}
 .landing-cabinet-hero h1 {
   font-size: clamp(64px, 6.4vw, 92px);
   font-weight: 500;
   line-height: 0.98;
-  letter-spacing: -0.065em;
-  margin: 22px 0 24px;
+  letter-spacing: -0.04em;
+  margin: 0 0 24px;
+  text-wrap: balance;
 }
 .landing-cabinet-hero h1 em {
   color: var(--acid);
@@ -132,7 +130,7 @@
 }
 .landing-cabinet-note strong {
   font-size: 32px;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   font-weight: 500;
 }
 .landing-cabinet-note .call-face {
@@ -159,7 +157,7 @@
 .landing-example-heading h2 {
   font-size: 36px;
   font-weight: 500;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
   margin: 12px 0;
 }
 .landing-example-heading > p:last-child {

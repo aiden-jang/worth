@@ -12,6 +12,9 @@
   padding-top: 40px;
   padding-bottom: 32px;
 }
+.app-content > main.page-width {
+  width: min(calc(100% - 72px), 1200px);
+}
 .app-content > main > :is(.page-head, .everyday-heading, .data-heading),
 .app-content .list-page-head {
   gap: 24px;
@@ -26,7 +29,7 @@
   font-size: 48px;
   font-weight: 500;
   line-height: 1.1;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.04em;
   overflow-wrap: anywhere;
 }
 .app-content > main > :is(.page-head, .everyday-heading, .data-heading) p:not(.overline),
@@ -60,10 +63,19 @@
   margin-top: 0;
 }
 .app-content .data-page {
-  width: min(calc(100% - 88px), 1200px);
+  width: min(calc(100% - 72px), 1200px);
   max-width: none;
   padding-inline: 0;
   margin-inline: auto;
+}
+.app-content .embedded-info-page {
+  width: min(calc(100% - 72px), 1200px);
+  max-width: none;
+  padding-inline: 0;
+  margin-inline: auto;
+}
+.embedded-info-page .info-document {
+  margin: 0;
 }
 .data-page .data-section,
 .data-page .settings-section {
@@ -102,7 +114,9 @@
   outline: 0;
 }
 @media (max-width: 1180px) {
-  .app-content .data-page {
+  .app-content .data-page,
+  .app-content .embedded-info-page,
+  .app-content > main.page-width {
     width: calc(100% - 56px);
   }
 }
@@ -125,7 +139,9 @@
   .app-content .page-head > a {
     align-self: start;
   }
-  .app-content .data-page {
+  .app-content .data-page,
+  .app-content .embedded-info-page,
+  .app-content > main.page-width {
     width: calc(100% - 40px);
   }
   .data-page :is(.data-section, .settings-section) h2 {
@@ -138,5 +154,64 @@
       textarea
     ) {
     font-size: 16px;
+  }
+}
+
+.page-context {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.app-content > main > .page-head p.page-context {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.settings-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  max-width: 820px;
+  padding-bottom: 22px;
+}
+.settings-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.settings-navigation a:hover {
+  color: var(--paper);
+  text-decoration: underline;
+}
+.data-page :is(.data-section, .settings-section),
+.info-content section {
+  scroll-margin-top: 24px;
+}
+.app-content :is(.memory-timeline, .search-group, .inbox-list) :is(h2, h3, strong) {
+  letter-spacing: -0.025em;
+}
+.app-content :is(.memory-timeline, .search-group, .inbox-list) .overline {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.app-content :is(.memory-filters, .calendar-controls, .board-filters, .guide-fields) :is(input, select) {
+  border-color: var(--line-strong);
+}
+.app-content
+  :is(.memory-filters, .calendar-controls, .board-filters, .guide-fields)
+  :is(input, select):focus-visible {
+  outline-color: var(--acid);
+}
+@media (max-width: 680px) {
+  .settings-navigation {
+    gap: 4px 20px;
+    padding-bottom: 18px;
+  }
+  .data-page :is(.data-section, .settings-section) {
+    scroll-margin-top: 88px;
   }
 }

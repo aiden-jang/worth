@@ -166,7 +166,6 @@ export function CodeCapturePage() {
     <main className="light-page page-width photo-text-page code-capture-page">
       <header className="page-head">
         <div>
-          <p className="overline">BARCODES & BOOKS</p>
           <h1>Read a code.</h1>
           <p>Small lines. Useful clues.</p>
         </div>

@@ -91,7 +91,6 @@ export function RetrospectivePage() {
     <main className="light-page page-width retrospective-page">
       <header className="page-head">
         <div>
-          <p className="overline">ON RECORD</p>
           <h1>Period summary.</h1>
           <p>A few pages, revisited.</p>
         </div>

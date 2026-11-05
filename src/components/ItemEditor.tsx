@@ -265,7 +265,6 @@ export function ItemEditor({
       <div className="editor-inner">
         <div className="editor-head">
           <div>
-            <p className="overline">{item ? 'ITEM DETAIL' : 'NEW ITEM'}</p>
             <h2 id="item-editor-title">{item ? item.title : 'Keep this one.'}</h2>
           </div>
           <button className="icon-button" aria-label="Close" onClick={requestClose}>

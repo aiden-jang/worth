@@ -248,7 +248,6 @@ export function ListsPage() {
     <main className={`light-page lists-page page-width${creating ? '' : ' directory-page'}`}>
       <div className="page-head">
         <div>
-          {creating && <p className="overline">YOUR ARCHIVE</p>}
           <h1>{pageTitle}</h1>
           {creating || showingArchived || workoutShortcut ? (
             <p>{pageDescription}</p>

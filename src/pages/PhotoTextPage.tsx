@@ -103,7 +103,6 @@ export function PhotoTextPage() {
     <main className="light-page page-width photo-text-page">
       <header className="page-head">
         <div>
-          <p className="overline">ON THIS DEVICE</p>
           <h1>Read a photo.</h1>
           <p>Keep the words. You choose what follows.</p>
         </div>

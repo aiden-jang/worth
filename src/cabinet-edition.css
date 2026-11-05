@@ -43,7 +43,7 @@
   color: var(--ink);
   font-size: clamp(36px, 5vw, 76px);
   font-weight: 500;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   display: grid;
   place-items: center;
   position: relative;
@@ -74,7 +74,7 @@
 .collection-empty-composition h2 {
   font-size: 32px;
   font-weight: 500;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
   line-height: 1.1;
   margin: 0 0 14px;
 }
@@ -121,7 +121,7 @@
   font-size: 32px;
   font-weight: 500;
   line-height: 1.12;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
 }
 .cabinet-create-layout {
   display: grid;
@@ -399,7 +399,7 @@
 }
 .cabinet-quiet-state h2 {
   font-weight: 500;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
   line-height: 1.15;
   font-size: 24px;
   margin: 0 0 10px;

@@ -115,7 +115,6 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
     <>
       <header className="page-head inbox-head">
         <div>
-          <p className="overline">SAVED / UNFILED</p>
           <Heading id={drawer ? 'inbox-drawer-title' : undefined}>Unfiled.</Heading>
           <p>Saved here. Organize whenever you like.</p>
         </div>

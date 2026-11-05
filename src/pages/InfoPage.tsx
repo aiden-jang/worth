@@ -1,8 +1,15 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { ProductLinks } from '../components/ProductLinks';
+import { InfoDocument } from '../components/InfoDocument';
 const contact = 'support@aidenjang.com';
-export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missing' }) {
+export function InfoPage({
+  kind,
+  embedded = false,
+}: {
+  kind: 'privacy' | 'terms' | 'help' | 'missing';
+  embedded?: boolean;
+}) {
   const title =
     kind === 'privacy'
       ? 'Privacy.'
@@ -18,22 +25,25 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
     };
   }, [title]);
   return (
-    <main className="info-page">
-      <header className="info-header">
-        <Link className="product-wordmark" to="/">
-          worth
-        </Link>
-        <Link to="/">Back to Worth →</Link>
-      </header>
-      <article className="info-content">
-        <p className="overline">
-          {kind === 'help'
-            ? 'HELP & CONTACT'
-            : kind === 'missing'
-              ? '404'
-              : 'WORTH / UPDATED OCTOBER 19, 2026'}
-        </p>
-        <h1>{title}</h1>
+    <main className={`info-page${embedded ? ' embedded-info-page' : ''}`}>
+      {!embedded && (
+        <header className="info-header">
+          <Link className="product-wordmark" to="/">
+            worth
+          </Link>
+          <Link to="/">Back to Worth →</Link>
+        </header>
+      )}
+      <InfoDocument
+        title={title}
+        context={
+          kind === 'missing'
+            ? '404'
+            : kind === 'privacy' || kind === 'terms'
+              ? 'Updated October 19, 2026'
+              : undefined
+        }
+      >
         {kind === 'missing' ? (
           <>
             <p>This address doesn’t lead to a Worth page.</p>
@@ -668,11 +678,13 @@ export function InfoPage({ kind }: { kind: 'privacy' | 'terms' | 'help' | 'missi
             </section>
           </>
         )}
-      </article>
-      <footer className="info-footer">
-        <ProductLinks />
-        <a href="https://www.aidenjang.com">Made by Aiden Jang</a>
-      </footer>
+      </InfoDocument>
+      {!embedded && (
+        <footer className="info-footer">
+          <ProductLinks />
+          <a href="https://www.aidenjang.com">Made by Aiden Jang</a>
+        </footer>
+      )}
     </main>
   );
 }

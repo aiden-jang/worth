@@ -345,7 +345,7 @@
 .opinion-slip-verdict strong {
   font-size: 42px;
   font-weight: 500;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
   margin-top: 6px;
   color: var(--ink);
@@ -666,7 +666,7 @@
   color: var(--ink);
   font-size: 42px;
   font-weight: 500;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
 }
 .collection-search,
 .collection-advanced-filters {

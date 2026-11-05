@@ -123,7 +123,6 @@ export function FieldGuidePage() {
     <main className="light-page page-width field-guide-page">
       <header className="page-head">
         <div>
-          <p className="overline">SOMETHING TO KEEP</p>
           <h1>Field guide</h1>
           <p>A few finds, in your own order.</p>
         </div>

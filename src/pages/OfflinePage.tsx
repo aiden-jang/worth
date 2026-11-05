@@ -351,8 +351,8 @@ export function OfflinePage() {
       </header>
       <header className="offline-heading">
         <div>
-          <p className="overline">ON THIS DEVICE · {online ? 'CONNECTION AVAILABLE' : 'OFFLINE'}</p>
           <h1>Your offline copy.</h1>
+          <p className="offline-connection">On this device · {online ? 'Connection available' : 'Offline'}</p>
           <p>Read what you kept. Save the next thing for later.</p>
         </div>
         <Folder />

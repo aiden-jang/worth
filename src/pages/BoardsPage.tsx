@@ -44,7 +44,6 @@ export function BoardsPage() {
     <main className="light-page page-width boards-page">
       <header className="page-head">
         <div>
-          <p className="overline">YOUR ARCHIVE</p>
           <h1>Boards</h1>
           <p>Keep a few things together.</p>
         </div>
@@ -210,10 +209,10 @@ export function BoardPage() {
     <main className="light-page page-width board-page">
       <header className="page-head">
         <div>
-          <p className="overline">
-            {board ? `${boardLabels[board.kind]}${board.archived ? ' · ARCHIVED' : ''}` : 'PRIVATE BOARD'}
-          </p>
           <h1>{board?.name ?? 'Board'}</h1>
+          <p className="page-context">
+            {board ? `${boardLabels[board.kind]}${board.archived ? ' · Archived' : ''}` : 'Private board'}
+          </p>
         </div>
         <Link to="/patterns/boards">Back to Boards →</Link>
       </header>

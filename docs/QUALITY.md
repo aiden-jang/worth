@@ -60,6 +60,31 @@ Mobile save cases exercise short windows and resized/panned visual viewports,
 focused-field clearance, retry errors and nested confirmations. These browser
 simulations do not replace physical iPhone/Android keyboard checks.
 
+## Complete interface pass
+
+The Home and collections design continues through the shared working-page frame,
+readers, editors and public pages. The visual review uses isolated synthetic records
+at the contract's desktop and phone sizes, with the narrow-width checks alongside
+the existing browser journeys. The maintained composition sources are listed in
+the [reference index](../art/ui-mocks/README.md).
+
+| Area           | Pages and states reviewed                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| Archive        | Home, directory, archived/current controls, collection, new collection/activity, ranked display            |
+| Recall         | Look back Memories/Insights, direct Memories, search, Unfiled, record readers/editors                      |
+| Activity       | Workout list, active/finished visits, routines, exercise logging and progress/history                      |
+| Capture        | Web capture and signed-out review, quick picks, photo text, barcode/ISBN, receipt directory/review/detail  |
+| Archive tools  | Calendar, period summary, boards/trips and replay, connections, field guide                                |
+| Private copies | Capsule directory/creation/closed/opened views, shared spaces, space detail and invitations                |
+| Ownership      | Settings downloads/restore/Trash/offline/device/deletion/account sections, confirmations and recovery      |
+| Public/device  | Landing and local example, Help, Privacy, Terms, missing pages, public ranking/expired links, offline copy |
+
+Settings section links and document contents are covered by browser checks. Help
+and policy text retain their full wording and update dates. Signed-in missing
+pages use the existing shell rather than repeating public navigation and footers.
+The standalone offline entry retains its separate account, encryption and sync
+boundaries. No private review fixtures are added to the production archive.
+
 Home and workout-completion cases cover stable source selection, refreshed counts,
 source links, failed/confirmed finishes, incomplete totals, history access, focus,
 filter recovery and narrow layouts. Migrated-D1 tests exercise private Home evidence

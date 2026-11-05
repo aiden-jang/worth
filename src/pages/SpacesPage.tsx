@@ -72,7 +72,6 @@ export function SpacesPage() {
     <main className="light-page page-width spaces-page">
       <header className="page-head">
         <div>
-          <p className="overline">A FEW THINGS, TOGETHER</p>
           <h1>Shared spaces</h1>
           <p>Your originals stay yours.</p>
         </div>
@@ -203,8 +202,8 @@ export function SpaceInvitePage() {
     <main className="light-page page-width spaces-page">
       <header className="page-head">
         <div>
-          <p className="overline">PRIVATE INVITATION</p>
           <h1>Join a space</h1>
+          <p className="page-context">Private invitation</p>
         </div>
         <Link to="/spaces">Back to Spaces →</Link>
       </header>
@@ -316,8 +315,8 @@ function SpaceContent({ id, owner }: { id: string; owner: string | undefined }) 
     <main className="light-page page-width spaces-page">
       <header className="page-head">
         <div>
-          <p className="overline">{space ? `PRIVATE SPACE · ${space.role}` : 'PRIVATE SPACE'}</p>
           <h1>{space?.name ?? 'Shared space'}</h1>
+          <p className="page-context">{space ? `Private space · ${space.role}` : 'Private space'}</p>
         </div>
         <Link to="/spaces">Back to Spaces →</Link>
       </header>

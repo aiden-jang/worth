@@ -64,7 +64,6 @@ export function ActivityCalendarPage() {
     <main className="light-page page-width activity-calendar-page">
       <header className="page-head">
         <div>
-          <p className="overline">DAYS YOU CHOSE</p>
           <h1>Calendar</h1>
           <p>Plans, visits and activities.</p>
         </div>

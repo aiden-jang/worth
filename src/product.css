@@ -278,7 +278,7 @@ button:disabled {
   font-family: 'DM Sans', Arial, sans-serif;
   font-size: clamp(42px, 8vw, 80px);
   line-height: 1.05;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   max-width: 14ch;
 }
 @media (max-width: 680px) {

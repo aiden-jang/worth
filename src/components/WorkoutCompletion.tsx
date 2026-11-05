@@ -31,7 +31,6 @@ export function WorkoutCompletion({
     <section className="workout-completion" aria-labelledby={id}>
       <header>
         <div>
-          <p className="overline">SAVED THIS VISIT</p>
           <h2 ref={headingRef} id={id} tabIndex={-1}>
             Workout finished.
           </h2>

@@ -16,12 +16,12 @@
   max-width: 940px;
   padding: 44px;
 }
-.info-content h1 {
-  margin: 12px 0 20px;
+.info-title h1 {
+  margin: 0;
   font-size: 48px;
   font-weight: 500;
   line-height: 1.1;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.04em;
 }
 .data-heading {
   padding-bottom: 28px;
@@ -119,9 +119,57 @@
   justify-content: space-between;
   gap: 24px;
 }
-.info-content {
+.info-document {
   max-width: 760px;
-  margin: 64px auto;
+  margin: 48px auto;
+}
+.info-title {
+  margin-bottom: 28px;
+}
+.info-title p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.info-content {
+  font-size: 15px;
+  line-height: 1.75;
+}
+.info-content p {
+  max-width: 72ch;
+  line-height: 1.75;
+}
+.info-contents {
+  border-block: 1px solid var(--line);
+  margin-bottom: 28px;
+  padding-block: 12px;
+}
+.info-contents summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+.info-contents summary:hover {
+  color: var(--acid);
+}
+.info-contents nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 24px;
+  padding: 12px 0;
+}
+.info-contents a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  font-size: 14px;
+  text-underline-offset: 4px;
+}
+.info-contents a:hover {
+  color: var(--paper);
+  text-decoration: underline;
 }
 .info-content section {
   margin-top: 32px;
@@ -141,7 +189,7 @@
   .data-page {
     padding: 28px 20px;
   }
-  .info-content h1 {
+  .info-title h1 {
     font-size: 36px;
   }
   .info-content h2 {
@@ -156,8 +204,11 @@
   .info-header .product-wordmark {
     font-size: 32px;
   }
-  .info-content {
-    margin: 44px 0;
+  .info-document {
+    margin: 32px 0;
+  }
+  .info-contents nav {
+    grid-template-columns: 1fr;
   }
   .restore-preview {
     padding: 20px;

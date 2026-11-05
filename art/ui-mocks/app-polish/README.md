@@ -5,18 +5,19 @@ capture audit covered 29 routes at 1440 × 900 and 390 × 780 before these refer
 were authored. The HTML and these eight desktop/phone pairs were rendered and
 opened before implementation. All content is synthetic; the reference saves nothing.
 
-| Pattern          | Desktop                             | Phone                             |
-| ---------------- | ----------------------------------- | --------------------------------- |
-| Home             | [Reference](home-desktop.png)       | [Reference](home-phone.png)       |
-| Collection       | [Reference](collection-desktop.png) | [Reference](collection-phone.png) |
-| Activity         | [Reference](activity-desktop.png)   | [Reference](activity-phone.png)   |
-| Search           | [Reference](search-desktop.png)     | [Reference](search-phone.png)     |
-| Look back        | [Reference](recall-desktop.png)     | [Reference](recall-phone.png)     |
-| Settings         | [Reference](settings-desktop.png)   | [Reference](settings-phone.png)   |
-| Capture/review   | [Reference](capture-desktop.png)    | [Reference](capture-phone.png)    |
-| Supporting forms | [Reference](tools-desktop.png)      | [Reference](tools-phone.png)      |
+| Pattern          | Desktop                                           | Phone                                           |
+| ---------------- | ------------------------------------------------- | ----------------------------------------------- |
+| Home             | [Reference](../home-collections/home-desktop.png) | [Reference](../home-collections/home-phone.png) |
+| Collection       | [Reference](collection-desktop.png)               | [Reference](collection-phone.png)               |
+| Activity         | [Reference](activity-desktop.png)                 | [Reference](activity-phone.png)                 |
+| Search           | [Reference](search-desktop.png)                   | [Reference](search-phone.png)                   |
+| Look back        | [Reference](recall-desktop.png)                   | [Reference](recall-phone.png)                   |
+| Settings         | [Reference](settings-desktop.png)                 | [Reference](settings-phone.png)                 |
+| Capture/review   | [Reference](capture-desktop.png)                  | [Reference](capture-phone.png)                  |
+| Supporting forms | [Reference](tools-desktop.png)                    | [Reference](tools-phone.png)                    |
 
-The [HTML](index.html) uses `?screen=home`, `collection`, `activity`, `search`,
+Home uses the [current polish reference](../home-collections/README.md).
+The [HTML](index.html) uses `?screen=collection`, `activity`, `search`,
 `recall`, `settings`, `capture` or `tools`. These are composition patterns, not
 replacement content: privacy explanations, export limits, optional controls,
 real counts, account links, errors and pending states remain in production.
@@ -24,8 +25,8 @@ real counts, account links, errors and pending states remain in production.
 ## Shared rules
 
 - Signed-in working pages share 48px desktop / 36px phone titles, weight 500,
-  1.1 line height and -0.055em tracking. Remove inherited narrow title caps.
-- Desktop content starts 40px down, with the existing 44px side inset; phones
+  1.1 line height and -0.04em tracking. Remove inherited narrow title caps.
+- Desktop content starts 40px down, with the approved Home 36px side inset; phones
   start 24px below their header with 20px insets. Headers have 28px / 24px below.
 - Functional labels use 14px sentence-case DM Sans. Inputs are 15px desktop /
   16px phone, at least 44px high, with 12px corners and visible keyboard focus.
@@ -45,6 +46,14 @@ remain. Show list, public snapshots and printable/exported objects keep their
 presentation layouts. Public policy/help and the separate offline entry share
 readable type and controls while retaining their own navigation and privacy copy.
 Reference icons and artwork are schematic; production keeps its actual assets.
+
+The [reading reference](reading.html), [desktop](reading-desktop.png) and
+[phone](reading-phone.png) define Help and policy typography, update metadata and
+expandable contents links. Running pages retain their full text. Settings adds
+section links for downloads, restore, Trash, offline data, device cleanup, deletion
+and account help. Other page headers omit redundant introductions; factual access,
+status and source context stays below the title. The landing retains its folders
+and example, with the headline leading directly below its wordmark header.
 
 Phone utility menus sit 84px plus the device safe area above the viewport bottom,
 with 20px side insets and internal scrolling. This keeps long saved-view forms

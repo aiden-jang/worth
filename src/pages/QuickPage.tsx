@@ -127,7 +127,6 @@ export function QuickPage() {
     <main className="light-page page-width quick-page">
       <header className="page-head">
         <div>
-          <p className="overline">QUICK PICKS</p>
           <h1>Within reach.</h1>
           <p>A shortlist or a saved find from your own collections.</p>
         </div>

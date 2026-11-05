@@ -1,5 +1,6 @@
 /* The collection directory owns its composition instead of stacking historical skins. */
 .directory-page {
+  width: min(calc(100% - 72px), 1200px);
   padding-top: 40px;
 }
 .directory-page .page-head {
@@ -14,7 +15,7 @@
   margin: 0 0 10px;
   font-size: 48px;
   line-height: 1.1;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.04em;
   font-weight: 500;
 }
 .directory-page .page-head p {
@@ -180,7 +181,7 @@
 .collection-directory-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 .collection-directory-entry {
   min-width: 0;
@@ -199,7 +200,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  min-height: 144px;
+  min-height: 128px;
   padding: 16px;
   color: var(--paper);
   border-radius: 22px;
@@ -210,7 +211,7 @@
 }
 .directory-artwork {
   display: block;
-  width: 152px;
+  width: 144px;
   aspect-ratio: 1.6;
   flex: none;
   border-radius: 12px;
@@ -240,7 +241,7 @@
   font-size: 24px;
   font-weight: 500;
   line-height: 1.25;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
   overflow-wrap: anywhere;
 }
 .collection-directory-copy small {
@@ -366,12 +367,16 @@
   }
 }
 @media (max-width: 1180px) {
+  .directory-page {
+    width: calc(100% - 56px);
+  }
   .collection-directory-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (max-width: 680px) {
   .directory-page {
+    width: calc(100% - 40px);
     padding-top: 24px;
   }
   .directory-page .page-head {

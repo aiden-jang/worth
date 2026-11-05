@@ -7,10 +7,18 @@ rankings and workout measurements are optional context.
 ## Current references
 
 The [reference index](art/ui-mocks/README.md) identifies the maintained compositions.
+The [Home and collections polish](art/ui-mocks/home-collections/README.md) owns
+their compact shelf, recent-record typography and directory card rhythm.
 The [build contract](art/ui-mocks/BUILD-CONTRACT.md) owns exact tokens, dimensions,
 responsive behavior and motion. [VOICE.md](VOICE.md) owns copy and character rules.
 Keep these documents about the current app; Git retains superseded designs and
 completed implementation plans.
+
+The approved Home rhythm continues through all working pages, with 36px desktop
+insets, readable title tracking and direct headings. Factual statuses and access
+roles sit below their titles. Settings links to its data sections; Help and policies
+have expandable contents derived from their unchanged section headings. The landing,
+public snapshots and offline entry retain their own navigation and composition.
 
 ## Everyday flow
 
