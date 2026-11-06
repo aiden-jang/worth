@@ -4,6 +4,37 @@ import { expect, list, test } from './fixtures';
 import { emptyItemContext } from '../src/shared/item-context';
 import { editItem } from './navigation';
 
+test('a revisit draft survives browser history and clears after an explicit discard', async ({
+  page,
+  archive,
+}) => {
+  const title = archive.items[0].title;
+  await page.goto('/lists');
+  await page
+    .getByRole('link', { name: new RegExp(archive.list.name) })
+    .first()
+    .click();
+  const editor = page.getByRole('dialog', { name: title, exact: true });
+  await editItem(page, title);
+  const note = editor.getByRole('textbox', { name: 'Note', exact: true });
+  const date = editor.getByLabel('Date', { exact: true });
+  await date.fill('2026-09-03');
+  await note.fill('The same table this time.');
+  await expect(editor.getByText('Draft saved on this device.', { exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(editor).toHaveCount(0);
+  await page.goForward();
+  await editItem(page, title);
+  await expect(date).toHaveValue('2026-09-03');
+  await expect(note).toHaveValue('The same table this time.');
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await editItem(page, title);
+  await expect(note).toHaveValue('');
+  await expect(date).not.toHaveValue('2026-09-03');
+});
+
 test('item editing separates calls from ranking and keeps saving visible', async ({
   page,
   archive,

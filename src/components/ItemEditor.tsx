@@ -8,7 +8,7 @@ import { formatDate, today } from '../format';
 import { useConnection } from '../hooks/useConnection';
 import { useDraft } from '../hooks/useDraft';
 import { useDraftPhoto } from '../hooks/useDraftPhoto';
-import { isItemDraft } from '../shared/drafts';
+import { isItemDraft, isRevisitDraft } from '../shared/drafts';
 import type { Item, Log } from '../shared/models';
 import { preparePhoto } from '../shared/photos';
 import { CollectionLogEditor } from './CollectionLogEditor';
@@ -75,8 +75,9 @@ export function ItemEditor({
   const online = useConnection();
   const previousItemId = useRef(item?.id);
   const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
-  const [logDate, setLogDate] = useState(today());
-  const [logNote, setLogNote] = useState('');
+  const [initialLog, setInitialLog] = useState(() => ({ happenedOn: today(), note: '' }));
+  const revisit = useDraft(`revisit:${listId}:${item?.id ?? 'new'}`, initialLog, isRevisitDraft);
+  const { happenedOn: logDate, note: logNote } = revisit.form;
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [confirmingContextReload, setConfirmingContextReload] = useState(false);
   const [editingLog, setEditingLog] = useState<Log | null>(null);
@@ -88,7 +89,8 @@ export function ItemEditor({
     (log) => log.itemId === item?.id || item?.mergedIds?.includes(log.itemId ?? ''),
   );
   const hasItemChanges = JSON.stringify(form) !== JSON.stringify(savedForm);
-  const hasUnsavedChanges = hasItemChanges || Boolean(logNote.trim()) || Boolean(photo);
+  const hasRevisitChanges = logDate !== initialLog.happenedOn || Boolean(logNote);
+  const hasUnsavedChanges = hasItemChanges || hasRevisitChanges || Boolean(photo);
 
   useModalDialog(dialog, () =>
     [...document.querySelectorAll<HTMLElement>('.collection-index-row')]
@@ -180,6 +182,7 @@ export function ItemEditor({
   const remove = useMutation({
     mutationFn: () => api.deleteItem(item!.id),
     onSuccess: () => {
+      revisit.clear(initialLog);
       void client.invalidateQueries({ queryKey: ['items', listId] });
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -202,7 +205,10 @@ export function ItemEditor({
         reps: null,
       }),
     onSuccess: ({ log }) => {
-      setLogNote('');
+      const next = { happenedOn: log.happenedOn, note: '' };
+      revisit.clear(next);
+      revisit.setForm(next);
+      setInitialLog(next);
       setEditingLog(log);
       void client.invalidateQueries({ queryKey: ['logs', listId] });
       void client.invalidateQueries({ queryKey: ['items', listId] });
@@ -231,6 +237,7 @@ export function ItemEditor({
   }
   function logAgain(event: FormEvent) {
     event.preventDefault();
+    if (addLog.isPending) return;
     addLog.mutate();
   }
 
@@ -420,21 +427,34 @@ export function ItemEditor({
                 type="date"
                 aria-label="Date"
                 required
+                disabled={addLog.isPending}
                 value={logDate}
-                onChange={(event) => setLogDate(event.target.value)}
+                onChange={(event) => {
+                  const happenedOn = event.target.value;
+                  revisit.setForm((prev) => ({ ...prev, happenedOn }));
+                }}
               />
               <input
                 ref={logNoteInput}
                 value={logNote}
                 maxLength={4000}
+                disabled={addLog.isPending}
                 aria-label="Note"
-                onChange={(event) => setLogNote(event.target.value)}
+                onChange={(event) => {
+                  const note = event.target.value;
+                  revisit.setForm((prev) => ({ ...prev, note }));
+                }}
                 placeholder="A note, if you want"
               />
               <button className="button button-outline" disabled={addLog.isPending}>
                 <Plus size={17} /> Log again
               </button>
             </form>
+            {hasRevisitChanges && revisit.status && (
+              <p className="draft-state" role="status">
+                {revisit.status}
+              </p>
+            )}
             {addLog.isError && <p className="form-error">{addLog.error.message}</p>}
             <div className="history-list">
               {history.map((log) => (
@@ -514,6 +534,7 @@ export function ItemEditor({
             confirmLabel="Discard changes"
             onConfirm={() => {
               draft.clear();
+              revisit.clear(initialLog);
               photoDraft.clear();
               setConfirmingDiscard(false);
               dialog.current?.close();
