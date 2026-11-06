@@ -69,6 +69,12 @@ export function RecordDetails({
         event.preventDefault();
         onClose();
       }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape' || event.defaultPrevented) return;
+        event.stopPropagation();
+        event.preventDefault();
+        onClose();
+      }}
       onClick={(event) => {
         if (event.target === dialog.current) onClose();
       }}

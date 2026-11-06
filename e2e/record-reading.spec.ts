@@ -141,9 +141,13 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
   await capture(page, 'unfiled-reader', info.project.name);
   await reader.getByRole('button', { name: 'Close details' }).click();
   await expect(openSaved).toBeFocused();
-  await page.getByRole('button', { name: 'View An earlier find', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'An earlier find', exact: true })).toBeVisible();
+  const viewEarlier = page.getByRole('button', { name: 'View An earlier find', exact: true });
+  const earlier = page.getByRole('dialog', { name: 'An earlier find', exact: true });
+  await viewEarlier.click();
+  await expect(earlier).toBeVisible();
   await page.keyboard.press('Escape');
+  await expect(earlier).toHaveCount(0);
+  await expect(viewEarlier).toBeFocused();
   await page.getByRole('button', { name: 'Edit A new find', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('A new find');
