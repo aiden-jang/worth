@@ -540,6 +540,10 @@
   align-items: center;
   gap: 4px;
 }
+.collection-row-options > summary {
+  width: 44px;
+  padding: 8px;
+}
 .collection-index-row .collection-row-edit {
   min-width: 44px;
   min-height: 44px;
