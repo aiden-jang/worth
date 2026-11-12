@@ -14,18 +14,21 @@ adding fields or changing the capture, storage or sharing contracts.
 
 ## Save first
 
-Choose **Add item**, enter a name and choose **Save**. Outside an open active list,
+Choose **Add item**, enter a name and choose **Quick save**. Outside an open active list,
 **Save in** starts at **Unfiled**. Inside a list it visibly selects that list.
 There is no hidden last-used destination. A recovered draft keeps its own visible
 destination. Unfiled is the existing Inbox store with a clearer primary UI label.
 
-Optional calls and **Want to try** are visible immediately. Choosing Want to try
-parks any draft call and hides rating choices; reversing it restores that draft
-call. Saving a plan creates no experience or opinion. **New collection** creates and selects a
-collection inside Add item while retaining its name and call. **Add details**
-opens optional text, context and one photo. **Record a dated
-experience** reveals the date and treats its reaction as **This time**. This also
-works in Unfiled: a find can keep its date, thought and photo before organization.
+Choose **Save with details** for optional context, notes, calls, **Want to try**,
+experiences and photos. No call is selected for a fresh name. **Name only** returns
+to quick capture; Quick save ignores optional draft fields. Detailed recovered
+drafts open their fields visibly. **New collection** preserves the name while
+creating and selecting a destination. Want to try parks a draft call and restores
+it when reversed; a plan adds no experience. **Record a dated experience** is
+explicit, with its own date and reaction. Activity quick saves keep their date.
+Use **Save item** or **Save entry** when ready to save the details.
+The experience reaction is labeled **This time**. An Unfiled find can keep its
+date, thought and photo before organization.
 An Unfiled find holds one optional experience; repeated visits belong to a
 collection record. The overall call stays separate when editing an existing find.
 Saving a name or photo alone never creates a visit.
@@ -63,7 +66,7 @@ grouped into a visit or given measurements automatically.
 
 Save closes the composer and offers Open and Undo. Undo uses existing 30-day Trash
 recovery. A new name and its first visit undo together; a repeat visit undoes only
-that visit. Save and Trash notices replace each other and stay above phone navigation.
+that visit. Collection success, saved-item and Trash notices replace each other and stay above phone navigation.
 Unfinished drafts remain scoped to the account on this device. A lost
 save reply freezes the exact payload and operation identity; Retry checks that
 same save, including after reload. Clearing a retry draft does not undo a request
@@ -113,11 +116,14 @@ Collections open with name capture, one row of call filters for saved items,
 search and **All items / Want to try / Tried** tabs. **Quick save** saves only the
 name, without a call or plan, including when an old draft had a selected rating.
 **Save with details** opens the existing editor with the typed name; no record is
-created until **Add item**. Its separate details draft survives closing or reload.
+created until **Save item**. Its separate details draft survives closing or reload.
 There are no inline rating choices. Tried contains
 nonplanned records with a call or dated experience; unrated name-only saves stay
-in All items. **More filters** retains the other views and specialized filters. A name-only save returns input focus without opening details.
-The desktop preview column stays in place even without a selection; widths up to
+in All items. **More filters** retains the other views and specialized filters. Favorite appears
+only in the call filter; older Favorites presets still work. Counts follow search,
+advanced criteria and the selected view. Active filters show their result count
+with **Clear all**. A name-only save returns input focus without opening details.
+The desktop preview column keeps a quiet, transparent placeholder before selection; widths up to
 960px use a native sheet. Selecting a record leaves rows in place and writes
 nothing. Its three call buttons save immediately on deliberate clicks; selecting
 the current call clears it. Edit and Add experience are available on the slip.
@@ -127,15 +133,16 @@ changing notes or touching ranking. **Remove from Want to try** clears only the
 plan flag and preserves any existing opinion. Row Edit belongs in its options
 menu with rank, notes, queues and **Move to Trash**. Trash asks for confirmation,
 preserves 30-day recovery and offers Undo. Its notice dismisses after six idle
-seconds, pausing for hover, focus, pending Undo or a recovery error. Wider editor
-changes still require Save. Unfiled opens its own page, without a drawer.
+seconds, pausing for hover, focus, pending Undo or a recovery error. The single-column item editor puts name, details and note before the compact
+optional call control. Its actions are **Save item**, **Save changes** and
+**Move to Trash**. Wider editor changes still require an explicit save. Unfiled opens its own page, without a drawer.
 
 Home, search, memory and tool links open saved records for reading. **Edit** switches
 to the existing editor, including any unfinished device draft; browsing always
 shows the saved version. Details include private notes/context, available photos
 and captions, and the actual dated experiences or recorded sets. Unfiled rows
 have separate **View** and **Edit** actions. Closing details returns focus without
-saving; a closed activity deep link stays closed after reload. Existing editor
+saving; closed Unfiled and activity deep links stay closed after reload. Existing editor
 URLs remain usable.
 
 New collections and activities need only a name. **Create** comes before the

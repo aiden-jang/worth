@@ -1,14 +1,14 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 
 export function useModalDialog(
   dialog: RefObject<HTMLDialogElement | null>,
   fallback?: () => HTMLElement | null | undefined,
 ) {
   const restore = useRef(fallback);
-  useEffect(() => {
+  useLayoutEffect(() => {
     restore.current = fallback;
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = dialog.current;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     node?.showModal();

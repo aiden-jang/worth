@@ -35,6 +35,7 @@ test('Add accepts a link and photo text inside the same draft without a detour',
 }, info) => {
   await page.goto('/');
   const add = await openAdd(page);
+  await add.getByRole('button', { name: 'Save with details', exact: true }).click();
   await add.getByRole('button', { name: 'Meh', exact: true }).click();
   await add.getByRole('button', { name: 'Paste link', exact: true }).click();
   await add.getByLabel('Link', { exact: true }).fill('https://example.test/corner-ramen');
@@ -47,7 +48,7 @@ test('Add accepts a link and photo text inside the same draft without a detour',
   await expect(add.getByRole('button', { name: 'Meh', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await capture(page, 'add-sources', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   expect(archive.inbox.at(-1)).toMatchObject({
     title: 'Shoyu ramen',
@@ -85,7 +86,7 @@ test('photo reading runs in the Add dialog and keeps its photo off the saved ite
   });
   await capture(page, 'photo-reading', info.project.name);
   await add.getByRole('button', { name: 'Use ILLUSTRATED EDITION', exact: true }).click();
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   expect(archive.inbox.at(-1)).toMatchObject({ title: 'ILLUSTRATED EDITION' });
   expect(archive.inbox.at(-1)?.photo).toBeFalsy();
@@ -112,7 +113,7 @@ test('an ISBN only leaves the device after Look up and its reviewed details can 
   expect(lookups).toEqual([]);
   await add.getByRole('button', { name: 'Look up book', exact: true }).click();
   await add.getByRole('button', { name: 'Use book details', exact: true }).click();
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   expect(lookups).toHaveLength(1);
   expect(archive.inbox.at(-1)).toMatchObject({
@@ -153,7 +154,7 @@ test('typing a saved name offers another experience instead of silently duplicat
   await page.goto(`/lists/${list.id}`);
   const add = await openAdd(page);
   await add.getByLabel('Name', { exact: true }).fill('Coffee');
-  await expect(add.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
+  await expect(add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ })).toBeDisabled();
   await expect(add.getByRole('link', { name: 'Open item', exact: true })).toBeVisible();
   await capture(page, 'existing-name', info.project.name);
   await add.getByRole('button', { name: 'Add another experience', exact: true }).click();
@@ -162,7 +163,7 @@ test('typing a saved name offers another experience instead of silently duplicat
     .getByRole('group', { name: 'This time', exact: true })
     .getByRole('button', { name: 'Meh', exact: true })
     .click();
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   expect(archive.items).toHaveLength(2);
   expect(archive.items[0].decision).toBe('favorite');

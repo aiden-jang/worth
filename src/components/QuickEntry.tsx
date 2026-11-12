@@ -87,7 +87,9 @@ export function QuickEntry({
   const hasCaptureContext =
     !!form.context && JSON.stringify(form.context) !== JSON.stringify(emptyItemContext);
   const [detailsOpen, setDetailsOpen] = useState(
-    Boolean(form.note || form.wantToTry || form.experienced || itemDetails),
+    Boolean(
+      form.note || form.wantToTry || form.decision || form.experienced || itemDetails || hasCaptureContext,
+    ),
   );
   const names = useQuery({
     queryKey: ['items', form.listId],
@@ -177,7 +179,7 @@ export function QuickEntry({
       setForm(applyCaptureSuggestion(form, suggestion));
       setValidation('');
       setCaptureNotice('Name added. Check it before saving.');
-      if (suggestion.note || suggestion.code || suggestion.type) setDetailsOpen(true);
+      setDetailsOpen(true);
       name.current?.focus();
       return true;
     } catch (cause) {
@@ -215,15 +217,20 @@ export function QuickEntry({
       return;
     setPreparing(true);
     try {
+      const quick = !detailsOpen && !form.pending;
       let pending: QuickEntryPending =
         form.pending ??
         (activity
           ? {
               kind: 'activity',
               listId: form.listId,
-              body: logInput.parse({ title: form.title, happenedOn: form.happenedOn, note: form.note }),
+              body: logInput.parse({
+                title: form.title,
+                happenedOn: form.happenedOn,
+                note: quick ? '' : form.note,
+              }),
             }
-          : collection && form.experienced
+          : !quick && collection && form.experienced
             ? {
                 kind: 'experience',
                 listId: form.listId,
@@ -244,14 +251,15 @@ export function QuickEntry({
                   kind: 'inbox',
                   item: inboxPayload.parse({
                     title: form.title,
-                    type: form.type ?? '',
-                    context: form.context,
-                    note: form.note,
-                    decision: form.experienced ? null : form.decision,
-                    wantToTry: form.wantToTry,
-                    memory: form.experienced
-                      ? { happenedOn: form.happenedOn, reaction: form.decision }
-                      : null,
+                    type: quick ? '' : (form.type ?? ''),
+                    context: quick ? emptyItemContext : form.context,
+                    note: quick ? '' : form.note,
+                    decision: quick || form.experienced ? null : form.decision,
+                    wantToTry: !quick && form.wantToTry,
+                    memory:
+                      !quick && form.experienced
+                        ? { happenedOn: form.happenedOn, reaction: form.decision }
+                        : null,
                   }),
                 }
               : {
@@ -259,11 +267,11 @@ export function QuickEntry({
                   listId: form.listId,
                   item: itemInput.parse({
                     title: form.title,
-                    type: form.type ?? '',
-                    context: form.context,
-                    note: form.note,
-                    decision: form.decision,
-                    wantToTry: form.wantToTry,
+                    type: quick ? '' : (form.type ?? ''),
+                    context: quick ? emptyItemContext : form.context,
+                    note: quick ? '' : form.note,
+                    decision: quick ? null : form.decision,
+                    wantToTry: !quick && form.wantToTry,
                   }),
                 });
       let file: File | null = null;
@@ -271,12 +279,25 @@ export function QuickEntry({
         throw new Error(
           'This photo draft could not be recovered. Check the saved entry before clearing this draft and choosing another photo.',
         );
-      if (photo.file && (!form.pending || pending.photoKey)) {
+      if (photo.file && (!quick || pending.photoKey) && (!form.pending || pending.photoKey)) {
         const prepared = await photo.freeze(await preparePhoto(photo.file));
         file = prepared.file;
         pending = { ...pending, photoKey: prepared.key };
       }
-      draft.checkpoint({ ...form, pending });
+      draft.checkpoint({
+        ...form,
+        ...(quick
+          ? {
+              type: '',
+              context: emptyItemContext,
+              note: '',
+              decision: null,
+              wantToTry: false,
+              experienced: false,
+            }
+          : {}),
+        pending,
+      });
       save.mutate({ pending, file });
     } catch (error) {
       setValidation(
@@ -502,47 +523,6 @@ export function QuickEntry({
                 name.current?.focus();
               }}
             />
-            {!activity && !form.experienced && (
-              <label className="capture-for-later check-label">
-                <input
-                  type="checkbox"
-                  aria-label="Want to try"
-                  checked={form.wantToTry}
-                  onChange={(event) =>
-                    edit(
-                      event.target.checked
-                        ? { wantToTry: true, parkedDecision: form.decision, decision: null }
-                        : { wantToTry: false, decision: form.parkedDecision ?? null },
-                    )
-                  }
-                />{' '}
-                Want to try <span>Save for later. Rate it after.</span>
-              </label>
-            )}
-            {!activity && form.wantToTry && (
-              <p className="quick-entry-helper">Verdict pending. Very reasonable.</p>
-            )}
-            {!activity && !form.wantToTry && (
-              <div className="quick-entry-call">
-                <p className="quick-entry-label">
-                  {form.experienced ? 'This time' : 'Your call'} <span className="optional">optional</span>
-                </p>
-                <CallChoices
-                  label={form.experienced ? 'This time' : 'Overall call'}
-                  value={form.decision}
-                  onChange={(decision) => edit({ decision })}
-                />
-                <p className="quick-entry-helper">
-                  {form.decision === 'favorite'
-                    ? 'A repeat appearance seems likely.'
-                    : form.decision === 'meh'
-                      ? 'An event occurred.'
-                      : form.decision === 'would_not_again'
-                        ? 'Research concluded.'
-                        : 'No opinion is also an option.'}
-                </p>
-              </div>
-            )}
             {activity && target && (
               <p className="quick-entry-helper">
                 One dated activity entry. For exercise sets,{' '}
@@ -551,12 +531,12 @@ export function QuickEntry({
                 </Link>
               </p>
             )}
-            <details
-              open={detailsOpen}
-              onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
+            <fieldset
+              hidden={!detailsOpen}
+              disabled={!detailsOpen}
+              aria-label="Item details"
               className="quick-entry-details"
             >
-              <summary>Add details</summary>
               {!activity && !form.itemId && (
                 <ItemDetailsFields
                   key={form.listId}
@@ -608,13 +588,54 @@ export function QuickEntry({
                   onChange={(event) => edit({ note: event.target.value })}
                 />
               </label>
+              {!activity && !form.experienced && (
+                <label className="capture-for-later check-label">
+                  <input
+                    type="checkbox"
+                    aria-label="Want to try"
+                    checked={form.wantToTry}
+                    onChange={(event) =>
+                      edit(
+                        event.target.checked
+                          ? { wantToTry: true, parkedDecision: form.decision, decision: null }
+                          : { wantToTry: false, decision: form.parkedDecision ?? null },
+                      )
+                    }
+                  />{' '}
+                  Want to try <span>Save for later. Rate it after.</span>
+                </label>
+              )}
+              {!activity && form.wantToTry && (
+                <p className="quick-entry-helper">Verdict pending. Very reasonable.</p>
+              )}
+              {!activity && !form.wantToTry && (
+                <div className="quick-entry-call">
+                  <p className="quick-entry-label">
+                    {form.experienced ? 'This time' : 'Your call'} <span className="optional">optional</span>
+                  </p>
+                  <CallChoices
+                    label={form.experienced ? 'This time' : 'Overall call'}
+                    value={form.decision}
+                    onChange={(decision) => edit({ decision })}
+                  />
+                  <p className="quick-entry-helper">
+                    {form.decision === 'favorite'
+                      ? 'A repeat appearance seems likely.'
+                      : form.decision === 'meh'
+                        ? 'An event occurred.'
+                        : form.decision === 'would_not_again'
+                          ? 'Research concluded.'
+                          : 'No opinion is also an option.'}
+                  </p>
+                </div>
+              )}
               <DraftPhoto file={photo.file} onChange={photo.change} disabled={locked || !photo.ready} />
               {photo.status && (
                 <p role="status" className="draft-state">
                   {photo.status}
                 </p>
               )}
-            </details>
+            </fieldset>
             {activity && (
               <label>
                 When
@@ -667,11 +688,30 @@ export function QuickEntry({
                   ? 'Saving…'
                   : form.pending
                     ? 'Retry save'
-                    : 'Save'}
+                    : detailsOpen
+                      ? activity
+                        ? 'Save entry'
+                        : 'Save item'
+                      : 'Quick save'}
             </button>
+            {!form.pending && (
+              <button
+                type="button"
+                className="button button-outline"
+                disabled={locked || creatingCollection || captureBusy}
+                aria-expanded={detailsOpen}
+                onClick={() => setDetailsOpen((open) => !open)}
+              >
+                {detailsOpen ? (activity ? 'Name and date' : 'Name only') : 'Save with details'}
+              </button>
+            )}
           </DialogSaveFooter>
         </form>
-        <p className="quick-entry-helper">A name is enough. You can add more later.</p>
+        <p className="quick-entry-helper">
+          {activity
+            ? 'Quick save keeps the name and date. You can add details later.'
+            : 'Quick save keeps only the name. You can add details later.'}
+        </p>
         {(form.title || form.pending) && (
           <button
             type="button"

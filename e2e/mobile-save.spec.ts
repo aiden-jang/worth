@@ -80,12 +80,12 @@ test('Add keeps Save and the focused field clear in a short visible viewport wit
   await page.goto('/lists/' + list.id);
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
-  const save = dialog.getByRole('button', { name: 'Save', exact: true });
+  const save = dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ });
   await dialog.getByLabel('Name', { exact: true }).fill('The little lotion');
   await capture(page, 'name-only', info.project.name);
   if (info.project.name === 'desktop')
     await expect(dialog.locator('.dialog-save-footer')).toHaveCSS('display', 'contents');
-  await dialog.getByText('Add details', { exact: true }).click();
+  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
   await dialog.getByLabel('Brand or maker', { exact: true }).fill('Harbor');
   const note = dialog.getByRole('textbox', { name: /^Note/ });
   await note.fill('A note from a small-screen journey.');

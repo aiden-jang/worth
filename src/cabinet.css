@@ -1100,44 +1100,9 @@
 .cabinet-demo .demo-capture:focus-within .button {
   border-color: var(--acid);
 }
-.collection-capture-status {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin: 0 0 18px;
-  padding: 10px 13px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  color: var(--paper);
-  background: var(--panel);
-  font:
-    400 12px/1.5 'DM Sans',
-    sans-serif;
-  overflow-wrap: anywhere;
-}
-.collection-capture-status::before {
-  content: '';
-  flex: 0 0 5px;
-  width: 5px;
-  height: 5px;
-  align-self: flex-start;
-  margin-top: 6px;
-  border-radius: 50%;
-  background: var(--acid);
-}
 .collection-index-rows li.selected:hover .collection-index-row,
 .collection-index-rows li.selected:focus-within .collection-index-row {
   background: var(--raised);
-}
-@keyframes cabinet-feedback-arrive {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .collection-capture input,
@@ -1148,9 +1113,6 @@
     transition:
       border-color 160ms ease,
       background-color 160ms ease;
-  }
-  .collection-capture-status {
-    animation: cabinet-feedback-arrive 180ms ease both;
   }
 }
 

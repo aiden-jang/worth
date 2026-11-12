@@ -41,16 +41,19 @@ Search invitations and no-match states use a small paper-and-magnifier illustrat
 empty Insights uses an archive folder. These static decorative vectors extend the
 existing quiet-state composition and palette without implying a saved photo or call.
 
-Add item opens one name-first composer and states its destination. Its optional
-Favorite / Meh / Not again choices and Want to try are visible before Add details.
-Want to try parks an unsaved call and asks for no rating; reversing the choice
-restores that draft call. New collection
-creates and selects a collection inline without discarding the item draft. Use the current
-active list when open; otherwise use Unfiled, independently of previous choices.
-Add details offers an explicit dated experience, thought, reaction and private
-photo. Saving a name or photo alone never implies a visit or an opinion.
-Successful capture restores focus after saving so another name can follow.
-Interrupted saves retain their exact retry identity and account-scoped draft.
+Add item opens a name-first composer with Quick save and Save with details.
+Quick save stores the name alone for a collection or Unfiled, with no call, plan,
+photo or experience. Save with details reveals the optional fields; Name only
+returns to quick capture, keeping the unfinished fields until an explicit save.
+Restored drafts with details open those fields visibly. Activity capture retains
+its explicit date in either mode. These two actions deliberately replace the
+reference's immediately visible rating controls, following the usability review.
+Want to try parks an unsaved call; reversing it restores that draft call. New
+collection creates and selects a destination without discarding the item draft.
+Use the current active list when open; otherwise use Unfiled. Dated experiences,
+reactions and private photos remain explicit. Applying a source suggestion opens
+details so its source and metadata are visible and retained. Successful capture
+restores focus; interrupted saves retain the exact request and account-scoped draft.
 
 Paste link, Photo text and Barcode sit below Name inside Add item. Pasting a full
 http/https address into an empty or selected Name suggests a name from its path
@@ -76,7 +79,7 @@ creation checks for an already-created destination before posting another copy.
 
 Primary navigation is Home, Collections and Look back. Search and Unfiled are utilities. Unfiled navigates to its own page.
 Collection shortcuts nest immediately under Collections; New collection stays
-separate from the prominent Add item action. Saved and Trash recovery banners dismiss after six
+separate from the prominent Add item action. Collection success messages, saved-item and Trash recovery banners share one visible feedback slot and dismiss after six
 seconds, pausing for hover, keyboard focus, pending Undo or recovery errors. Desktop uses the 192px rail; phones use the persistent
 safe-area navigation and Add bar, plus search/account access in the header.
 Content, status panels and menus must clear that bar.
@@ -103,20 +106,26 @@ headings; one kind does not repeat the page title.
 A collection opens with identity, name capture, visible All items / Want to try /
 Tried tabs, direct call filters and search. Tried includes nonplanned records with
 an explicit call or dated experience; name-only saves remain in All items.
-More filters holds the other existing views and specialized filters. Settings,
+More filters holds the other existing views and specialized filters. Favorite
+appears only in the call filter; older saved Favorites views apply that filter.
+View counts respect search and advanced filters, and call counts also respect the
+selected view. A visible result summary lists active filters with Clear all. Settings,
 sharing and More tools are contextual. Entry options discloses batch capture,
 experiences, selection and saved views. Unranked items remain accessible. Wide desktop selection uses a cream side slip; widths up to
 960px use a native scrolling sheet with focus return and stable list positions.
 The preview stays reachable without scrolling past the collection's rows.
 The desktop slip column remains present before and after selection, with a quiet
-placeholder when nothing is selected. Preview call buttons save only on deliberate
+transparent, muted placeholder when nothing is selected. Preview call buttons save only on deliberate
 clicks and support clearing the current call; merely browsing writes nothing.
 Edit and Add experience stay on the slip, while row Edit belongs in its options
 menu, including Move to Trash with a confirmation and 30-day recovery. The editor
-still saves its wider changes explicitly. Inline capture offers Quick save and
+uses a 720px single column with name, useful details and note before a compact
+optional call capsule. This deliberately replaces its large cream rating card;
+cream remains for saved-item previews. Save item creates a record, Save changes
+updates it, and Move to Trash labels its recoverable deletion. Inline capture offers Quick save and
 Save with details. Quick save stores only the name, without a call, plan or visit,
 even when an older device draft contains a rating. Save with details opens the
-existing editor with the typed name and writes nothing until its Add item action.
+existing editor with the typed name and writes nothing until Save item.
 Its separate account-scoped details draft survives closing and reload; successful
 saves clear the inline name and return focus. These explicit actions replace the
 reference's single Save and optional inline call controls by user request. One
@@ -130,7 +139,7 @@ read-first details dialog. It shows saved text, context, photos and experiences;
 Edit opens the existing draft-aware editor. Unfiled rows have distinct View and
 Edit actions. Existing editor links still work. Closing a reader writes nothing
 and returns focus to its row, or the page heading when the source is elsewhere.
-Activity deep links clear when closed so refresh cannot reopen a dismissed record.
+Unfiled and activity deep links clear when closed so refresh cannot reopen a dismissed record.
 Name-only readers stay compact and omit empty history groups, while Add experience
 remains available for collection records.
 
@@ -147,7 +156,8 @@ Private uploaded covers take precedence over optional built-in artwork. Automati
 art uses exact starter-name matching or a monogram; explicit saved object/palette
 choices remain available. Artwork never implies a call, a rank or a memory.
 
-Optional item details sit together under Add details. Product starters offer brand,
+Optional capture fields sit under Save with details; editors group item details
+in their own disclosure. Product starters offer brand,
 variant, size and price/currency; Places offers location. Other collections can
 explicitly add product details. Name-only capture stays complete. Brand and size
 reuse private custom details, and variants/prices reuse their existing storage.

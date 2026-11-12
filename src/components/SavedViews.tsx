@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import type { SavedViewFilters } from '../shared/workspace';
 import { ConfirmDialog } from './ConfirmDialog';
+import { showMessage } from '../shared/feedback';
 
 export function SavedViews({
   listId,
@@ -14,7 +15,6 @@ export function SavedViews({
 }) {
   const { query, mutation } = useWorkspace(listId);
   const [name, setName] = useState('');
-  const [status, setStatus] = useState('');
   const [removeId, setRemoveId] = useState<string | null>(null);
   const workspace = query.data?.workspace;
   const duplicate = workspace?.views.some(
@@ -48,7 +48,7 @@ export function SavedViews({
                 {
                   onSuccess: () => {
                     setName('');
-                    setStatus('View saved.');
+                    showMessage('View saved.');
                   },
                 },
               );
@@ -80,7 +80,7 @@ export function SavedViews({
                   disabled={mutation.isPending}
                   onClick={() => {
                     onApply(view.filters);
-                    setStatus(`Applied ${view.name}.`);
+                    showMessage(`Applied ${view.name}.`);
                   }}
                 >
                   {view.name}
@@ -98,7 +98,6 @@ export function SavedViews({
           </ul>
         </>
       )}
-      {status && <p role="status">{status}</p>}
       {mutation.isError && (
         <p role="alert">
           {mutation.error.message}{' '}
@@ -129,7 +128,7 @@ export function SavedViews({
               {
                 onSuccess: () => {
                   setRemoveId(null);
-                  setStatus('View removed.');
+                  showMessage('View removed.');
                 },
               },
             )

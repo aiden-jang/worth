@@ -10,8 +10,10 @@ test('create a collection while adding an item and save its call in the same flo
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('The little ramen place');
+  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toHaveCount(0);
+  await add.getByRole('button', { name: 'Save with details', exact: true }).click();
   await add.getByRole('button', { name: 'Favorite', exact: true }).click();
-  await expect(add.locator('.quick-entry-details')).not.toHaveAttribute('open');
+  await expect(add.locator('.quick-entry-details')).toBeVisible();
   await add.getByRole('button', { name: 'New collection', exact: true }).click();
   await add.getByLabel('Collection name', { exact: true }).fill('Places');
   await add.getByRole('button', { name: 'Create collection', exact: true }).click();
@@ -26,7 +28,7 @@ test('create a collection while adding an item and save its call in the same flo
     await page.screenshot({ path: `${process.env.WORTH_FLOW_QA}/add-${info.project.name}.png` });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   expect(archive.list.name).toBe('Places');
   expect(archive.items.at(-1)).toMatchObject({ title: 'The little ramen place', decision: 'favorite' });
@@ -96,6 +98,29 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
+test('view and search counts agree and active filters clear together', async ({ page, archive }) => {
+  archive.items[0].wantToTry = false;
+  archive.items[0].decision = 'favorite';
+  archive.items[1].wantToTry = true;
+  archive.items[1].decision = null;
+  await page.goto(`/lists/${list.id}`);
+  const views = page.getByRole('group', { name: 'Collection views', exact: true });
+  const calls = page.getByRole('group', { name: 'Filter by personal call', exact: true });
+  await views.getByRole('button', { name: /^Want to try/ }).click();
+  await expect(calls.getByRole('button', { name: 'All calls 1', exact: true })).toBeVisible();
+  await expect(calls.getByRole('button', { name: 'Favorite 0', exact: true })).toBeVisible();
+  await expect(calls.getByRole('button', { name: 'No call 1', exact: true })).toBeVisible();
+  await page.getByRole('textbox', { name: `Search ${archive.list.name}`, exact: true }).fill('Coffee');
+  const active = page.getByRole('region', { name: 'Active filters', exact: true });
+  await expect(active).toContainText('0 results · Search: Coffee · Want to try');
+  await expect(calls.getByRole('button', { name: 'All calls 0', exact: true })).toBeVisible();
+  await active.getByRole('button', { name: 'Clear all', exact: true }).click();
+  await expect(active).toHaveCount(0);
+  await expect(calls.getByRole('button', { name: 'All calls 2', exact: true })).toBeVisible();
+  await expect(page.locator('.collection-index-row')).toHaveCount(2);
+  expect(archive.writes).toEqual([]);
+});
+
 test('save with details keeps a draft until an explicit save', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
   await page.getByRole('textbox', { name: 'Add a name', exact: true }).fill('Iced tea');
@@ -112,7 +137,7 @@ test('save with details keeps a draft until an explicit save', async ({ page, ar
   await page.getByRole('button', { name: 'Save with details', exact: true }).click();
   await editor.getByRole('button', { name: 'Meh', exact: true }).click();
   await editor.getByLabel('Private note', { exact: false }).fill('Try it iced.');
-  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await editor.getByRole('button', { name: 'Save item', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toHaveValue('');
   await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toBeFocused();
@@ -167,7 +192,7 @@ test('saved banner pauses for interaction and dismisses automatically', async ({
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('Remember this');
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   const banner = page.locator('.entry-saved');
   await expect(banner).toBeVisible();
   await banner.getByRole('button', { name: 'Undo', exact: true }).focus();
@@ -240,7 +265,7 @@ test('a visible plan can be reviewed in place without a visit date or ranking ch
   await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('A future tea');
   expect(archive.writes).toEqual([]);
   await editor.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
-  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await editor.getByRole('button', { name: 'Save item', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toHaveValue('');
   const planned = archive.items.at(-1)!;
@@ -346,7 +371,7 @@ test('Home mixes reminders while a save refresh keeps the current record', async
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Save in').selectOption(list.id);
   await add.getByLabel('Name', { exact: true }).fill('A new name');
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(add).toHaveCount(0);
   await expect(reminder).toHaveAttribute('aria-busy', 'false');
   await expect(reminder.getByRole('link', { name: 'An old favorite', exact: true })).toBeVisible();

@@ -98,7 +98,7 @@ test('a delayed name-only save keeps one retry identity after a lost reply', asy
     await page.getByRole('button', { name: 'Add item', exact: true }).click();
     let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
     await dialog.getByLabel('Name', { exact: true }).fill('The tiny midnight bakery');
-    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
     await expect.poll(() => submissions).toBe(1);
     await expect(dialog.getByLabel('Name', { exact: true })).toBeDisabled();
     await dialog.locator('form').evaluate((node) => {

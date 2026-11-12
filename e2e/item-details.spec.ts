@@ -17,7 +17,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
   let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toBeHidden();
   await dialog.getByLabel('Name', { exact: true }).fill('Daily lotion');
-  await dialog.getByText('Add details', { exact: true }).click();
+  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
   await dialog.getByLabel('Type', { exact: true }).fill('Moisturizer');
   await dialog.getByLabel('Brand or maker', { exact: true }).fill('Harbor');
   await expect(dialog.locator('datalist option[value="Harbor"]')).toHaveCount(1);
@@ -29,7 +29,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
   dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveValue('Harbor');
   await expect(dialog.getByLabel('Price paid', { exact: true })).toHaveValue('0');
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog.getByRole('alert')).toContainText('currency');
   await dialog.getByLabel('Currency', { exact: true }).fill('usd');
   if (process.env.WORTH_ITEM_DETAILS_QA) {
@@ -41,7 +41,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
     });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   const saved = archive.items.find((entry) => entry.title === 'Daily lotion')!;
   expect(saved).toMatchObject({
@@ -111,11 +111,11 @@ test('place capture keeps location first and a name-only capture creates no expe
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('The corner cafe');
-  await dialog.getByText('Add details', { exact: true }).click();
+  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel('Price paid', { exact: true })).toHaveCount(0);
   await dialog.getByLabel('Location', { exact: true }).fill('Brooklyn');
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   expect(archive.items.find((entry) => entry.title === 'The corner cafe')).toMatchObject({
     context: { location: 'Brooklyn' },

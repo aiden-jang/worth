@@ -15,7 +15,7 @@ test('Want to try capture and filtering leave opinions and rankings alone', asyn
   await page.getByRole('button', { name: 'Save with details', exact: true }).click();
   await expect(editor.getByRole('checkbox', { name: 'Want to try', exact: true })).toBeChecked();
   await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('Next café');
-  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await editor.getByRole('button', { name: 'Save item', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: 'Next café added' })).toBeVisible();
   expect(archive.items.at(-1)).toMatchObject({ wantToTry: true, decision: null });

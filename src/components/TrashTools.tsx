@@ -98,10 +98,12 @@ export function TrashNotice() {
     window.addEventListener('worth:trashed', listener);
     window.addEventListener('worth:restored', restored);
     window.addEventListener('worth:entry-saved', saved);
+    window.addEventListener('worth:message', saved);
     return () => {
       window.removeEventListener('worth:trashed', listener);
       window.removeEventListener('worth:restored', restored);
       window.removeEventListener('worth:entry-saved', saved);
+      window.removeEventListener('worth:message', saved);
     };
   }, [client, resetUndo]);
   useEffect(() => {

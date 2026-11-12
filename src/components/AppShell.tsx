@@ -20,6 +20,7 @@ import { quickEntryRequest, type SavedEntry } from '../shared/quick-entry';
 import { ProductLinks } from './ProductLinks';
 import { useConnection } from '../hooks/useConnection';
 import { api } from '../api';
+import { announceSavedEntry } from '../shared/feedback';
 
 const QuickEntry = lazy(() => import('./QuickEntry').then((module) => ({ default: module.QuickEntry })));
 
@@ -47,10 +48,19 @@ export function AppShell({
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
   const [menuOpen, setMenuOpen] = useState(false);
   const [add, setAdd] = useState<{ listId: string; title?: string } | null>(null);
-  const [saved, setSaved] = useState<SavedEntry | null>(null);
-  const [savedPaused, setSavedPaused] = useState(false);
+  const [notice, setNotice] = useState<{
+    entry?: SavedEntry;
+    text: string;
+    id: string;
+  } | null>(null);
+  const saved = notice?.entry;
+  const [savedHovered, setSavedHovered] = useState(false);
+  const [savedFocused, setSavedFocused] = useState(false);
+  const savedPaused = savedHovered || savedFocused;
   useEffect(() => {
-    const clearSaved = () => setSaved(null);
+    const clearSaved = () => {
+      setNotice(null);
+    };
     window.addEventListener('worth:trashed', clearSaved);
     return () => window.removeEventListener('worth:trashed', clearSaved);
   }, []);
@@ -186,15 +196,44 @@ export function AppShell({
           ? api.deleteItem(entry.undoItemId ?? entry.id)
           : api.deleteLog(entry.id),
     onSuccess: (_, entry) => {
-      setSaved((current) => (current?.id === entry.id ? null : current));
+      setNotice((current) => (current?.entry?.id === entry.id ? null : current));
       void client.invalidateQueries();
     },
   });
+  const { reset: resetUndo } = undo;
   useEffect(() => {
-    if (!saved || savedPaused || undo.isPending || undo.isError) return;
-    const timer = window.setTimeout(() => setSaved(null), 6000);
+    const savedEntry = (event: Event) => {
+      const detail = (event as CustomEvent<{ entry?: SavedEntry; message?: string }>).detail;
+      if (!detail?.entry) return;
+      resetUndo();
+      setSavedHovered(false);
+      setSavedFocused(false);
+      setNotice({
+        entry: detail.entry,
+        text: detail.message ?? `Saved “${detail.entry.title}”.`,
+        id: crypto.randomUUID(),
+      });
+    };
+    const message = (event: Event) => {
+      const text = (event as CustomEvent<string>).detail;
+      if (!text) return;
+      resetUndo();
+      setSavedHovered(false);
+      setSavedFocused(false);
+      setNotice({ text, id: crypto.randomUUID() });
+    };
+    window.addEventListener('worth:entry-saved', savedEntry);
+    window.addEventListener('worth:message', message);
+    return () => {
+      window.removeEventListener('worth:entry-saved', savedEntry);
+      window.removeEventListener('worth:message', message);
+    };
+  }, [resetUndo]);
+  useEffect(() => {
+    if (!notice || savedPaused || undo.isPending || undo.isError) return;
+    const timer = window.setTimeout(() => setNotice(null), 6000);
     return () => window.clearTimeout(timer);
-  }, [saved, savedPaused, undo.isPending, undo.isError]);
+  }, [notice, savedPaused, undo.isPending, undo.isError]);
   if (location.pathname.endsWith('/show')) return <>{children}</>;
   const collectionActive = location.pathname === '/lists' || /^\/lists\/[^/]+$/.test(location.pathname);
   const savedHref = saved
@@ -335,34 +374,36 @@ export function AppShell({
           <Plus size={19} /> Add item
         </button>
       </nav>
-      {saved && (
+      {notice && (
         <div
           className="entry-saved"
           role="status"
-          onMouseEnter={() => setSavedPaused(true)}
-          onMouseLeave={() => setSavedPaused(false)}
-          onFocus={() => setSavedPaused(true)}
+          onMouseEnter={() => setSavedHovered(true)}
+          onMouseLeave={() => setSavedHovered(false)}
+          onFocus={() => setSavedFocused(true)}
           onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setSavedPaused(false);
+            if (!event.currentTarget.contains(event.relatedTarget)) setSavedFocused(false);
           }}
         >
-          <span>Saved “{saved.title}”.</span>
-          <Link to={savedHref}>Open</Link>
-          <button
-            type="button"
-            disabled={undo.isPending}
-            onClick={() => {
-              undo.reset();
-              undo.mutate(saved);
-            }}
-          >
-            {undo.isPending ? 'Undoing…' : 'Undo'}
-          </button>
+          <span>{notice.text}</span>
+          {saved && <Link to={savedHref}>Open</Link>}
+          {saved && (
+            <button
+              type="button"
+              disabled={undo.isPending}
+              onClick={() => {
+                undo.reset();
+                undo.mutate(saved);
+              }}
+            >
+              {undo.isPending ? 'Undoing…' : 'Undo'}
+            </button>
+          )}
           <button
             type="button"
             className="icon-button"
             aria-label="Dismiss saved message"
-            onClick={() => setSaved(null)}
+            onClick={() => setNotice(null)}
           >
             <X size={18} />
           </button>
@@ -383,10 +424,7 @@ export function AppShell({
             initialListId={add.listId}
             initialTitle={add.title}
             onSaved={(entry) => {
-              window.dispatchEvent(new Event('worth:entry-saved'));
-              undo.reset();
-              setSavedPaused(false);
-              setSaved(entry);
+              announceSavedEntry(entry);
             }}
             onClose={() => {
               setAdd(null);

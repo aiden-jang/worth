@@ -115,6 +115,7 @@ test('inline collection creation retains the item and call through a failed crea
   const saved = vi.fn();
   setup(<QuickEntry lists={[]} initialListId="inbox" onClose={() => {}} onSaved={saved} />);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Cold brew' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Meh' }));
   fireEvent.click(screen.getByRole('button', { name: 'New collection' }));
   fireEvent.change(screen.getByLabelText('Collection name'), { target: { value: 'Drinks' } });
@@ -125,8 +126,8 @@ test('inline collection creation retains the item and call through a failed crea
   await waitFor(() => expect(screen.getByLabelText('Save in')).toHaveValue(list.id));
   expect(create).toHaveBeenCalledTimes(2);
   expect(screen.getByRole('button', { name: 'Meh' })).toHaveAttribute('aria-pressed', 'true');
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
   await waitFor(() => expect(saved).toHaveBeenCalled());
   expect(save).toHaveBeenCalledWith(
     list.id,
@@ -198,8 +199,8 @@ test('save with details waits for the editor and retains the typed name', async 
   expect(create).not.toHaveBeenCalled();
   fireEvent.click(within(editor).getByRole('button', { name: 'Meh' }));
   fireEvent.change(within(editor).getByLabelText(/Private note/), { target: { value: 'Try iced' } });
-  await waitFor(() => expect(within(editor).getByRole('button', { name: 'Add item' })).toBeEnabled());
-  fireEvent.click(within(editor).getByRole('button', { name: 'Add item' }));
+  await waitFor(() => expect(within(editor).getByRole('button', { name: 'Save item' })).toBeEnabled());
+  fireEvent.click(within(editor).getByRole('button', { name: 'Save item' }));
   await waitFor(() =>
     expect(create).toHaveBeenCalledWith(
       list.id,

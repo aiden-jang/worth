@@ -12,11 +12,14 @@ collection tools. All items, Want to try and Tried are visible collection views;
 More filters holds specialized choices. Customize collection contains optional
 setup. More from your archive reveals extra Home material. The signed-out example retains Keep it.
 
-Add details opens optional capture fields. Record a dated experience is an
-explicit choice; This time labels its reaction, separately from the overall call.
-Inline collection capture uses Quick save for a name alone and Save with details
-to open the editor before saving. Move to Trash names the recoverable delete action.
-A name-only find is complete. Never imply that missing details are homework.
+Quick save stores a name alone; Save with details opens optional capture fields.
+Name only returns to quick capture. Save item creates a record and Save changes
+updates it. Activity capture retains its explicit date and uses Save entry in
+details mode. Record a dated experience is an explicit choice; This time labels
+its reaction separately from the overall call. Move to Trash names recoverable
+delete actions. A name-only find is complete. Never imply that missing details
+are homework. The compact editor says No call selected. when its optional call
+is empty; illustrated saved-item slips retain their existing dry captions.
 
 Keep account access, workouts, dates, errors, help, privacy, sharing and destructive
 confirmations direct. Visibility belongs beside sharing/export/upload decisions,
@@ -77,9 +80,7 @@ Home reminders say “You liked it. Still on record.”, “Still awaiting its b
 moment.” or the actual call for a recent experience. Show another changes the
 reminder explicitly. Want to try capture says “Verdict pending. Very reasonable.”
 I tried it opens direct call choices; keep its explanation and no-call removal clear.
-Unfiled says “Saved. Filing department currently on break.” The idle opinion slip
-says “The opinion goes here.” with “Pick an item to see the details or make your
-call. Very official.” Capture responses are “A repeat appearance seems likely.”,
+Unfiled says “Saved. Filing department currently on break.” The idle preview says “Select an item to view its details.” Capture responses are “A repeat appearance seems likely.”,
 “An event occurred.” and “Research concluded.” Only show one call aside at a time;
 never replace functional labels or save user content with this copy.
 

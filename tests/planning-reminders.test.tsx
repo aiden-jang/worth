@@ -164,14 +164,15 @@ test('Want to try is visible during capture and parks an unsaved opinion until t
   }));
   setup(<QuickEntry lists={[list]} initialListId="inbox" onClose={() => {}} onSaved={() => {}} />);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Some future coffee' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Favorite' }));
   fireEvent.click(screen.getByRole('checkbox', { name: /Want to try/ }));
   expect(screen.queryByRole('button', { name: 'Favorite' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('checkbox', { name: /Want to try/ }));
   expect(screen.getByRole('button', { name: 'Favorite' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.click(screen.getByRole('checkbox', { name: /Want to try/ }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
   await waitFor(() => expect(create).toHaveBeenCalled());
   expect(create.mock.calls[0][0]).toMatchObject({ wantToTry: true, decision: null, memory: null });
 });

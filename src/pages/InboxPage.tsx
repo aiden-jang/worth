@@ -59,14 +59,9 @@ export function InboxPanel() {
   } | null>(null);
   const [params, setParams] = useSearchParams();
   const focus = z.string().uuid().safeParse(params.get('focus'));
-  const [selected, setSelected] = useState<string | null>(focus.success ? focus.data : null);
   const focusId = focus.success ? focus.data : null;
-  const [reading, setReading] = useState(params.get('view') === '1');
-  const routeView = params.get('view');
-  useEffect(() => {
-    setSelected(focusId);
-    setReading(routeView === '1');
-  }, [focusId, routeView]);
+  const selected = focusId;
+  const reading = params.get('view') === '1';
   const [term, setTerm] = useState(''),
     [limit, setLimit] = useState(30);
   const [discard, setDiscard] = useState(false);
@@ -161,22 +156,24 @@ export function InboxPanel() {
     : entries;
   const entry = entries.find((entry) => entry.id === selected);
   function closeEditor() {
-    setSelected(null);
-    if (params.has('focus')) {
-      const next = new URLSearchParams(params);
-      next.delete('focus');
-      next.delete('view');
-      setParams(next, { replace: true });
-    }
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete('focus');
+        next.delete('view');
+        return next;
+      },
+      { replace: true },
+    );
   }
   function openFind(id: string, view: boolean) {
-    setSelected(id);
-    setReading(view);
-    const next = new URLSearchParams(params);
-    next.set('focus', id);
-    if (view) next.set('view', '1');
-    else next.delete('view');
-    setParams(next);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('focus', id);
+      if (view) next.set('view', '1');
+      else next.delete('view');
+      return next;
+    });
   }
   return (
     <>

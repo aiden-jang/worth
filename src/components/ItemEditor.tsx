@@ -15,7 +15,7 @@ import { CollectionLogEditor } from './CollectionLogEditor';
 import { ConfirmDialog } from './ConfirmDialog';
 import { DraftPhoto } from './DraftPhoto';
 import { MergedRecords } from './MergedRecords';
-import { OpinionSlip } from './OpinionSlip';
+import { CallChoices } from './PersonalCall';
 import { PhotoControl } from './PhotoControl';
 import { ItemContextEditor } from './ItemContextEditor';
 import { VisitContextReadout } from './VisitContext';
@@ -320,16 +320,6 @@ export function ItemEditor({
               />
             </label>
           </div>
-          <OpinionSlip
-            presentation="editor"
-            className="record-call"
-            title={form.title.trim() || 'This one'}
-            type={form.type}
-            decision={form.decision}
-            onChange={(decision) => setForm({ ...form, decision })}
-          >
-            <p className="record-call-hint">Optional. Tap the selected call to clear it.</p>
-          </OpinionSlip>
           <div className="record-notes">
             <details
               className="record-extras item-basic-details"
@@ -357,14 +347,6 @@ export function ItemEditor({
                 locationInBasics={collectionDetailProfile(collectionName) === 'place'}
               />
             </details>
-            <label className="capture-want">
-              <input
-                type="checkbox"
-                checked={Boolean(form.wantToTry)}
-                onChange={(e) => setForm({ ...form, wantToTry: e.target.checked })}
-              />
-              Want to try
-            </label>
             <label>
               Private note <span className="optional">not in public ranking links</span>
               <textarea
@@ -376,6 +358,30 @@ export function ItemEditor({
                 placeholder="Anything to remember?"
               />
             </label>
+            <label className="capture-want">
+              <input
+                type="checkbox"
+                checked={Boolean(form.wantToTry)}
+                onChange={(e) => setForm({ ...form, wantToTry: e.target.checked })}
+              />
+              Want to try
+            </label>
+            <section
+              className="record-call-field"
+              aria-label={`Your call for ${form.title.trim() || 'This one'}`}
+            >
+              <p className="field-label">
+                Your call <span className="optional">optional</span>
+              </p>
+              <CallChoices
+                value={form.decision}
+                onChange={(decision) => setForm({ ...form, decision })}
+                label={`Your call for ${form.title.trim() || 'This one'}`}
+              />
+              <p className="record-call-hint">
+                {form.decision ? 'Tap the selected call to clear it.' : 'No call selected.'}
+              </p>
+            </section>
             <details className="record-extras" open={Boolean(item?.startedOn || item?.endedOn)}>
               <summary>
                 Dates <span>optional</span>
@@ -512,20 +518,20 @@ export function ItemEditor({
             onClick={() => setDeleteTarget({ kind: 'item', title: item.title })}
             disabled={remove.isPending}
           >
-            Delete item
+            Move to Trash
           </button>
         )}
         {remove.isError && <p className="form-error">{remove.error.message}</p>}
         {deleteTarget && (
           <ConfirmDialog
-            eyebrow={deleteTarget.kind === 'item' ? 'DELETE ITEM' : 'DELETE LOG'}
-            title={`Delete ${deleteTarget.title}?`}
+            eyebrow="MOVE TO TRASH"
+            title={`Move ${deleteTarget.title} to Trash?`}
             description={
               deleteTarget.kind === 'item'
                 ? 'This moves the item, merged originals, attached logs and private photos to Trash for 30 days. Restored items return unranked.'
                 : 'This moves the log and its private photo to Trash for 30 days.'
             }
-            confirmLabel={deleteTarget.kind === 'item' ? 'Delete item' : 'Delete log'}
+            confirmLabel="Move to Trash"
             pending={deleteTarget.kind === 'item' ? remove.isPending : deleteLog.isPending}
             error={
               deleteTarget.kind === 'item'
@@ -601,7 +607,7 @@ export function ItemEditor({
             Boolean(item && !hasItemChanges)
           }
         >
-          {save.isPending ? 'Saving…' : item ? 'Save changes' : 'Add item'}
+          {save.isPending ? 'Saving…' : item ? 'Save changes' : 'Save item'}
         </button>
         {draft.status && (
           <span className="draft-state" role="status">

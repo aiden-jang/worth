@@ -61,7 +61,7 @@ test('a first name can be saved without creating a collection, found from Home, 
   await dialog.getByLabel('Name', { exact: true }).fill('That little bookshop');
   await capture(page, 'add', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   await expect(
     page
@@ -86,7 +86,7 @@ test('a lost global save keeps its exact destination and payload across reload',
   await page.goto('/');
   let dialog = await openAdd(page);
   await dialog.getByLabel('Name', { exact: true }).fill('Corner ramen');
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog.getByRole('alert')).toBeVisible();
   await expect(dialog.getByLabel('Name', { exact: true })).toBeDisabled();
   await expect(dialog.getByLabel('Save in')).toBeDisabled();
@@ -197,7 +197,7 @@ test('collection experiences preserve overall calls and Undo reverses only the n
   const dialog = await openAdd(page);
   await expect(dialog.getByLabel('Save in')).toHaveValue(list.id);
   await dialog.getByLabel('Name', { exact: true }).fill('Ramen by the station');
-  await dialog.locator('summary').filter({ hasText: 'Add details' }).click();
+  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
   await dialog.getByLabel('Record a dated experience').check();
   await expect(dialog.getByLabel('When', { exact: true })).toHaveValue(today());
   await dialog.getByLabel('When', { exact: true }).fill('2025-04-12');
@@ -205,17 +205,17 @@ test('collection experiences preserve overall calls and Undo reverses only the n
     .getByRole('group', { name: 'This time', exact: true })
     .getByRole('button', { name: 'Meh', exact: true })
     .click();
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   expect(archive.logs.at(-1)).toMatchObject({ happenedOn: '2025-04-12', context: { reaction: 'meh' } });
   expect(archive.items.at(-1)?.decision).toBeNull();
   const savedId = archive.items.at(-1)!.id;
   const again = await openAdd(page);
   await again.getByLabel('Name', { exact: true }).fill('Ramen by the station');
-  await again.locator('summary').filter({ hasText: 'Add details' }).click();
+  await again.getByRole('button', { name: 'Save with details', exact: true }).click();
   await again.getByLabel('Record a dated experience').check();
   await again.getByRole('button', { name: 'Use saved Ramen by the station', exact: false }).click();
-  await again.getByRole('button', { name: 'Save', exact: true }).click();
+  await again.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(again).toHaveCount(0);
   expect(archive.items.filter((entry) => entry.title === 'Ramen by the station')).toHaveLength(1);
   expect(archive.logs.at(-1)?.itemId).toBe(savedId);
@@ -228,9 +228,9 @@ test('collection experiences preserve overall calls and Undo reverses only the n
   expect(archive.logs).toHaveLength(1);
   const newName = await openAdd(page);
   await newName.getByLabel('Name', { exact: true }).fill('Another noodle shop');
-  await newName.locator('summary').filter({ hasText: 'Add details' }).click();
+  await newName.getByRole('button', { name: 'Save with details', exact: true }).click();
   await newName.getByLabel('Record a dated experience').check();
-  await newName.getByRole('button', { name: 'Save', exact: true }).click();
+  await newName.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(newName).toHaveCount(0);
   await expect(page.getByRole('complementary', { name: 'Deletion recovery' })).toHaveCount(0);
   const newId = archive.items.at(-1)!.id;
@@ -436,7 +436,7 @@ test('global activity capture saves one dated entry without inventing exercise s
   await expect(dialog.getByLabel('Save in')).toHaveValue(list.id);
   await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('The long way home');
   await dialog.getByLabel('When', { exact: true }).fill('2025-04-12');
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   expect(archive.logs).toHaveLength(1);
   expect(archive.logs[0]).toMatchObject({

@@ -52,7 +52,7 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await editItem(page, 'Coffee');
   const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });
   await editor.getByRole('button', { name: 'Favorite', exact: true }).click();
-  await expect(editor.getByText('Undecided.', { exact: true })).toBeVisible();
+  await expect(editor.getByText('No call selected.', { exact: true })).toBeVisible();
   expect(archive.items[0].decision).toBe('favorite');
   await editor.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(editor.getByText('Saved.', { exact: true })).toBeVisible();

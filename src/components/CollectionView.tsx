@@ -13,7 +13,7 @@ import {
   batchCaptureTitles,
   collectionItemTitleLimit,
 } from '../shared/collection-capture';
-import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
+import { wasOpenedLongAgo } from '../shared/collection-workspace';
 import type { Item, ItemDecision, ListDetail } from '../shared/models';
 import { CallFace } from './PersonalCall';
 import { personalCalls, decisionLabel } from '../shared/decisions';
@@ -29,7 +29,7 @@ import { IndexRows, ItemPreview } from './CollectionIndex';
 import { CollectionTools } from './CollectionTools';
 import { ItemSheet } from './ItemSheet';
 import { SavedViews } from './SavedViews';
-import { FilingMoment } from './FilingMoment';
+import { announceSavedEntry, showMessage } from '../shared/feedback';
 import type { SavedViewFilters } from '../shared/workspace';
 import { brandKey, itemBrand, itemDetailSuggestions, itemIdentity } from '../shared/item-details';
 import { matchingSavedItems } from '../shared/capture-assist';
@@ -52,7 +52,6 @@ type BrowseMode = 'all' | 'kept' | 'tried' | 'revisited' | 'not-opened-lately' |
 
 const browseModes: { id: BrowseMode; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'kept', label: 'Favorites' },
   { id: 'tried', label: 'Tried' },
   { id: 'want', label: 'Want to try' },
   { id: 'queue', label: 'Revisit queue' },
@@ -150,10 +149,15 @@ export function CollectionView({
     'all',
   );
   const [sort, setSort] = useViewPreference<ItemSort>(`collection:${list.id}:sort`, 'rank');
+  useEffect(() => {
+    // Normalize older saved Favorites views into the one personal-call filter.
+    if (browse === 'kept') {
+      setBrowse('all');
+      setDecisionFilter('favorite');
+    }
+  }, [browse, setBrowse, setDecisionFilter]);
   const [selecting, setSelecting] = useState(false);
   const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
-  const [status, setStatus] = useState('');
-  const [filing, setFiling] = useState({ sequence: 0, count: 0, message: '' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewInSheet, setPreviewInSheet] = useState(() => matchMedia('(max-width: 960px)').matches);
   useEffect(() => {
@@ -165,7 +169,6 @@ export function CollectionView({
 
   useEffect(() => {
     restoreCaptureFocus.current = null;
-    setStatus('');
     setSelecting(false);
     setSelectionIds(new Set());
   }, [list.id]);
@@ -240,12 +243,11 @@ export function CollectionView({
     setDecisionFilter('all');
     setSort('rank');
     setSelectedId(null);
-    setStatus(`${item.title} added to ${list.name}.`);
-    setFiling((previous) => ({
-      sequence: previous.sequence + 1,
-      count: 1,
-      message: `${item.title} added to ${list.name}.`,
-    }));
+    announceSavedEntry(
+      { id: item.id, title: item.title, kind: 'item', listId: list.id },
+      `${item.title} added to ${list.name}.`,
+    );
+
     void client.invalidateQueries({ queryKey: ['items', list.id] });
     void client.invalidateQueries({ queryKey: ['list', list.id] });
     void client.invalidateQueries({ queryKey: ['lists'] });
@@ -292,12 +294,10 @@ export function CollectionView({
       setDecisionFilter('all');
       setSort('rank');
       setSelectedId(null);
-      setStatus(`${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`);
-      setFiling((previous) => ({
-        sequence: previous.sequence + 1,
-        count: created.length,
-        message: `${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`,
-      }));
+      showMessage(
+        `${created.length} ${created.length === 1 ? 'item added' : 'items added'} to ${list.name}.`,
+      );
+
       void client.invalidateQueries({ queryKey: ['items', list.id] });
       void client.invalidateQueries({ queryKey: ['list', list.id] });
       void client.invalidateQueries({ queryKey: ['lists'] });
@@ -319,13 +319,13 @@ export function CollectionView({
       opener: document.activeElement instanceof HTMLElement ? document.activeElement : null,
     }),
     onSuccess: ({ list: next }) => {
-      setStatus('Ranking saved.');
+      showMessage('Ranking saved.');
       client.setQueryData(['list', list.id], { list: next });
       void client.invalidateQueries({ queryKey: ['overview'] });
     },
     onError: async (error) => {
       if (error instanceof RequestError && error.status === 409) {
-        setStatus('The ranking changed in another tab, so the latest order has been restored.');
+        showMessage('The ranking changed in another tab, so the latest order has been restored.');
         await client.invalidateQueries({ queryKey: ['list', list.id] });
       }
     },
@@ -357,14 +357,14 @@ export function CollectionView({
       client.setQueryData<{ items: Item[] }>(['items', list.id], (current) => ({
         items: (current?.items ?? []).map((value) => (value.id === item.id ? item : value)),
       }));
-      setStatus(item.revisitQueued ? 'Added to revisit queue.' : 'Removed from revisit queue.');
+      showMessage(item.revisitQueued ? 'Added to revisit queue.' : 'Removed from revisit queue.');
       void client.invalidateQueries({ queryKey: ['items', list.id] });
     },
   });
   const want = useMutation({
     mutationFn: (item: Item) => api.updateItem(item.id, { wantToTry: !item.wantToTry }),
     onSuccess: ({ item }) => {
-      setStatus(item.wantToTry ? 'Saved to Want to try.' : 'Removed from Want to try.');
+      showMessage(item.wantToTry ? 'Saved to Want to try.' : 'Removed from Want to try.');
       void client.invalidateQueries({ queryKey: ['items', list.id] });
     },
   });
@@ -375,7 +375,7 @@ export function CollectionView({
       client.setQueryData<{ items: Item[] }>(['items', list.id], (current) => ({
         items: (current?.items ?? []).map((value) => (value.id === item.id ? item : value)),
       }));
-      setStatus(
+      showMessage(
         item.decision
           ? `${decisionLabel(item.decision)} saved for ${item.title}.`
           : `Call cleared for ${item.title}.`,
@@ -392,17 +392,17 @@ export function CollectionView({
     Boolean(addedSince || addedBefore || visits !== 'all') ||
     type !== 'all' ||
     rankFilter !== 'all' ||
-    decisionFilter !== 'all' ||
+    !['all', 'want', 'tried', 'kept'].includes(browse) ||
     sort !== 'rank';
   const ranks = useMemo(() => new Map(list.rankedIds.map((id, index) => [id, index + 1])), [list.rankedIds]);
   const ordered = visibleItems(items, list.rankedIds, {
     search,
     type,
     rankFilter,
-    decisionFilter,
+    decisionFilter: 'all',
     sort,
   });
-  const visible = ordered.filter((item) => {
+  const matching = ordered.filter((item) => {
     if (brand && brandKey(itemBrand(item.context)) !== brandKey(brand)) return false;
     if (label && !item.context?.labels.includes(label)) return false;
     if (stamp && !item.context?.stamps.includes(stamp)) return false;
@@ -416,14 +416,51 @@ export function CollectionView({
       (visits === 'again' && item.logCount <= 1)
     )
       return false;
-    if (browse === 'want') return Boolean(item.wantToTry);
-    if (browse === 'tried') return !item.wantToTry && (item.decision !== null || item.logCount > 0);
-    if (browse === 'queue') return Boolean(item.revisitQueued);
-    if (browse === 'kept') return item.decision === 'favorite';
-    if (browse === 'revisited') return item.logCount > 1;
-    if (browse === 'not-opened-lately') return wasOpenedLongAgo(item);
     return true;
   });
+  function matchesView(item: Item, view: BrowseMode) {
+    if (view === 'want') return Boolean(item.wantToTry);
+    if (view === 'tried') return !item.wantToTry && (item.decision !== null || item.logCount > 0);
+    if (view === 'queue') return Boolean(item.revisitQueued);
+    if (view === 'kept') return item.decision === 'favorite';
+    if (view === 'revisited') return item.logCount > 1;
+    if (view === 'not-opened-lately') return wasOpenedLongAgo(item);
+    return true;
+  }
+  const inView = matching.filter((item) => matchesView(item, browse));
+  const visible = inView.filter(
+    (item) =>
+      decisionFilter === 'all' ||
+      (decisionFilter === 'none' ? item.decision === null : item.decision === decisionFilter),
+  );
+  const activeFilters = [
+    search.trim() && `Search: ${search.trim()}`,
+    browse !== 'all' && browseModes.find((mode) => mode.id === browse)?.label,
+    decisionFilter !== 'all' && (decisionFilter === 'none' ? 'No call' : decisionLabel(decisionFilter)),
+    type !== 'all' && `Type: ${type}`,
+    brand && `Brand: ${brand}`,
+    label && `Label: ${label}`,
+    stamp && `Stamp: ${stamp}`,
+    rankFilter !== 'all' && `Rank: ${rankFilter}`,
+    addedSince && `Since ${addedSince}`,
+    addedBefore && `Before ${addedBefore}`,
+    visits !== 'all' && `Visits: ${visits}`,
+    sort !== 'rank' && `Order: ${sort}`,
+  ].filter(Boolean);
+  function clearFilters() {
+    setBrowse('all');
+    setSearch('');
+    setType('all');
+    setBrand('');
+    setLabel('');
+    setStamp('');
+    setRankFilter('all');
+    setDecisionFilter('all');
+    setAddedSince('');
+    setAddedBefore('');
+    setVisits('all');
+    setSort('rank');
+  }
   const windowScope = JSON.stringify([
     list.id,
     browse,
@@ -464,14 +501,12 @@ export function CollectionView({
     if (batchMode) {
       const titles = batchCaptureTitles(batchTitles);
       if (titles.length) {
-        setStatus('');
         batchCreate.mutate(titles);
       }
       return;
     }
     const cleanTitle = title.trim();
     if (cleanTitle) {
-      setStatus('');
       if (!captureDraft.form.pendingItem)
         captureDraft.checkpoint({
           ...captureDraft.form,
@@ -543,7 +578,6 @@ export function CollectionView({
       onLogRevisit(id);
     },
     onRank: (item: Item, position: number | null) => {
-      setStatus('');
       rank.mutate({ item, position });
     },
     rankPending: rank.isPending,
@@ -561,7 +595,6 @@ export function CollectionView({
 
   function selectBrowse(next: BrowseMode) {
     setBrowse(next);
-    setStatus('');
   }
 
   return (
@@ -697,12 +730,6 @@ export function CollectionView({
               {call.error?.message ?? want.error?.message ?? queue.error?.message ?? rank.error?.message}
             </p>
           )}
-          {status && (
-            <p className="collection-capture-status" role="status">
-              {filing.message === status && <FilingMoment key={filing.sequence} count={filing.count} />}
-              {status}
-            </p>
-          )}
 
           {showFilters && (
             <div className="collection-advanced-filters" id="collection-filters">
@@ -715,11 +742,7 @@ export function CollectionView({
                 >
                   {browseModes.map((mode) => (
                     <option key={mode.id} value={mode.id}>
-                      {mode.label} (
-                      {mode.id === 'want'
-                        ? items.filter((item) => item.wantToTry).length
-                        : collectionBrowseCount(mode.id, items)}
-                      )
+                      {mode.label} ({matching.filter((item) => matchesView(item, mode.id)).length})
                     </option>
                   ))}
                 </select>
@@ -826,25 +849,6 @@ export function CollectionView({
                   <option value="again">More than once</option>
                 </select>
               </label>
-              {hasAdvancedFilters && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAddedSince('');
-                    setAddedBefore('');
-                    setVisits('all');
-                    setType('all');
-                    setBrand('');
-                    setLabel('');
-                    setStamp('');
-                    setRankFilter('all');
-                    setDecisionFilter('all');
-                    setSort('rank');
-                  }}
-                >
-                  Clear filters
-                </button>
-              )}
             </div>
           )}
 
@@ -856,7 +860,7 @@ export function CollectionView({
               visibleIds={[...shownRanked, ...shownUnranked].map((i) => i.id)}
               onSelection={setSelectionIds}
               onDone={(message) => {
-                setStatus(message);
+                showMessage(message);
                 setSelectionIds(new Set());
                 setSelecting(false);
                 setSelectedId(null);
@@ -885,12 +889,7 @@ export function CollectionView({
                     setDecisionFilter('all');
                   }}
                 >
-                  {mode.label}{' '}
-                  <small>
-                    {mode.id === 'want'
-                      ? items.filter((item) => item.wantToTry).length
-                      : collectionBrowseCount(mode.id, items)}
-                  </small>
+                  {mode.label} <small>{matching.filter((item) => matchesView(item, mode.id)).length}</small>
                 </button>
               ))}
               {!['all', 'want', 'tried'].includes(browse) && (
@@ -907,7 +906,7 @@ export function CollectionView({
                   { value: 'none', label: 'No call' },
                 ] as const
               ).map((filter) => {
-                const count = items.filter(
+                const count = inView.filter(
                   (item) =>
                     filter.value === 'all' ||
                     (filter.value === 'none' ? item.decision === null : item.decision === filter.value),
@@ -1030,6 +1029,16 @@ export function CollectionView({
                 </div>
               </div>
             }
+            {activeFilters.length > 0 && (
+              <div className="collection-active-filters" role="region" aria-label="Active filters">
+                <p>
+                  {visible.length} {visible.length === 1 ? 'result' : 'results'} · {activeFilters.join(' · ')}
+                </p>
+                <button type="button" onClick={clearFilters}>
+                  Clear all
+                </button>
+              </div>
+            )}
             <div className="collection-index">
               {!visible.length ? (
                 <div className={items.length ? 'collection-index-empty' : 'collection-empty-composition'}>
@@ -1119,10 +1128,7 @@ export function CollectionView({
           <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
         ) : (
           <aside className="opinion-slip opinion-slip-placeholder" aria-label="Item preview">
-            <p className="overline">YOUR CALL</p>
-            <BlankSlips />
-            <h2>The opinion goes here.</h2>
-            <p>Pick an item to see the details or make your call. Very official.</p>
+            <p>Select an item to view its details.</p>
           </aside>
         )}
       </div>

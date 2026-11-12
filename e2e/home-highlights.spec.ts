@@ -132,7 +132,7 @@ test('Home keeps the chosen preference stable, refreshes its counts and can expl
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('A quick unfiled find');
-  await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(dialog).toHaveCount(0);
   await expect(shelf).toContainText('You marked 5 of 6 rated things Favorite.');
   await expect(shelf.getByRole('heading', { name: 'Harbor', exact: true })).toBeVisible();

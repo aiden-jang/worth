@@ -336,34 +336,6 @@
 .saved-rankings {
   margin: 20px 0;
 }
-.filing-moment {
-  width: 42px;
-  height: 36px;
-  flex: 0 0 auto;
-  overflow: hidden;
-}
-.filing-paper {
-  animation: file-record 650ms ease-out both;
-}
-@keyframes file-record {
-  from {
-    transform: translateY(-18px) rotate(-7deg);
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-  to {
-    transform: translateY(12px);
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .filing-paper {
-    animation: none;
-    transform: translateY(12px);
-  }
-}
 @media (max-width: 680px) {
   .saved-view-form {
     align-items: stretch;

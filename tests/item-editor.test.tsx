@@ -75,7 +75,7 @@ test('a refreshed item or photo does not replace unsaved fields and call', () =>
   expect(screen.getByRole('region', { name: 'Your call for My next draft' })).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: 'My next draft' })).not.toBeInTheDocument();
   expect(screen.queryByText('UNRANKED')).not.toBeInTheDocument();
-  expect(screen.getByText('Undecided.')).toBeInTheDocument();
+  expect(screen.getByText('No call selected.')).toBeInTheDocument();
 });
 
 test('closing a nested confirmation does not close the editor or discard the draft', () => {

@@ -913,13 +913,8 @@ select:focus {
 .collection-capture-note button:disabled {
   color: var(--faint);
 }
-.collection-capture-error,
-.collection-capture-status {
+.collection-capture-error {
   margin: 0.75rem 0 0;
-}
-.collection-capture-status {
-  color: var(--muted);
-  font: 500 0.68rem/1.5 var(--mono);
 }
 .collection-search {
   display: flex;

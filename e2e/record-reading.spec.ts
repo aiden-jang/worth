@@ -115,6 +115,7 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
       updatedAt: 1,
     },
   ];
+  const earlierId = archive.inbox[0].id;
   await page.goto('/inbox');
   let release!: () => void;
   const refresh = new Promise<void>((resolve) => {
@@ -127,7 +128,8 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
   await page.getByRole('main').getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('A new find');
-  await add.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toHaveCount(0);
+  await add.getByRole('button', { name: 'Quick save', exact: true }).click();
   const openSaved = page.locator('.entry-saved').getByRole('link', { name: 'Open', exact: true });
   await openSaved.click();
   try {
@@ -137,6 +139,11 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
     release();
   }
   const reader = page.getByRole('dialog', { name: 'A new find', exact: true });
+  expect(archive.inbox.find((entry) => entry.title === 'A new find')).toMatchObject({
+    decision: null,
+    wantToTry: false,
+    memory: null,
+  });
   await expect(reader.getByRole('textbox')).toHaveCount(0);
   if (info.project.name === 'desktop') expect((await reader.boundingBox())!.width).toBeLessThanOrEqual(520);
   await capture(page, 'unfiled-reader', info.project.name);
@@ -144,11 +151,17 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
   await expect(openSaved).toBeFocused();
   const viewEarlier = page.getByRole('button', { name: /^View An earlier find/ });
   const earlier = page.getByRole('dialog', { name: 'An earlier find', exact: true });
-  await viewEarlier.click();
-  await expect(earlier).toBeVisible();
-  await page.keyboard.press('Escape');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await viewEarlier.click();
+    await expect(earlier).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`focus=${earlierId}.*view=1`));
+    await page.keyboard.press('Escape');
+    await expect(earlier).toHaveCount(0);
+    await expect(page).toHaveURL(/\/inbox$/);
+    await expect(viewEarlier).toBeFocused();
+  }
+  await page.reload();
   await expect(earlier).toHaveCount(0);
-  await expect(viewEarlier).toBeFocused();
   await page.getByRole('button', { name: 'Edit A new find', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('A new find');

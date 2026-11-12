@@ -53,13 +53,22 @@ bottom bar. Content, status panels and dialogs must remain usable above it.
 
 Add opens a name-first native composer with an explicit destination: current
 active list when open, otherwise Unfiled. Do not silently use the previous list.
-A name is sufficient. Add item shows optional calls and Want to try directly and
-offers inline New collection creation, preserving the draft and selecting the new
-destination. Want to try parks an unsaved call and hides rating choices until
-reversed; saving a plan adds neither a call nor a visit.
-Add details opens an explicit dated-experience choice,
-thought, labeled reaction and optional photo disclosure. Never infer an experience
-from a name, image or save timestamp, or an overall call from a visit reaction.
+A name is sufficient. Fresh Add item shows Quick save and Save with details, with
+optional fields hidden until requested. Quick save keeps only the name for a
+collection or Unfiled; no old optional draft rating, photo or experience is saved.
+Save with details reveals context, note, optional plan/call, explicit dated
+experience and photo. Name only returns to quick capture; a detailed recovered
+draft opens visibly. Activity quick capture still requires its explicit date.
+Source suggestions open details so their metadata stays visible and is retained.
+New collection creation preserves the draft and selects the destination. Want to
+try parks an unsaved call until reversed; saving a plan adds no call or visit.
+Never infer an experience from a name, image or save timestamp, or an overall call
+from a visit reaction. The split actions intentionally replace the older Add
+reference's immediately visible rating controls, as requested in the review.
+The item editor is a 720px single column: name, details and note lead; optional
+plan and a compact dark call capsule follow. This replaces its oversized cream
+rating card while preserving the save footer. Save item creates, Save changes
+updates, and Move to Trash identifies recoverable deletion.
 
 An Unfiled find holds one optional experience and private photo. Filing transfers
 these atomically. Interrupted saves preserve exact retry identities and device
@@ -127,24 +136,24 @@ put the full-width input above two equal 48px actions. Do not show inline call
 choices or a New item options disclosure. Wide desktop selection uses a cream side slip;
 widths up to 960px use a native scrolling sheet without moving list rows or
 placing the preview below a long collection. Desktop always reserves the 300px
-slip column (275px at narrow desktop widths), including an unselected placeholder.
+slip column (275px at narrow desktop widths), including a transparent, muted unselected placeholder.
 Selecting, clearing selection, saving and filtering never resize the row column.
 Preview calls save on an explicit click and can clear; browse selection writes
 nothing. Edit and Add experience remain on the slip at all widths. Row Edit moves
 into the options menu, alongside experience, rank, notes, queues and Move to Trash.
 Trash requires confirmation and keeps the existing 30-day recovery. Direct call
-filters remain visible as one row for saved items; new-item choices appear only
-inside the capture disclosure and do not change those filters. Unranked items stay
-accessible. On phones, open capture options stack the new-item call label above
-text-only choices. Compact filter spacing keeps the first saved row above the bottom navigation. Controls
-retain their 44px minimum targets.
+filters remain visible as one row for saved items. Favorite has no second browse
+view; older saved Favorites presets normalize to All items plus the Favorite
+filter. View counts respect search and advanced filters; call counts also respect
+the selected view. Active criteria appear with a result count and Clear all.
+Unranked items stay accessible. Controls retain their 44px minimum targets.
 
 These interactions deliberately refine the static collection and Add references
 in response to the November usability review: fewer disclosures, a stable preview
 column and clear separation of Add item from New collection. The existing dark
 canvas, cream slip, tokens, typography and mobile sheet behavior remain the visual
 reference. Sidebar collection links nest beneath Collections, Add item moves below
-the wordmark, and Unfiled uses its full page. Saved and Trash recovery banners dismiss after six
+the wordmark, and Unfiled uses its full page. Collection success, saved-item and Trash recovery banners occupy one visible feedback slot and dismiss after six
 seconds, pausing on hover/focus and during pending or failed Undo. Home adds a
 cream reminder after search, mixing older overall Favorites (90 days, with a
 recent-favorite fallback), Want to try and the last 30 days of experiences.

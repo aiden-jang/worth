@@ -69,7 +69,7 @@ test('item editing separates calls from ranking and keeps saving visible', async
     await expect(save).toBeInViewport();
     await expect(page.getByRole('dialog', { name: 'Saved item: Light Citrus Wheat' })).toHaveCount(0);
     const card = await call.boundingBox();
-    expect(card!.height).toBeLessThanOrEqual(280);
+    expect(card!.height).toBeLessThanOrEqual(180);
     expect(await editor.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
     if (process.env.WORTH_EDITOR_QA) {
       await mkdir(process.env.WORTH_EDITOR_QA, { recursive: true });
@@ -80,7 +80,7 @@ test('item editing separates calls from ranking and keeps saving visible', async
     }
   }
   await call.getByRole('button', { name: 'Not again', exact: true }).click();
-  await expect(call.getByText('Undecided.', { exact: true })).toBeVisible();
+  await expect(call.getByText('No call selected.', { exact: true })).toBeVisible();
   await call.getByRole('button', { name: 'Favorite', exact: true }).click();
   await expect(call.getByRole('button', { name: 'Favorite', exact: true })).toHaveAttribute(
     'aria-pressed',
