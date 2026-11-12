@@ -287,7 +287,6 @@ export function InboxPanel() {
               {filtered.slice(0, limit).map((find) => (
                 <li key={find.id} data-inbox-id={find.id}>
                   <button
-                    aria-label={`View ${find.title}`}
                     disabled={!!pending || checkFiling.isPending || !!creatingBusyId}
                     onClick={() => openFind(find.id, true)}
                   >
@@ -295,6 +294,7 @@ export function InboxPanel() {
                       ↳
                     </span>
                     <span>
+                      <span className="sr-only">View </span>
                       <strong>{find.title}</strong>
                       <small>
                         {find.type ? `${find.type} · ` : ''}

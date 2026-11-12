@@ -72,7 +72,9 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
-  const inbox = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
+  const inbox = page.getByRole('main');
+  await expect(page).toHaveURL(/\/inbox$/);
+  await expect(inbox.getByRole('heading', { name: 'Unfiled.', exact: true })).toBeVisible();
   await inbox.evaluate((node) => {
     node.tabIndex = -1;
     node.focus();
@@ -80,6 +82,6 @@ test('neutral activity artwork keeps first-log and workout actions usable withou
   await expect(inbox).toBeFocused();
   await page.keyboard.press('a');
   await expect(inbox).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(1);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(archive.writes).toHaveLength(0);
 });

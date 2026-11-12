@@ -196,7 +196,7 @@ function ItemRowOptions({
               onOpenDetails(item.id);
             }}
           >
-            Edit item
+            Edit
           </button>
           <button
             type="button"

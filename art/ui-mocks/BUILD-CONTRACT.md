@@ -126,6 +126,9 @@ Preview calls save on an explicit click and can clear; browse selection writes
 nothing. Edit and Add experience remain on the slip at all widths. Row Edit moves
 into the options menu, alongside experience, rank, notes and queues. Direct call
 filters and optional name-capture calls remain visible. Unranked items stay accessible.
+On phones, keep the optional call label beside text-only choices and use compact
+filter spacing so the first saved row stays above the bottom navigation. Controls
+retain their 44px minimum targets.
 
 These interactions deliberately refine the static collection and Add references
 in response to the November usability review: fewer disclosures, a stable preview

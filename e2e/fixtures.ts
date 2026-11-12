@@ -382,7 +382,7 @@ export async function mockArchive(page: Page): Promise<State> {
       const body = request.postDataJSON();
       state.writes.push({ path, body });
       if (state.failCapture) return reply({ message: 'Couldn’t save this item. Try again.' }, 503);
-      const created: Item = { ...item, ...body, id: 'captured', note: '', decision: null };
+      const created: Item = { ...item, note: '', decision: null, ...body, id: 'captured' };
       state.items.push(created);
       state.list.itemCount++;
       return reply({ item: created }, 201);

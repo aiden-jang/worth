@@ -2071,8 +2071,7 @@
     margin-left: 22px;
   }
   .collection-capture-call {
-    display: grid;
-    gap: 6px;
+    gap: 8px;
   }
   .collection-capture-call > span small {
     display: inline;
@@ -2081,13 +2080,16 @@
   .collection-capture-call .call-choices {
     max-width: none;
   }
+  .collection-capture-call .call-face {
+    display: none;
+  }
   .collection-call-filters {
-    gap: 6px;
+    gap: 4px;
   }
   .collection-call-filters button {
     font-size: 12px;
-    padding-inline: 8px;
-    gap: 4px;
+    padding-inline: 6px;
+    gap: 3px;
   }
   .collection-call-filters .call-face {
     display: none;

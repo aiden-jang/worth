@@ -37,11 +37,11 @@ test('saved views and context orders survive reload without changing the main ra
   archive.items[1].wantToTry = true;
   archive.list.rankedIds = [archive.items[0].id];
   await page.goto(`/lists/${list.id}`);
-  await entryOptions(page);
   await page
     .getByRole('group', { name: 'Collection views', exact: true })
     .getByRole('button', { name: /^Want to try/ })
     .click();
+  await entryOptions(page);
   await page.getByText('Saved views', { exact: true }).click();
   await page.getByRole('textbox', { name: 'View name', exact: true }).fill('Next weekend');
   if (info.project.name === 'phone') {

@@ -157,6 +157,10 @@ test('Unfiled opens as a page and keeps Trash Undo available', async ({ page, ar
   await expect(drawer).toBeVisible();
   await expect(page).toHaveURL(/\/inbox$/);
   await expect(page.locator('dialog[open]')).toHaveCount(0);
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'My drinks', exact: true })).toBeVisible();
+  await page.goForward();
+  await expect(drawer.getByRole('heading', { name: 'Unfiled.', exact: true })).toBeVisible();
   await capture(page, 'page', info.project.name);
   await drawer.getByRole('button', { name: 'Edit A tiny illustrated book', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
@@ -165,17 +169,14 @@ test('Unfiled opens as a page and keeps Trash Undo available', async ({ page, ar
     .getByRole('dialog', { name: 'Move this find to Trash?', exact: true })
     .getByRole('button', { name: 'Move to Trash', exact: true })
     .click();
-  await expect(drawer.getByRole('complementary', { name: 'Deletion recovery' })).toBeVisible();
-  await drawer.getByRole('button', { name: 'Undo', exact: true }).click();
-  await expect(
-    drawer.getByRole('button', { name: 'View A tiny illustrated book', exact: true }),
-  ).toBeVisible();
+  const recovery = page.getByRole('complementary', { name: 'Deletion recovery' });
+  await expect(recovery).toBeVisible();
+  await recovery.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(drawer.getByRole('button', { name: /^View A tiny illustrated book/ })).toBeVisible();
   expect(archive.inbox).toHaveLength(1);
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
   ).toEqual([]);
-  await page.goBack();
-  await expect(page.getByRole('heading', { name: 'My drinks', exact: true })).toBeVisible();
 });
 
 test('empty Unfiled and long unfiled names reflow without invented calls', async ({

@@ -155,9 +155,7 @@ test('a visible plan can be reviewed in place without a visit date or ranking ch
   archive,
 }, info) => {
   await page.goto(`/lists/${list.id}`);
-  await expect(
-    page.getByRole('button', { name: 'Entry options', exact: true }).locator('..'),
-  ).not.toHaveAttribute('open');
+  await expect(page.getByLabel('Entry options', { exact: true }).locator('..')).not.toHaveAttribute('open');
   await page.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
   await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Add a name', exact: true }).fill('A future tea');
