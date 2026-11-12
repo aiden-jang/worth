@@ -411,17 +411,17 @@ export function ItemEditor({
                 </button>
               </div>
             )}
+            {!item && (
+              <>
+                <DraftPhoto file={photo} onChange={setPhoto} disabled={save.isPending} />
+                {photoDraft.status && (
+                  <p className="draft-state" role="status">
+                    {photoDraft.status}
+                  </p>
+                )}
+              </>
+            )}
           </div>
-          {!item && (
-            <div className="record-notes">
-              <DraftPhoto file={photo} onChange={setPhoto} disabled={save.isPending} />
-              {photoDraft.status && (
-                <p className="draft-state" role="status">
-                  {photoDraft.status}
-                </p>
-              )}
-            </div>
-          )}
         </form>
         {item && (
           <details className="record-extras record-photo" open={item.hasPhoto}>

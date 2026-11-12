@@ -229,12 +229,12 @@ test('row Trash confirms, preserves errors for retry, and can be cancelled', asy
   const menu = screen.getByLabelText('More options for Coffee').closest('details')!;
   menu.open = true;
   fireEvent(menu, new Event('toggle'));
-  fireEvent.click(await screen.findByRole('button', { name: 'Move Coffee to Trash' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Move to Trash: Coffee' }));
   fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button', { name: 'Cancel' })[1]);
   expect(remove).not.toHaveBeenCalled();
   menu.open = true;
   fireEvent(menu, new Event('toggle'));
-  fireEvent.click(await screen.findByRole('button', { name: 'Move Coffee to Trash' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Move to Trash: Coffee' }));
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Move to Trash' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete');
   expect(screen.getByRole('button', { name: 'Coffee' })).toBeInTheDocument();

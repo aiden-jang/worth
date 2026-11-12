@@ -268,7 +268,7 @@ function ItemRowOptions({
           <button
             type="button"
             className="text-danger"
-            aria-label={`Move ${item.title} to Trash`}
+            aria-label={`Move to Trash: ${item.title}`}
             onClick={() => {
               closeMenu();
               onTrash(item);

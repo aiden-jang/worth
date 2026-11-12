@@ -102,6 +102,9 @@ test('save with details keeps a draft until an explicit save', async ({ page, ar
   await page.getByRole('button', { name: 'Save with details', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep this one.', exact: true });
   await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('Iced tea');
+  const noteBox = await editor.getByLabel('Private note', { exact: false }).boundingBox();
+  const photoBox = await editor.locator('.draft-photo').boundingBox();
+  expect(photoBox!.y).toBeGreaterThan(noteBox!.y + noteBox!.height);
   expect(archive.writes).toEqual([]);
   await editor.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(editor).toHaveCount(0);
@@ -123,7 +126,7 @@ test('row Trash supports cancel, retry, Undo and a timed recovery notice', async
   await page.goto(`/lists/${list.id}`);
   async function openTrash() {
     await page.getByLabel('More options for Coffee', { exact: true }).click();
-    await page.getByRole('button', { name: 'Move Coffee to Trash', exact: true }).click();
+    await page.getByRole('button', { name: 'Move to Trash: Coffee', exact: true }).click();
   }
   await openTrash();
   const confirmation = page.getByRole('dialog', { name: 'Move Coffee to Trash?', exact: true });
