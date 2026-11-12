@@ -132,7 +132,7 @@ export function ListPage() {
                 }
                 onClick={() => setShowWorkbench(true)}
               >
-                Ranking & tools
+                More tools
               </button>
             )}
             {list.kind === 'collection' && (

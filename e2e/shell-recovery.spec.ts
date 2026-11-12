@@ -41,12 +41,12 @@ test('mobile navigation returns focus on Escape and resets across a desktop resi
 test('closing Add on a phone restores its persistent button', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  const picker = page.getByRole('dialog', { name: 'Keep something.' });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Add item' });
   await expect(picker).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(picker).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Add item', exact: true })).toBeFocused();
 });
 
 test('global dialogs have names and keyboard navigation can skip the repeated rail', async ({
@@ -66,5 +66,5 @@ test('global dialogs have names and keyboard navigation can skip the repeated ra
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.keyboard.press('Escape');
   await page.keyboard.press('n');
-  await expect(page.getByRole('dialog', { name: 'Keep something.' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Add item' })).toBeVisible();
 });

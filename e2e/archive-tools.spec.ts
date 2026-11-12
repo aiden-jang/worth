@@ -17,7 +17,10 @@ test('Want to try capture and filtering leave opinions and rankings alone', asyn
   await expect(page.getByRole('status').filter({ hasText: 'Next café added' })).toBeVisible();
   expect(archive.items.at(-1)).toMatchObject({ wantToTry: true, decision: null });
   expect(archive.list.rankedIds).toEqual(['coffee']);
-  await page.getByRole('combobox', { name: 'Browse collection' }).selectOption('want');
+  await page
+    .getByRole('group', { name: 'Collection views', exact: true })
+    .getByRole('button', { name: /^Want to try/ })
+    .click();
   await expect(page.getByRole('button', { name: /Next café Want to try/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toHaveCount(0);
 });

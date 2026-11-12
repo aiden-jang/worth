@@ -25,6 +25,10 @@ export type ExperienceInput = z.infer<typeof experienceInput>;
 export const memoryFilter = z
   .object({
     mode: z.enum(['visits', 'saved']).default('visits'),
+    call: z.enum(['', 'favorite', 'meh', 'would_not_again']).default(''),
+    want: z.enum(['', '0', '1']).default(''),
+    id: z.string().max(100).default(''),
+    experiences: z.enum(['', '1']).default(''),
     list: z.union([z.literal(''), z.literal('inbox'), z.string().uuid()]).default(''),
     from: z.union([z.literal(''), logInput.shape.happenedOn]).default(''),
     to: z.union([z.literal(''), logInput.shape.happenedOn]).default(''),
@@ -50,6 +54,7 @@ export interface MemoryRecord {
   order: string;
   reaction: ItemDecision | null;
   hasPhoto: boolean;
+  wantToTry?: boolean;
 }
 export interface MemoryPage {
   records: MemoryRecord[];

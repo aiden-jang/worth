@@ -22,28 +22,62 @@ public snapshots and offline entry retain their own navigation and composition.
 
 ## Everyday flow
 
-Home leads with search and recent records, including Unfiled. Collections and a
-compact memory follow. Someone can save without first creating or organizing a
-collection. Use actual records and useful empty states, without sample private data.
+Home leads with search and one cream reminder, followed by recent records including
+Unfiled and the collection shelf. Reminders rotate between overall Favorites
+(prefer those saved at least 90 days ago), Want to try and experiences in the last
+30 days. Each visit gets a random starting category and record; Show another
+cycles available categories. Draws reach the full matching archive, including
+Unfiled and records beyond the first page. Refetches retain the exact record and
+refresh its text; an ineligible record gives way to another. No call, visit reaction
+or planned item becomes an overall Favorite. Someone can save without organizing
+a collection. Use actual records and useful empty states, without sample private data.
 
-The existing Home memory slot may also show a recorded preference or an exact
-exercise comparison. Its source stays selected for the visit while refreshed calls
-update in place. Pull a memory remains explicit. Sparse accounts use an invitation;
-aggregate preferences and exercise results use neutral artwork rather than an inferred call.
+More from your archive optionally opens the existing memory slot, including
+recorded preferences and exact exercise comparisons. Its source stays selected
+while refreshed calls update in place. Pull a memory remains explicit. Sparse
+accounts use an invitation; aggregates use neutral artwork rather than an inferred call.
 
 Search invitations and no-match states use a small paper-and-magnifier illustration;
 empty Insights uses an archive folder. These static decorative vectors extend the
 existing quiet-state composition and palette without implying a saved photo or call.
 
-Add opens one name-first composer and states its destination. Use the current
+Add item opens one name-first composer and states its destination. Its optional
+Favorite / Meh / Not again choices and Want to try are visible before Add details.
+Want to try parks an unsaved call and asks for no rating; reversing the choice
+restores that draft call. New collection
+creates and selects a collection inline without discarding the item draft. Use the current
 active list when open; otherwise use Unfiled, independently of previous choices.
 Add details offers an explicit dated experience, thought, reaction and private
 photo. Saving a name or photo alone never implies a visit or an opinion.
 Successful capture restores focus after saving so another name can follow.
 Interrupted saves retain their exact retry identity and account-scoped draft.
 
-Primary navigation is Home, Collections and Look back. Search, Unfiled and personal
-shortcuts are utilities. Desktop uses the 192px rail; phones use the persistent
+Paste link, Photo text and Barcode sit below Name inside Add item. Pasting a full
+http/https address into an empty or selected Name suggests a name from its path
+and retains its visible source. Suggestions are reviewed before saving. Photo
+recognition stays on-device and never implies an attachment. ISBN lookup sends
+only the code to Open Library after Look up book. Supplied book details append
+to existing notes. Unapplied source text and code suggestions recover with the
+account-scoped item draft; the standalone capture routes remain available.
+
+Matching saved names appear while typing, with Open item, Add another experience
+and an explicit separate-item choice. The selected item’s context and overall
+call stay unchanged; a visit’s reaction is chosen separately. Collection name
+capture uses the same matching rule. Pending inline captures retain their exact
+payload and operation identity across retry/reload, even if the newly saved item
+now appears as a match.
+
+Unfiled rows offer up to three direct collection choices, a full chooser and
+inline Create & file. Filing checks the chosen collection for a duplicate before
+moving anything; a separate copy needs an explicit choice. The existing atomic
+transfer keeps notes, context, calls, dated memories and photos intact. Lost
+replies retain the filing receipt after the source disappears. Failed collection
+creation checks for an already-created destination before posting another copy.
+
+Primary navigation is Home, Collections and Look back. Search and Unfiled are utilities. Unfiled navigates to its own page.
+Collection shortcuts nest immediately under Collections; New collection stays
+separate from the prominent Add item action. Saved banners dismiss after six
+seconds, pausing for hover, keyboard focus, pending Undo or recovery errors. Desktop uses the 192px rail; phones use the persistent
 safe-area navigation and Add bar, plus search/account access in the header.
 Content, status panels and menus must clear that bar.
 
@@ -66,20 +100,27 @@ Keep filters visible for more than three collections or an active query/nondefau
 order, and through filtering for the rest of that visit. Mixed kinds have section
 headings; one kind does not repeat the page title.
 
-A collection opens with identity, name capture and one browse/search/filter row.
-Settings, sharing and Ranking & tools are contextual. Entry options discloses
-batch capture, Want to try, experiences, selection and saved views. Unranked items
-remain accessible. Wide desktop selection uses a cream side slip; widths up to
+A collection opens with identity, name capture, visible All items / Want to try /
+Tried tabs, direct call filters and search. Tried includes nonplanned records with
+an explicit call or dated experience; name-only saves remain in All items.
+More filters holds the other existing views and specialized filters. Settings,
+sharing and More tools are contextual. Entry options discloses batch capture,
+experiences, selection and saved views. Unranked items remain accessible. Wide desktop selection uses a cream side slip; widths up to
 960px use a native scrolling sheet with focus return and stable list positions.
 The preview stays reachable without scrolling past the collection's rows.
-The selected slip is read-only: it shows the saved call, character and filled
-details without reaction buttons or an Unranked badge. Each row has a quiet Edit
-action and an options menu for Add experience, rank, notes and queues. Preview sheets
-retain Edit and Add experience as navigation to explicit editors. Browsing never
-changes a call; the item editor saves its changes explicitly.
+The desktop slip column remains present before and after selection, with a quiet
+placeholder when nothing is selected. Preview call buttons save only on deliberate
+clicks and support clearing the current call; merely browsing writes nothing.
+Edit and Add experience stay on the slip, while row Edit belongs in its options
+menu. The editor still saves its wider changes explicitly. Name capture has
+optional calls beside its save flow, and All calls / Favorite / Meh / Not again /
+No call filters remain visible without opening a menu. Want to try is also visible
+beside capture. Planned-item previews, readers and Home reminders offer I tried it:
+choose a call to save it and leave Want to try, without creating a visit or changing
+rank. Remove from Want to try preserves the current call. Browsing still writes nothing.
 
 Links to saved records from Home, search, recall and the optional tools open a
-read-only details dialog. It shows saved text, context, photos and experiences;
+read-first details dialog. It shows saved text, context, photos and experiences;
 Edit opens the existing draft-aware editor. Unfiled rows have distinct View and
 Edit actions. Existing editor links still work. Closing a reader writes nothing
 and returns focus to its row, or the page heading when the source is elsewhere.
@@ -88,7 +129,9 @@ Name-only readers stay compact and omit empty history groups, while Add experien
 remains available for collection records.
 
 Create collection/activity places its submit action immediately after the name
-and suggestions, before optional sections. This deliberately brings the promised
+and suggestions, before Customize collection or Activity options. These optional
+groups retain starters, templates, artwork, reusable details and description.
+This deliberately brings the promised
 name-only path into view on phones. An active workout gives Resume priority over
 starting another; the empty invitation appears before optional workout tools.
 Lazy page loading keeps the signed-in navigation visible, and failed pages offer

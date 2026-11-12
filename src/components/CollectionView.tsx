@@ -14,7 +14,9 @@ import {
   collectionItemTitleLimit,
 } from '../shared/collection-capture';
 import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
-import type { Item, ListDetail } from '../shared/models';
+import type { Item, ItemDecision, ListDetail } from '../shared/models';
+import { CallChoices, CallFace } from './PersonalCall';
+import { personalCalls, decisionLabel } from '../shared/decisions';
 import {
   moveRank,
   visibleItems,
@@ -29,15 +31,28 @@ import { ItemSheet } from './ItemSheet';
 import { SavedViews } from './SavedViews';
 import { FilingMoment } from './FilingMoment';
 import type { SavedViewFilters } from '../shared/workspace';
-import { brandKey, itemBrand, itemDetailSuggestions } from '../shared/item-details';
+import { brandKey, itemBrand, itemDetailSuggestions, itemIdentity } from '../shared/item-details';
+import { matchingSavedItems } from '../shared/capture-assist';
+import { itemInput } from '../shared/validation';
+import { ConfirmDialog } from './ConfirmDialog';
 
-type CaptureDraft = { title: string; batchTitles: string; batchMode: boolean; wantToTry?: boolean };
+type CaptureDraft = {
+  title: string;
+  batchTitles: string;
+  batchMode: boolean;
+  wantToTry?: boolean;
+  decision?: ItemDecision | null;
+  keepSeparate?: boolean;
+  parkedDecision?: ItemDecision | null;
+  pendingItem?: { title: string; decision: ItemDecision | null; wantToTry: boolean };
+};
 
-type BrowseMode = 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue' | 'want';
+type BrowseMode = 'all' | 'kept' | 'tried' | 'revisited' | 'not-opened-lately' | 'queue' | 'want';
 
 const browseModes: { id: BrowseMode; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'kept', label: 'Favorites' },
+  { id: 'tried', label: 'Tried' },
   { id: 'want', label: 'Want to try' },
   { id: 'queue', label: 'Revisit queue' },
   { id: 'revisited', label: 'Revisited' },
@@ -78,11 +93,30 @@ export function CollectionView({
         typeof value.batchTitles === 'string' &&
         'batchMode' in value &&
         typeof value.batchMode === 'boolean' &&
-        (!('wantToTry' in value) || typeof value.wantToTry === 'boolean'),
+        (!('wantToTry' in value) || typeof value.wantToTry === 'boolean') &&
+        (!('keepSeparate' in value) || typeof value.keepSeparate === 'boolean') &&
+        (!('parkedDecision' in value) ||
+          value.parkedDecision === undefined ||
+          value.parkedDecision === null ||
+          personalCalls.some((call) => call.value === value.parkedDecision)) &&
+        (!('pendingItem' in value) ||
+          value.pendingItem === undefined ||
+          itemInput.safeParse(value.pendingItem).success) &&
+        (!('decision' in value) ||
+          value.decision === null ||
+          personalCalls.some((call) => call.value === value.decision)),
       ),
   );
   const { title, batchTitles, batchMode } = captureDraft.form;
-  const setTitle = (title: string) => captureDraft.setForm((current) => ({ ...current, title }));
+  const setTitle = (title: string) =>
+    captureDraft.setForm((current) => ({ ...current, title, keepSeparate: false }));
+  const captureMatches = matchingSavedItems(items, title);
+  const captureDuplicate =
+    !batchMode &&
+    !captureDraft.form.pendingItem &&
+    captureMatches.length > 0 &&
+    !captureDraft.form.keepSeparate;
+  const [discardCapture, setDiscardCapture] = useState(false);
   const setBatchTitles = (batchTitles: string) =>
     captureDraft.setForm((current) => ({ ...current, batchTitles }));
   const setBatchMode = (next: boolean | ((current: boolean) => boolean)) =>
@@ -115,7 +149,12 @@ export function CollectionView({
   const [sort, setSort] = useViewPreference<ItemSort>(`collection:${list.id}:sort`, 'rank');
   const captureWant = Boolean(captureDraft.form.wantToTry);
   const setCaptureWant = (wantToTry: boolean) =>
-    captureDraft.setForm((current) => ({ ...current, wantToTry }));
+    captureDraft.setForm((current) => ({
+      ...current,
+      wantToTry,
+      parkedDecision: wantToTry ? (current.decision ?? null) : current.parkedDecision,
+      decision: wantToTry ? null : (current.parkedDecision ?? null),
+    }));
   const [selecting, setSelecting] = useState(false);
   const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState('');
@@ -179,20 +218,34 @@ export function CollectionView({
       api.createItem(
         list.id,
         {
-          title: nextTitle,
+          title: captureDraft.form.pendingItem?.title ?? nextTitle,
           type: '',
           note: '',
-          decision: null,
-          wantToTry: captureWant,
+          decision: captureDraft.form.pendingItem
+            ? captureDraft.form.pendingItem.decision
+            : (captureDraft.form.decision ?? null),
+          wantToTry: captureDraft.form.pendingItem?.wantToTry ?? captureWant,
           startedOn: null,
           endedOn: null,
         },
         captureDraft.operationId.current,
       ),
     onSuccess: ({ item }) => {
-      captureDraft.clear({ ...captureDraft.form, title: '' });
+      captureDraft.clear({
+        ...captureDraft.form,
+        title: '',
+        decision: null,
+        parkedDecision: null,
+        pendingItem: undefined,
+      });
       captureDraft.operationId.current = crypto.randomUUID();
       setTitle('');
+      captureDraft.setForm((current) => ({
+        ...current,
+        decision: null,
+        parkedDecision: null,
+        pendingItem: undefined,
+      }));
       setBrowse('all');
       setSearch('');
       setAddedSince('');
@@ -317,6 +370,22 @@ export function CollectionView({
       void client.invalidateQueries({ queryKey: ['items', list.id] });
     },
   });
+  const call = useMutation({
+    mutationFn: ({ item, decision }: { item: Item; decision: ItemDecision | null }) =>
+      api.updateItem(item.id, { decision }),
+    onSuccess: ({ item }) => {
+      client.setQueryData<{ items: Item[] }>(['items', list.id], (current) => ({
+        items: (current?.items ?? []).map((value) => (value.id === item.id ? item : value)),
+      }));
+      setStatus(
+        item.decision
+          ? `${decisionLabel(item.decision)} saved for ${item.title}.`
+          : `Call cleared for ${item.title}.`,
+      );
+      for (const key of ['items', 'item', 'list', 'lists', 'overview', 'patterns', 'search'])
+        void client.invalidateQueries({ queryKey: [key] });
+    },
+  });
   const rankedIds = new Set(list.rankedIds);
   const types = Array.from(new Set(items.map((item) => item.type).filter(Boolean))).sort();
   const brands = itemDetailSuggestions(items, 'brand');
@@ -350,6 +419,7 @@ export function CollectionView({
     )
       return false;
     if (browse === 'want') return Boolean(item.wantToTry);
+    if (browse === 'tried') return !item.wantToTry && (item.decision !== null || item.logCount > 0);
     if (browse === 'queue') return Boolean(item.revisitQueued);
     if (browse === 'kept') return item.decision === 'favorite';
     if (browse === 'revisited') return item.logCount > 1;
@@ -392,7 +462,7 @@ export function CollectionView({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!online || capturePending) return;
+    if (!online || capturePending || captureDuplicate) return;
     if (batchMode) {
       const titles = batchCaptureTitles(batchTitles);
       if (titles.length) {
@@ -404,6 +474,15 @@ export function CollectionView({
     const cleanTitle = title.trim();
     if (cleanTitle) {
       setStatus('');
+      if (!captureDraft.form.pendingItem)
+        captureDraft.checkpoint({
+          ...captureDraft.form,
+          pendingItem: {
+            title: cleanTitle,
+            decision: captureDraft.form.decision ?? null,
+            wantToTry: captureWant,
+          },
+        });
       create.mutate(cleanTitle);
     }
   }
@@ -414,13 +493,14 @@ export function CollectionView({
     .split(/\r?\n/)
     .some((entry) => entry.trim().length > collectionItemTitleLimit);
   const capturePending = create.isPending || batchCreate.isPending;
+  const captureLocked = capturePending || !!captureDraft.form.pendingItem;
   useEffect(() => {
     if (capturePending || !restoreCaptureFocus.current) return;
     const field = restoreCaptureFocus.current === 'batch' ? batchCaptureRef.current : captureRef.current;
     restoreCaptureFocus.current = null;
     field?.focus();
   }, [capturePending]);
-  const selectedItem = visible.find((item) => item.id === selectedId);
+  const selectedItem = items.find((item) => item.id === selectedId);
   const rowActions = {
     selection: selecting
       ? {
@@ -440,7 +520,7 @@ export function CollectionView({
     queuePending: queue.isPending,
     rankSlots: items.length,
     onOpenDetails: (id: string) => {
-      setSelectedId(null);
+      if (previewInSheet) setSelectedId(null);
       onOpenDetails(id);
     },
     onAddNote: (id: string) => {
@@ -456,6 +536,9 @@ export function CollectionView({
       rank.mutate({ item, position });
     },
     rankPending: rank.isPending,
+    onCall: (item: Item, decision: ItemDecision | null) => call.mutate({ item, decision }),
+    callPending: call.isPending,
+    callError: call.isError && call.variables.item.id === selectedId ? call.error.message : '',
   };
 
   function closeEntryOptions() {
@@ -484,7 +567,7 @@ export function CollectionView({
                   maxLength={3660}
                   onChange={(event) => setBatchTitles(event.target.value)}
                   placeholder={'One name per line\nYou can rank them later'}
-                  disabled={capturePending}
+                  disabled={captureLocked}
                 />
               ) : (
                 <input
@@ -493,7 +576,7 @@ export function CollectionView({
                   maxLength={collectionItemTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder={captureWant ? 'Add a name to Want to try' : 'Add a name'}
-                  disabled={capturePending}
+                  disabled={captureLocked}
                 />
               )}
             </label>
@@ -502,12 +585,42 @@ export function CollectionView({
               disabled={
                 !online ||
                 capturePending ||
+                captureDuplicate ||
                 (batchMode ? !batchEntries.length || batchOverLimit || batchHasLongTitle : !title.trim())
               }
             >
-              {capturePending ? 'Saving…' : batchMode ? `Save ${batchEntries.length || ''}` : 'Save'}{' '}
+              {capturePending
+                ? 'Saving…'
+                : captureDraft.form.pendingItem
+                  ? 'Retry save'
+                  : batchMode
+                    ? `Save ${batchEntries.length || ''}`
+                    : 'Save'}{' '}
               <ArrowRight size={17} />
             </button>
+            <label className="capture-for-later check-label">
+              <input
+                type="checkbox"
+                aria-label="Want to try"
+                checked={captureWant}
+                disabled={captureLocked}
+                onChange={(event) => setCaptureWant(event.target.checked)}
+              />
+              Want to try <span>Save for later</span>
+            </label>
+            {!batchMode && !captureWant && (
+              <div className="collection-capture-call">
+                <span>
+                  Your call <small>optional</small>
+                </span>
+                <CallChoices
+                  label="Call for new item"
+                  value={captureDraft.form.decision ?? null}
+                  disabled={captureLocked}
+                  onChange={(decision) => captureDraft.setForm((current) => ({ ...current, decision }))}
+                />
+              </div>
+            )}
             {batchMode && (
               <p className="collection-capture-note">
                 {batchHasLongTitle
@@ -516,6 +629,43 @@ export function CollectionView({
               </p>
             )}
           </form>
+          {captureDraft.form.pendingItem && !create.isPending && (
+            <p className="quick-entry-helper">
+              This capture is waiting for confirmation. Retry to check the same item.{' '}
+              <button type="button" onClick={() => setDiscardCapture(true)}>
+                Clear pending capture
+              </button>
+            </p>
+          )}
+          {!batchMode && !captureDraft.form.pendingItem && captureMatches.length > 0 && (
+            <div className="collection-existing-capture">
+              <p>Already saved here.</p>
+              {captureMatches.slice(0, 3).map((item) => (
+                <div className="data-actions" key={item.id}>
+                  <span>
+                    {item.title}
+                    {itemIdentity(item) ? ` · ${itemIdentity(item)}` : ''}
+                  </span>
+                  <button type="button" disabled={capturePending} onClick={() => setSelectedId(item.id)}>
+                    View saved item
+                  </button>
+                  <button type="button" disabled={capturePending} onClick={() => onLogRevisit(item.id)}>
+                    Add another experience
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                aria-pressed={!!captureDraft.form.keepSeparate}
+                disabled={capturePending}
+                onClick={() =>
+                  captureDraft.setForm((current) => ({ ...current, keepSeparate: !current.keepSeparate }))
+                }
+              >
+                {captureDraft.form.keepSeparate ? 'Saving as a separate item ✓' : 'Save as a separate item'}
+              </button>
+            </div>
+          )}
           {experienceOpen && (
             <ExperienceEditor listId={list.id} items={items} onClose={() => setExperienceOpen(false)} />
           )}
@@ -541,11 +691,12 @@ export function CollectionView({
               Start a new batch
             </button>
           )}
-          {(want.isError ||
+          {(call.isError ||
+            want.isError ||
             queue.isError ||
             (rank.isError && !(rank.error instanceof RequestError && rank.error.status === 409))) && (
             <p className="form-error collection-capture-error" role="alert">
-              {want.error?.message ?? queue.error?.message ?? rank.error?.message}
+              {call.error?.message ?? want.error?.message ?? queue.error?.message ?? rank.error?.message}
             </p>
           )}
           {status && (
@@ -557,6 +708,25 @@ export function CollectionView({
 
           {showFilters && (
             <div className="collection-advanced-filters" id="collection-filters">
+              <label className="collection-browse-select">
+                <span>More views</span>
+                <select
+                  aria-label="Browse collection"
+                  value={browse}
+                  onChange={(event) => selectBrowse(event.target.value as BrowseMode)}
+                >
+                  {browseModes.map((mode) => (
+                    <option key={mode.id} value={mode.id}>
+                      {mode.label} (
+                      {mode.id === 'want'
+                        ? items.filter((item) => item.wantToTry).length
+                        : collectionBrowseCount(mode.id, items)}
+                      )
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               {(brands.length > 0 || brand) && (
                 <label>
                   <span>Brand or maker</span>
@@ -592,20 +762,6 @@ export function CollectionView({
                   <option value="top5">Top 5</option>
                   <option value="top10">Top 10</option>
                   <option value="unranked">Not ranked</option>
-                </select>
-              </label>
-              <label>
-                <span>Your call</span>
-                <select
-                  aria-label="Filter by personal call"
-                  value={decisionFilter}
-                  onChange={(event) => setDecisionFilter(event.target.value as DecisionFilter)}
-                >
-                  <option value="all">Any call</option>
-                  <option value="none">No call</option>
-                  <option value="favorite">Favorite</option>
-                  <option value="meh">Meh</option>
-                  <option value="would_not_again">Not again</option>
                 </select>
               </label>
               {(['label', 'stamp'] as const).map((kind) => {
@@ -714,26 +870,68 @@ export function CollectionView({
             />
           )}
           <div className="collection-index-layout">
+            <div className="collection-state-tabs" role="group" aria-label="Collection views">
+              {(
+                [
+                  { id: 'all', label: 'All items' },
+                  { id: 'want', label: 'Want to try' },
+                  { id: 'tried', label: 'Tried' },
+                ] as const
+              ).map((mode) => (
+                <button
+                  type="button"
+                  key={mode.id}
+                  aria-pressed={browse === mode.id}
+                  onClick={() => {
+                    setBrowse(mode.id);
+                    setDecisionFilter('all');
+                  }}
+                >
+                  {mode.label}{' '}
+                  <small>
+                    {mode.id === 'want'
+                      ? items.filter((item) => item.wantToTry).length
+                      : collectionBrowseCount(mode.id, items)}
+                  </small>
+                </button>
+              ))}
+              {!['all', 'want', 'tried'].includes(browse) && (
+                <button type="button" className="collection-extra-view" onClick={() => setBrowse('all')}>
+                  {browseModes.find((mode) => mode.id === browse)?.label} <X size={14} />
+                </button>
+              )}
+            </div>
+            <div className="collection-call-filters" role="group" aria-label="Filter by personal call">
+              {(
+                [
+                  { value: 'all', label: 'All calls' },
+                  ...personalCalls,
+                  { value: 'none', label: 'No call' },
+                ] as const
+              ).map((filter) => {
+                const count = items.filter(
+                  (item) =>
+                    filter.value === 'all' ||
+                    (filter.value === 'none' ? item.decision === null : item.decision === filter.value),
+                ).length;
+                return (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    aria-pressed={decisionFilter === filter.value && browse !== 'kept'}
+                    onClick={() => {
+                      setDecisionFilter(filter.value);
+                      if (browse === 'kept') setBrowse('all');
+                    }}
+                  >
+                    {filter.value !== 'all' && filter.value !== 'none' && <CallFace value={filter.value} />}
+                    {filter.label} <small>{count}</small>
+                  </button>
+                );
+              })}
+            </div>
             {
               <div className="cabinet-index-toolbar">
-                <label className="collection-browse-select">
-                  <span className="sr-only">Browse collection</span>
-                  <select
-                    aria-label="Browse collection"
-                    value={browse}
-                    onChange={(event) => selectBrowse(event.target.value as BrowseMode)}
-                  >
-                    {browseModes.map((mode) => (
-                      <option key={mode.id} value={mode.id}>
-                        {mode.label} (
-                        {mode.id === 'want'
-                          ? items.filter((item) => item.wantToTry).length
-                          : collectionBrowseCount(mode.id, items)}
-                        )
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <div className="collection-search" id="collection-search">
                   <label>
                     <span className="sr-only">Search {list.name}</span>
@@ -757,7 +955,7 @@ export function CollectionView({
                     aria-controls="collection-filters"
                     onClick={() => setShowFilters((current) => !current)}
                   >
-                    Filter{hasAdvancedFilters ? ' ·' : ''}
+                    More filters{hasAdvancedFilters ? ' ·' : ''}
                   </button>
                   <details ref={entryMenu} data-menu className="entry-options">
                     <summary aria-label="Entry options">•••</summary>
@@ -771,19 +969,10 @@ export function CollectionView({
                             (batchMode ? captureRef.current : batchCaptureRef.current)?.focus(),
                           );
                         }}
-                        disabled={capturePending}
+                        disabled={captureLocked}
                       >
                         {batchMode ? 'Add one name' : 'Add several'}
                       </button>
-                      <label className="capture-want">
-                        <input
-                          type="checkbox"
-                          checked={captureWant}
-                          disabled={capturePending}
-                          onChange={(event) => setCaptureWant(event.target.checked)}
-                        />
-                        Want to try
-                      </label>
                       <button
                         type="button"
                         onClick={() => {
@@ -854,12 +1043,22 @@ export function CollectionView({
                         ? 'Try another view or search for a different name.'
                         : 'Add the first thing you tried. A name will do.'}
                     </p>
-                    {items.length > 0 && (browse !== 'all' || search) && (
+                    {items.length > 0 && (browse !== 'all' || search || hasAdvancedFilters) && (
                       <button
                         type="button"
                         onClick={() => {
                           setBrowse('all');
                           setSearch('');
+                          setDecisionFilter('all');
+                          setType('all');
+                          setBrand('');
+                          setLabel('');
+                          setStamp('');
+                          setRankFilter('all');
+                          setAddedSince('');
+                          setAddedBefore('');
+                          setVisits('all');
+                          setSort('rank');
                         }}
                       >
                         Show everything
@@ -912,15 +1111,39 @@ export function CollectionView({
             </div>
           </div>
         </div>
-        {selectedItem &&
-          (previewInSheet ? (
+        {previewInSheet ? (
+          selectedItem && (
             <ItemSheet title={selectedItem.title} onClose={() => setSelectedId(null)}>
               <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} sheet {...rowActions} />
             </ItemSheet>
-          ) : (
-            <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
-          ))}
+          )
+        ) : selectedItem ? (
+          <ItemPreview item={selectedItem} rank={ranks.get(selectedItem.id)} {...rowActions} />
+        ) : (
+          <aside className="opinion-slip opinion-slip-placeholder" aria-label="Item preview">
+            <p className="overline">YOUR CALL</p>
+            <BlankSlips />
+            <h2>The opinion goes here.</h2>
+            <p>Pick an item to see the details or make your call. Very official.</p>
+          </aside>
+        )}
       </div>
+      {discardCapture && (
+        <ConfirmDialog
+          title="Clear this pending capture?"
+          description="The item may already have saved. Check the collection before starting a new copy. This clears only the capture draft on this device."
+          confirmLabel="Clear capture draft"
+          onClose={() => setDiscardCapture(false)}
+          onConfirm={() => {
+            const next = { ...captureDraft.form, pendingItem: undefined };
+            captureDraft.clear(next);
+            captureDraft.setForm(next);
+            captureDraft.operationId.current = crypto.randomUUID();
+            create.reset();
+            setDiscardCapture(false);
+          }}
+        />
+      )}
     </section>
   );
 }

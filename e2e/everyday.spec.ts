@@ -20,8 +20,8 @@ async function capture(page: Page, name: string, project: string) {
     });
 }
 async function openAdd(page: Page) {
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  return page.getByRole('dialog', { name: 'Add item', exact: true });
 }
 
 test('Home search clears without losing focus and still searches the full archive', async ({
@@ -99,9 +99,9 @@ test('a lost global save keeps its exact destination and payload across reload',
   await expect(dialog).toHaveCount(0);
   expect(archive.inbox.filter((entry) => entry.title === 'Corner ramen')).toHaveLength(1);
   expect(archive.writes.filter((write) => write.path === '/inbox')[1]).toEqual(first);
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
   await expect(
-    page.getByRole('dialog', { name: 'Keep something.' }).getByLabel('Name', { exact: true }),
+    page.getByRole('dialog', { name: 'Add item' }).getByLabel('Name', { exact: true }),
   ).toHaveValue('');
 });
 
@@ -127,7 +127,7 @@ test('collection capture stays compact and item selection does not push other en
   const slip = phone
     ? page.getByRole('dialog', { name: 'Saved item: Coffee' })
     : page.locator('.cabinet-collection-body > .opinion-slip');
-  await expect(slip.getByRole('button', { name: 'Meh', exact: true })).toHaveCount(0);
+  await expect(slip.getByRole('button', { name: 'Meh', exact: true })).toBeVisible();
   await expect(slip.getByText('Favorite.', { exact: true })).toBeVisible();
   expect(archive.writes).toEqual([]);
   await capture(page, 'item', info.project.name);
@@ -419,7 +419,7 @@ test('empty recall distinguishes undated names from filtered results and offers 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   await empty.getByRole('button', { name: 'Add a name', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Save in')).toHaveValue('inbox');
   await expect(dialog.getByLabel('Name', { exact: true })).toBeFocused();
 });

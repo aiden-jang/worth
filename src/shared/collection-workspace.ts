@@ -10,11 +10,13 @@ export function wasOpenedLongAgo(item: Item, now = Date.now()): boolean {
 }
 
 export function collectionBrowseCount(
-  mode: 'all' | 'kept' | 'revisited' | 'not-opened-lately' | 'queue',
+  mode: 'all' | 'kept' | 'tried' | 'revisited' | 'not-opened-lately' | 'queue',
   items: Item[],
 ): number {
   if (mode === 'queue') return items.filter((item) => item.revisitQueued).length;
   if (mode === 'kept') return items.filter((item) => item.decision === 'favorite').length;
+  if (mode === 'tried')
+    return items.filter((item) => !item.wantToTry && (item.decision !== null || item.logCount > 0)).length;
   if (mode === 'revisited') return items.filter((item) => item.logCount > 1).length;
   if (mode === 'not-opened-lately') return items.filter((item) => wasOpenedLongAgo(item)).length;
   return items.length;

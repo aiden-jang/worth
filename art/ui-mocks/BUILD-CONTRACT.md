@@ -53,14 +53,29 @@ bottom bar. Content, status panels and dialogs must remain usable above it.
 
 Add opens a name-first native composer with an explicit destination: current
 active list when open, otherwise Unfiled. Do not silently use the previous list.
-A name is sufficient. Add details opens an explicit dated-experience choice,
+A name is sufficient. Add item shows optional calls and Want to try directly and
+offers inline New collection creation, preserving the draft and selecting the new
+destination. Want to try parks an unsaved call and hides rating choices until
+reversed; saving a plan adds neither a call nor a visit.
+Add details opens an explicit dated-experience choice,
 thought, labeled reaction and optional photo disclosure. Never infer an experience
 from a name, image or save timestamp, or an overall call from a visit reaction.
 
 An Unfiled find holds one optional experience and private photo. Filing transfers
 these atomically. Interrupted saves preserve exact retry identities and device
 drafts; name-only capture, older clients and older backup files remain supported.
-Phone inputs use 16px text. Native dialogs scroll inside the viewport and retain
+The capture-source toolbar deliberately extends the Add reference with three quiet,
+labeled actions below Name. Expand one inset panel at a time, keep the original
+Name and Save controls, and retain source text in the same account-scoped draft.
+Photo text/barcode reading stays on-device; only a deliberate ISBN lookup contacts
+Open Library. Recognition does not attach a photo. Existing-name choices are inline,
+leave saved calls intact, and require an explicit choice before a separate copy.
+Unfiled adds a second, wrapping row of 44px collection choices and inline creation;
+this replaces the default editor/save/file sequence. Duplicate warnings and errors
+remain inline; pending filing recovery retains its existing identity and controls.
+These are intentional usability refinements to the maintained Add and working-page
+compositions, using their existing colors, typography, field sizes and mobile Save
+footer. Phone inputs use 16px text. Native dialogs scroll inside the viewport and retain
 focus return, outside/Escape dismissal and unsaved-change protection.
 
 Phone collection, entry and recall menus use 20px side insets and 84px plus the
@@ -70,8 +85,9 @@ stay anchored to their trigger.
 
 ## Working pages
 
-Home prioritizes search and recent records including Unfiled, then collections
-and a compact real memory. Collection cards group thumbnail/text horizontally on
+Home prioritizes search and one cream reminder, then recent records including
+Unfiled and collections. More from your archive discloses the existing deeper
+memory/preferences/exercise panel only on demand. Collection cards group thumbnail/text horizontally on
 desktop and for one phone collection; multiple phone collections use a compact
 two-column shelf. Empty invitations use modest artwork. Actual saved context,
 not streaks or missing-field prompts, gives someone a reason to return.
@@ -96,24 +112,47 @@ Multiple phone cards use two columns; all available preview cards remain visible
 Directory artwork is 144px on desktop, with 20px grid gaps and a 128px minimum
 card height. Phone artwork and all real counts/descriptions remain intact.
 
-A collection has compact identity, name capture and one browse/search/filter row.
-Settings, sharing and Ranking & tools are contextual; Entry options holds batch,
-Want to try, experiences, selection and saved views. Name-only saves return input
+A collection has compact identity, name capture, All items / Want to try / Tried
+tabs, direct call filters and search. Tried requires an explicit call or experience
+and excludes plans. More filters holds other existing views and specialized
+filters. Settings, sharing and More tools are contextual; Entry options holds
+batch, experiences, selection and saved views. Want to try is visible in capture. Name-only saves return input
 focus without opening details. Wide desktop selection uses a cream side slip;
 widths up to 960px use a native scrolling sheet without moving list rows or
-placing the preview below a long collection. These previews deliberately
-show saved information only: no reaction buttons, Unranked badge or options stack.
-Each row has an always-visible quiet Edit action and an options menu for Add
-experience, ranking, notes and queues. Preview sheets retain Edit and Add experience
-as navigation to explicit editors. This separates browsing from changes while
-keeping existing tools reachable. Unranked items remain accessible.
+placing the preview below a long collection. Desktop always reserves the 300px
+slip column (275px at narrow desktop widths), including an unselected placeholder.
+Selecting, clearing selection, saving and filtering never resize the row column.
+Preview calls save on an explicit click and can clear; browse selection writes
+nothing. Edit and Add experience remain on the slip at all widths. Row Edit moves
+into the options menu, alongside experience, rank, notes and queues. Direct call
+filters and optional name-capture calls remain visible. Unranked items stay accessible.
+
+These interactions deliberately refine the static collection and Add references
+in response to the November usability review: fewer disclosures, a stable preview
+column and clear separation of Add item from New collection. The existing dark
+canvas, cream slip, tokens, typography and mobile sheet behavior remain the visual
+reference. Sidebar collection links nest beneath Collections, Add item moves below
+the wordmark, and Unfiled uses its full page. Saved banners dismiss after six
+seconds, pausing on hover/focus and during pending or failed Undo. Home adds a
+cream reminder after search, mixing older overall Favorites (90 days, with a
+recent-favorite fallback), Want to try and the last 30 days of experiences.
+Unfiled and older pages are eligible. A visit starts with a random category and
+record; Show another cycles available categories. Refreshes retain the exact
+record while it remains eligible. No-call, Meh and visit reactions never become
+Favorites. Planned items offer I tried it in reminders, previews and readers:
+choosing a call clears Want to try without creating a dated experience or changing
+rank. Removing Want to try without a new call preserves the existing opinion.
+The visible tabs, optional More from your archive and Customize collection groups
+are intentional simplifications of the reference's default controls; the shared
+tokens, phone sizes, cream cards and dark canvas remain authoritative.
 
 Saved-record links outside the collection index use the same read-first semantics:
 a native details dialog shows saved information and an explicit Edit action.
 Unfiled rows expose View and Edit separately. Readers preserve notes, context,
 photo captions, individual sets and measurements without inferring missing values.
 Legacy editor links and draft recovery remain supported. The name-only creation
-action deliberately precedes optional sections, keeping it visible on phones.
+action deliberately precedes Customize collection / Activity options, keeping it
+visible on phones. Those groups retain starters, templates, artwork and details.
 Empty activity invitations precede optional tools; Resume is primary when a
 workout is active. Navigation remains available while page code loads.
 

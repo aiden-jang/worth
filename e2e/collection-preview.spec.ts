@@ -1,10 +1,10 @@
 import { mkdir } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, list, test } from './fixtures';
-import { closeItemSheet } from './navigation';
+import { closeItemSheet, editItem } from './navigation';
 import { emptyItemContext } from '../src/shared/item-context';
 
-test('collection previews show saved information without editing it at any width', async ({
+test('collection previews keep browsing passive and expose direct calls at any width', async ({
   page,
   archive,
 }, info) => {
@@ -34,9 +34,13 @@ test('collection previews show saved information without editing it at any width
     expect((await title.boundingBox())!.x).toBeCloseTo(start, 0);
     await expect(preview.getByText('Not again.', { exact: true })).toBeVisible();
     await expect(preview.getByText('Blue Moon', { exact: true })).toBeVisible();
-    await expect(preview.locator('.call-choices, select, input, .item-more')).toHaveCount(0);
+    await expect(preview.locator('select, input, .item-more')).toHaveCount(0);
+    await expect(preview.getByRole('button', { name: 'Not again', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await expect(preview.getByText('UNRANKED', { exact: true })).toHaveCount(0);
-    await expect(preview.getByRole('button')).toHaveCount(width <= 960 ? 2 : 0);
+    await expect(preview.getByRole('button')).toHaveCount(5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(
       1,
     );
@@ -54,9 +58,9 @@ test('collection previews show saved information without editing it at any width
         path: `${process.env.WORTH_PREVIEW_QA}/rows-${info.project.name}-${width}.png`,
         animations: 'disabled',
       });
+    await row.getByLabel('More options for Light Citrus Wheat', { exact: true }).click();
     const edit = row.getByRole('button', { name: 'Edit Light Citrus Wheat', exact: true });
     expect((await edit.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    await row.getByLabel('More options for Light Citrus Wheat', { exact: true }).click();
     await expect(row.getByRole('button', { name: 'Add experience for Light Citrus Wheat' })).toBeInViewport();
     if (process.env.WORTH_PREVIEW_QA && [1440, 390].includes(width))
       await page.screenshot({
@@ -76,9 +80,8 @@ test('row editing has explicit save and discard while phone preview navigation s
   archive,
 }, info) => {
   await page.goto('/lists/' + list.id);
-  const edit = page.getByRole('button', { name: 'Edit Coffee', exact: true });
-  await edit.focus();
-  await page.keyboard.press('Enter');
+  const more = page.getByLabel('More options for Coffee', { exact: true });
+  await editItem(page, 'Coffee');
   const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });
   await editor.getByRole('button', { name: 'Meh', exact: true }).click();
   await expect(editor.getByText('Unsaved changes.', { exact: true })).toBeVisible();
@@ -89,12 +92,11 @@ test('row editing has explicit save and discard while phone preview navigation s
     .getByRole('button', { name: 'Discard changes', exact: true })
     .click();
   await expect(editor).toHaveCount(0);
-  await expect(edit).toBeFocused();
+  await expect(more).toBeFocused();
   expect(archive.items[0].decision).toBe('favorite');
   await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   const preview = page.getByRole('region', { name: 'Your call for Coffee' });
-  if (info.project.name === 'phone') await preview.getByRole('button', { name: 'Edit', exact: true }).click();
-  else await edit.click();
+  await preview.getByRole('button', { name: 'Edit', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Saved item: Coffee' })).toHaveCount(0);
   await editor.getByRole('button', { name: 'Not again', exact: true }).click();
   expect(archive.items[0].decision).toBe('favorite');
@@ -103,7 +105,8 @@ test('row editing has explicit save and discard while phone preview navigation s
   expect(archive.items[0].decision).toBe('would_not_again');
   expect(archive.list.rankedIds).toEqual(['coffee']);
   await editor.getByRole('button', { name: 'Close', exact: true }).click();
-  await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
+  if (info.project.name === 'phone')
+    await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   await expect(preview.getByText('Not again.', { exact: true })).toBeVisible();
   if (info.project.name === 'phone') {
     await preview.getByRole('button', { name: 'Add experience for Coffee' }).click();
@@ -195,7 +198,7 @@ test('long rows keep secondary actions reachable near the viewport edge', async 
 test('reordering beyond the displayed page follows the moved item without opening its preview', async ({
   page,
   archive,
-}) => {
+}, info) => {
   archive.items = Array.from({ length: 60 }, (_, index) => ({
     ...structuredClone(archive.items[0]),
     id: 'ranked-' + index,
@@ -206,7 +209,7 @@ test('reordering beyond the displayed page follows the moved item without openin
   await expect(page.locator('.collection-index-row')).toHaveCount(50);
   const row = page
     .locator('.collection-index-row')
-    .filter({ has: page.getByRole('button', { name: 'Edit Saved drink 1', exact: true }) });
+    .filter({ has: page.getByRole('button', { name: 'Saved drink 1 Drink', exact: true }) });
   const more = row.getByLabel('More options for Saved drink 1', { exact: true });
   await more.click();
   await row.getByLabel('Rank Saved drink 1', { exact: true }).click();
@@ -217,7 +220,9 @@ test('reordering beyond the displayed page follows the moved item without openin
   await expect(page.locator('.collection-index-row')).toHaveCount(60);
   await expect(more).toBeFocused();
   await expect(more).toBeInViewport();
-  await expect(page.locator('.opinion-slip')).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'Item preview' })).toHaveCount(
+    info.project.name === 'desktop' ? 1 : 0,
+  );
   expect(archive.list.rankedIds.at(-1)).toBe('ranked-0');
   expect(archive.items[0].decision).toBe('favorite');
 });

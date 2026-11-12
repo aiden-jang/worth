@@ -67,7 +67,10 @@ test('a busy archive renders current work before older history', async ({ page, 
   }
   await search.fill('');
   await expect(page.locator('.collection-index-rows > li')).toHaveCount(100);
-  await page.getByRole('combobox', { name: 'Browse collection', exact: true }).selectOption('kept');
+  await page
+    .getByRole('group', { name: 'Filter by personal call', exact: true })
+    .getByRole('button', { name: /^Favorite/ })
+    .click();
   await expect(page.locator('.collection-index-rows > li')).toHaveCount(50);
   await expect(page.locator('.archive-paging')).toContainText('250');
   await entryOptions(page);
@@ -92,8 +95,8 @@ test('a delayed name-only save keeps one retry identity after a lost reply', asy
   });
   try {
     await page.goto('/');
-    await page.getByRole('button', { name: 'Add', exact: true }).click();
-    let dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+    await page.getByRole('button', { name: 'Add item', exact: true }).click();
+    let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
     await dialog.getByLabel('Name', { exact: true }).fill('The tiny midnight bakery');
     await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect.poll(() => submissions).toBe(1);
@@ -107,8 +110,8 @@ test('a delayed name-only save keeps one retry identity after a lost reply', asy
     release();
     await expect(dialog.getByRole('alert')).toBeVisible();
     await page.reload();
-    await page.getByRole('button', { name: 'Add', exact: true }).click();
-    dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+    await page.getByRole('button', { name: 'Add item', exact: true }).click();
+    dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
     await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('The tiny midnight bakery');
     await dialog.getByRole('button', { name: 'Retry save', exact: true }).click();
     await expect(dialog).toHaveCount(0);

@@ -28,7 +28,7 @@ const savedViewFilters = z
   .object({
     label: z.string().max(32).default(''),
     stamp: z.string().max(48).default(''),
-    browse: z.enum(['all', 'kept', 'want', 'queue', 'revisited', 'not-opened-lately']),
+    browse: z.enum(['all', 'kept', 'want', 'tried', 'queue', 'revisited', 'not-opened-lately']),
     search: z.string().max(200),
     type: z.string().max(60),
     brand: z.string().max(240).optional(),

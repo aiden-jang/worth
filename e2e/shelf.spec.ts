@@ -14,7 +14,7 @@ test.beforeEach(async ({ archive }) => {
 async function open(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Shelf preview' })).toBeVisible();
 }
@@ -59,7 +59,7 @@ test('private shelf choices persist, open records and remain separate from calls
   ).toEqual([]);
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await expect(preview).toContainText('For rainy Sundays.');
   await page.getByText('Personalize this shelf', { exact: true }).click();
@@ -93,7 +93,7 @@ test('shelf drafts recover and conflicting saves require a reviewed reload', asy
   await page.getByRole('textbox', { name: 'Private dedication', exact: true }).fill('My local dedication');
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Your shelf', exact: true }).click();
   await page.getByText('Personalize this shelf', { exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Private dedication', exact: true })).toHaveValue(

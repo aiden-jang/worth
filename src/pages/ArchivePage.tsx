@@ -1,4 +1,5 @@
 import { recordHref } from '../shared/record-links';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Plus } from '@phosphor-icons/react';
 import { Link } from 'react-router';
@@ -12,9 +13,11 @@ import { CallBadge } from '../components/PersonalCall';
 import { BlankSlips } from '../components/BlankSlips';
 import { MemoryShelf } from '../components/MemoryShelf';
 import { HomeSearch } from '../components/HomeSearch';
+import { HomeReminders } from '../components/HomeReminders';
 
 export function ArchivePage() {
   usePageTitle('Home');
+  const [moreOpen, setMoreOpen] = useState(false);
   const overview = useQuery({ queryKey: ['overview'], queryFn: api.overview });
   const inbox = useQuery({ queryKey: ['inbox'], queryFn: api.inbox });
   if (overview.isPending)
@@ -70,10 +73,11 @@ export function ArchivePage() {
       <header className="everyday-heading">
         <div>
           <h1>Good to keep.</h1>
-          <p>A name is enough. The rest can wait.</p>
+          <p>Your taste has a paper trail.</p>
         </div>
       </header>
       <HomeSearch />
+      {hasMemories && <HomeReminders />}
       <div className="home-columns">
         <section aria-labelledby="home-recent-heading" className="home-recent">
           <header className="everyday-section-head">
@@ -111,9 +115,9 @@ export function ArchivePage() {
             <div className="home-empty">
               <BlankSlips />
               <h2>Something to remember?</h2>
-              <p>Save a name now. Pick a collection whenever you like.</p>
+              <p>Something you tried. A place you liked. A very forgettable movie.</p>
               <button className="button button-accent" onClick={() => requestAddEntry({ listId: 'inbox' })}>
-                <Plus size={18} /> Save your first thing
+                <Plus size={18} /> Add your first item
               </button>
             </div>
           )}
@@ -181,7 +185,16 @@ export function ArchivePage() {
               )}
             </div>
           </section>
-          {hasMemories && <MemoryShelf />}
+          {hasMemories && (
+            <details
+              className="home-memory-more"
+              open={moreOpen}
+              onToggle={(event) => setMoreOpen(event.currentTarget.open)}
+            >
+              <summary>More from your archive</summary>
+              {moreOpen && <MemoryShelf />}
+            </details>
+          )}
         </div>
       </div>
     </main>

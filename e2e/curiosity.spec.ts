@@ -49,6 +49,7 @@ test('a memory draw reaches beyond the first page, avoids an immediate repeat an
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
+  await page.getByText('More from your archive', { exact: true }).click();
   const shelf = page.getByRole('region', { name: 'Memory shelf', exact: true });
   await expect(shelf.getByRole('heading', { name: 'An afternoon 1', exact: true })).toBeVisible();
   await page.evaluate(() => {
@@ -114,6 +115,7 @@ test('saved names can be rediscovered without inventing a visit, and empty or fa
     });
   });
   await page.goto('/');
+  await page.getByText('More from your archive', { exact: true }).click();
   const shelf = page.getByRole('region', { name: 'Memory shelf', exact: true });
   await shelf.getByRole('button', { name: 'Pull a memory', exact: true }).click();
   await expect(shelf).toContainText('Saved Jan 12, 2025 (UTC)');

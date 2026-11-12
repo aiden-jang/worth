@@ -78,8 +78,8 @@ test('Add keeps Save and the focused field clear in a short visible viewport wit
   archive.list.name = 'Skincare';
   archive.failCapture = true;
   await page.goto('/lists/' + list.id);
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   const save = dialog.getByRole('button', { name: 'Save', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('The little lotion');
   await capture(page, 'name-only', info.project.name);

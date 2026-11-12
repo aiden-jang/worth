@@ -115,7 +115,7 @@ async function setup(page: Page, state: State) {
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Taste history', exact: true }).click();
 }
 async function capture(page: Page, name: string, project: string, target = '.taste-history') {

@@ -55,8 +55,9 @@ test('working pages keep shared type, readable fields and stable cards after nav
       const submit = page.getByRole('button', { name: 'Create collection', exact: true });
       await expect(submit).toBeInViewport();
       const bounds = await submit.boundingBox();
-      const options = await page.locator('.create-options').boundingBox();
+      const options = await page.locator('.collection-customize > summary').boundingBox();
       expect(bounds!.y + bounds!.height).toBeLessThan(options!.y);
+      await page.locator('.collection-customize > summary').click();
       const reusable = page.locator('summary').filter({ hasText: 'Reusable details' });
       await reusable.click();
       await page.getByRole('textbox', { name: 'Reusable detail names', exact: true }).fill('Brand\nBrand');

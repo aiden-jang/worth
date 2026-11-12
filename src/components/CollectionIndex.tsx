@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { ArrowRight } from '@phosphor-icons/react';
-import type { Item } from '../shared/models';
+import type { Item, ItemDecision } from '../shared/models';
 import { OpinionSlip } from './OpinionSlip';
 import { CallBadge } from './PersonalCall';
 import { itemIdentity } from '../shared/item-details';
 import { ItemDetailsReadout } from './ItemDetailsReadout';
+import { TryReview } from './TryReview';
 
 type IndexProps = {
   sheet?: boolean;
@@ -23,6 +24,9 @@ type IndexProps = {
   onLogRevisit: (id: string) => void;
   onRank: (item: Item, position: number | null) => void;
   rankPending: boolean;
+  onCall: (item: Item, decision: ItemDecision | null) => void;
+  callPending: boolean;
+  callError: string;
 };
 
 export function IndexRows({
@@ -78,14 +82,6 @@ export function IndexRows({
                   {item.decision && <CallBadge value={item.decision} />}
                   {!selection && (
                     <>
-                      <button
-                        type="button"
-                        className="collection-row-edit"
-                        aria-label={`Edit ${item.title}`}
-                        onClick={() => actions.onOpenDetails(item.id)}
-                      >
-                        Edit
-                      </button>
                       <ItemRowOptions item={item} rank={rank} {...actions} />
                     </>
                   )}
@@ -138,6 +134,7 @@ function ItemRowOptions({
   onLogRevisit,
   onRank,
   rankPending,
+  onOpenDetails,
 }: Omit<IndexProps, 'items' | 'ranks' | 'selectedId' | 'onSelect'> & {
   item: Item;
   rank?: number;
@@ -191,6 +188,16 @@ function ItemRowOptions({
       <summary aria-label={`More options for ${item.title}`}>•••</summary>
       {open && (
         <div className="entry-options-panel" ref={panel}>
+          <button
+            type="button"
+            aria-label={`Edit ${item.title}`}
+            onClick={() => {
+              closeMenu();
+              onOpenDetails(item.id);
+            }}
+          >
+            Edit item
+          </button>
           <button
             type="button"
             aria-label={`Add experience for ${item.title}`}
@@ -265,10 +272,15 @@ function ItemRowOptions({
 export function ItemPreview({
   item,
   rank,
-  sheet,
   onOpenDetails,
   onLogRevisit,
-}: Pick<IndexProps, 'sheet' | 'onOpenDetails' | 'onLogRevisit'> & { item: Item; rank?: number }) {
+  onCall,
+  callPending,
+  callError,
+}: Pick<IndexProps, 'sheet' | 'onOpenDetails' | 'onLogRevisit' | 'onCall' | 'callPending' | 'callError'> & {
+  item: Item;
+  rank?: number;
+}) {
   return (
     <OpinionSlip
       presentation="preview"
@@ -277,22 +289,30 @@ export function ItemPreview({
       type={item.type}
       rank={rank}
       decision={item.decision}
+      onChange={item.wantToTry ? undefined : (decision) => onCall(item, decision)}
+      disabled={callPending}
     >
-      <ItemDetailsReadout item={item} />
-      {sheet && (
-        <div className="collection-tray-actions">
-          <button
-            type="button"
-            aria-label={`Add experience for ${item.title}`}
-            onClick={() => onLogRevisit(item.id)}
-          >
-            Add experience
-          </button>
-          <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
-            Edit <ArrowRight size={15} />
-          </button>
-        </div>
+      {callError && (
+        <p className="form-error" role="alert">
+          {callError}
+        </p>
       )}
+      <ItemDetailsReadout item={item} />
+      {item.wantToTry && (
+        <TryReview key={item.id} target={{ kind: 'item', id: item.id, title: item.title, initial: item }} />
+      )}
+      <div className="collection-tray-actions">
+        <button
+          type="button"
+          aria-label={`Add experience for ${item.title}`}
+          onClick={() => onLogRevisit(item.id)}
+        >
+          Add experience
+        </button>
+        <button type="button" className="collection-open-details" onClick={() => onOpenDetails(item.id)}>
+          Edit <ArrowRight size={15} />
+        </button>
+      </div>
     </OpinionSlip>
   );
 }

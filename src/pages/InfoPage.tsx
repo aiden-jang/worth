@@ -222,14 +222,22 @@ export function InfoPage({
             <section>
               <h2>Save something first</h2>
               <p>
-                Choose Add, enter a name and Save. Outside an open list, the destination starts at Unfiled.
-                You can choose a collection now or organize later. Notes and opinions are optional. Saving a
-                name does not create a visit.
+                Choose Add item, enter a name and Save. Outside an open list, the destination starts at
+                Unfiled. You can choose a collection now or organize later. Notes and opinions are optional.
+                Saving a name does not create a visit.
               </p>
               <p>
-                Home keeps recent entries and search together. Collections group things you want to find
-                again. Look back brings Memories and Insights together. Gym and other activities keep dated
-                entries and progress.
+                Home keeps search, a reminder and recent entries together. Show another rotates between
+                favorites, things waiting to be tried and recent experiences. More from your archive opens
+                deeper memories and insights. Collections group things you want to find again. Look back
+                brings Memories and Insights together. Gym and other activities keep dated entries and
+                progress.
+              </p>
+              <p>
+                Choose Want to try when saving for later. In a collection, All items, Want to try and Tried
+                are visible views; Tried contains records with a call or dated experience. I tried it opens
+                call choices and removes the plan flag when you choose one. It does not invent a visit date or
+                change your ranking. Remove from Want to try leaves any existing opinion alone.
               </p>
             </section>
             <section>
@@ -259,10 +267,10 @@ export function InfoPage({
             <section>
               <h2>Ranking and collection tools</h2>
               <p>
-                Open Collection options → Ranking & tools to try a draft ranking, compare records privately,
-                or draw a record from Want to try, the revisit queue or Favorites. Head-to-head comparisons
-                can hide saved ranks and calls; Skip and Undo are available. Reveal the result before using it
-                in the sandbox. Your main ranking changes only after Preview ranking change and Apply ranking.
+                Open Collection options → More tools to try a draft ranking, compare records privately, or
+                draw a record from Want to try, the revisit queue or Favorites. Head-to-head comparisons can
+                hide saved ranks and calls; Skip and Undo are available. Reveal the result before using it in
+                the sandbox. Your main ranking changes only after Preview ranking change and Apply ranking.
               </p>
               <p>
                 Saved views keep named filters across devices. Context rankings keep alternative orders such
@@ -292,7 +300,7 @@ export function InfoPage({
               </p>
               <h2>Possible duplicates</h2>
               <p>
-                Open Collection options → Ranking & tools → Comparison table → Possible duplicates to review
+                Open Collection options → More tools → Comparison table → Possible duplicates to review
                 matching names and types. Open shows a record’s Details; Revisit opens its visit form without
                 saving a visit. Keep separate saves a review across devices and leaves all records, calls and
                 rankings unchanged. No merge happens automatically.
@@ -307,7 +315,7 @@ export function InfoPage({
             <section>
               <h2>Importing CSV and saving links</h2>
               <p>
-                In Collection options → Ranking & tools → Import &amp; capture, choose a CSV file or paste CSV
+                In Collection options → More tools → Import &amp; capture, choose a CSV file or paste CSV
                 data. Set the separator, review which columns supply names, types, notes, calls, source URLs
                 and dates, then preview up to 100 records. Possible duplicates start unselected. Choose them
                 explicitly to keep both; invalid rows stay out of the save. Existing records and rankings stay
@@ -324,20 +332,20 @@ export function InfoPage({
             <section>
               <h2>Reusable details and templates</h2>
               <p>
-                Ranking & tools → Collection setup saves optional detail names. In an item’s Custom details,
-                choose Detail names from this collection to add blank fields to that draft. Changing the
-                collection setup never changes existing records. Save setup as template keeps only the
-                collection name, description, authored artwork and detail names. Choose a saved template
-                during collection creation, review the draft, then create an empty collection. No records,
-                notes, uploaded cover photos, ranks or calls are copied. Templates are private and included in
-                backups; removing one leaves existing collections unchanged. Keep up to 50 templates.
+                More tools → Collection setup saves optional detail names. In an item’s Custom details, choose
+                Detail names from this collection to add blank fields to that draft. Changing the collection
+                setup never changes existing records. Save setup as template keeps only the collection name,
+                description, authored artwork and detail names. Choose a saved template during collection
+                creation, review the draft, then create an empty collection. No records, notes, uploaded cover
+                photos, ranks or calls are copied. Templates are private and included in backups; removing one
+                leaves existing collections unchanged. Keep up to 50 templates.
               </p>
             </section>
             <section>
               <h2>Your collection shelf</h2>
               <p>
-                Ranking & tools → Your shelf offers paper pockets or book spines, optional bookends and a
-                faceless paper creature beside records without calls. Personalize this shelf keeps a private
+                More tools → Your shelf offers paper pockets or book spines, optional bookends and a faceless
+                paper creature beside records without calls. Personalize this shelf keeps a private
                 dedication, one keepsake and an inscription attached to a chosen record. These choices are
                 saved across devices and included in backup, independently of ranks and calls.
               </p>
@@ -351,7 +359,7 @@ export function InfoPage({
             <section>
               <h2>Cover collages</h2>
               <p>
-                Ranking & tools → Cover collage arranges up to six saved record or visit photos. Choose each
+                More tools → Cover collage arranges up to six saved record or visit photos. Choose each
                 frame’s position, size, layer and optional caption. Originals fit without cropping and stay
                 intact. Prepare the exact image, inspect it, then save it as this collection’s private cover
                 or download it. Shelf crops may vary; calls and ranks stay separate.
@@ -551,7 +559,7 @@ export function InfoPage({
             <section>
               <h2>Ranking and opinion history</h2>
               <p>
-                Ranking & tools → Taste history records future changes to ranks and calls. Earlier changes are
+                More tools → Taste history records future changes to ranks and calls. Earlier changes are
                 unknown. Compare an older order with the current one, then copy it into the ranking sandbox
                 for review. Applying still needs a separate preview and confirmation.
               </p>

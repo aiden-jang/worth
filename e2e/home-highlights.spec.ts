@@ -49,6 +49,7 @@ test('returning Home waits for stale observations to refresh before choosing its
   const memoryRead = page.waitForResponse((response) => response.url().includes('/api/memories?'));
   const progressRead = page.waitForResponse((response) => response.url().endsWith('/api/home-progress'));
   await page.getByRole('link', { name: 'Home', exact: true }).click();
+  await page.getByText('More from your archive', { exact: true }).click();
   await Promise.all([memoryRead, progressRead]);
   await page.evaluate(async () => {
     await new Promise(requestAnimationFrame);
@@ -112,6 +113,7 @@ test('Home keeps the chosen preference stable, refreshes its counts and can expl
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
+  await page.getByText('More from your archive', { exact: true }).click();
   const shelf = page.getByRole('region', { name: 'Memory shelf', exact: true });
   await expect(shelf.getByRole('heading', { name: 'Harbor', exact: true })).toBeVisible();
   await expect(shelf).toContainText('You marked 4 of 5 rated things Favorite.');
@@ -127,8 +129,8 @@ test('Home keeps the chosen preference stable, refreshes its counts and can expl
     { ...groups[0], name: 'A new leading brand', favorite: 9 },
     { ...groups[0], favorite: 5 },
   ];
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('A quick unfiled find');
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(dialog).toHaveCount(0);
@@ -194,6 +196,7 @@ test('Home progress shows the recorded unit, comparison and source while staying
     }),
   );
   await page.goto('/');
+  await page.getByText('More from your archive', { exact: true }).click();
   const shelf = page.getByRole('region', { name: 'Memory shelf', exact: true });
   await expect(shelf.getByRole('heading', { name: 'Bench press', exact: true })).toBeVisible();
   await expect(shelf).toContainText('40 kg × 10 reps');

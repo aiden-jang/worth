@@ -1,7 +1,7 @@
 import { requestAddEntry } from '../shared/quick-entry';
 import { recordHref } from '../shared/record-links';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { api } from '../api';
@@ -12,7 +12,10 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useDraft } from '../hooks/useDraft';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useConnection } from '../hooks/useConnection';
-import { inboxEntry } from '../shared/inbox';
+import { inboxEntry, type InboxEntry } from '../shared/inbox';
+import type { Item, ListSummary } from '../shared/models';
+import { duplicateIdentity } from '../shared/record-identity';
+import { InboxFileActions } from '../components/InboxFileActions';
 import { contextSearchText } from '../shared/item-context';
 import { formatDate, formatRelativeTimestamp } from '../format';
 import '../inbox.css';
@@ -33,22 +36,37 @@ export function InboxPage() {
   );
 }
 
-export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
+export function InboxPanel() {
   const client = useQueryClient(),
     online = useConnection();
   const query = useQuery({ queryKey: ['inbox'], queryFn: api.inbox });
+  const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
+  const collections = lists.data?.lists.filter((list) => list.kind === 'collection' && !list.archived) ?? [];
+  const focusAfterFiling = useRef<HTMLElement | null>(null);
+  const preflightLock = useRef(false);
+  const [creatingBusyId, setCreatingBusyId] = useState<string | null>(null);
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+  const [duplicateFiling, setDuplicateFiling] = useState<{
+    entry: InboxEntry;
+    target: ListSummary;
+    item: Item;
+  } | null>(null);
   const [params, setParams] = useSearchParams();
   const focus = z.string().uuid().safeParse(params.get('focus'));
-  const [selected, setSelected] = useState<string | null>(!drawer && focus.success ? focus.data : null);
+  const [selected, setSelected] = useState<string | null>(focus.success ? focus.data : null);
   const focusId = focus.success ? focus.data : null;
-  const [reading, setReading] = useState(!drawer && params.get('view') === '1');
+  const [reading, setReading] = useState(params.get('view') === '1');
   const routeView = params.get('view');
   useEffect(() => {
-    if (!drawer) {
-      setSelected(focusId);
-      setReading(routeView === '1');
-    }
-  }, [drawer, focusId, routeView]);
+    setSelected(focusId);
+    setReading(routeView === '1');
+  }, [focusId, routeView]);
   const [term, setTerm] = useState(''),
     [limit, setLimit] = useState(30);
   const [discard, setDiscard] = useState(false);
@@ -74,12 +92,64 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
       draft.operationId.current = crypto.randomUUID();
       setSaved({ id: item.id, listId: item.listId, title: item.title, logId });
       void client.invalidateQueries();
+      requestAnimationFrame(() => {
+        const target = focusAfterFiling.current;
+        const heading = document.querySelector<HTMLElement>('main h1');
+        if (target?.isConnected) target.focus({ preventScroll: true });
+        else if (heading) {
+          heading.tabIndex = -1;
+          heading.focus({ preventScroll: true });
+        }
+      });
     },
     onError: () => {
       // A lost reply may follow a completed filing; refresh without losing its retry receipt.
       void client.invalidateQueries({ queryKey: ['inbox'] });
     },
   });
+  function beginFiling(current: InboxEntry, target: { id: string; name: string }) {
+    if (pending || file.isPending || !online) return;
+    const row = [...document.querySelectorAll<HTMLElement>('[data-inbox-id]')].find(
+      (node) => node.dataset.inboxId === current.id,
+    );
+    focusAfterFiling.current =
+      row?.nextElementSibling?.querySelector<HTMLElement>('button') ??
+      row?.previousElementSibling?.querySelector<HTMLElement>('button') ??
+      null;
+    const next = { pending: { entry: current, targetId: target.id, targetName: target.name } };
+    draft.checkpoint(next);
+    setDuplicateFiling(null);
+    closeEditor();
+    file.mutate(next.pending);
+  }
+  const checkFiling = useMutation({
+    mutationFn: async (value: { entry: InboxEntry; target: ListSummary }) => {
+      const { items } = await client.fetchQuery({
+        queryKey: ['items', value.target.id],
+        queryFn: () => api.items(value.target.id),
+        staleTime: 0,
+      });
+      return {
+        ...value,
+        item: items.find((item) => duplicateIdentity(item) === duplicateIdentity(value.entry)),
+      };
+    },
+    onSuccess: ({ entry, target, item }) => {
+      if (live.current) {
+        if (item) setDuplicateFiling({ entry, target, item });
+        else beginFiling(entry, target);
+      }
+    },
+    onSettled: () => {
+      preflightLock.current = false;
+    },
+  });
+  function requestFiling(entry: InboxEntry, target: ListSummary) {
+    if (pending || file.isPending || preflightLock.current || !online) return;
+    preflightLock.current = true;
+    setDuplicateFiling(null);
+    checkFiling.mutate({ entry, target });
+  }
   const entries = query.data?.entries ?? [];
   const search = term.trim().toLocaleLowerCase();
   const filtered = search
@@ -90,10 +160,9 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
       )
     : entries;
   const entry = entries.find((entry) => entry.id === selected);
-  const Heading = drawer ? 'h2' : 'h1';
   function closeEditor() {
     setSelected(null);
-    if (!drawer && params.has('focus')) {
+    if (params.has('focus')) {
       const next = new URLSearchParams(params);
       next.delete('focus');
       next.delete('view');
@@ -103,23 +172,21 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
   function openFind(id: string, view: boolean) {
     setSelected(id);
     setReading(view);
-    if (!drawer) {
-      const next = new URLSearchParams(params);
-      next.set('focus', id);
-      if (view) next.set('view', '1');
-      else next.delete('view');
-      setParams(next);
-    }
+    const next = new URLSearchParams(params);
+    next.set('focus', id);
+    if (view) next.set('view', '1');
+    else next.delete('view');
+    setParams(next);
   }
   return (
     <>
       <header className="page-head inbox-head">
         <div>
-          <Heading id={drawer ? 'inbox-drawer-title' : undefined}>Unfiled.</Heading>
-          <p>Saved here. Organize whenever you like.</p>
+          <h1>Unfiled.</h1>
+          <p>Saved. Filing department currently on break.</p>
         </div>
         <button className="button button-accent" onClick={() => requestAddEntry({ listId: 'inbox' })}>
-          Add a name
+          Add item
         </button>
       </header>
       <p className="inbox-count">
@@ -207,13 +274,21 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
             </section>
           )}
           {!!entries.length && !filtered.length && <p>No Unfiled finds match “{term}”.</p>}
+          {lists.isError && !!entries.length && (
+            <p className="form-error" role="alert">
+              Collections couldn’t load.{' '}
+              <button type="button" onClick={() => void lists.refetch()}>
+                Try again
+              </button>
+            </p>
+          )}
           {!!filtered.length && (
             <ul className="inbox-list">
               {filtered.slice(0, limit).map((find) => (
                 <li key={find.id} data-inbox-id={find.id}>
                   <button
                     aria-label={`View ${find.title}`}
-                    disabled={!!pending}
+                    disabled={!!pending || checkFiling.isPending || !!creatingBusyId}
                     onClick={() => openFind(find.id, true)}
                   >
                     <span className="inbox-row-mark" aria-hidden="true">
@@ -237,11 +312,40 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
                   <button
                     className="inbox-row-edit"
                     aria-label={`Edit ${find.title}`}
-                    disabled={!!pending}
+                    disabled={!!pending || checkFiling.isPending || !!creatingBusyId}
                     onClick={() => openFind(find.id, false)}
                   >
                     Edit
                   </button>
+                  {lists.data && (
+                    <InboxFileActions
+                      entry={find}
+                      collections={collections}
+                      disabled={
+                        !!pending ||
+                        checkFiling.isPending ||
+                        (!!creatingBusyId && creatingBusyId !== find.id) ||
+                        !online
+                      }
+                      checking={checkFiling.isPending && checkFiling.variables.entry.id === find.id}
+                      error={
+                        checkFiling.isError && checkFiling.variables.entry.id === find.id
+                          ? checkFiling.error.message
+                          : ''
+                      }
+                      duplicate={duplicateFiling?.entry.id === find.id ? duplicateFiling : null}
+                      onBusyChange={(busy) =>
+                        setCreatingBusyId((current) =>
+                          busy ? find.id : current === find.id ? null : current,
+                        )
+                      }
+                      onFile={(target) => requestFiling(find, target)}
+                      onCancelDuplicate={() => setDuplicateFiling(null)}
+                      onFileSeparate={() => {
+                        if (duplicateFiling) beginFiling(duplicateFiling.entry, duplicateFiling.target);
+                      }}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
@@ -271,12 +375,7 @@ export function InboxPanel({ drawer = false }: { drawer?: boolean }) {
             id={selected}
             entry={entry}
             onClose={closeEditor}
-            onFile={(current, target) => {
-              const next = { pending: { entry: current, targetId: target.id, targetName: target.name } };
-              draft.checkpoint(next);
-              closeEditor();
-              file.mutate(next.pending);
-            }}
+            onFile={beginFiling}
           />
         )
       )}

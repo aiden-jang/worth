@@ -14,17 +14,41 @@ adding fields or changing the capture, storage or sharing contracts.
 
 ## Save first
 
-Choose **Add**, enter a name and choose **Save**. Outside an open active list,
+Choose **Add item**, enter a name and choose **Save**. Outside an open active list,
 **Save in** starts at **Unfiled**. Inside a list it visibly selects that list.
 There is no hidden last-used destination. A recovered draft keeps its own visible
 destination. Unfiled is the existing Inbox store with a clearer primary UI label.
 
-**Add details** opens optional text, a call and one photo. **Record a dated
+Optional calls and **Want to try** are visible immediately. Choosing Want to try
+parks any draft call and hides rating choices; reversing it restores that draft
+call. Saving a plan creates no experience or opinion. **New collection** creates and selects a
+collection inside Add item while retaining its name and call. **Add details**
+opens optional text, context and one photo. **Record a dated
 experience** reveals the date and treats its reaction as **This time**. This also
 works in Unfiled: a find can keep its date, thought and photo before organization.
 An Unfiled find holds one optional experience; repeated visits belong to a
 collection record. The overall call stays separate when editing an existing find.
 Saving a name or photo alone never creates a visit.
+
+Paste link, Photo text and Barcode work inside Add item. A link suggests a name
+from its address and retains the visible source; a photo supplies reviewed text
+without becoming an attachment. An explicit ISBN lookup may supply book details,
+which append to the note without replacing its existing text. Source drafts remain
+account-scoped and clear with the completed item draft. Recognition itself uses
+on-device workers; Open Library receives only the code after Look up book.
+
+A matching saved name offers Open item or Add another experience. The latter
+selects the existing record, reveals its date and separates This time from the
+record’s saved overall call. Saving a new copy requires Save as a separate item.
+The collection’s inline name field follows the same rule. Its frozen pending
+capture remains retryable after a lost reply/reload without treating its own saved
+result as a new duplicate.
+
+Unfiled offers direct destination buttons and Create & file on each row. No editor
+or separate Save action is needed for unchanged entries. Filing checks duplicates
+before transferring the saved find; File as a separate item is explicit. Dated
+memories/photos still transfer atomically and interrupted requests retain their
+same retry identity. Editing remains available when saved details need changing.
 
 For a collection, saving an experience creates the name and visit in one transaction.
 If that name already exists, Use saved attaches the visit explicitly to that
@@ -50,13 +74,20 @@ connected-only.
 
 ## Find what you kept
 
-Home starts with search and recent records, including Unfiled. List shortcuts open
-existing data; no names, calls or activity are invented for a sparse account.
-Collections and a compact memory offer quieter ways to browse. The regular search
+Home starts with search and one reminder, followed by recent records including
+Unfiled and the collection shelf. Reminders mix overall Favorites (prefer at least
+90 days old, falling back to newer favorites), Want to try and experiences in the
+last 30 days. They include Unfiled and older result pages. Each visit starts with
+a random category and record; **Show another** cycles available categories.
+Refreshes update that exact record rather than jumping as counts or order change.
+If it no longer qualifies, another can take its place. A visit reaction never
+becomes an overall Favorite. No names, calls or activity are invented for a sparse
+account. List shortcuts open existing data. The regular search
 continues to cover archived content with its existing labels and boundaries.
 The Recent section's **Search all** link opens archive search.
 
-The existing memory card can also show a preference with at least three recorded
+**More from your archive** optionally opens the existing memory card. It can show
+a preference with at least three recorded
 calls and a single most-recorded call, or an exact rep improvement from the most
 recent finished workout in the last 30 UTC days. Each links to its supporting
 entries. The chosen source stays stable during the Home visit; refreshed counts
@@ -78,14 +109,20 @@ keeps its existing name/description search, order preference and archive links.
 Search text stays in the tab and clears on reload; the order preference persists.
 Once visible, the controls stay open for the directory visit.
 
-Collections open with name capture, a browse selector, search and Filter. A
-name-only save returns input focus without opening details. Selecting a record
-shows its actual call in the desktop slip or a native sheet at widths up to 960px, leaving other
-rows in place. The preview is read-only: it has no reaction choices or Unranked
-badge. Each row has Edit and an options menu for Add experience, rank, notes,
-Want to try and revisit queue actions. Preview sheets also offer Edit and Add
-experience. Calls change in the editor only after Save; closing an unchanged
-preview writes nothing.
+Collections open with name capture, optional calls, Want to try, visible call
+filters, search and **All items / Want to try / Tried** tabs. Tried contains
+nonplanned records with a call or dated experience; unrated name-only saves stay
+in All items. **More filters** retains the other views and specialized filters. A name-only save returns input focus without opening details.
+The desktop preview column stays in place even without a selection; widths up to
+960px use a native sheet. Selecting a record leaves rows in place and writes
+nothing. Its three call buttons save immediately on deliberate clicks; selecting
+the current call clears it. Edit and Add experience are available on the slip.
+Planned-item slips, saved-record readers and Home reminders offer **I tried it**.
+Choosing a call saves it and clears Want to try without inventing a visit date,
+changing notes or touching ranking. **Remove from Want to try** clears only the
+plan flag and preserves any existing opinion. Row Edit belongs in its options
+menu with rank, notes and queues. Wider editor
+changes still require Save. Unfiled opens its own page, without a drawer.
 
 Home, search, memory and tool links open saved records for reading. **Edit** switches
 to the existing editor, including any unfinished device draft; browsing always
@@ -96,13 +133,14 @@ saving; a closed activity deep link stays closed after reload. Existing editor
 URLs remain usable.
 
 New collections and activities need only a name. **Create** comes before the
-optional starter, artwork and detail sections. On an empty Gym page, **Start
+**Customize collection** / **Activity options** groups. These retain optional
+starters, templates, artwork, reusable details and descriptions. On an empty Gym page, **Start
 workout** and **Add activity** remain the two entry points; optional tools follow
 the invitation. With an active workout, **Resume workout** gets priority.
 
-**Collection options** contains sharing, presentation, settings and **Ranking &
-tools** (the existing Workbench). **Entry options** contains batch capture, Want
-to try capture, dated experiences, bulk selection and saved filter views. Each
+**Collection options** contains sharing, presentation, settings and **More tools**
+(the existing Workbench). **Entry options** contains batch capture, dated
+experiences, bulk selection and saved filter views. Each
 menu closes on outside focus/pointer or Escape. No advanced capability or saved
 configuration is deleted.
 

@@ -6284,6 +6284,14 @@ test('memory recall uses actual dates, literal search, pagination, archive scope
   expect((await read('q=Oat')).total).toBe(1);
   expect((await read('from=2026-01-01')).total).toBe(0);
   expect((await read('mode=saved&type=Coffee')).total).toBe(1);
+  expect((await read('call=favorite')).total).toBe(1);
+  expect((await read('call=meh')).total).toBe(0);
+  expect((await read('mode=saved&call=favorite')).total).toBe(0);
+  await call(`/items/${first.item.id}`, owner, 'PATCH', { decision: 'favorite' });
+  expect((await read('mode=saved&call=favorite')).total).toBe(1);
+  expect((await read('mode=saved&call=meh')).total).toBe(0);
+  expect((await read('mode=saved&call=favorite', 'foreignmemory')).total).toBe(0);
+  expect((await call('/memories?call=unknown', owner)).status).toBe(400);
   expect((await read('', 'foreignmemory')).total).toBe(0);
   expect((await call(`/memories?list=${list.id}`, 'foreignmemory')).status).toBe(404);
   expect((await call('/memories?from=2026-02-30', owner)).status).toBe(400);

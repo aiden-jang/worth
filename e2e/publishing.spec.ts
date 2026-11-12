@@ -7,7 +7,7 @@ import { test, expect, list } from './fixtures';
 async function open(page: import('@playwright/test').Page) {
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Booklets & cards', exact: true }).click();
 }
 
@@ -155,7 +155,7 @@ test('photo export failures recover and export settings survive closing', async 
   await page.getByRole('button', { name: 'Close workbench', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Booklets & cards', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Coffee', exact: true })).toBeChecked();
 });

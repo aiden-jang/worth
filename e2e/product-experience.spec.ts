@@ -44,8 +44,8 @@ test('product details require an explicit switch before clearing and survive a l
     return route.abort('failed');
   });
   await page.goto('/lists/' + list.id);
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  let dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('Sample lotion');
   await dialog.getByText('Add details', { exact: true }).click();
   await dialog.getByLabel('Type', { exact: true }).fill('Moisturizer');
@@ -61,8 +61,8 @@ test('product details require an explicit switch before clearing and survive a l
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(dialog.getByRole('alert')).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveValue('Harbor');
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toBeDisabled();
   await dialog.getByRole('button', { name: 'Retry save', exact: true }).click();

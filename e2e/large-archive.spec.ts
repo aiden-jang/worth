@@ -19,8 +19,8 @@ test('a populated archive keeps quick capture and older search results reachable
 }, info) => {
   const { file } = await setupLargeArchive(page, archive);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  const add = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('The little late-night bakery');
   await add.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Recent', exact: true })).toContainText(

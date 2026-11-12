@@ -5,10 +5,12 @@ words such as name, list, note and copy. One small joke per moment is enough.
 
 ## Functional language
 
-Primary navigation is Home, Collections and Look back. Signed-in actions use Add,
+Primary navigation is Home, Collections and Look back. Signed-in actions use Add item,
 Save, Add experience, Edit and Start workout. Inbox is labeled Unfiled in the
-primary flow; storage/API names remain unchanged. Ranking & tools names the
-collection tools. The signed-out example retains Keep it.
+primary flow; storage/API names remain unchanged. More tools names the
+collection tools. All items, Want to try and Tried are visible collection views;
+More filters holds specialized choices. Customize collection contains optional
+setup. More from your archive reveals extra Home material. The signed-out example retains Keep it.
 
 Add details opens optional capture fields. Record a dated experience is an
 explicit choice; This time labels its reaction, separately from the overall call.
@@ -58,7 +60,7 @@ Generic category objects may have decorative faces without implying an opinion.
 | Supporting line  | Keep what you try. Rank what you like. / The meh can stay.             |
 | Signup           | Start your archive →                                                   |
 | Landing footer   | Meh is a complete sentence. / Lists for your taste. Logs for the rest. |
-| Home             | Good to keep. / A name is enough. The rest can wait.                   |
+| Home             | Good to keep. / Your taste has a paper trail.                          |
 | Example capture  | Keep it / Rank later. No rush.                                         |
 | Empty collection | Nothing to judge. Yet.                                                 |
 | Search start     | Somewhere in here.                                                     |
@@ -68,6 +70,16 @@ Landing topics are Drinks, Midnight snacks and Questionable purchases, with
 For research. / Several were necessary. / Seemed reasonable. captions. Keep them
 inside the labeled EXAMPLE; they are not starter descriptions to save in accounts.
 The running private app uses actual records and useful empty states.
+
+Home reminders say “You liked it. Still on record.”, “Still awaiting its big
+moment.” or the actual call for a recent experience. Show another changes the
+reminder explicitly. Want to try capture says “Verdict pending. Very reasonable.”
+I tried it opens direct call choices; keep its explanation and no-call removal clear.
+Unfiled says “Saved. Filing department currently on break.” The idle opinion slip
+says “The opinion goes here.” with “Pick an item to see the details or make your
+call. Very official.” Capture responses are “A repeat appearance seems likely.”,
+“An event occurred.” and “Research concluded.” Only show one call aside at a time;
+never replace functional labels or save user content with this copy.
 
 The [build contract](art/ui-mocks/BUILD-CONTRACT.md) owns composition and motion;
 [current references](art/ui-mocks/README.md) identify maintained screens.

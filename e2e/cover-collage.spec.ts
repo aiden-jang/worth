@@ -145,7 +145,7 @@ async function setup(page: Page, state: State) {
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Cover collage', exact: true }).click();
   return page.getByRole('dialog', { name: 'Cover collage', exact: true });
 }
@@ -288,7 +288,7 @@ test('arrangements recover without a stale prepared file and missing originals r
   await dialog.getByRole('textbox', { name: 'Caption for frame 1', exact: false }).fill('Keep this caption');
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Cover collage', exact: true }).click();
   dialog = page.getByRole('dialog', { name: 'Cover collage', exact: true });
   await expect(dialog.getByRole('textbox', { name: 'Caption for frame 1', exact: false })).toHaveValue(
@@ -379,7 +379,7 @@ test('browser Back preserves a blocked-storage arrangement until the user delibe
   await page.goto('/');
   await page.locator('main').getByRole('link').filter({ hasText: 'My drinks' }).first().click();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Cover collage', exact: true }).click();
   const dialog = await add(page);
   await dialog

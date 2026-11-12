@@ -48,7 +48,7 @@ export function OpinionSlip({
         <strong>{decision ? `${decisionLabel(decision)}.` : 'Undecided.'}</strong>
         <span>{decision ? callAsides[decision] : 'No opinion required.'}</span>
       </div>
-      {presentation !== 'preview' && onChange && (
+      {onChange && (
         <CallChoices
           value={decision}
           onChange={onChange}

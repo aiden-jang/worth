@@ -30,6 +30,7 @@ test('starters remain available in a populated archive and create only an empty 
 }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/lists?create=1&kind=collection');
+  await page.locator('.collection-customize > summary').click();
   const name = page.getByRole('textbox', { name: 'Name', exact: true });
   const toggle = page.locator('.collection-starters > summary');
   const choices = page.getByRole('group', { name: 'Collection starters', exact: true });
@@ -83,6 +84,7 @@ test('choosing a starter preserves personal details and artwork and wraps at nar
   archive,
 }) => {
   await page.goto('/lists?create=1&kind=collection');
+  await page.locator('.collection-customize > summary').click();
   await page.getByText('Description & cover', { exact: false }).click();
   const description = page.getByPlaceholder('What belongs in this list?');
   await description.fill('My own collection note');

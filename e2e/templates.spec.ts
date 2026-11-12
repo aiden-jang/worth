@@ -18,7 +18,7 @@ async function setup(page: Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   return page.getByRole('region', { name: 'Collection setup', exact: true });
 }
@@ -72,7 +72,7 @@ test('detail drafts recover, concurrent edits require a deliberate reload and du
   await expect(region.getByText('Draft saved on this device.', { exact: true })).toBeVisible();
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await expect(region.getByRole('textbox', { name: 'Reusable detail names', exact: true })).toHaveValue(
@@ -123,7 +123,7 @@ test('a lost template response retries the same payload across reload without an
   await expect(region.getByRole('textbox', { name: 'Template name', exact: true })).toBeDisabled();
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await region.getByRole('button', { name: 'Retry template save', exact: true }).click();
@@ -141,6 +141,7 @@ test('template application reviews replacement, creates an empty collection and 
   archive.templates = [structuredClone(template)];
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/lists?kind=collection&create=1');
+  await page.locator('.collection-customize > summary').click();
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('My unfinished idea');
   await page.locator('.collection-templates > summary').click();
   await page.getByRole('combobox', { name: 'Saved template', exact: true }).selectOption(template.id);
@@ -215,6 +216,7 @@ test('templates and fields reflow at narrow widths and loading failures leave na
     route.fulfill({ status: 503, json: { message: 'Templates unavailable' } }),
   );
   await page.goto('/lists?kind=collection&create=1');
+  await page.locator('.collection-customize > summary').click();
   await page.locator('.collection-templates > summary').click();
   await expect(page.getByRole('alert')).toContainText('Templates unavailable', { timeout: 15000 });
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Just a name');
@@ -297,7 +299,7 @@ test('suggested details respect remaining capacity and collection field drafts s
   );
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Collection setup', exact: true }).click();
   region = page.getByRole('region', { name: 'Collection setup', exact: true });
   await expect(region.getByRole('textbox', { name: 'Reusable detail names', exact: true })).toHaveValue(

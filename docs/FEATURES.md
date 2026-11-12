@@ -12,13 +12,13 @@
 - Keep an optional location, edition, order/setup and reaction for each revisit, separately from the overall call.
 - Archive collections from their settings and find them under Collections → Archived. Records stay editable and searchable; unarchive whenever you want.
 - Undo deletions immediately, or restore lists, items and logs from Settings → Trash for 30 days.
-- Open a collection’s Ranking & tools for draft rankings, blind head-to-head comparisons,
+- Open a collection’s More tools for draft rankings, blind head-to-head comparisons,
   a private comparison table, or a draw from Want to try, the revisit queue or Favorites.
 - Save filter views and named context rankings across devices. Applying a sandbox
   ranking requires a preview and checks for newer edits.
-- Review matching names/types in Ranking & tools → Comparison table. Open or revisit
+- Review matching names/types in More tools → Comparison table. Open or revisit
   a record, or save a reversible keep-separate review without merging anything.
-- Browse paper pockets or book spines in Ranking & tools → Your shelf. Choose a private
+- Browse paper pockets or book spines in More tools → Your shelf. Choose a private
   keepsake, dedication, record inscription and optional arch/plant bookend.
 - Keep optional recommendation sources, reasons, personal labels/stamps, version/location
   details and custom fields. Track purchases and loans, and download a calendar return reminder.
@@ -30,7 +30,7 @@
 - Seal private time capsules with a message, opening date/timezone and explicitly reviewed record/photo snapshots; compare them with current sources after opening. Owner backups include unopened contents.
 - Assemble a personal field guide across collections, with explicit note/location/photo choices, captions, an exact preview and an offline HTML or printable copy.
 - Link related finds, editions, the same thing across places and reasoned replacement chains in Look back → More tools → Connections, with a readable constellation view.
-- Review future ranking/call changes in Ranking & tools → Taste history, keep optional reasons/linked visits, and compare older orders in the sandbox.
+- Review future ranking/call changes in More tools → Taste history, keep optional reasons/linked visits, and compare older orders in the sandbox.
 - Set an optional revisit date and snooze in record context. Look back → More tools → Activity calendar separates those plans from entered visits and activity logs, with a readable daily agenda.
 - Gather cross-collection records and visits into private moments, shortlists, evening and trip boards, with manual stop replay and a readable list.
 - Log a dated experience with optional place, order and reaction; recover a fixed retry without duplicate names or visits.

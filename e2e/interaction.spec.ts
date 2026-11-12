@@ -32,7 +32,7 @@ test('capture recovers from failure and creates an unranked item without a call'
   await expect(page.getByRole('alert').filter({ hasText: 'Couldn’t save' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Add a name' })).toHaveValue('New tea');
   archive.failCapture = false;
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Retry save', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'New tea added' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Add a name' })).toBeFocused();
   expect(archive.items.at(-1)).toMatchObject({ title: 'New tea', decision: null });
@@ -44,7 +44,10 @@ test('calls can clear independently of rank and browsing survives Back', async (
   await page.goto(`/lists/${list.id}`);
   await page.getByRole('button', { name: 'Coffee Drink', exact: true }).click();
   const slip = page.getByRole('region', { name: 'Your call for Coffee' }).filter({ visible: true });
-  await expect(slip.getByRole('button', { name: 'Favorite' })).toHaveCount(0);
+  await expect(slip.getByRole('button', { name: 'Favorite', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   expect(archive.writes).toEqual([]);
   await editItem(page, 'Coffee');
   const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });

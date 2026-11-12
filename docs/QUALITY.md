@@ -126,3 +126,19 @@ native image sharing. Check VoiceOver or TalkBack, not only an automated scan.
 Use a disposable account with permission; never make production data as a smoke
 test without authorization. Fresh-visitor observation and provider recovery/alert
 delivery remain manual checks described in [release and recovery](../RELEASE.md).
+
+Capture-assistance cases cover source suggestions inside Add, explicit public ISBN
+lookup, appending notes, unapplied source recovery, duplicate-name experience paths,
+inline capture lost-reply recovery and direct Unfiled filing. Filing cases retain
+memory/photo ownership and exact retry identity after the source disappears, with
+an explicit separate-copy choice and collection creation followed by filing.
+
+Planning/reminder coverage checks visible Want to try capture and draft-call
+reversal, in-place reviews without invented visit dates, preserved notes/ranks,
+Unfiled revision/retry behavior, and the distinction between tried and name-only
+records. Reminder cases cover category rotation, exact-record refresh, removed
+plans, sparse archives, older pages and partial source failures. The in-process
+SQLite reminder tests run production route SQL, including owner/archive scope,
+Want to try, exact IDs and recent-experience filters. Migrated D1 and desktop/phone
+browser runs remain separate integration and visual checks; SQLite/unit passes
+do not claim those checks succeeded.

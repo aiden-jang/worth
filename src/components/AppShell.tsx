@@ -3,7 +3,6 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNod
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { logoutUrl } from '@aidenjang/auth-client';
 import {
-  ArrowRight,
   ChartBar,
   DownloadSimple,
   House,
@@ -22,7 +21,6 @@ import { ProductLinks } from './ProductLinks';
 import { useConnection } from '../hooks/useConnection';
 import { api } from '../api';
 
-const InboxDrawer = lazy(() => import('./InboxDrawer').then((module) => ({ default: module.InboxDrawer })));
 const QuickEntry = lazy(() => import('./QuickEntry').then((module) => ({ default: module.QuickEntry })));
 
 export function AppShell({
@@ -47,22 +45,25 @@ export function AppShell({
     content = useRef<HTMLDivElement>(null),
     addTrigger = useRef<HTMLButtonElement>(null);
   const lists = useQuery({ queryKey: ['lists'], queryFn: api.lists });
-  const [menuOpen, setMenuOpen] = useState(false),
-    [inboxOpen, setInboxOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [add, setAdd] = useState<{ listId: string; title?: string } | null>(null);
   const [saved, setSaved] = useState<SavedEntry | null>(null);
+  const [savedPaused, setSavedPaused] = useState(false);
   useEffect(() => {
     const clearSaved = () => setSaved(null);
     window.addEventListener('worth:trashed', clearSaved);
     return () => window.removeEventListener('worth:trashed', clearSaved);
   }, []);
   const collections = lists.data?.lists.filter((list) => list.kind === 'collection') ?? [];
+  const currentCollection = collections.find((list) => location.pathname === `/lists/${list.id}`);
+  const collectionShortcuts = collections.slice(0, 4);
+  if (currentCollection && !collectionShortcuts.some((list) => list.id === currentCollection.id))
+    collectionShortcuts.splice(3, 1, currentCollection);
   const activities = lists.data?.lists.filter((list) => list.kind === 'activity') ?? [];
   const activityShortcut =
     activities.find((list) => list.name.trim().toLocaleLowerCase() === 'gym') ?? activities[0];
   useEffect(() => {
     setMenuOpen(false);
-    setInboxOpen(false);
     setAdd(null);
   }, [location.pathname]);
   useEffect(() => {
@@ -96,7 +97,6 @@ export function AppShell({
       const requested = input.listId ?? current;
       const target = lists.data?.lists.find((list) => list.id === requested && !list.archived);
       setMenuOpen(false);
-      setInboxOpen(false);
       setAdd({ listId: input.listId === 'inbox' ? 'inbox' : (target?.id ?? 'inbox'), title: input.title });
     },
     [lists.data, location.pathname],
@@ -190,6 +190,11 @@ export function AppShell({
       void client.invalidateQueries();
     },
   });
+  useEffect(() => {
+    if (!saved || savedPaused || undo.isPending || undo.isError) return;
+    const timer = window.setTimeout(() => setSaved(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [saved, savedPaused, undo.isPending, undo.isError]);
   if (location.pathname.endsWith('/show')) return <>{children}</>;
   const collectionActive = location.pathname === '/lists' || /^\/lists\/[^/]+$/.test(location.pathname);
   const savedHref = saved
@@ -237,58 +242,44 @@ export function AppShell({
             {menuOpen ? <X size={24} /> : <List size={24} />}
           </button>
         </div>
+        <button className="button button-accent header-add rail-add-item" onClick={() => openAdd()}>
+          <Plus size={18} /> Add item
+        </button>
         <nav id="worth-navigation" aria-label="Main navigation" className="main-nav">
           <NavLink end to="/">
             <House size={18} aria-hidden="true" /> Home
           </NavLink>
-          <NavLink to="/lists" className={() => (collectionActive ? 'active' : undefined)}>
+          <NavLink end to="/lists">
             <Stack size={18} aria-hidden="true" /> Collections
           </NavLink>
+          <div className="rail-collection-links" role="group" aria-label="Your collections">
+            {collectionShortcuts.map((list) => (
+              <NavLink key={list.id} to={`/lists/${list.id}`}>
+                <span className="rail-collection-dot" aria-hidden="true" />
+                <span>{list.name}</span>
+                <small>{list.itemCount}</small>
+              </NavLink>
+            ))}
+            <Link className="rail-new-collection" to="/lists?create=1&kind=collection">
+              <Plus size={14} aria-hidden="true" /> New collection
+            </Link>
+          </div>
+          {activityShortcut && (
+            <NavLink to={`/lists/${activityShortcut.id}`}>
+              <List size={18} aria-hidden="true" /> {activityShortcut.name}
+            </NavLink>
+          )}
           <NavLink to="/patterns">
             <ChartBar size={18} aria-hidden="true" /> Look back
           </NavLink>
           <NavLink className="rail-utility-link" to="/search">
             <MagnifyingGlass size={18} aria-hidden="true" /> Search
           </NavLink>
-          <NavLink
-            to="/inbox"
-            onClick={(event) => {
-              if (
-                location.pathname === '/inbox' ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey ||
-                event.button !== 0
-              )
-                return;
-              event.preventDefault();
-              setMenuOpen(false);
-              setInboxOpen(true);
-            }}
-          >
+          <NavLink to="/inbox">
             <Tray size={18} aria-hidden="true" /> Unfiled
           </NavLink>
         </nav>
-        {(collections.length > 0 || activityShortcut) && (
-          <nav className="rail-collections" aria-label="Quick access">
-            <p>Quick access</p>
-            {activityShortcut && (
-              <NavLink to={`/lists/${activityShortcut.id}`}>
-                {activityShortcut.name} <ArrowRight size={14} />
-              </NavLink>
-            )}
-            {collections.slice(0, 3).map((list) => (
-              <NavLink key={list.id} to={`/lists/${list.id}`}>
-                <span>{list.name}</span>
-              </NavLink>
-            ))}
-          </nav>
-        )}
         <div className="rail-actions" id="worth-rail-actions">
-          <button className="button button-accent header-add" onClick={() => openAdd()}>
-            <Plus size={18} /> Add
-          </button>
           <a
             className="account-link"
             href={new URL('/account', authOrigin).toString()}
@@ -341,11 +332,20 @@ export function AppShell({
           <span>Look back</span>
         </NavLink>
         <button ref={addTrigger} className="button button-accent" onClick={() => openAdd()}>
-          <Plus size={19} /> Add
+          <Plus size={19} /> Add item
         </button>
       </nav>
       {saved && (
-        <div className="entry-saved" role="status">
+        <div
+          className="entry-saved"
+          role="status"
+          onMouseEnter={() => setSavedPaused(true)}
+          onMouseLeave={() => setSavedPaused(false)}
+          onFocus={() => setSavedPaused(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setSavedPaused(false);
+          }}
+        >
           <span>Saved “{saved.title}”.</span>
           <Link to={savedHref}>Open</Link>
           <button
@@ -384,20 +384,12 @@ export function AppShell({
             initialTitle={add.title}
             onSaved={(entry) => {
               window.dispatchEvent(new Event('worth:entry-saved'));
+              undo.reset();
+              setSavedPaused(false);
               setSaved(entry);
             }}
             onClose={() => {
               setAdd(null);
-              requestAnimationFrame(restoreFocus);
-            }}
-          />
-        </Suspense>
-      )}
-      {inboxOpen && (
-        <Suspense fallback={<p role="status">Opening Unfiled…</p>}>
-          <InboxDrawer
-            onClose={() => {
-              setInboxOpen(false);
               requestAnimationFrame(restoreFocus);
             }}
           />

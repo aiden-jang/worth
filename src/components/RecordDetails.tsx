@@ -15,6 +15,7 @@ import { GalleryPhoto } from './GalleryPhoto';
 import { ItemContextReadout } from './ItemContextReadout';
 import { ItemDetailsReadout } from './ItemDetailsReadout';
 import { VisitContextReadout } from './VisitContext';
+import { TryReview } from './TryReview';
 import '../record-details.css';
 import '../photo-gallery.css';
 
@@ -101,6 +102,18 @@ export function RecordDetails({
             </button>
           )}
         </div>
+        {record.kind === 'item' && record.item.wantToTry && (
+          <TryReview
+            key={record.item.id}
+            target={{ kind: 'item', id: record.item.id, title, initial: record.item }}
+          />
+        )}
+        {record.kind === 'inbox' && record.entry.wantToTry && (
+          <TryReview
+            key={record.entry.id}
+            target={{ kind: 'inbox', id: record.entry.id, title, initial: record.entry }}
+          />
+        )}
         <div className={item ? 'record-reader-layout' : undefined}>
           <div className="record-reader-content">
             {item?.type && <p className="record-reader-type">{item.type}</p>}

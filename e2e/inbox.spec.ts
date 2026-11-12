@@ -147,19 +147,17 @@ test('stale Unfiled edits keep their draft and require explicit reload', async (
   );
 });
 
-test('Unfiled opens over a collection and Trash Undo works inside the drawer', async ({
-  page,
-  archive,
-}, info) => {
+test('Unfiled opens as a page and keeps Trash Undo available', async ({ page, archive }, info) => {
   archive.inbox = [find()];
   await page.goto(`/lists/${list.id}`);
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
-  const drawer = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
+  const drawer = page.getByRole('main');
   await expect(drawer).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/lists/${list.id}$`));
-  await capture(page, 'drawer', info.project.name);
+  await expect(page).toHaveURL(/\/inbox$/);
+  await expect(page.locator('dialog[open]')).toHaveCount(0);
+  await capture(page, 'page', info.project.name);
   await drawer.getByRole('button', { name: 'Edit A tiny illustrated book', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Keep the details.', exact: true });
   await editor.getByRole('button', { name: 'Move find to Trash', exact: true }).click();
@@ -176,7 +174,7 @@ test('Unfiled opens over a collection and Trash Undo works inside the drawer', a
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations,
   ).toEqual([]);
-  await drawer.getByRole('button', { name: 'Close Unfiled', exact: true }).click();
+  await page.goBack();
   await expect(page.getByRole('heading', { name: 'My drinks', exact: true })).toBeVisible();
 });
 
@@ -269,18 +267,18 @@ test('Unfiled-only backups have a reviewable restore preview', async ({ page, ar
   });
 });
 
-test('capture links close Unfiled even when it opened over the capture page', async ({ page }, info) => {
+test('Unfiled navigation preserves the capture draft when returning with Back', async ({ page }, info) => {
   await page.goto('/capture');
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Unfinished capture');
   if (info.project.name === 'phone')
     await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('link', { name: 'Unfiled', exact: true }).click();
-  const drawer = page.getByRole('dialog', { name: 'Unfiled.', exact: true });
-  await drawer.getByRole('button', { name: 'Add a name', exact: true }).click();
-  await expect(drawer).toHaveCount(0);
-  const quick = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await expect(page).toHaveURL(/\/inbox$/);
+  await page.getByRole('main').getByRole('button', { name: 'Add item', exact: true }).click();
+  const quick = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(quick.getByLabel('Save in')).toHaveValue('inbox');
   await quick.getByRole('button', { name: 'Close Add', exact: true }).click();
+  await page.goBack();
   await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue('Unfinished capture');
 });
 

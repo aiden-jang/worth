@@ -14,8 +14,8 @@ async function choosePhoto(page: Page) {
   await expect(section.getByAltText('Photo ready to attach')).toBeVisible();
 }
 async function add(page: Page) {
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  return page.getByRole('dialog', { name: 'Add item', exact: true });
 }
 async function capture(page: Page, name: string, project: string) {
   if (!process.env.WORTH_UNFILED_QA) return;

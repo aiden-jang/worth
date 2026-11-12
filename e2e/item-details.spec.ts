@@ -13,8 +13,8 @@ test('optional product details recover drafts, preserve free purchases, and rema
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/lists/' + list.id);
   const originalRanks = [...archive.list.rankedIds];
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  let dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toBeHidden();
   await dialog.getByLabel('Name', { exact: true }).fill('Daily lotion');
   await dialog.getByText('Add details', { exact: true }).click();
@@ -25,8 +25,8 @@ test('optional product details recover drafts, preserve free purchases, and rema
   await dialog.getByLabel('Size', { exact: true }).fill('50 ml');
   await dialog.getByLabel('Price paid', { exact: true }).fill('0');
   await page.reload();
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveValue('Harbor');
   await expect(dialog.getByLabel('Price paid', { exact: true })).toHaveValue('0');
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
@@ -90,7 +90,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
   expect(saved.context?.purchase.price).toBeNull();
   await editor.getByRole('button', { name: 'Close', exact: true }).click();
   await closeItemSheet(page);
-  await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  await page.getByRole('button', { name: 'More filters', exact: true }).click();
   await page.getByRole('combobox', { name: 'Brand or maker', exact: true }).selectOption('Harbor');
   await expect(page.locator('.collection-index')).toContainText('Daily lotion');
   await expect(page.locator('.collection-index')).not.toContainText('Tea');
@@ -108,8 +108,8 @@ test('place capture keeps location first and a name-only capture creates no expe
 }) => {
   archive.list.name = 'Places';
   await page.goto('/lists/' + list.id);
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('button', { name: 'Add item', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('The corner cafe');
   await dialog.getByText('Add details', { exact: true }).click();
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveCount(0);

@@ -101,6 +101,87 @@
   margin-top: 12px;
   white-space: pre-wrap;
 }
+.inbox-row-filing {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 16px 50px;
+}
+.inbox-filing-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.inbox-filing-choices > span {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.inbox-filing-choices > button:not(.quick-create-toggle) {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--paper);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.inbox-filing-choices .quick-create-toggle {
+  margin: 0 0 0 6px;
+  padding: 4px;
+  font-size: 13px;
+}
+.inbox-filing-more select {
+  max-width: 220px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.inbox-filing-duplicate {
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.inbox-filing-duplicate p,
+.inbox-row-filing .quick-entry-helper {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.inbox-filing-duplicate .data-actions {
+  margin: 6px 0 0;
+}
+.inbox-filing-duplicate :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--acid);
+  border: 0;
+  font-size: 13px;
+}
+.inbox-row-filing .quick-create-collection {
+  max-width: 520px;
+  width: 100%;
+  margin: 0;
+}
+@media (max-width: 680px) {
+  .inbox-row-filing {
+    padding-left: 28px;
+    padding-right: 0;
+  }
+  .inbox-filing-choices > button:not(.quick-create-toggle) {
+    padding-inline: 10px;
+  }
+  .inbox-filing-more select {
+    font-size: 16px;
+    max-width: 100%;
+  }
+}
 .inbox-empty {
   padding: 24px 0;
   display: flex;
@@ -130,7 +211,6 @@
   max-width: 100%;
   white-space: normal;
 }
-.inbox-drawer,
 .inbox-editor {
   background: #181915;
   color: #f0ecdf;
@@ -144,27 +224,8 @@
 .inbox-editor {
   width: min(720px, calc(100vw - 32px));
 }
-.inbox-drawer::backdrop,
 .inbox-editor::backdrop {
   background: #0009;
-}
-.inbox-drawer-tools {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.inbox-drawer-tools a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: #aaa99b;
-}
-.inbox-drawer .inbox-head {
-  margin: 0 0 20px;
-  padding: 0;
-  border: 0;
 }
 .inbox-editor fieldset {
   border: 0;
@@ -236,10 +297,8 @@
   background: #ded9c8;
 }
 .inbox-editor .button,
-.inbox-drawer .button,
 .inbox-page .button,
-.inbox-editor .icon-button,
-.inbox-drawer .icon-button {
+.inbox-editor .icon-button {
   min-height: 44px;
 }
 .inbox-editor input,
@@ -272,7 +331,6 @@
   .inbox-head > .button {
     justify-self: start;
   }
-  .inbox-drawer,
   .inbox-editor {
     width: calc(100vw - 20px);
     max-height: calc(100dvh - 20px);

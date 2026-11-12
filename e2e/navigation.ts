@@ -7,6 +7,7 @@ export async function closeItemSheet(page: Page) {
 
 export async function editItem(page: Page, title: string) {
   await closeItemSheet(page);
+  await page.getByLabel(`More options for ${title}`, { exact: true }).click();
   await page.getByRole('button', { name: `Edit ${title}`, exact: true }).click();
 }
 

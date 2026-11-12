@@ -36,6 +36,13 @@ its content and height depend on the saved evidence. Empty accounts keep their
 useful invitations. The Home columns continue to stack at 960px for readable real
 content. Native phone navigation stays fixed with safe-area clearance.
 
-Collection readers retain their read-only slips, explicit Edit and Add experience
-actions, ranking and contextual tools. These existing functions are not removed
-to match the simplified preview.
+Collection readers retain their slips, explicit Edit and Add experience
+actions, ranking and contextual tools. The current build contract documents the
+November direct-call controls, stable desktop preview and mixed Home reminders.
+The single cream reminder mixes overall Favorites, plans and recent experiences;
+Show another cycles them while refreshes retain the current record. More from
+your archive optionally reveals the deeper memory panel. Visible All items /
+Want to try / Tried tabs and I tried it actions reduce repeated menus; More filters,
+More tools and Customize collection retain advanced options. These deliberate
+production refinements keep the reference's palette, type, spacing and responsive
+shelf rather than copying its synthetic content.

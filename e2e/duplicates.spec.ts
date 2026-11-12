@@ -16,7 +16,7 @@ test.beforeEach(async ({ archive }) => {
 async function open(page: Page) {
   await page.goto(`/lists/${list.id}`);
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
 }
@@ -45,7 +45,7 @@ test('matching records can stay separate across reloads and reopen without chang
   expect(archive.items.map((item) => item.decision)).toEqual(['favorite', null]);
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
   await expect(page.locator('.duplicate-review > summary')).toHaveText('Possible duplicates · 0');
@@ -82,7 +82,7 @@ test('new group members need a new review and obsolete saved reviews can be remo
   archive.items.push({ ...archive.items[0], id: third, title: 'COFFEE', decision: 'meh' });
   await page.reload();
   await collectionOptions(page);
-  await page.getByRole('button', { name: 'Ranking & tools', exact: true }).click();
+  await page.getByRole('button', { name: 'More tools', exact: true }).click();
   await page.getByRole('button', { name: 'Comparison table', exact: true }).click();
   await page.locator('.duplicate-review > summary').click();
   await expect(page.locator('.duplicate-review > summary')).toHaveText('Possible duplicates · 1');

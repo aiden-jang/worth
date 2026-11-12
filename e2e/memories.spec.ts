@@ -466,6 +466,7 @@ test('the monthly keepsake uses dated entries and a recorded reaction', async ({
     }),
   );
   await page.goto('/');
+  await page.getByText('More from your archive', { exact: true }).click();
   const card = page.getByRole('region', { name: 'Memory shelf' });
   await expect(card).toContainText('3 dated entries this month.');
   await expect(card.getByRole('heading', { name: 'Morning coffee', exact: true })).toBeVisible();

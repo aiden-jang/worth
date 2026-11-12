@@ -65,7 +65,7 @@ test('private context saves, filters by personal labels and downloads an explici
   expect(archive.list.rankedIds).toEqual(['coffee']);
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await closeItemSheet(page);
-  await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  await page.getByRole('button', { name: 'More filters', exact: true }).click();
   await page.getByRole('combobox', { name: 'Personal label', exact: true }).selectOption('comfort watch');
   await expect(page.locator('.collection-index')).toContainText('Coffee');
   await expect(page.locator('.collection-index')).not.toContainText('Tea');

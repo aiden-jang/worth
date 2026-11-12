@@ -5,6 +5,7 @@ import { inboxPayload } from '../src/shared/inbox';
 import { emptyItemContext } from '../src/shared/item-context';
 import type { Log } from '../src/shared/models';
 import { test, expect, list } from './fixtures';
+import { editItem } from './navigation';
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -83,7 +84,7 @@ test('search opens saved details without editing and Edit preserves an unfinishe
   await expect(experience.getByRole('textbox')).toHaveCount(0);
   await experience.getByRole('button', { name: 'Close details' }).click();
   expect(archive.writes).toEqual([]);
-  await page.getByRole('button', { name: 'Edit Coffee', exact: true }).click();
+  await editItem(page, 'Coffee');
   const editor = page.getByRole('dialog', { name: 'Coffee', exact: true });
   await editor.getByRole('textbox', { name: 'Name', exact: true }).fill('Coffee draft');
   await page.goto(`/lists/${list.id}?focus=item:coffee`);
@@ -123,8 +124,8 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
     if (route.request().method() === 'GET' && archive.inbox.length > 1) await refresh;
     await route.fallback();
   });
-  await page.getByRole('button', { name: 'Add a name', exact: true }).click();
-  const add = page.getByRole('dialog', { name: 'Keep something.', exact: true });
+  await page.getByRole('main').getByRole('button', { name: 'Add item', exact: true }).click();
+  const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('A new find');
   await add.getByRole('button', { name: 'Save', exact: true }).click();
   const openSaved = page.locator('.entry-saved').getByRole('link', { name: 'Open', exact: true });
