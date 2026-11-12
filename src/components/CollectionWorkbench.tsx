@@ -147,13 +147,13 @@ export function CollectionWorkbench({
         <div className="workbench-head">
           <div>
             <p className="overline">{list.name}</p>
-            <h2 id="workbench-title">A little perspective.</h2>
+            <h2 id="workbench-title">Order is negotiable.</h2>
           </div>
           <button className="button button-outline" onClick={requestClose} disabled={apply.isPending}>
             Close workbench
           </button>
         </div>
-        <p>Try a different order, compare records, or make something to keep.</p>
+        <p>Try another order, compare items, or make a copy to keep.</p>
         <nav className="workbench-tabs" aria-label="Workbench tools">
           {(
             [

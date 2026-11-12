@@ -124,7 +124,7 @@ export function FieldGuidePage() {
       <header className="page-head">
         <div>
           <h1>Field guide</h1>
-          <p>A few finds, in your own order.</p>
+          <p>A few finds. Your order.</p>
         </div>
         <Link to="/patterns">Back to Look back →</Link>
       </header>

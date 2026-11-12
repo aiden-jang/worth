@@ -99,9 +99,9 @@ test('insights lead with recorded calls, distinguish visit reactions and disclos
   await page.getByRole('button', { name: 'Show fewer groups', exact: true }).click();
   await expect(cards).toHaveCount(3);
   await expect(page.getByRole('button', { name: 'Show all 5 groups', exact: true })).toBeFocused();
-  await expect(page.getByRole('heading', { name: 'Mixed feelings, on record.' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Your calls, on record.' })).toBeHidden();
   await page.getByText('Archive totals', { exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Mixed feelings, on record.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your calls, on record.' })).toBeVisible();
   await expect(page.locator('.call-summary > div')).toHaveCount(3);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(archive.writes).toHaveLength(0);
@@ -125,15 +125,13 @@ test('preferences have honest loading, retry and empty states with a way back to
   await expect(page.getByRole('status').filter({ hasText: 'Reading your preferences' })).toBeVisible();
   await capture(page, 'loading', info.project.name);
   release();
-  const preferencesRegion = page.getByRole('region', { name: 'What you like.', exact: true });
+  const preferencesRegion = page.getByRole('region', { name: 'Your calls.', exact: true });
   await expect(preferencesRegion.getByRole('alert')).toContainText('Preferences couldn’t load');
   await capture(page, 'retry', info.project.name);
   failed = false;
   await preferencesRegion.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(preferencesRegion.getByRole('alert')).toHaveCount(0);
-  await expect(preferencesRegion).toContainText(
-    'No calls to summarize yet. Your saved things are still here.',
-  );
+  await expect(preferencesRegion).toContainText('No calls to summarize yet. Browse what you saved.');
   await expect(page.locator('.preference-grid > article')).toHaveCount(0);
   await capture(page, 'empty', info.project.name);
   await preferencesRegion.getByRole('link', { name: 'Browse saved things', exact: false }).click();

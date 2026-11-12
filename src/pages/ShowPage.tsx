@@ -103,7 +103,7 @@ export function ShowPage() {
         <div className="show-intro-copy">
           <p className="overline">YOUR RANKED LIST</p>
           <h1>{list.name}</h1>
-          <p className="ranking-caption">{ranked.length} ranked · In your very particular order.</p>
+          <p className="ranking-caption">{ranked.length} ranked · Your order. Naturally.</p>
         </div>
         {primaryItem && (
           <aside className="show-favorite">

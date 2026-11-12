@@ -92,7 +92,7 @@ export function RetrospectivePage() {
       <header className="page-head">
         <div>
           <h1>Period summary.</h1>
-          <p>A few pages, revisited.</p>
+          <p>What you kept. What you did.</p>
         </div>
         <Link to="/patterns">Back to Look back →</Link>
       </header>
@@ -256,7 +256,7 @@ export function RetrospectivePage() {
           {!data.counts.kept && !data.counts.revisits && !data.counts.activity ? (
             <CabinetEmptyState
               title="A quiet page."
-              description="No currently kept records match these dates and lists. Choose another period whenever you like."
+              description="No saved records match these dates and lists. Try another period."
             />
           ) : (
             <>

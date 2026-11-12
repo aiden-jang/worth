@@ -355,7 +355,7 @@ export function ItemEditor({
                 maxLength={4000}
                 value={form.note}
                 onChange={(event) => setForm({ ...form, note: event.target.value })}
-                placeholder="Anything to remember?"
+                placeholder="Anything worth remembering?"
               />
             </label>
             <label className="capture-want">
@@ -468,7 +468,7 @@ export function ItemEditor({
                   const note = event.target.value;
                   revisit.setForm((prev) => ({ ...prev, note }));
                 }}
-                placeholder="A note, if you want"
+                placeholder="Anything worth remembering?"
               />
               <button className="button button-outline" disabled={addLog.isPending}>
                 <Plus size={17} /> Log again
@@ -508,7 +508,7 @@ export function ItemEditor({
                   </div>
                 </div>
               ))}
-              {!history.length && <p className="muted">Been here before? Log a revisit.</p>}
+              {!history.length && <p className="muted">Tried it again? Log a revisit.</p>}
             </div>
           </section>
         )}

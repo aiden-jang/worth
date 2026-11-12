@@ -563,8 +563,8 @@ export function OfflinePage() {
             ))}
           </section>
           <section className="offline-capture">
-            <h2>Capture for the Unfiled</h2>
-            <p>A name is enough. Queue it to keep it encrypted on this device, then sync when connected.</p>
+            <h2>Save to Unfiled</h2>
+            <p>Queue a name in this encrypted device copy. Sync it with Worth when connected.</p>
             <label>
               Find name
               <input

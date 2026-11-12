@@ -60,7 +60,7 @@ export function ConnectionsPage() {
       <header className="page-head">
         <div>
           <h1>Connections</h1>
-          <p>Keep the things in common.</p>
+          <p>Some things go together.</p>
         </div>
         <Link to="/patterns">Back to Look back →</Link>
       </header>

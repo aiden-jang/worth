@@ -53,7 +53,7 @@ respects reduced motion. There are no quotas or completion requirements.
 
 ## Download your data
 
-Open **Settings & data → Take a copy**:
+Open **Settings → Download a copy**:
 
 - **Export JSON (.json)** keeps the full supported text archive for restoring Worth.
 - **Export Excel (.xlsx)** creates readable sheets for saved things, experiences,

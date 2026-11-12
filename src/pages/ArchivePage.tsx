@@ -115,7 +115,7 @@ export function ArchivePage() {
             <div className="home-empty">
               <BlankSlips />
               <h2>Something to remember?</h2>
-              <p>Something you tried. A place you liked. A very forgettable movie.</p>
+              <p>A drink, a place, a forgettable movie.</p>
               <button className="button button-accent" onClick={() => requestAddEntry({ listId: 'inbox' })}>
                 <Plus size={18} /> Add your first item
               </button>
@@ -123,12 +123,12 @@ export function ArchivePage() {
           )}
           {activities.length > 0 && (
             <section className="home-activities" aria-label="Your activity">
-              <h2>Keep going</h2>
+              <h2>Activity</h2>
               {activities.slice(0, 3).map((list) => (
                 <Link key={list.id} to={`/lists/${list.id}`}>
                   <div>
                     <strong>{list.name}</strong>
-                    <small>Open your activity and progress</small>
+                    <small>History and progress</small>
                   </div>
                   <ArrowRight size={19} aria-hidden="true" />
                 </Link>

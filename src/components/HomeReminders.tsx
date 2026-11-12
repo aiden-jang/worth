@@ -6,7 +6,7 @@ import { api } from '../api';
 import { memorySourceHref, memoryPhotoHref } from '../shared/memories';
 import { loadHomeReminder, type HomeReminder } from '../shared/home-reminders';
 import { formatDate, today } from '../format';
-import { decisionLabel } from '../shared/decisions';
+import { decisionLabel, noCallAside, wantToTryAside } from '../shared/decisions';
 import { CallFace } from './PersonalCall';
 import { BlankSlips } from './BlankSlips';
 import { TryReview } from './TryReview';
@@ -40,7 +40,7 @@ export function HomeReminders() {
           <p className="overline">A LITTLE LOOK BACK</p>
           <h2>
             {query.isPending
-              ? 'A little rummage…'
+              ? 'Looking back…'
               : query.isError
                 ? 'Reminders couldn’t load.'
                 : 'Something to come back to.'}
@@ -53,7 +53,7 @@ export function HomeReminders() {
             </button>
           ) : (
             <>
-              <p>Favorites, things to try, and recent experiences will turn up here.</p>
+              <p>Favorites, things to try, and recent experiences go here.</p>
               <Link to="/lists">
                 Browse collections <ArrowRight size={15} />
               </Link>
@@ -81,10 +81,10 @@ export function HomeReminders() {
           {kind === 'favorite'
             ? 'You liked it. Still on record.'
             : kind === 'want'
-              ? 'Still awaiting its big moment.'
+              ? wantToTryAside
               : record.reaction
                 ? `Your call this time: ${decisionLabel(record.reaction)}.`
-                : 'You tried it. The verdict is still yours.'}
+                : `You tried it. ${noCallAside}`}
         </p>
         <small>
           {record.listName} ·{' '}

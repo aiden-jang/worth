@@ -15,3 +15,6 @@ export const callAsides: Record<ItemDecision, string> = {
   meh: 'It was a thing.',
   would_not_again: 'Once was plenty.',
 };
+
+export const noCallAside = 'Judgment deferred.';
+export const wantToTryAside = 'Promising. Unverified.';

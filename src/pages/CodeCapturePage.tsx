@@ -167,7 +167,7 @@ export function CodeCapturePage() {
       <header className="page-head">
         <div>
           <h1>Read a code.</h1>
-          <p>Small lines. Useful clues.</p>
+          <p>A barcode or ISBN. You check the name.</p>
         </div>
         <Link to="/capture">Back to capture →</Link>
       </header>
@@ -370,7 +370,7 @@ export function CodeCapturePage() {
         </section>
         <section className="photo-text-review" aria-labelledby="code-review-title">
           <p className="overline">02 / REVIEW</p>
-          <h2 id="code-review-title">A name you recognize.</h2>
+          <h2 id="code-review-title">Check the name.</h2>
           <p>
             No name, opinion or ranking is inferred from a code. Type a name or explicitly copy a suggested
             book title.
@@ -382,7 +382,7 @@ export function CodeCapturePage() {
               maxLength={120}
               disabled={busy}
               onChange={(event) => draft.setForm({ ...form, title: event.target.value })}
-              placeholder="Something worth remembering"
+              placeholder="The name you want to keep"
             />
           </label>
           <details

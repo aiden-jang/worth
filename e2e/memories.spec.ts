@@ -350,7 +350,7 @@ test('preferences link to their full supporting records and memory filters keep 
   await capture(page, 'remember', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByLabel('Through', { exact: true }).fill('2024-10-31');
-  await expect(page.getByRole('alert')).toContainText('Choose real dates');
+  await expect(page.getByRole('alert')).toContainText('Choose valid dates');
   await expect(page.locator('.memory-timeline > li')).toHaveCount(0);
 });
 

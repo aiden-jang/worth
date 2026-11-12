@@ -59,7 +59,7 @@ export function WorkoutRoutines({
       )}
       {query.data?.routines.length === 0 && (
         <p className="exercise-helper">
-          Name a routine. Add your exercise lineup. Start a visit when you’re ready.
+          Name the routine, add exercises, then start a workout when you need it.
         </p>
       )}
       <div className="routine-grid">

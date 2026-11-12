@@ -204,7 +204,7 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
           reaction, are included.
         </p>
       )}
-      {!parsed.success && <p role="alert">Choose real dates, with the end on or after the start.</p>}
+      {!parsed.success && <p role="alert">Choose valid dates. The end must be on or after the start.</p>}
       {(lists.isError || archived.isError) && (
         <p role="alert">
           Some lists couldn’t load.{' '}
@@ -236,10 +236,10 @@ export function MemoryPage({ embedded = false }: { embedded?: boolean }) {
         <div className="workspace-empty memory-empty">
           <p>
             {hasFilters
-              ? 'No matches for these filters. Try another search, or clear the filters.'
+              ? 'No matches. Try another search or clear the filters.'
               : filter.mode === 'visits'
-                ? 'No dated experiences yet. Names saved without a date are under Saved things.'
-                : 'No saved names yet. A name is enough to start.'}
+                ? 'No dated experiences yet. Find your saved names under Saved things.'
+                : 'Nothing saved yet. Start with a name.'}
           </p>
           <button
             className="button button-outline"

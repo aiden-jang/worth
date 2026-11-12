@@ -172,9 +172,7 @@ export function CapturePage() {
     share.dismiss();
     setReplace(false);
     setError('');
-    setStatus(
-      'Incoming share copied into this draft. Review it, then keep it in Unfiled or choose a collection.',
-    );
+    setStatus('Share added to your draft. Check it, then choose where to save.');
   }
   function confirmSave() {
     if (!frozen && (!destinationReady || !parsed.item || (duplicate && !form.approvedDuplicate))) return;
@@ -190,7 +188,7 @@ export function CapturePage() {
       <header className="page-head">
         <div>
           <h1>Keep a name.</h1>
-          <p>A name is enough. Keep it in Unfiled now, or choose a collection before saving.</p>
+          <p>Save to Unfiled, or choose a collection. A name is enough.</p>
         </div>
       </header>
       <p>Saving as {owner?.email || owner?.displayName || 'your signed-in account'}.</p>
@@ -290,7 +288,7 @@ export function CapturePage() {
               placeholder="Something worth keeping"
             />
           </label>
-          <p className="muted">Up to 120 characters. Shared names remain editable.</p>
+          <p className="muted">Up to 120 characters. Edit the name before saving.</p>
           <details className="record-extras">
             <summary>
               Source, note and type <span className="optional">optional</span>
@@ -335,6 +333,7 @@ export function CapturePage() {
             <label>
               Private note
               <textarea
+                placeholder="Anything worth remembering?"
                 value={form.note}
                 maxLength={16000}
                 disabled={locked}

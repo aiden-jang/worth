@@ -217,8 +217,7 @@ export function InboxEntryEditor({
         </button>
       </header>
       <p>
-        Only a name is needed. Dates and a photo are optional. Unfinished changes stay on this device for
-        seven days.
+        A name is enough. Dates and a photo can wait. This device keeps unfinished changes for seven days.
       </p>
       {!online && <p role="status">You’re offline. This draft stays on this device; reconnect to save.</p>}
       {!entry && (
@@ -315,6 +314,7 @@ export function InboxEntryEditor({
           <label>
             Private note
             <textarea
+              placeholder="Anything worth remembering?"
               rows={3}
               maxLength={4000}
               value={item.note}
@@ -326,7 +326,7 @@ export function InboxEntryEditor({
               Call, plans and dates <span>optional</span>
             </summary>
             <CallChoices value={item.decision} onChange={(decision) => edit({ decision })} />
-            <p>No call is separate from Meh. Click a selected call again to clear it.</p>
+            <p>Meh is a call. Leaving it blank is different. Select your call again to clear it.</p>
             <label className="inbox-check">
               <input
                 type="checkbox"

@@ -1047,8 +1047,8 @@ export function CollectionView({
                     <h2>{items.length ? 'No matching items.' : 'Nothing to judge. Yet.'}</h2>
                     <p>
                       {items.length
-                        ? 'Try another view or search for a different name.'
-                        : 'Add the first thing you tried. A name will do.'}
+                        ? 'Try another view, search or clear the filters.'
+                        : 'Add something you tried, or something to try. A name will do.'}
                     </p>
                     {items.length > 0 && (browse !== 'all' || search || hasAdvancedFilters) && (
                       <button

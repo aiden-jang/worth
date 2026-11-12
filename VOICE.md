@@ -1,7 +1,13 @@
 # Worth voice
 
-Worth is cute, relaxed and dry. Say less and show the reaction. Use concrete
-words such as name, list, note and copy. One small joke per moment is enough.
+Worth is relaxed, matter-of-fact and occasionally amused. Use short, natural
+sentences and concrete words such as name, list, note and copy. Contractions are
+welcome. Let an understated observation stand on its own.
+
+Most copy is plain. Give an empty state, call caption or helper one dry line;
+keep surrounding instructions useful. Cut repeated reassurance, elaborate jokes
+and imaginary departments. Avoid exclamation marks, forced slang, praise and
+repeated nudges. Humor belongs to taste and the situation, not to judging the user.
 
 ## Functional language
 
@@ -35,12 +41,17 @@ opinion; it never means someone forgot to choose. Not again maps to the existing
 
 Show one caption for the selected call:
 
-| State     | Caption                           |
-| --------- | --------------------------------- |
-| Favorite  | Yes, again.                       |
-| Meh       | It was a thing.                   |
-| Not again | Once was plenty.                  |
-| No call   | Undecided. / No opinion required. |
+| State     | Caption            |
+| --------- | ------------------ |
+| Favorite  | Yes, again.        |
+| Meh       | It was a thing.    |
+| Not again | Once was plenty.   |
+| No call   | Judgment deferred. |
+
+The no-call heading remains Undecided. and functional fields say No call selected.
+Use the shared captions in `src/shared/decisions.ts` for slips, readers and
+capture. Want to try uses Promising. Unverified. Keep it separate from a recorded
+call or experience. Labels and accessible names stay literal and consistent.
 
 Large characters have matte butter, sage or clay bodies, fine ink features, faint
 blush and small rounded feet. Favorite has a pear shape and small warm heart;
@@ -62,27 +73,43 @@ Generic category objects may have decorative faces without implying an opinion.
 | Location         | Copy                                                                   |
 | ---------------- | ---------------------------------------------------------------------- |
 | Landing headline | Your taste. A place to keep it.                                        |
-| Supporting line  | Keep what you try. Rank what you like. / The meh can stay.             |
+| Supporting line  | Keep what you try. Rank it if you want. / The meh can stay.            |
 | Signup           | Start your archive →                                                   |
 | Landing footer   | Meh is a complete sentence. / Lists for your taste. Logs for the rest. |
 | Home             | Good to keep. / Your taste has a paper trail.                          |
-| Example capture  | Keep it / Rank later. No rush.                                         |
+| Example capture  | Keep it / New names start unranked, with no call.                      |
 | Empty collection | Nothing to judge. Yet.                                                 |
 | Search start     | Somewhere in here.                                                     |
-| No search result | It’s being elusive.                                                    |
+| No search result | No sign of it.                                                         |
+| Quick capture    | A name is enough. Details can wait.                                    |
+| Optional note    | Anything worth remembering?                                            |
+| Want to try      | Promising. Unverified.                                                 |
+| Unfiled          | Saved. Filing can wait.                                                |
+| Workbench        | Order is negotiable.                                                   |
 
 Landing topics are Drinks, Midnight snacks and Questionable purchases, with
 For research. / Several were necessary. / Seemed reasonable. captions. Keep them
 inside the labeled EXAMPLE; they are not starter descriptions to save in accounts.
 The running private app uses actual records and useful empty states.
 
-Home reminders say “You liked it. Still on record.”, “Still awaiting its big
-moment.” or the actual call for a recent experience. Show another changes the
-reminder explicitly. Want to try capture says “Verdict pending. Very reasonable.”
-I tried it opens direct call choices; keep its explanation and no-call removal clear.
-Unfiled says “Saved. Filing department currently on break.” The idle preview says “Select an item to view its details.” Capture responses are “A repeat appearance seems likely.”,
-“An event occurred.” and “Research concluded.” Only show one call aside at a time;
-never replace functional labels or save user content with this copy.
+Home reminders say “You liked it. Still on record.”, use the shared Want to try
+aside, or state the actual call for a recent experience. A visit without a
+reaction says “You tried it. Judgment deferred.” Show another changes the reminder
+explicitly. I tried it opens direct call choices; explain that no date is needed.
+The idle preview says “Select an item to view its details.” Only show one call
+aside at a time. A quick activity save names its date as well as its name.
+
+Insights describe recorded calls and their denominators. A group can contain
+Favorite, Meh or Not again; avoid headings that assume approval or mixed results.
+Activity copy describes actual entries and results without commentary on fitness
+or performance. Settings headings identify downloads, restore and device data.
+Privacy, sharing and destructive consequences stay explicit. Loading, save and
+retry messages state what happened and what remains available; humor adds no
+extra step. Preserve all limits, dates and account boundaries.
+
+The app-wide copy pass intentionally shortens wording in the visual references.
+Their composition, type and controls remain authoritative. Never replace
+functional labels or save user content with brand copy.
 
 The [build contract](art/ui-mocks/BUILD-CONTRACT.md) owns composition and motion;
 [current references](art/ui-mocks/README.md) identify maintained screens.

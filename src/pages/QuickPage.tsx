@@ -128,7 +128,7 @@ export function QuickPage() {
       <header className="page-head">
         <div>
           <h1>Within reach.</h1>
-          <p>A shortlist or a saved find from your own collections.</p>
+          <p>Your shortlist, or something you saved.</p>
         </div>
       </header>
       <section className="quick-panel" aria-label="Private quick picks">
@@ -311,7 +311,7 @@ function SavedFind({ items, listId }: { items: Item[]; listId: string }) {
           </Link>
         </article>
       )}
-      {!items.length && <p>No records in this group. Choose another group or add one in the collection.</p>}
+      {!items.length && <p>Nothing in this group. Choose another or add an item in the collection.</p>}
     </section>
   );
 }

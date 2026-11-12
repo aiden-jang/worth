@@ -106,7 +106,7 @@ export function MemoryShelf() {
   if (!highlight)
     return (
       <section className="month-memory" aria-label="Memory shelf">
-        <p role="status">Opening a little of your archive…</p>
+        <p role="status">Opening your archive…</p>
       </section>
     );
   const preference =
@@ -124,7 +124,7 @@ export function MemoryShelf() {
       : preference.name
     : (progress?.title ??
       first?.title ??
-      (changed ? 'Your archive changed.' : revealed ? 'A little empty in here.' : 'Fancy a little rummage?'));
+      (changed ? 'Your archive changed.' : revealed ? 'Nothing to pull yet.' : 'See what turns up.'));
   const href = preference
     ? preferenceRecordsHref(preference)
     : progress
@@ -190,8 +190,8 @@ export function MemoryShelf() {
             {changed
               ? 'Pull a memory to find something else in your archive.'
               : revealed
-                ? 'Save a name in a collection. It can turn up here later.'
-                : 'Pull a saved name or a past entry. See what turns up.'}
+                ? 'Save a name in a collection and it can turn up here.'
+                : 'Pull a saved name or a past entry.'}
           </p>
         )}
       </div>
@@ -214,7 +214,7 @@ export function MemoryShelf() {
         )}
       </div>
       {draw.isPending && <p role="status">Looking through your archive…</p>}
-      {draw.isError && <p role="alert">Memories couldn’t load. Try pulling again.</p>}
+      {draw.isError && <p role="alert">Couldn’t load a memory. Try again.</p>}
       {draw.isSuccess && (
         <p role="status" className="sr-only">
           {first ? `Pulled ${first.title}.` : 'No saved memories yet.'}

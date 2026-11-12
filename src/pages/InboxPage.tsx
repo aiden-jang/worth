@@ -180,7 +180,7 @@ export function InboxPanel() {
       <header className="page-head inbox-head">
         <div>
           <h1>Unfiled.</h1>
-          <p>Saved. Filing department currently on break.</p>
+          <p>Saved. Filing can wait.</p>
         </div>
         <button className="button button-accent" onClick={() => requestAddEntry({ listId: 'inbox' })}>
           Add item
@@ -230,7 +230,7 @@ export function InboxPanel() {
           </Link>
         </p>
       )}
-      {query.isPending && <p role="status">Opening the Unfiled…</p>}
+      {query.isPending && <p role="status">Opening Unfiled…</p>}
       {query.isError && (
         <p role="alert">
           {query.error.message}{' '}
@@ -260,7 +260,7 @@ export function InboxPanel() {
               <BlankSlips className="inbox-blank-slips" />
               <div>
                 <h2>A place for the maybes.</h2>
-                <p>Keep a name or a link here. No collection or opinion required.</p>
+                <p>Save a name or link. Choose a collection later.</p>
                 <button
                   className="button button-outline"
                   onClick={() => requestAddEntry({ listId: 'inbox' })}

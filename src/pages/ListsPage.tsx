@@ -121,7 +121,7 @@ export function ListsPage() {
   const pageTitle = listScope === 'activity' ? 'Activity' : 'Collections';
   const workoutShortcut = params.get('action') === 'workout';
   const pageDescription = showingArchived
-    ? 'Tucked away. Still yours. Open a collection to unarchive it in settings.'
+    ? 'Still here. Open a collection’s settings to unarchive it.'
     : workoutShortcut
       ? 'Choose an activity list to start a workout.'
       : listScope === 'collection'
@@ -495,9 +495,7 @@ export function ListsPage() {
                             </div>
                           </div>
                         )}
-                        <small>
-                          {coverFile ? coverFile.name : 'JPEG, PNG, or WebP. You can add one later, too.'}
-                        </small>
+                        <small>{coverFile ? coverFile.name : 'JPEG, PNG or WebP. A cover can wait.'}</small>
                       </div>
                     )}
                   </details>
@@ -578,7 +576,7 @@ export function ListsPage() {
         ) : showingArchived ? (
           <section className="collection-directory-empty">
             <h2>No archived collections.</h2>
-            <p>Archive a collection from its settings when you want it out of the everyday view.</p>
+            <p>Archive a collection from its settings to put it here.</p>
           </section>
         ) : (
           <EmptyListScope scope={listScope} onChoose={chooseSuggestion} />

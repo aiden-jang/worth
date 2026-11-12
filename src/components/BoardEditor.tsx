@@ -379,9 +379,7 @@ export function BoardEditor({
                 Add unlinked entry
               </button>
             </div>
-            {!form.current.entries.length && (
-              <p>A name is enough to save the board. Add entries whenever you need them.</p>
-            )}
+            {!form.current.entries.length && <p>A name is enough. Entries can wait.</p>}
             <ol className="board-entry-editors">
               {form.current.entries.map((entry, index) => (
                 <li key={entry.id}>

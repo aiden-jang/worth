@@ -26,7 +26,7 @@ and never writes to a private archive.
   search a saved name or read patterns with links to their supporting records.
 - **Gym and activity** put current workouts ahead of optional routines, progress
   and history. Previous sets remain references until explicitly copied and saved.
-- **Settings & data → Take a copy** offers Excel for readable records, JSON for
+- **Settings → Download a copy** offers Excel for readable records, JSON for
   restoring Worth, and an image-inclusive JSON backup.
 
 Calls (**Favorite**, **Meh**, **Not again**, or no call), rankings, Want to try and

@@ -186,7 +186,7 @@ export function ActivityView({
         <CabinetEmptyState
           art={<ActivityIllustration />}
           title="Nothing here yet."
-          description="Start a workout, or keep a single activity entry. Routines are optional."
+          description="Start a workout or add one activity. Routines are optional."
         />
       )}
       {workoutsQuery.isError && workoutsQuery.data && (

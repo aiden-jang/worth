@@ -126,10 +126,10 @@ test('saved names can be rediscovered without inventing a visit, and empty or fa
   );
   outcome = 'failure';
   await shelf.getByRole('button', { name: 'Another memory', exact: true }).click();
-  await expect(shelf.getByRole('alert')).toContainText('Memories couldn’t load');
+  await expect(shelf.getByRole('alert')).toContainText('Couldn’t load a memory');
   outcome = 'empty';
   await shelf.getByRole('button', { name: /memory/ }).click();
-  await expect(shelf.getByRole('heading', { name: 'A little empty in here.', exact: true })).toBeVisible();
+  await expect(shelf.getByRole('heading', { name: 'Nothing to pull yet.', exact: true })).toBeVisible();
   expect(archive.writes).toHaveLength(0);
 });
 
@@ -229,7 +229,7 @@ test('Excel downloads preserve names, dates, zero and bodyweight in a native wor
   });
   await page.route('**/api/export/records', (route) => route.fulfill({ json: file }));
   await page.goto('/settings');
-  await page.getByRole('heading', { name: 'Take a copy.', exact: true }).scrollIntoViewIfNeeded();
+  await page.getByRole('heading', { name: 'Download a copy.', exact: true }).scrollIntoViewIfNeeded();
   await capture(page, 'export-options', info.project.name);
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export Excel (.xlsx)', exact: true }).click();

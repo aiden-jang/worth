@@ -7,7 +7,7 @@ import { api } from '../api';
 import { formatDate } from '../format';
 import type { InboxEntry } from '../shared/inbox';
 import type { Item, Log } from '../shared/models';
-import { callAsides, decisionLabel } from '../shared/decisions';
+import { callAsides, decisionLabel, noCallAside } from '../shared/decisions';
 import { formatActivityMetric } from '../shared/workouts';
 import { CallBadge, CallFace } from './PersonalCall';
 import { BlankSlips } from './BlankSlips';
@@ -255,7 +255,7 @@ export function RecordDetails({
                   <BlankSlips className="undecided-slips" />
                 )}
                 <strong>{item.decision ? `${decisionLabel(item.decision)}.` : 'Undecided.'}</strong>
-                <span>{item.decision ? callAsides[item.decision] : 'No opinion required.'}</span>
+                <span>{item.decision ? callAsides[item.decision] : noCallAside}</span>
               </div>
               {record.kind === 'item' && record.rank && (
                 <p className="record-reader-rank">

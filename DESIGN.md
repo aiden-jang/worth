@@ -172,8 +172,8 @@ queue membership or a missing choice. Storage retains `favorite`, `meh`,
 `would_not_again` and `null` throughout editors, filters, backups and summaries.
 
 The slip shows one actual call, character and dry caption. No-call stays faceless
-with Undecided / No opinion required. Call buttons keep text, pressed states and
-visible focus; color and expression are never the only indicators.
+with an “Undecided.” heading and “Judgment deferred.” caption. Call buttons keep
+text, pressed states and visible focus; color and expression are never the only indicators.
 
 Matte butter, sage and clay characters have distinct soft silhouettes, fine ink
 gestures and faint blush. Large characters may react briefly and settle; row

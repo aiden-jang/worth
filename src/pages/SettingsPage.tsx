@@ -116,7 +116,7 @@ export function SettingsPage() {
     <main className="data-page">
       <header className="data-heading">
         <h1>Settings.</h1>
-        <p>Copies, drafts, and a little housekeeping.</p>
+        <p>Copies, drafts and a little housekeeping.</p>
       </header>
       <nav className="settings-navigation" aria-label="Settings sections">
         <a href="#downloads">Downloads</a>
@@ -138,7 +138,7 @@ export function SettingsPage() {
         </p>
       )}
       <section id="downloads" className="data-section">
-        <h2>Take a copy.</h2>
+        <h2>Download a copy.</h2>
         <p>
           Excel opens your collections, saved things, experiences, workouts, sets, measurements, routines and
           Unfiled (the Inbox sheet) in separate sheets. JSON is the full archive format for restoring Worth.
@@ -180,7 +180,7 @@ export function SettingsPage() {
         </p>
       </section>
       <section id="restore" className="data-section">
-        <h2>Bring it back.</h2>
+        <h2>Restore a backup.</h2>
         <p>
           Restore a Worth file as new lists, templates and Unfiled finds. Review it first; your existing
           archive stays intact.
@@ -358,7 +358,7 @@ export function SettingsPage() {
         </a>
       </section>
       <section className="settings-section">
-        <h2>Within reach.</h2>
+        <h2>Capture and shortcuts.</h2>
         <p>
           <Link to="/receipts">Reviewed receipts</Link> keeps checked text, optional image copies and chosen
           record links. <Link to="/read">Read text from a photo</Link> or{' '}

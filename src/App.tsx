@@ -7,6 +7,7 @@ import { InfoPage } from './pages/InfoPage';
 import { Link, Route, Routes, ScrollRestoration, useLocation } from 'react-router';
 import { api, bindPageAccount } from './api';
 import { CallFace, CallBadge } from './components/PersonalCall';
+import { callAsides } from './shared/decisions';
 import { OpinionSlip } from './components/OpinionSlip';
 import { Component, Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ItemDecision } from './shared/models';
@@ -292,7 +293,7 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
           <em>A place to keep it.</em>
         </h1>
         <p>
-          Keep what you try. Rank what you like.
+          Keep what you try. Rank it if you want.
           <br />
           The meh can stay.
         </p>
@@ -323,13 +324,13 @@ function Welcome({ authOrigin }: { authOrigin: string }) {
             <strong>Meh.</strong>
             <CallFace value="meh" />
           </div>
-          <p>It was a thing.</p>
+          <p>{callAsides.meh}</p>
         </div>
         <figcaption>EXAMPLE / A FEW THINGS, FILED.</figcaption>
       </figure>
       <header className="landing-example-heading" id="worth-example">
-        <p className="overline">EXAMPLE / MAKE YOUR CALL</p>
-        <h2>Go on. Have an opinion.</h2>
+        <p className="overline">EXAMPLE</p>
+        <h2>Make your call.</h2>
         <p>Try the example. Nothing here is saved.</p>
       </header>
       <LandingExample />
@@ -460,7 +461,7 @@ function LandingExample() {
             Keep it <span aria-hidden="true">→</span>
           </button>
         </form>
-        <p className="demo-footnote">Just an example. Nothing here is saved.</p>
+        <p className="demo-footnote">New names start unranked, with no call.</p>
       </div>
     </section>
   );

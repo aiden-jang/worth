@@ -71,7 +71,7 @@ export function PatternsPage() {
                 <CabinetEmptyState
                   art={<ArchiveIllustration kind="memories" />}
                   title="Too soon to tell."
-                  description="Your saved opinions and activity will appear here."
+                  description="Your recorded calls and activity will appear here."
                 >
                   <button className="button button-accent" onClick={() => requestAddEntry()}>
                     Add a name
@@ -133,8 +133,8 @@ function CallDistribution({ counts }: { counts: Record<ItemDecision, number> }) 
     <section className="call-distribution" aria-labelledby="call-distribution-heading">
       <header>
         <p className="overline">YOUR OVERALL CALLS</p>
-        <h2 id="call-distribution-heading">Mixed feelings, on record.</h2>
-        <p>Visit reactions stay separate. Unrated records stay unrated.</p>
+        <h2 id="call-distribution-heading">Your calls, on record.</h2>
+        <p>Overall calls only. Visit reactions are separate; no-call records are excluded.</p>
       </header>
       <dl className="call-summary">
         {(['favorite', 'meh', 'would_not_again'] as const).map((call) => (

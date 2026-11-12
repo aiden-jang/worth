@@ -56,7 +56,7 @@ export function ReceiptsPage() {
             <path d="M25 10h70v90l-10-5-10 5-10-5-10 5-10-5-10 5-10-5z" fill="#eae5d5" />
             <path d="M40 32h40M40 45h25M40 58h40M40 78h12" stroke="#626456" strokeWidth="3" />
           </svg>
-          <h2>{query.data.receipts.length ? 'No receipts match.' : 'Nothing to squint at yet.'}</h2>
+          <h2>{query.data.receipts.length ? 'No receipts match.' : 'Nothing to squint at.'}</h2>
           <p>
             {query.data.receipts.length
               ? 'Try another name or merchant.'

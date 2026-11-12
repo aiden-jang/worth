@@ -99,7 +99,7 @@ export function SearchPage() {
           id="archive-search"
           ref={input}
           autoFocus
-          placeholder="An exercise, a note, a good drink…"
+          placeholder="A name, a note, that drink…"
           maxLength={40}
           value={query}
           onChange={(event) => {
@@ -175,7 +175,7 @@ export function SearchPage() {
           ) : (
             <CabinetEmptyState
               art={<ArchiveIllustration kind="search" />}
-              title="It’s being elusive."
+              title="No sign of it."
               description={
                 scope === 'all'
                   ? 'Try a shorter search or a different spelling.'

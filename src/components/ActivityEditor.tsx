@@ -468,7 +468,7 @@ export function ActivityEditor({
                   maxLength={4000}
                   value={form.note}
                   onChange={(event) => setForm({ ...form, note: event.target.value })}
-                  placeholder="Anything you want to remember"
+                  placeholder="Anything worth remembering?"
                 />
               </label>
             </div>

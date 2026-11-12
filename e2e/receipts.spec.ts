@@ -408,7 +408,7 @@ test('missing linked records retain reviewed lines and removal leaves originals 
     .getByRole('button', { name: 'Remove receipt', exact: true })
     .click();
   await expect(page).toHaveURL(/\/receipts$/);
-  await expect(page.getByRole('heading', { name: 'Nothing to squint at yet.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nothing to squint at.', exact: true })).toBeVisible();
   await capture(page, 'empty-directory', info.project.name);
   expect(fixture.rows.size).toBe(0);
   expect(archive.items).toHaveLength(2);

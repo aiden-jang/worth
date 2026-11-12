@@ -318,7 +318,7 @@ export function ReceiptCapturePage() {
       <header className="page-head">
         <div>
           <h1>Keep a receipt.</h1>
-          <p>A few lines worth keeping.</p>
+          <p>Keep the useful lines.</p>
         </div>
         <Link to="/receipts">Back to Receipts →</Link>
       </header>

@@ -253,7 +253,7 @@ test('Look back brings memories and insights together and retains direct memory 
   await capture(page, 'look-back', info.project.name);
   await page.getByRole('button', { name: 'Insights', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Insights', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'What you like.', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your calls.', exact: true })).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await capture(page, 'insights', info.project.name);
   await page.goto('/patterns/remember?mode=saved&q=Coffee');
@@ -399,7 +399,7 @@ test('empty recall distinguishes undated names from filtered results and offers 
   await expect(page.getByRole('button', { name: 'Saved things', exact: true })).toBeFocused();
   await expect(page.getByRole('link', { name: 'Coffee ↗', exact: true })).toBeVisible();
   await page.getByRole('searchbox').fill('not in my archive');
-  await expect(empty).toContainText('No matches for these filters.');
+  await expect(empty).toContainText('No matches. Try another search or clear the filters.');
   await capture(page, 'recall-no-matches', info.project.name);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await empty.getByRole('button', { name: 'Clear filters', exact: true }).click();
@@ -412,7 +412,7 @@ test('empty recall distinguishes undated names from filtered results and offers 
   await expect(page.getByRole('link', { name: 'Coffee ↗', exact: true })).toBeVisible();
   await page.unroute('**/api/memories?*');
   await page.reload();
-  await expect(empty).toContainText('No saved names yet.');
+  await expect(empty).toContainText('Nothing saved yet. Start with a name.');
   await capture(page, 'recall-no-names', info.project.name);
   for (const width of [320, 430, 768]) {
     await page.setViewportSize({ width, height: 900 });

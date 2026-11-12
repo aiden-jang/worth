@@ -25,6 +25,7 @@ import type { ListSummary } from '../shared/models';
 import { CallChoices } from './PersonalCall';
 import { ConfirmDialog } from './ConfirmDialog';
 import { emptyItemContext } from '../shared/item-context';
+import { callAsides, noCallAside, wantToTryAside } from '../shared/decisions';
 import { hasItemDetails, itemIdentity } from '../shared/item-details';
 import { ItemDetailsFields } from './ItemDetailsFields';
 import { collectionDetailProfile } from '../shared/item-details';
@@ -582,6 +583,7 @@ export function QuickEntry({
               <label>
                 Note <span className="optional">optional</span>
                 <textarea
+                  placeholder="Anything worth remembering?"
                   rows={3}
                   maxLength={4000}
                   value={form.note}
@@ -602,12 +604,10 @@ export function QuickEntry({
                       )
                     }
                   />{' '}
-                  Want to try <span>Save for later. Rate it after.</span>
+                  Want to try <span>Save for later. No call needed.</span>
                 </label>
               )}
-              {!activity && form.wantToTry && (
-                <p className="quick-entry-helper">Verdict pending. Very reasonable.</p>
-              )}
+              {!activity && form.wantToTry && <p className="quick-entry-helper">{wantToTryAside}</p>}
               {!activity && !form.wantToTry && (
                 <div className="quick-entry-call">
                   <p className="quick-entry-label">
@@ -619,13 +619,7 @@ export function QuickEntry({
                     onChange={(decision) => edit({ decision })}
                   />
                   <p className="quick-entry-helper">
-                    {form.decision === 'favorite'
-                      ? 'A repeat appearance seems likely.'
-                      : form.decision === 'meh'
-                        ? 'An event occurred.'
-                        : form.decision === 'would_not_again'
-                          ? 'Research concluded.'
-                          : 'No opinion is also an option.'}
+                    {form.decision ? callAsides[form.decision] : noCallAside}
                   </p>
                 </div>
               )}
@@ -708,9 +702,7 @@ export function QuickEntry({
           </DialogSaveFooter>
         </form>
         <p className="quick-entry-helper">
-          {activity
-            ? 'Quick save keeps the name and date. You can add details later.'
-            : 'Quick save keeps only the name. You can add details later.'}
+          {activity ? 'A name and date are enough. Details can wait.' : 'A name is enough. Details can wait.'}
         </p>
         {(form.title || form.pending) && (
           <button

@@ -12,6 +12,7 @@ import {
   type WorkspaceResponse,
 } from '../shared/workspace';
 import { ConfirmDialog } from './ConfirmDialog';
+import { noCallAside } from '../shared/decisions';
 import '../shelf.css';
 
 const shelfDraft = z.object({ settings: collectionShelf, revision: z.number().int().nonnegative() }).strict();
@@ -289,7 +290,7 @@ function ShelfEditor({
             <p>
               {undecided} {undecided === 1 ? 'record' : 'records'} without a call.
               <br />
-              <span>No opinion required.</span>
+              <span>{noCallAside}</span>
             </p>
           </div>
         )}

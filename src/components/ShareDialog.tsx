@@ -226,7 +226,7 @@ export function ShareDialog({
         <ConfirmDialog
           eyebrow="REVOKE LINK"
           title="Revoke this shared ranking?"
-          description="Anyone with this link will lose access immediately. You can always create a new link later."
+          description="Anyone with this link will lose access immediately. You can create a new link later."
           confirmLabel="Revoke link"
           pending={revoke.isPending}
           error={revoke.isError ? revoke.error.message : undefined}

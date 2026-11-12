@@ -15,8 +15,8 @@ export function PreferenceInsights() {
   return (
     <section className="preference-insights" aria-labelledby="preference-heading">
       <header>
-        <h2 id="preference-heading">What you like.</h2>
-        <p>Your recorded calls, with the entries behind them.</p>
+        <h2 id="preference-heading">Your calls.</h2>
+        <p>With the records behind them.</p>
       </header>
       {query.isPending && <p role="status">Reading your preferences…</p>}
       {query.isError && (
@@ -49,7 +49,7 @@ export function PreferenceInsights() {
           )}
           {!query.data.groups.length && (
             <div className="preference-empty">
-              <p>No calls to summarize yet. Your saved things are still here.</p>
+              <p>No calls to summarize yet. Browse what you saved.</p>
               <Link to="/patterns/remember?mode=saved">Browse saved things →</Link>
             </div>
           )}

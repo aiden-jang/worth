@@ -104,7 +104,7 @@ export function PhotoTextPage() {
       <header className="page-head">
         <div>
           <h1>Read a photo.</h1>
-          <p>Keep the words. You choose what follows.</p>
+          <p>Read the text. Keep what matters.</p>
         </div>
         <Link to="/capture">Back to capture →</Link>
       </header>
@@ -189,7 +189,7 @@ export function PhotoTextPage() {
         </section>
         <section className="photo-text-review" aria-labelledby="photo-review-title">
           <p className="overline">02 / REVIEW</p>
-          <h2 id="photo-review-title">Your words, checked.</h2>
+          <h2 id="photo-review-title">Check the text.</h2>
           <p>
             Nothing is saved automatically. Names, prices and dates can be misread; Worth doesn’t fill those
             fields for you.
@@ -237,7 +237,7 @@ export function PhotoTextPage() {
               value={form.title}
               disabled={busy}
               onChange={(event) => draft.setForm({ ...form, title: event.target.value })}
-              placeholder="Something worth remembering"
+              placeholder="The name you want to keep"
             />
           </label>
           <details

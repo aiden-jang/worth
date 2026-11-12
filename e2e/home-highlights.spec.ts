@@ -57,7 +57,7 @@ test('returning Home waits for stale observations to refresh before choosing its
   });
   const shelf = page.getByRole('region', { name: 'Memory shelf', exact: true });
   await expect.poll(() => reads).toBe(2);
-  await expect(shelf.getByRole('status')).toContainText('Opening a little');
+  await expect(shelf.getByRole('status')).toContainText('Opening your archive');
   await expect(shelf.getByRole('heading', { name: 'Earlier calls', exact: true })).toHaveCount(0);
   release();
   await expect(shelf.getByRole('heading', { name: 'Current calls', exact: true })).toBeVisible();

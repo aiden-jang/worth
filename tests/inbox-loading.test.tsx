@@ -22,7 +22,7 @@ test('Unfiled waits for its response before reporting an empty archive', async (
     </QueryClientProvider>,
   );
 
-  expect(await screen.findByRole('status')).toHaveTextContent('Opening the Unfiled…');
+  expect(await screen.findByRole('status')).toHaveTextContent('Opening Unfiled…');
   expect(screen.queryByText('0 saved finds · Private')).not.toBeInTheDocument();
   expect(screen.queryByText('A place for the maybes.')).not.toBeInTheDocument();
 

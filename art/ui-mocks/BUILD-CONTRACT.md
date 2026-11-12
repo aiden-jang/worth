@@ -6,7 +6,10 @@ Use the [reference index](README.md) for shared app composition, the collections
 directory, everyday flows, landing and specialized tools. Open the relevant source
 before implementing. These rules describe one current design, rather than a chain
 of historical overrides. [DESIGN.md](../../DESIGN.md) explains the product flow;
-[VOICE.md](../../VOICE.md) governs language and character behavior.
+[VOICE.md](../../VOICE.md) governs language and character behavior. The approved
+app-wide copy pass uses shorter wording, shared call captions and sparse dry
+asides; it deliberately supersedes reference-image wording while keeping their
+composition, typography and controls.
 
 ## Shared system
 
@@ -177,14 +180,12 @@ visible on phones. Those groups retain starters, templates, artwork and details.
 Empty activity invitations precede optional tools; Resume is primary when a
 workout is active. Navigation remains available while page code loads.
 
-Item editors use a compact cream call card: the character sits beside its call and
-caption, followed by the same three choices. The editor deliberately omits repeated
-name/type and rank metadata from that card; the heading and Name field identify the
-item, while collection ordering remains independent. This keeps optional product
-fields prominent without making the reaction dominate the form. Product details
-are labeled optional once per group. The item editor's Save footer stays visible
-inside the scrolling dialog on desktop and phone, with Saved / Unsaved changes
-feedback. Other desktop form actions retain their normal flow.
+Item editors use the single column and compact dark call capsule defined above.
+Name, useful details and note precede the optional call. Illustrated cream slips
+belong to saved-item previews and readers. Collection ordering remains independent.
+Product details are labeled optional once per group. The item editor's Save footer
+stays visible inside the scrolling dialog on desktop and phone, with Saved /
+Unsaved changes feedback. Other desktop form actions retain their normal flow.
 
 Large collection sections and past workouts initially draw 50 rows/cards, with
 Show more to reveal the next 50. This deliberately extends the small reference
@@ -215,8 +216,9 @@ collection-name/ranked-title/type scope, without calls, notes, photos or history
 
 Favorite, Meh, Not again and no-call remain optional, reversible and independent
 of rank and queue membership. Use one actual call face/caption on the slip, plain
-labeled buttons and accessible pressed states. No-call says Undecided / No opinion
-required without a reaction face. Small row indicators remain static.
+labeled buttons and accessible pressed states. No-call uses an “Undecided.” heading
+and “Judgment deferred.” caption, without a reaction face. Small row indicators
+remain static.
 
 Large characters use matte butter `#e4d79a`, sage `#d4dac3` or clay `#e3c2b5`,
 matching body strokes, fine ink features and faint blush. Favorite is pear-shaped
