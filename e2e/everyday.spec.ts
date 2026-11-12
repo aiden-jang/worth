@@ -136,7 +136,7 @@ test('collection capture stays compact and item selection does not push other en
   if (phone) await expect(coffee).toBeFocused();
   const name = page.getByRole('textbox', { name: 'Add a name', exact: true });
   await name.fill('Saturday market');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Quick save', exact: true }).click();
   await expect(name).toHaveValue('');
   await expect(name).toBeFocused();
   await expect(page.locator('dialog[open]')).toHaveCount(0);

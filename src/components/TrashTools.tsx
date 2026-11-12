@@ -69,6 +69,8 @@ export function TrashPanel() {
 
 export function TrashNotice() {
   const [entries, setEntries] = useState<TrashReference[]>([]);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const client = useQueryClient();
   const undo = useMutation({
     mutationFn: (refs: TrashReference[]) => api.restoreTrash(refs),
@@ -81,6 +83,8 @@ export function TrashNotice() {
   useEffect(() => {
     const listener = (event: Event) => {
       resetUndo();
+      setHovered(false);
+      setFocused(false);
       setEntries((event as CustomEvent<TrashReference[]>).detail);
       void client.invalidateQueries({ queryKey: ['trash'] });
     };
@@ -100,9 +104,23 @@ export function TrashNotice() {
       window.removeEventListener('worth:entry-saved', saved);
     };
   }, [client, resetUndo]);
+  useEffect(() => {
+    if (!entries.length || hovered || focused || undo.isPending || undo.isError) return;
+    const timer = window.setTimeout(() => setEntries([]), 6000);
+    return () => window.clearTimeout(timer);
+  }, [entries, hovered, focused, undo.isPending, undo.isError]);
   if (!entries.length) return null;
   return (
-    <aside className="trash-notice" aria-label="Deletion recovery">
+    <aside
+      className="trash-notice"
+      aria-label="Deletion recovery"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+      }}
+    >
       <span role="status">Moved to Trash.</span>
       <button
         className="button button-outline"

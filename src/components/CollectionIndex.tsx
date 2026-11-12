@@ -13,6 +13,7 @@ type IndexProps = {
   onWant: (item: Item) => void;
   wantPending: boolean;
   onQueue: (item: Item) => void;
+  onTrash: (item: Item) => void;
   queuePending: boolean;
   items: Item[];
   ranks: Map<string, number>;
@@ -135,6 +136,7 @@ function ItemRowOptions({
   onRank,
   rankPending,
   onOpenDetails,
+  onTrash,
 }: Omit<IndexProps, 'items' | 'ranks' | 'selectedId' | 'onSelect'> & {
   item: Item;
   rank?: number;
@@ -262,6 +264,17 @@ function ItemRowOptions({
             }}
           >
             {item.revisitQueued ? 'In revisit queue ✓' : 'Add to revisit queue'}
+          </button>
+          <button
+            type="button"
+            className="text-danger"
+            aria-label={`Move ${item.title} to Trash`}
+            onClick={() => {
+              closeMenu();
+              onTrash(item);
+            }}
+          >
+            Move to Trash
           </button>
         </div>
       )}

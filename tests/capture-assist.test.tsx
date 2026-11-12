@@ -304,7 +304,7 @@ test('collection capture recovers the exact pending request after a lost reply a
   const create = vi
     .spyOn(api, 'createItem')
     .mockRejectedValueOnce(new Error('Reply lost'))
-    .mockResolvedValue({ item: { ...coffee, title: 'New tea', decision: 'meh' } });
+    .mockResolvedValue({ item: { ...coffee, title: 'New tea', decision: null } });
   const content = (items: Item[]) => (
     <CollectionView
       list={list}
@@ -317,12 +317,8 @@ test('collection capture recovers the exact pending request after a lost reply a
   );
   const first = setup(content([coffee]));
   fireEvent.change(screen.getByRole('textbox', { name: 'Add a name' }), { target: { value: 'New tea' } });
-  fireEvent.click(screen.getByText('New item options'));
-  fireEvent.click(
-    within(screen.getByRole('group', { name: 'Call for new item' })).getByRole('button', { name: 'Meh' }),
-  );
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Quick save' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Quick save' }));
   await screen.findByRole('alert');
   first.unmount();
   setup(content([coffee, { ...coffee, title: 'New tea' }]));

@@ -4,16 +4,19 @@ import { test, expect, list } from './fixtures';
 
 test('Want to try capture and filtering leave opinions and rankings alone', async ({ page, archive }) => {
   await page.goto(`/lists/${list.id}`);
-  await page.getByText('New item options', { exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
   await page.getByRole('textbox', { name: 'Add a name' }).fill('Next café');
-  await expect(page.getByRole('status').filter({ hasText: 'Draft saved on this device.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Save with details', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Keep this one.', exact: true });
+  await editor.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
+  await expect(editor.getByRole('status').filter({ hasText: 'Draft saved on this device.' })).toBeVisible();
   page.once('dialog', (dialog) => void dialog.accept());
   await page.reload();
-  await page.getByText('New item options', { exact: true }).click();
-  await expect(page.getByRole('checkbox', { name: 'Want to try', exact: true })).toBeChecked();
   await expect(page.getByRole('textbox', { name: 'Add a name' })).toHaveValue('Next café');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await expect(editor.getByRole('checkbox', { name: 'Want to try', exact: true })).toBeChecked();
+  await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('Next café');
+  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await expect(editor).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: 'Next café added' })).toBeVisible();
   expect(archive.items.at(-1)).toMatchObject({ wantToTry: true, decision: null });
   expect(archive.list.rankedIds).toEqual(['coffee']);

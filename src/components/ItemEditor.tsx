@@ -46,6 +46,9 @@ export function ItemEditor({
   focusNoteComposer,
   onClose,
   onCreated,
+  initialTitle,
+  draftName,
+  onNameChange,
 }: {
   listId: string;
   collectionName?: string;
@@ -57,6 +60,9 @@ export function ItemEditor({
   focusNoteComposer: boolean;
   onClose: () => void;
   onCreated: (id: string) => void;
+  initialTitle?: string;
+  draftName?: string;
+  onNameChange?: (title: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const formId = useId();
@@ -64,19 +70,28 @@ export function ItemEditor({
   const itemNoteInput = useRef<HTMLTextAreaElement>(null);
   const client = useQueryClient();
   const draft = useDraft<ItemInput>(
-    `item:${listId}:${item?.id ?? 'new'}`,
-    item ? fromItem(item) : emptyItem,
+    draftName ?? `item:${listId}:${item?.id ?? 'new'}`,
+    item ? fromItem(item) : { ...emptyItem, title: initialTitle ?? '' },
     isItemDraft,
   );
   const { form, setForm } = draft;
-  const photoDraft = useDraftPhoto(`item:${listId}:${item?.id ?? 'new'}`);
+  useEffect(() => {
+    if (initialTitle !== undefined && !item) setForm((current) => ({ ...current, title: initialTitle }));
+  }, [initialTitle, item, setForm]);
+  const photoDraft = useDraftPhoto(draftName ?? `item:${listId}:${item?.id ?? 'new'}`);
   const photo = photoDraft.file;
   const setPhoto = photoDraft.change;
   const online = useConnection();
   const previousItemId = useRef(item?.id);
-  const [savedForm, setSavedForm] = useState<ItemInput>(item ? fromItem(item) : emptyItem);
+  const [savedForm, setSavedForm] = useState<ItemInput>(
+    item ? fromItem(item) : { ...emptyItem, title: initialTitle ?? '' },
+  );
   const [initialLog, setInitialLog] = useState(() => ({ happenedOn: today(), note: '' }));
-  const revisit = useDraft(`revisit:${listId}:${item?.id ?? 'new'}`, initialLog, isRevisitDraft);
+  const revisit = useDraft(
+    draftName ? `${draftName}:revisit` : `revisit:${listId}:${item?.id ?? 'new'}`,
+    initialLog,
+    isRevisitDraft,
+  );
   const { happenedOn: logDate, note: logNote } = revisit.form;
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [confirmingContextReload, setConfirmingContextReload] = useState(false);
@@ -98,7 +113,7 @@ export function ItemEditor({
       ?.querySelector<HTMLElement>(':scope > button'),
   );
   useEffect(() => {
-    const nextForm = item ? fromItem(item) : emptyItem;
+    const nextForm = item ? fromItem(item) : { ...emptyItem, title: initialTitle ?? '' };
     if (previousItemId.current !== item?.id) {
       setForm(nextForm);
       draft.clear();
@@ -297,7 +312,10 @@ export function ItemEditor({
                 autoFocus={!item}
                 maxLength={120}
                 value={form.title}
-                onChange={(event) => setForm({ ...form, title: event.target.value })}
+                onChange={(event) => {
+                  setForm({ ...form, title: event.target.value });
+                  onNameChange?.(event.target.value);
+                }}
                 placeholder="The thing you want to remember"
               />
             </label>

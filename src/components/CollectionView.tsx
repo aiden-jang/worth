@@ -1,7 +1,7 @@
 import { useListWindow } from '../hooks/useListWindow';
 import { ExperienceEditor } from './ExperienceEditor';
 import '../memories.css';
-import { ArrowRight, CaretDown, X } from '@phosphor-icons/react';
+import { ArrowRight, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { api, RequestError } from '../api';
@@ -15,7 +15,7 @@ import {
 } from '../shared/collection-capture';
 import { collectionBrowseCount, wasOpenedLongAgo } from '../shared/collection-workspace';
 import type { Item, ItemDecision, ListDetail } from '../shared/models';
-import { CallChoices, CallFace } from './PersonalCall';
+import { CallFace } from './PersonalCall';
 import { personalCalls, decisionLabel } from '../shared/decisions';
 import {
   moveRank,
@@ -35,6 +35,7 @@ import { brandKey, itemBrand, itemDetailSuggestions, itemIdentity } from '../sha
 import { matchingSavedItems } from '../shared/capture-assist';
 import { itemInput } from '../shared/validation';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ItemEditor } from './ItemEditor';
 
 type CaptureDraft = {
   title: string;
@@ -77,7 +78,8 @@ export function CollectionView({
   const client = useQueryClient();
   const [experienceOpen, setExperienceOpen] = useState(false);
   const captureRef = useRef<HTMLInputElement>(null);
-  const captureOptions = useRef<HTMLDetailsElement>(null);
+  const [captureDetailsOpen, setCaptureDetailsOpen] = useState(false);
+  const [trashTarget, setTrashTarget] = useState<Item | null>(null);
   const entryMenu = useRef<HTMLDetailsElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
@@ -148,14 +150,6 @@ export function CollectionView({
     'all',
   );
   const [sort, setSort] = useViewPreference<ItemSort>(`collection:${list.id}:sort`, 'rank');
-  const captureWant = Boolean(captureDraft.form.wantToTry);
-  const setCaptureWant = (wantToTry: boolean) =>
-    captureDraft.setForm((current) => ({
-      ...current,
-      wantToTry,
-      parkedDecision: wantToTry ? (current.decision ?? null) : current.parkedDecision,
-      decision: wantToTry ? null : (current.parkedDecision ?? null),
-    }));
   const [selecting, setSelecting] = useState(false);
   const [selectionIds, setSelectionIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState('');
@@ -214,6 +208,52 @@ export function CollectionView({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [selectedId, setSelectedId]);
 
+  function finishCapture(item: Item) {
+    setCaptureDetailsOpen(false);
+    captureDraft.clear({
+      ...captureDraft.form,
+      title: '',
+      decision: null,
+      parkedDecision: null,
+      wantToTry: false,
+      pendingItem: undefined,
+    });
+    captureDraft.operationId.current = crypto.randomUUID();
+    setTitle('');
+    captureDraft.setForm((current) => ({
+      ...current,
+      decision: null,
+      parkedDecision: null,
+      wantToTry: false,
+      pendingItem: undefined,
+    }));
+    setBrowse('all');
+    setSearch('');
+    setAddedSince('');
+    setAddedBefore('');
+    setVisits('all');
+    setType('all');
+    setBrand('');
+    setLabel('');
+    setStamp('');
+    setRankFilter('all');
+    setDecisionFilter('all');
+    setSort('rank');
+    setSelectedId(null);
+    setStatus(`${item.title} added to ${list.name}.`);
+    setFiling((previous) => ({
+      sequence: previous.sequence + 1,
+      count: 1,
+      message: `${item.title} added to ${list.name}.`,
+    }));
+    void client.invalidateQueries({ queryKey: ['items', list.id] });
+    void client.invalidateQueries({ queryKey: ['list', list.id] });
+    void client.invalidateQueries({ queryKey: ['lists'] });
+    void client.invalidateQueries({ queryKey: ['overview'] });
+    void client.invalidateQueries({ queryKey: ['patterns'] });
+    restoreCaptureFocus.current = 'single';
+  }
+
   const create = useMutation({
     mutationFn: (nextTitle: string) =>
       api.createItem(
@@ -222,66 +262,21 @@ export function CollectionView({
           title: captureDraft.form.pendingItem?.title ?? nextTitle,
           type: '',
           note: '',
-          decision: captureDraft.form.pendingItem
-            ? captureDraft.form.pendingItem.decision
-            : (captureDraft.form.decision ?? null),
-          wantToTry: captureDraft.form.pendingItem?.wantToTry ?? captureWant,
+          decision: captureDraft.form.pendingItem ? captureDraft.form.pendingItem.decision : null,
+          wantToTry: captureDraft.form.pendingItem?.wantToTry ?? false,
           startedOn: null,
           endedOn: null,
         },
         captureDraft.operationId.current,
       ),
-    onSuccess: ({ item }) => {
-      if (captureOptions.current) captureOptions.current.open = false;
-      captureDraft.clear({
-        ...captureDraft.form,
-        title: '',
-        decision: null,
-        parkedDecision: null,
-        pendingItem: undefined,
-      });
-      captureDraft.operationId.current = crypto.randomUUID();
-      setTitle('');
-      captureDraft.setForm((current) => ({
-        ...current,
-        decision: null,
-        parkedDecision: null,
-        pendingItem: undefined,
-      }));
-      setBrowse('all');
-      setSearch('');
-      setAddedSince('');
-      setAddedBefore('');
-      setVisits('all');
-      setType('all');
-      setBrand('');
-      setLabel('');
-      setStamp('');
-      setRankFilter('all');
-      setDecisionFilter('all');
-      setSort('rank');
-      setSelectedId(null);
-      setStatus(`${item.title} added to ${list.name}.`);
-      setFiling((previous) => ({
-        sequence: previous.sequence + 1,
-        count: 1,
-        message: `${item.title} added to ${list.name}.`,
-      }));
-      void client.invalidateQueries({ queryKey: ['items', list.id] });
-      void client.invalidateQueries({ queryKey: ['list', list.id] });
-      void client.invalidateQueries({ queryKey: ['lists'] });
-      void client.invalidateQueries({ queryKey: ['overview'] });
-      void client.invalidateQueries({ queryKey: ['patterns'] });
-      restoreCaptureFocus.current = 'single';
-    },
+    onSuccess: ({ item }) => finishCapture(item),
   });
 
   const batchCreate = useMutation({
     mutationFn: (nextTitles: string[]) =>
-      api.createItems(list.id, nextTitles, captureDraft.operationId.current, captureWant),
+      api.createItems(list.id, nextTitles, captureDraft.operationId.current, false),
     onSuccess: ({ items: created }) => {
-      if (captureOptions.current) captureOptions.current.open = false;
-      captureDraft.clear({ ...captureDraft.form, batchTitles: '' });
+      captureDraft.clear({ ...captureDraft.form, batchTitles: '', wantToTry: false, decision: null });
       captureDraft.operationId.current = crypto.randomUUID();
       setBatchTitles('');
       setBrowse('all');
@@ -482,8 +477,8 @@ export function CollectionView({
           ...captureDraft.form,
           pendingItem: {
             title: cleanTitle,
-            decision: captureDraft.form.decision ?? null,
-            wantToTry: captureWant,
+            decision: null,
+            wantToTry: false,
           },
         });
       create.mutate(cleanTitle);
@@ -498,12 +493,21 @@ export function CollectionView({
   const capturePending = create.isPending || batchCreate.isPending;
   const captureLocked = capturePending || !!captureDraft.form.pendingItem;
   useEffect(() => {
-    if (capturePending || !restoreCaptureFocus.current) return;
+    if (capturePending || captureDetailsOpen || !restoreCaptureFocus.current) return;
     const field = restoreCaptureFocus.current === 'batch' ? batchCaptureRef.current : captureRef.current;
     restoreCaptureFocus.current = null;
     field?.focus();
-  }, [capturePending]);
+  }, [capturePending, captureDetailsOpen]);
   const selectedItem = items.find((item) => item.id === selectedId);
+  const remove = useMutation({
+    mutationFn: (item: Item) => api.deleteItem(item.id),
+    onSuccess: (_, item) => {
+      setTrashTarget(null);
+      if (selectedId === item.id) setSelectedId(null);
+      void client.invalidateQueries();
+      requestAnimationFrame(() => captureRef.current?.focus());
+    },
+  });
   const rowActions = {
     selection: selecting
       ? {
@@ -520,6 +524,10 @@ export function CollectionView({
     onWant: (item: Item) => want.mutate(item),
     wantPending: want.isPending,
     onQueue: (item: Item) => queue.mutate(item),
+    onTrash: (item: Item) => {
+      remove.reset();
+      setTrashTarget(item);
+    },
     queuePending: queue.isPending,
     rankSlots: items.length,
     onOpenDetails: (id: string) => {
@@ -578,7 +586,7 @@ export function CollectionView({
                   value={title}
                   maxLength={collectionItemTitleLimit}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder={captureWant ? 'Add a name to Want to try' : 'Add a name'}
+                  placeholder="Add a name"
                   disabled={captureLocked}
                 />
               )}
@@ -598,45 +606,19 @@ export function CollectionView({
                   ? 'Retry save'
                   : batchMode
                     ? `Save ${batchEntries.length || ''}`
-                    : 'Save'}{' '}
+                    : 'Quick save'}{' '}
               <ArrowRight size={17} />
             </button>
-            <details className="collection-capture-options" ref={captureOptions}>
-              <summary>
-                <CaretDown size={14} aria-hidden="true" />
-                <span>New item options</span>
-                <small>
-                  {captureWant
-                    ? 'Want to try'
-                    : !batchMode && captureDraft.form.decision
-                      ? decisionLabel(captureDraft.form.decision)
-                      : 'Optional'}
-                </small>
-              </summary>
-              <div className="collection-capture-fields">
-                <label className="capture-for-later check-label">
-                  <input
-                    type="checkbox"
-                    aria-label="Want to try"
-                    checked={captureWant}
-                    disabled={captureLocked}
-                    onChange={(event) => setCaptureWant(event.target.checked)}
-                  />
-                  Want to try <span>Save for later</span>
-                </label>
-                {!batchMode && !captureWant && (
-                  <div className="collection-capture-call">
-                    <span>Call for new item</span>
-                    <CallChoices
-                      label="Call for new item"
-                      value={captureDraft.form.decision ?? null}
-                      disabled={captureLocked}
-                      onChange={(decision) => captureDraft.setForm((current) => ({ ...current, decision }))}
-                    />
-                  </div>
-                )}
-              </div>
-            </details>
+            {!batchMode && (
+              <button
+                type="button"
+                className="collection-capture-details button button-outline"
+                disabled={!online || captureLocked || captureDuplicate || !title.trim()}
+                onClick={() => setCaptureDetailsOpen(true)}
+              >
+                Save with details
+              </button>
+            )}
             {batchMode && (
               <p className="collection-capture-note">
                 {batchHasLongTitle
@@ -1144,6 +1126,39 @@ export function CollectionView({
           </aside>
         )}
       </div>
+      {captureDetailsOpen && (
+        <ItemEditor
+          listId={list.id}
+          collectionName={list.name}
+          item={null}
+          items={items}
+          logs={[]}
+          initialTitle={title}
+          draftName={`item:${list.id}:capture:${captureDraft.operationId.current}`}
+          onNameChange={setTitle}
+          focusLogId={null}
+          focusLogComposer={false}
+          focusNoteComposer={false}
+          onClose={() => setCaptureDetailsOpen(false)}
+          onCreated={(id) => {
+            const saved = client
+              .getQueryData<{ items: Item[] }>(['items', list.id])
+              ?.items.find((item) => item.id === id);
+            if (saved) finishCapture(saved);
+          }}
+        />
+      )}
+      {trashTarget && (
+        <ConfirmDialog
+          title={`Move ${trashTarget.title} to Trash?`}
+          description="The item, attached experiences and private photos stay recoverable in Trash for 30 days. Restored items return unranked."
+          confirmLabel="Move to Trash"
+          pending={remove.isPending}
+          error={remove.isError ? remove.error.message : undefined}
+          onClose={() => setTrashTarget(null)}
+          onConfirm={() => remove.mutate(trashTarget)}
+        />
+      )}
       {discardCapture && (
         <ConfirmDialog
           title="Clear this pending capture?"

@@ -28,7 +28,7 @@ test('capture recovers from failure and creates an unranked item without a call'
   archive.failCapture = true;
   await page.goto(`/lists/${list.id}`);
   await page.getByRole('textbox', { name: 'Add a name' }).fill('New tea');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Quick save', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Couldn’t save' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Add a name' })).toHaveValue('New tea');
   archive.failCapture = false;

@@ -427,6 +427,24 @@ export async function mockArchive(page: Page): Promise<State> {
       Object.assign(entry, body, { revision: (entry.revision ?? 0) + 1 });
       return reply({ log: entry });
     }
+    if (/^\/items\/[^/]+$/.test(path) && method === 'DELETE') {
+      if (state.failAction) return reply({ message: 'Could not move this item to Trash. Try again.' }, 503);
+      const entry = state.items.find((item) => item.id === path.split('/')[2]);
+      if (!entry) return reply({ message: 'Item not found.' }, 404);
+      state.writes.push({ path, body: null });
+      state.trash.push({
+        kind: 'item',
+        id: entry.id,
+        title: entry.title,
+        listId: entry.listId,
+        listName: state.list.name,
+        trashedAt: Date.now(),
+        expiresAt: Date.now() + 30 * 86400000,
+      });
+      state.list.rankedIds = state.list.rankedIds.filter((id) => id !== entry.id);
+      state.list.rankRevision++;
+      return reply({});
+    }
     if (path.startsWith('/items/') && method === 'PATCH') {
       const body = request.postDataJSON();
       state.writes.push({ path, body });

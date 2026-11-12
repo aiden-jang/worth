@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -8,6 +8,7 @@ import type { Item, ListDetail } from '../src/shared/models';
 import type { MemoryRecord } from '../src/shared/memories';
 import { QuickEntry } from '../src/components/QuickEntry';
 import { CollectionView } from '../src/components/CollectionView';
+import { TrashNotice } from '../src/components/TrashTools';
 import { HomeReminders } from '../src/components/HomeReminders';
 
 const list: ListDetail = {
@@ -62,6 +63,14 @@ beforeEach(() => {
       this.open = false;
     },
   });
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe = vi.fn();
+      disconnect = vi.fn();
+      unobserve = vi.fn();
+    },
+  );
   vi.stubGlobal('matchMedia', () => ({
     matches: false,
     addEventListener: vi.fn(),
@@ -70,6 +79,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   for (const [name, descriptor] of Object.entries(dialogMethods)) {
@@ -85,6 +95,7 @@ function setup(content: ReactNode) {
       mutations: { retry: false },
     },
   });
+  client.setQueryData(['me'], { user: { id: 'simpler-account' } });
   client.setQueryData(['workspace', list.id], { workspace: { rankings: [], views: [] }, revision: 0 });
   return render(
     <QueryClientProvider client={client}>
@@ -124,9 +135,17 @@ test('inline collection creation retains the item and call through a failed crea
   );
 });
 
-test('new-item options stay separate from saved-item call filters and close after saving', async () => {
+test('quick save ignores a legacy draft call and saves only a name', async () => {
+  localStorage.setItem(
+    `worth:draft:v1:simpler-account:capture:${list.id}`,
+    JSON.stringify({
+      form: { title: 'New tea', batchTitles: '', batchMode: false, decision: 'favorite', wantToTry: true },
+      operationId: 'capture-operation',
+      updatedAt: Date.now(),
+    }),
+  );
   const create = vi.spyOn(api, 'createItem').mockResolvedValue({
-    item: { ...coffee, id: 'new-tea', title: 'New tea', decision: 'meh' },
+    item: { ...coffee, id: 'new-tea', title: 'New tea', decision: null },
   });
   const update = vi.spyOn(api, 'updateItem');
   setup(
@@ -139,34 +158,115 @@ test('new-item options stay separate from saved-item call filters and close afte
       onLogRevisit={() => {}}
     />,
   );
-  const summary = screen.getByText('New item options');
-  const options = summary.closest('details')!;
   const filters = screen.getByRole('group', { name: 'Filter by personal call' });
-  expect(options).not.toHaveAttribute('open');
+  expect(screen.queryByText('New item options')).not.toBeInTheDocument();
+  expect(screen.queryByRole('group', { name: 'Call for new item' })).not.toBeInTheDocument();
   expect(screen.getAllByRole('group', { name: 'Filter by personal call' })).toHaveLength(1);
   fireEvent.click(within(filters).getByRole('button', { name: /^Favorite/ }));
-  fireEvent.change(screen.getByRole('textbox', { name: 'Add a name' }), { target: { value: 'New tea' } });
-  fireEvent.click(summary);
-  fireEvent.click(
-    within(screen.getByRole('group', { name: 'Call for new item' })).getByRole('button', { name: 'Meh' }),
-  );
-  expect(options.querySelector('summary')).toHaveTextContent('Meh');
-  expect(within(filters).getByRole('button', { name: /^Favorite/ })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByRole('button', { name: 'Coffee' })).toBeInTheDocument();
-  expect(create).not.toHaveBeenCalled();
+  expect(screen.getByRole('textbox', { name: 'Add a name' })).toHaveValue('New tea');
   expect(update).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Quick save' }));
   await waitFor(() =>
     expect(create).toHaveBeenCalledWith(
       list.id,
-      expect.objectContaining({ title: 'New tea', decision: 'meh' }),
+      expect.objectContaining({ title: 'New tea', decision: null, wantToTry: false, note: '' }),
+      'capture-operation',
+    ),
+  );
+  expect(screen.getByRole('textbox', { name: 'Add a name' })).toHaveValue('');
+  expect(update).not.toHaveBeenCalled();
+});
+
+test('save with details waits for the editor and retains the typed name', async () => {
+  const saved = { ...coffee, id: 'new-tea', title: 'New tea', decision: 'meh' as const, note: 'Try iced' };
+  const create = vi.spyOn(api, 'createItem').mockResolvedValue({ item: saved });
+  vi.spyOn(api, 'updateItem').mockResolvedValue({ item: saved });
+  setup(
+    <CollectionView
+      list={list}
+      items={[coffee]}
+      focusCapture={false}
+      onOpenDetails={() => {}}
+      onAddNote={() => {}}
+      onLogRevisit={() => {}}
+    />,
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: 'Add a name' }), { target: { value: 'New tea' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
+  const editor = screen.getByRole('dialog');
+  expect(within(editor).getByLabelText('Name')).toHaveValue('New tea');
+  expect(create).not.toHaveBeenCalled();
+  fireEvent.click(within(editor).getByRole('button', { name: 'Meh' }));
+  fireEvent.change(within(editor).getByLabelText(/Private note/), { target: { value: 'Try iced' } });
+  await waitFor(() => expect(within(editor).getByRole('button', { name: 'Add item' })).toBeEnabled());
+  fireEvent.click(within(editor).getByRole('button', { name: 'Add item' }));
+  await waitFor(() =>
+    expect(create).toHaveBeenCalledWith(
+      list.id,
+      expect.objectContaining({ title: 'New tea', decision: 'meh', note: 'Try iced' }),
       expect.any(String),
     ),
   );
-  await waitFor(() => expect(options).not.toHaveAttribute('open'));
-  expect(options.querySelector('summary')).toHaveTextContent('Optional');
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByRole('textbox', { name: 'Add a name' })).toHaveValue('');
-  expect(update).not.toHaveBeenCalled();
+});
+
+test('row Trash confirms, preserves errors for retry, and can be cancelled', async () => {
+  const remove = vi
+    .spyOn(api, 'deleteItem')
+    .mockRejectedValueOnce(new Error('Could not delete'))
+    .mockResolvedValue(undefined);
+  setup(
+    <CollectionView
+      list={list}
+      items={[coffee]}
+      focusCapture={false}
+      onOpenDetails={() => {}}
+      onAddNote={() => {}}
+      onLogRevisit={() => {}}
+    />,
+  );
+  const menu = screen.getByLabelText('More options for Coffee').closest('details')!;
+  menu.open = true;
+  fireEvent(menu, new Event('toggle'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Move Coffee to Trash' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getAllByRole('button', { name: 'Cancel' })[1]);
+  expect(remove).not.toHaveBeenCalled();
+  menu.open = true;
+  fireEvent(menu, new Event('toggle'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Move Coffee to Trash' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Move to Trash' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete');
+  expect(screen.getByRole('button', { name: 'Coffee' })).toBeInTheDocument();
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Move to Trash' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(remove).toHaveBeenCalledTimes(2);
+  expect(remove).toHaveBeenLastCalledWith(coffee.id);
+});
+
+test('Trash notices expire after six seconds and pause while focused or hovered', async () => {
+  vi.useFakeTimers();
+  setup(<TrashNotice />);
+  act(() =>
+    window.dispatchEvent(new CustomEvent('worth:trashed', { detail: [{ kind: 'item', id: coffee.id }] })),
+  );
+  const notice = screen.getByRole('complementary', { name: 'Deletion recovery' });
+  fireEvent.mouseEnter(notice);
+  fireEvent.focus(screen.getByRole('button', { name: 'Undo' }));
+  fireEvent.mouseLeave(notice);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(7000);
+  });
+  expect(notice).toBeInTheDocument();
+  fireEvent.blur(screen.getByRole('button', { name: 'Undo' }), { relatedTarget: document.body });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(5999);
+  });
+  expect(notice).toBeInTheDocument();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1);
+  });
+  expect(screen.queryByRole('complementary', { name: 'Deletion recovery' })).not.toBeInTheDocument();
 });
 
 test('browsing does not write and a failed direct call preserves the saved opinion for retry', async () => {

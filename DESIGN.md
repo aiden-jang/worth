@@ -76,7 +76,7 @@ creation checks for an already-created destination before posting another copy.
 
 Primary navigation is Home, Collections and Look back. Search and Unfiled are utilities. Unfiled navigates to its own page.
 Collection shortcuts nest immediately under Collections; New collection stays
-separate from the prominent Add item action. Saved banners dismiss after six
+separate from the prominent Add item action. Saved and Trash recovery banners dismiss after six
 seconds, pausing for hover, keyboard focus, pending Undo or recovery errors. Desktop uses the 192px rail; phones use the persistent
 safe-area navigation and Add bar, plus search/account access in the header.
 Content, status panels and menus must clear that bar.
@@ -112,11 +112,16 @@ The desktop slip column remains present before and after selection, with a quiet
 placeholder when nothing is selected. Preview call buttons save only on deliberate
 clicks and support clearing the current call; merely browsing writes nothing.
 Edit and Add experience stay on the slip, while row Edit belongs in its options
-menu. The editor still saves its wider changes explicitly. Inline name capture keeps
-its optional call and Want to try setting under collapsed New item options. The
-summary shows an active draft choice and closes after a confirmed save. One visible
-All calls / Favorite / Meh / Not again / No call row filters saved items; choosing a
-new item's call never changes those filters. Planned-item previews, readers and Home reminders offer I tried it:
+menu, including Move to Trash with a confirmation and 30-day recovery. The editor
+still saves its wider changes explicitly. Inline capture offers Quick save and
+Save with details. Quick save stores only the name, without a call, plan or visit,
+even when an older device draft contains a rating. Save with details opens the
+existing editor with the typed name and writes nothing until its Add item action.
+Its separate account-scoped details draft survives closing and reload; successful
+saves clear the inline name and return focus. These explicit actions replace the
+reference's single Save and optional inline call controls by user request. One
+visible All calls / Favorite / Meh / Not again / No call row filters saved items.
+Planned-item previews, readers and Home reminders offer I tried it:
 choose a call to save it and leave Want to try, without creating a visit or changing
 rank. Remove from Want to try preserves the current call. Browsing still writes nothing.
 

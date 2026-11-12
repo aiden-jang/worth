@@ -14,8 +14,8 @@ setup. More from your archive reveals extra Home material. The signed-out exampl
 
 Add details opens optional capture fields. Record a dated experience is an
 explicit choice; This time labels its reaction, separately from the overall call.
-Inline collection capture uses New item options for optional calls and plans;
-Call for new item distinguishes those choices from the saved-item filters below.
+Inline collection capture uses Quick save for a name alone and Save with details
+to open the editor before saving. Move to Trash names the recoverable delete action.
 A name-only find is complete. Never imply that missing details are homework.
 
 Keep account access, workouts, dates, errors, help, privacy, sharing and destructive

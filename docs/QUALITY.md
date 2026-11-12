@@ -102,12 +102,17 @@ Use a local synthetic account for the following pass:
 
 1. Open the signed-out landing. Try a name and a call in its labeled example;
    confirm it does not save private records. Open Help and the policy links.
-2. Enter an empty archive. Create a list and capture only a name. Add another
+2. Enter an empty archive. Create a list and Quick save only a name without a call.
+   Open Save with details with a typed name, close it without writing, then save a
+   note and explicit call. Check that a legacy draft rating cannot enter Quick save.
+   Add another
    immediately, preview it without writes, then use Edit to clear and save a call.
    Rank independently from the row options, and find the record again.
 3. Search and open a result. Return with Back, open/close navigation with a
    keyboard, and check that the browser tab identifies the destination.
-4. Edit a note, cancel a destructive confirmation, then try again. Simulate a
+4. Open Move to Trash from a row, cancel, then confirm and Undo. Verify the six-second
+   notice timeout, hover/focus pauses and recovery after the notice disappears.
+   Edit a note, cancel a destructive confirmation, then try again. Simulate a
    failed save and confirm the text remains; retry without duplicating records.
 5. Preview a public snapshot before creating its link. Check the signed-out
    snapshot excludes private notes, photos and history, then revoke it.

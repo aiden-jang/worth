@@ -39,18 +39,12 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
 }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
-  const captureOptions = page.locator('.collection-capture-options');
-  await expect(captureOptions).not.toHaveAttribute('open');
+  await expect(page.getByText('New item options', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
   await expect(page.getByRole('checkbox', { name: 'Want to try', exact: true })).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Filter by personal call', exact: true })).toHaveCount(1);
   const capture = page.getByRole('textbox', { name: 'Add a name', exact: true });
   await capture.fill('A very average tea');
-  await page.getByText('New item options', { exact: true }).click();
-  await page
-    .getByRole('group', { name: 'Call for new item', exact: true })
-    .getByRole('button', { name: 'Meh', exact: true })
-    .click();
   await expect(
     page
       .getByRole('group', { name: 'Filter by personal call', exact: true })
@@ -58,22 +52,26 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
   ).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.collection-index-row')).toHaveCount(2);
   expect(archive.writes).toEqual([]);
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Quick save', exact: true }).click();
   await expect(capture).toHaveValue('');
   await expect(capture).toBeFocused();
-  await expect(captureOptions).not.toHaveAttribute('open');
+  await expect(page.getByText('New item options', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
-  expect(archive.items.at(-1)).toMatchObject({ title: 'A very average tea', decision: 'meh' });
+  expect(archive.items.at(-1)).toMatchObject({
+    title: 'A very average tea',
+    decision: null,
+    wantToTry: false,
+  });
   expect(archive.list.rankedIds).toEqual(['coffee']);
   const filters = page.getByRole('group', { name: 'Filter by personal call', exact: true });
   for (const [label, expected] of [
-    ['Favorite', 'Coffee'],
-    ['Meh', 'A very average tea'],
-    ['No call', 'Tea'],
-  ]) {
+    ['Favorite', ['Coffee']],
+    ['Meh', []],
+    ['No call', ['Tea', 'A very average tea']],
+  ] as const) {
     await filters.getByRole('button', { name: new RegExp('^' + label) }).click();
-    await expect(page.locator('.collection-index-row')).toHaveCount(1);
-    await expect(page.locator('.collection-index-row strong')).toHaveText(expected);
+    await expect(page.locator('.collection-index-row')).toHaveCount(expected.length);
+    await expect(page.locator('.collection-index-row strong')).toHaveText([...expected]);
   }
   await filters.getByRole('button', { name: /^All calls/ }).click();
   const row = page.locator('.collection-index-row > button').filter({ hasText: 'Coffee' });
@@ -96,6 +94,68 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
     await page.screenshot({ path: `${process.env.WORTH_FLOW_QA}/collection-${info.project.name}.png` });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('save with details keeps a draft until an explicit save', async ({ page, archive }) => {
+  await page.goto(`/lists/${list.id}`);
+  await page.getByRole('textbox', { name: 'Add a name', exact: true }).fill('Iced tea');
+  await page.getByRole('button', { name: 'Save with details', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Keep this one.', exact: true });
+  await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('Iced tea');
+  expect(archive.writes).toEqual([]);
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toHaveValue('Iced tea');
+  await page.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await editor.getByRole('button', { name: 'Meh', exact: true }).click();
+  await editor.getByLabel('Private note', { exact: false }).fill('Try it iced.');
+  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toBeFocused();
+  expect(archive.items.at(-1)).toMatchObject({ title: 'Iced tea', note: 'Try it iced.', decision: 'meh' });
+  expect(archive.logs).toHaveLength(0);
+  expect(archive.list.rankedIds).toEqual(['coffee']);
+});
+
+test('row Trash supports cancel, retry, Undo and a timed recovery notice', async ({ page, archive }) => {
+  await page.clock.install();
+  await page.goto(`/lists/${list.id}`);
+  async function openTrash() {
+    await page.getByLabel('More options for Coffee', { exact: true }).click();
+    await page.getByRole('button', { name: 'Move Coffee to Trash', exact: true }).click();
+  }
+  await openTrash();
+  const confirmation = page.getByRole('dialog', { name: 'Move Coffee to Trash?', exact: true });
+  await confirmation.getByRole('button', { name: 'Cancel', exact: true }).last().click();
+  expect(archive.trash).toHaveLength(0);
+  await openTrash();
+  archive.failAction = true;
+  await confirmation.getByRole('button', { name: 'Move to Trash', exact: true }).click();
+  await expect(confirmation.getByRole('alert')).toContainText('Could not move');
+  await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toHaveCount(1);
+  archive.failAction = false;
+  await confirmation.getByRole('button', { name: 'Move to Trash', exact: true }).click();
+  await expect(confirmation).toHaveCount(0);
+  const notice = page.getByRole('complementary', { name: 'Deletion recovery', exact: true });
+  await expect(notice).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toHaveCount(0);
+  await notice.getByRole('button', { name: 'Undo', exact: true }).focus();
+  await page.clock.fastForward(7000);
+  await expect(notice).toBeVisible();
+  await notice.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(notice).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Coffee Drink', exact: true })).toBeVisible();
+  expect(archive.items[0]).toMatchObject({ note: 'PRIVATE NOTE', decision: 'favorite' });
+  expect(archive.list.rankedIds).toEqual([]);
+  await openTrash();
+  await confirmation.getByRole('button', { name: 'Move to Trash', exact: true }).click();
+  await expect(notice).toBeVisible();
+  await page.getByRole('heading', { level: 1 }).click();
+  await page.mouse.move(0, 0);
+  await page.clock.fastForward(6100);
+  await expect(notice).toHaveCount(0);
+  expect(archive.trash.some((entry) => entry.id === 'coffee')).toBe(true);
 });
 
 test('saved banner pauses for interaction and dismisses automatically', async ({ page }) => {
@@ -171,11 +231,14 @@ test('a visible plan can be reviewed in place without a visit date or ranking ch
 }, info) => {
   await page.goto(`/lists/${list.id}`);
   await expect(page.getByLabel('Entry options', { exact: true }).locator('..')).not.toHaveAttribute('open');
-  await page.getByText('New item options', { exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
-  await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Add a name', exact: true }).fill('A future tea');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Save with details', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Keep this one.', exact: true });
+  await expect(editor.getByLabel('Name', { exact: true })).toHaveValue('A future tea');
+  expect(archive.writes).toEqual([]);
+  await editor.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
+  await editor.getByRole('button', { name: 'Add item', exact: true }).click();
+  await expect(editor).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'Add a name', exact: true })).toHaveValue('');
   const planned = archive.items.at(-1)!;
   expect(planned).toMatchObject({ wantToTry: true, decision: null, logCount: 0 });

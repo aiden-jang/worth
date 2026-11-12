@@ -110,10 +110,11 @@ Search text stays in the tab and clears on reload; the order preference persists
 Once visible, the controls stay open for the directory visit.
 
 Collections open with name capture, one row of call filters for saved items,
-search and **All items / Want to try / Tried** tabs. **New item options** discloses
-the optional new-item call and Want to try setting; it starts closed, shows an
-active draft choice in its summary and closes after a confirmed save. New-item
-choices do not change the saved-item filters. Tried contains
+search and **All items / Want to try / Tried** tabs. **Quick save** saves only the
+name, without a call or plan, including when an old draft had a selected rating.
+**Save with details** opens the existing editor with the typed name; no record is
+created until **Add item**. Its separate details draft survives closing or reload.
+There are no inline rating choices. Tried contains
 nonplanned records with a call or dated experience; unrated name-only saves stay
 in All items. **More filters** retains the other views and specialized filters. A name-only save returns input focus without opening details.
 The desktop preview column stays in place even without a selection; widths up to
@@ -124,7 +125,9 @@ Planned-item slips, saved-record readers and Home reminders offer **I tried it**
 Choosing a call saves it and clears Want to try without inventing a visit date,
 changing notes or touching ranking. **Remove from Want to try** clears only the
 plan flag and preserves any existing opinion. Row Edit belongs in its options
-menu with rank, notes and queues. Wider editor
+menu with rank, notes, queues and **Move to Trash**. Trash asks for confirmation,
+preserves 30-day recovery and offers Undo. Its notice dismisses after six idle
+seconds, pausing for hover, focus, pending Undo or a recovery error. Wider editor
 changes still require Save. Unfiled opens its own page, without a drawer.
 
 Home, search, memory and tool links open saved records for reading. **Edit** switches

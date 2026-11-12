@@ -116,18 +116,23 @@ A collection has compact identity, name capture, All items / Want to try / Tried
 tabs, direct call filters and search. Tried requires an explicit call or experience
 and excludes plans. More filters holds other existing views and specialized
 filters. Settings, sharing and More tools are contextual; Entry options holds
-batch, experiences, selection and saved views. Inline capture keeps optional calls
-and Want to try under collapsed New item options. Its summary shows an active
-draft choice; confirmed saves close the disclosure and clear a saved draft call.
-Name-only saves return input
-focus without opening details. Wide desktop selection uses a cream side slip;
+batch, experiences, selection and saved views. Inline capture deliberately replaces
+the reference's single Save with Quick save and Save with details, as requested.
+Quick save stores a name without a call, Want to try or an experience; ignore
+unsubmitted legacy draft calls while retaining exact pending request retries.
+Save with details opens the existing editor with the name filled in and waits for
+an explicit save. Preserve its separate details/photo draft and return input focus
+after a confirmed save. Desktop places the input and actions in one row; phones
+put the full-width input above two equal 48px actions. Do not show inline call
+choices or a New item options disclosure. Wide desktop selection uses a cream side slip;
 widths up to 960px use a native scrolling sheet without moving list rows or
 placing the preview below a long collection. Desktop always reserves the 300px
 slip column (275px at narrow desktop widths), including an unselected placeholder.
 Selecting, clearing selection, saving and filtering never resize the row column.
 Preview calls save on an explicit click and can clear; browse selection writes
 nothing. Edit and Add experience remain on the slip at all widths. Row Edit moves
-into the options menu, alongside experience, rank, notes and queues. Direct call
+into the options menu, alongside experience, rank, notes, queues and Move to Trash.
+Trash requires confirmation and keeps the existing 30-day recovery. Direct call
 filters remain visible as one row for saved items; new-item choices appear only
 inside the capture disclosure and do not change those filters. Unranked items stay
 accessible. On phones, open capture options stack the new-item call label above
@@ -139,7 +144,7 @@ in response to the November usability review: fewer disclosures, a stable previe
 column and clear separation of Add item from New collection. The existing dark
 canvas, cream slip, tokens, typography and mobile sheet behavior remain the visual
 reference. Sidebar collection links nest beneath Collections, Add item moves below
-the wordmark, and Unfiled uses its full page. Saved banners dismiss after six
+the wordmark, and Unfiled uses its full page. Saved and Trash recovery banners dismiss after six
 seconds, pausing on hover/focus and during pending or failed Undo. Home adds a
 cream reminder after search, mixing older overall Favorites (90 days, with a
 recent-favorite fallback), Want to try and the last 30 days of experiences.
