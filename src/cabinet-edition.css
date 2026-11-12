@@ -87,14 +87,6 @@
 .collection-empty-composition .button {
   border-radius: 999px;
 }
-.collection-index-rows li.selected .collection-row-rank {
-  color: var(--ink);
-  background: var(--acid);
-  border-radius: 999px;
-  min-height: 28px;
-  display: grid;
-  place-items: center;
-}
 .opinion-slip-verdict .undecided-slips {
   width: 100px;
   height: 86px;

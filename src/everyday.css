@@ -1937,7 +1937,7 @@
 .collection-index-rows li.selected:hover .collection-index-row {
   padding-inline: 0 12px;
   background: var(--raised);
-  box-shadow: inset 3px 0 var(--acid);
+  box-shadow: none;
   border-radius: 12px;
 }
 .collection-index-row > button[aria-expanded='true'] strong {

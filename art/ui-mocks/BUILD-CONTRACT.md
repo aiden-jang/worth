@@ -211,7 +211,9 @@ one blink finishes within 3.2 seconds. Hands/heart settle earlier. Hover may add
 small lean; reduced motion disables character and hover transforms. No loops.
 
 Capture focus highlights the group in butter without hiding outlines. Selected
-rows retain their raised surface on hover. Collection-link arrows move 2px and
+rows retain their raised surface on hover, with a butter title and plain, muted
+rank text. Selection adds no filled rank badge or left-edge stripe; row padding
+and alignment stay unchanged. Collection-link arrows move 2px and
 covers scale to 1.025 on fine-pointer hover or keyboard focus; touch/reduced motion
 stay still. Factual confirmation panels use a 180ms entrance. Dialogs and mounted
 slips may settle over 200ms with a 6px rise, disabled for reduced motion.
