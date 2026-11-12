@@ -67,7 +67,7 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
   for (const [label, expected] of [
     ['Favorite', ['Coffee']],
     ['Meh', []],
-    ['No call', ['Tea', 'A very average tea']],
+    ['No call', ['A very average tea', 'Tea']],
   ] as const) {
     await filters.getByRole('button', { name: new RegExp('^' + label) }).click();
     await expect(page.locator('.collection-index-row')).toHaveCount(expected.length);
