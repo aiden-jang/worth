@@ -540,10 +540,6 @@
   align-items: center;
   gap: 4px;
 }
-.collection-row-options > summary {
-  width: 44px;
-  padding: 8px;
-}
 .collection-index-row .collection-row-edit {
   min-width: 44px;
   min-height: 44px;
@@ -1939,6 +1935,7 @@
 }
 .collection-index-rows li.selected .collection-index-row,
 .collection-index-rows li.selected:hover .collection-index-row {
+  padding-inline: 0 12px;
   background: var(--raised);
   box-shadow: inset 3px 0 var(--acid);
   border-radius: 12px;
