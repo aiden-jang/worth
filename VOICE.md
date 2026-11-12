@@ -14,6 +14,8 @@ setup. More from your archive reveals extra Home material. The signed-out exampl
 
 Add details opens optional capture fields. Record a dated experience is an
 explicit choice; This time labels its reaction, separately from the overall call.
+Inline collection capture uses New item options for optional calls and plans;
+Call for new item distinguishes those choices from the saved-item filters below.
 A name-only find is complete. Never imply that missing details are homework.
 
 Keep account access, workouts, dates, errors, help, privacy, sharing and destructive

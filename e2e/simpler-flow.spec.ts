@@ -39,15 +39,30 @@ test('direct capture, call filters and a stable preview avoid extra editors', as
 }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`/lists/${list.id}`);
+  const captureOptions = page.locator('.collection-capture-options');
+  await expect(captureOptions).not.toHaveAttribute('open');
+  await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('checkbox', { name: 'Want to try', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Filter by personal call', exact: true })).toHaveCount(1);
   const capture = page.getByRole('textbox', { name: 'Add a name', exact: true });
   await capture.fill('A very average tea');
+  await page.getByText('New item options', { exact: true }).click();
   await page
     .getByRole('group', { name: 'Call for new item', exact: true })
     .getByRole('button', { name: 'Meh', exact: true })
     .click();
+  await expect(
+    page
+      .getByRole('group', { name: 'Filter by personal call', exact: true })
+      .getByRole('button', { name: /^All calls/ }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.collection-index-row')).toHaveCount(2);
+  expect(archive.writes).toEqual([]);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(capture).toHaveValue('');
   await expect(capture).toBeFocused();
+  await expect(captureOptions).not.toHaveAttribute('open');
+  await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
   expect(archive.items.at(-1)).toMatchObject({ title: 'A very average tea', decision: 'meh' });
   expect(archive.list.rankedIds).toEqual(['coffee']);
   const filters = page.getByRole('group', { name: 'Filter by personal call', exact: true });
@@ -156,6 +171,7 @@ test('a visible plan can be reviewed in place without a visit date or ranking ch
 }, info) => {
   await page.goto(`/lists/${list.id}`);
   await expect(page.getByLabel('Entry options', { exact: true }).locator('..')).not.toHaveAttribute('open');
+  await page.getByText('New item options', { exact: true }).click();
   await page.getByRole('checkbox', { name: 'Want to try', exact: true }).check();
   await expect(page.getByRole('group', { name: 'Call for new item', exact: true })).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Add a name', exact: true }).fill('A future tea');

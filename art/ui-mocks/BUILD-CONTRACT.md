@@ -116,7 +116,10 @@ A collection has compact identity, name capture, All items / Want to try / Tried
 tabs, direct call filters and search. Tried requires an explicit call or experience
 and excludes plans. More filters holds other existing views and specialized
 filters. Settings, sharing and More tools are contextual; Entry options holds
-batch, experiences, selection and saved views. Want to try is visible in capture. Name-only saves return input
+batch, experiences, selection and saved views. Inline capture keeps optional calls
+and Want to try under collapsed New item options. Its summary shows an active
+draft choice; confirmed saves close the disclosure and clear a saved draft call.
+Name-only saves return input
 focus without opening details. Wide desktop selection uses a cream side slip;
 widths up to 960px use a native scrolling sheet without moving list rows or
 placing the preview below a long collection. Desktop always reserves the 300px
@@ -125,9 +128,10 @@ Selecting, clearing selection, saving and filtering never resize the row column.
 Preview calls save on an explicit click and can clear; browse selection writes
 nothing. Edit and Add experience remain on the slip at all widths. Row Edit moves
 into the options menu, alongside experience, rank, notes and queues. Direct call
-filters and optional name-capture calls remain visible. Unranked items stay accessible.
-On phones, keep the optional call label beside text-only choices and use compact
-filter spacing so the first saved row stays above the bottom navigation. Controls
+filters remain visible as one row for saved items; new-item choices appear only
+inside the capture disclosure and do not change those filters. Unranked items stay
+accessible. On phones, open capture options stack the new-item call label above
+text-only choices. Compact filter spacing keeps the first saved row above the bottom navigation. Controls
 retain their 44px minimum targets.
 
 These interactions deliberately refine the static collection and Add references

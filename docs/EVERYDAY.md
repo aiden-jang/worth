@@ -109,8 +109,11 @@ keeps its existing name/description search, order preference and archive links.
 Search text stays in the tab and clears on reload; the order preference persists.
 Once visible, the controls stay open for the directory visit.
 
-Collections open with name capture, optional calls, Want to try, visible call
-filters, search and **All items / Want to try / Tried** tabs. Tried contains
+Collections open with name capture, one row of call filters for saved items,
+search and **All items / Want to try / Tried** tabs. **New item options** discloses
+the optional new-item call and Want to try setting; it starts closed, shows an
+active draft choice in its summary and closes after a confirmed save. New-item
+choices do not change the saved-item filters. Tried contains
 nonplanned records with a call or dated experience; unrated name-only saves stay
 in All items. **More filters** retains the other views and specialized filters. A name-only save returns input focus without opening details.
 The desktop preview column stays in place even without a selection; widths up to

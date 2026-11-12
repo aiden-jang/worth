@@ -124,6 +124,51 @@ test('inline collection creation retains the item and call through a failed crea
   );
 });
 
+test('new-item options stay separate from saved-item call filters and close after saving', async () => {
+  const create = vi.spyOn(api, 'createItem').mockResolvedValue({
+    item: { ...coffee, id: 'new-tea', title: 'New tea', decision: 'meh' },
+  });
+  const update = vi.spyOn(api, 'updateItem');
+  setup(
+    <CollectionView
+      list={list}
+      items={[coffee]}
+      focusCapture={false}
+      onOpenDetails={() => {}}
+      onAddNote={() => {}}
+      onLogRevisit={() => {}}
+    />,
+  );
+  const summary = screen.getByText('New item options');
+  const options = summary.closest('details')!;
+  const filters = screen.getByRole('group', { name: 'Filter by personal call' });
+  expect(options).not.toHaveAttribute('open');
+  expect(screen.getAllByRole('group', { name: 'Filter by personal call' })).toHaveLength(1);
+  fireEvent.click(within(filters).getByRole('button', { name: /^Favorite/ }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Add a name' }), { target: { value: 'New tea' } });
+  fireEvent.click(summary);
+  fireEvent.click(
+    within(screen.getByRole('group', { name: 'Call for new item' })).getByRole('button', { name: 'Meh' }),
+  );
+  expect(options.querySelector('summary')).toHaveTextContent('Meh');
+  expect(within(filters).getByRole('button', { name: /^Favorite/ })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'Coffee' })).toBeInTheDocument();
+  expect(create).not.toHaveBeenCalled();
+  expect(update).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() =>
+    expect(create).toHaveBeenCalledWith(
+      list.id,
+      expect.objectContaining({ title: 'New tea', decision: 'meh' }),
+      expect.any(String),
+    ),
+  );
+  await waitFor(() => expect(options).not.toHaveAttribute('open'));
+  expect(options.querySelector('summary')).toHaveTextContent('Optional');
+  expect(screen.getByRole('textbox', { name: 'Add a name' })).toHaveValue('');
+  expect(update).not.toHaveBeenCalled();
+});
+
 test('browsing does not write and a failed direct call preserves the saved opinion for retry', async () => {
   const update = vi
     .spyOn(api, 'updateItem')

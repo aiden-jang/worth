@@ -133,7 +133,9 @@ inline capture lost-reply recovery and direct Unfiled filing. Filing cases retai
 memory/photo ownership and exact retry identity after the source disappears, with
 an explicit separate-copy choice and collection creation followed by filing.
 
-Planning/reminder coverage checks visible Want to try capture and draft-call
+Collection checks verify one visible saved-item call filter, collapsed new-item
+options, independent draft calls and filters, and disclosure reset after saving.
+Planning/reminder coverage checks Want to try capture and draft-call
 reversal, in-place reviews without invented visit dates, preserved notes/ranks,
 Unfiled revision/retry behavior, and the distinction between tried and name-only
 records. Reminder cases cover category rotation, exact-record refresh, removed

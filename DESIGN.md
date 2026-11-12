@@ -112,10 +112,11 @@ The desktop slip column remains present before and after selection, with a quiet
 placeholder when nothing is selected. Preview call buttons save only on deliberate
 clicks and support clearing the current call; merely browsing writes nothing.
 Edit and Add experience stay on the slip, while row Edit belongs in its options
-menu. The editor still saves its wider changes explicitly. Name capture has
-optional calls beside its save flow, and All calls / Favorite / Meh / Not again /
-No call filters remain visible without opening a menu. Want to try is also visible
-beside capture. Planned-item previews, readers and Home reminders offer I tried it:
+menu. The editor still saves its wider changes explicitly. Inline name capture keeps
+its optional call and Want to try setting under collapsed New item options. The
+summary shows an active draft choice and closes after a confirmed save. One visible
+All calls / Favorite / Meh / Not again / No call row filters saved items; choosing a
+new item's call never changes those filters. Planned-item previews, readers and Home reminders offer I tried it:
 choose a call to save it and leave Want to try, without creating a visit or changing
 rank. Remove from Want to try preserves the current call. Browsing still writes nothing.
 

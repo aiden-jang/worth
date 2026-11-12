@@ -1,7 +1,7 @@
 import { useListWindow } from '../hooks/useListWindow';
 import { ExperienceEditor } from './ExperienceEditor';
 import '../memories.css';
-import { ArrowRight, X } from '@phosphor-icons/react';
+import { ArrowRight, CaretDown, X } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { api, RequestError } from '../api';
@@ -77,6 +77,7 @@ export function CollectionView({
   const client = useQueryClient();
   const [experienceOpen, setExperienceOpen] = useState(false);
   const captureRef = useRef<HTMLInputElement>(null);
+  const captureOptions = useRef<HTMLDetailsElement>(null);
   const entryMenu = useRef<HTMLDetailsElement>(null);
   const batchCaptureRef = useRef<HTMLTextAreaElement>(null);
   const restoreCaptureFocus = useRef<'single' | 'batch' | null>(null);
@@ -231,6 +232,7 @@ export function CollectionView({
         captureDraft.operationId.current,
       ),
     onSuccess: ({ item }) => {
+      if (captureOptions.current) captureOptions.current.open = false;
       captureDraft.clear({
         ...captureDraft.form,
         title: '',
@@ -278,6 +280,7 @@ export function CollectionView({
     mutationFn: (nextTitles: string[]) =>
       api.createItems(list.id, nextTitles, captureDraft.operationId.current, captureWant),
     onSuccess: ({ items: created }) => {
+      if (captureOptions.current) captureOptions.current.open = false;
       captureDraft.clear({ ...captureDraft.form, batchTitles: '' });
       captureDraft.operationId.current = crypto.randomUUID();
       setBatchTitles('');
@@ -598,29 +601,42 @@ export function CollectionView({
                     : 'Save'}{' '}
               <ArrowRight size={17} />
             </button>
-            <label className="capture-for-later check-label">
-              <input
-                type="checkbox"
-                aria-label="Want to try"
-                checked={captureWant}
-                disabled={captureLocked}
-                onChange={(event) => setCaptureWant(event.target.checked)}
-              />
-              Want to try <span>Save for later</span>
-            </label>
-            {!batchMode && !captureWant && (
-              <div className="collection-capture-call">
-                <span>
-                  Your call <small>optional</small>
-                </span>
-                <CallChoices
-                  label="Call for new item"
-                  value={captureDraft.form.decision ?? null}
-                  disabled={captureLocked}
-                  onChange={(decision) => captureDraft.setForm((current) => ({ ...current, decision }))}
-                />
+            <details className="collection-capture-options" ref={captureOptions}>
+              <summary>
+                <CaretDown size={14} aria-hidden="true" />
+                <span>New item options</span>
+                <small>
+                  {captureWant
+                    ? 'Want to try'
+                    : !batchMode && captureDraft.form.decision
+                      ? decisionLabel(captureDraft.form.decision)
+                      : 'Optional'}
+                </small>
+              </summary>
+              <div className="collection-capture-fields">
+                <label className="capture-for-later check-label">
+                  <input
+                    type="checkbox"
+                    aria-label="Want to try"
+                    checked={captureWant}
+                    disabled={captureLocked}
+                    onChange={(event) => setCaptureWant(event.target.checked)}
+                  />
+                  Want to try <span>Save for later</span>
+                </label>
+                {!batchMode && !captureWant && (
+                  <div className="collection-capture-call">
+                    <span>Call for new item</span>
+                    <CallChoices
+                      label="Call for new item"
+                      value={captureDraft.form.decision ?? null}
+                      disabled={captureLocked}
+                      onChange={(decision) => captureDraft.setForm((current) => ({ ...current, decision }))}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </details>
             {batchMode && (
               <p className="collection-capture-note">
                 {batchHasLongTitle

@@ -317,6 +317,7 @@ test('collection capture recovers the exact pending request after a lost reply a
   );
   const first = setup(content([coffee]));
   fireEvent.change(screen.getByRole('textbox', { name: 'Add a name' }), { target: { value: 'New tea' } });
+  fireEvent.click(screen.getByText('New item options'));
   fireEvent.click(
     within(screen.getByRole('group', { name: 'Call for new item' })).getByRole('button', { name: 'Meh' }),
   );
