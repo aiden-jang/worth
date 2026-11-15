@@ -22,6 +22,8 @@ and never writes to a private archive.
 - **Choose** browses All saved, Want to try and Favorites across collections and
   Unfiled. Search names, notes, types, brands and labels, optionally in one
   collection. Original calls, notes and photos help with the next decision.
+  **Pick for me** draws up to three matching Favorites or Want to try entries,
+  with a reason for each; **See all matches** returns to browsing.
 - **Collections** open directly to names, quick capture, search and a browse/filter
   row. Choose an item for its optional call, an experience or editing. Phone item
   details open in a focused sheet. Collection and entry menus hold advanced tools.

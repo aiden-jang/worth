@@ -79,8 +79,17 @@ types, recorded brands and labels; people can search their own descriptive words
 Cards show the actual call, plan, note and optional photo, with a link to the
 read-first saved record. Paginated results retain existing cards after a failed
 next page. Empty accounts receive a capture invitation, not invented suggestions.
-This first choice flow deliberately browses personal records; it does not claim
-predictive recommendations or require an external catalog or paid inference.
+Pick for me is the page's primary action; the shared rail/phone Add remains
+available. It draws up to three existing Favorites or Want to try entries from
+the full matching archive. Favorites picks require a Favorite without a pending
+Want to try plan; Want to try picks require that explicit plan. Both exclude Meh,
+Not again, archived and removed records. All saved combines those eligible sources.
+Each card explains its actual call or plan and any literal search match. Show other
+picks prefers unshown eligible records before reusing a previous pick when fewer
+than three alternatives remain. Small pools show their actual count and disable
+another draw when all are shown. Filters leave picks immediately; See all matches
+returns to browsing with those filters intact. Picks run on explicit requests,
+without predictive claims, external catalogs, paid inference or new storage.
 The [Save and choose reference](art/ui-mocks/choose-and-save/README.md) owns these
 compositions; the existing Home reference gains a quiet row of direct choices.
 

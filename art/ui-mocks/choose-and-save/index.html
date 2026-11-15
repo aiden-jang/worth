@@ -127,6 +127,50 @@
       margin-bottom: 14px;
       font-size: 13px;
     }
+    .page-heading,
+    .pick-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pick-actions {
+      justify-content: start;
+      gap: 8px;
+    }
+    .pick-reason {
+      display: none;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid #38392f;
+      color: #aaa99b;
+      font-size: 13px;
+    }
+    .pick-reason strong {
+      color: #f0ecdf;
+      font-weight: 500;
+    }
+    .picks-heading,
+    [data-pick-only] {
+      display: none;
+    }
+    .pick-hint {
+      margin: -4px 0 20px;
+      color: #aaa99b;
+      font-size: 13px;
+    }
+    body[data-picking='true'] .pick-reason,
+    body[data-picking='true'] [data-pick-only] {
+      display: grid;
+    }
+    body[data-picking='true'] .picks-heading {
+      display: block;
+      margin: 0 0 8px;
+    }
+    body[data-picking='true'] [data-not-a-pick] {
+      display: none;
+    }
     .cards {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -289,6 +333,10 @@
       .sheet {
         padding: 22px;
       }
+      .page-heading {
+        flex-direction: column;
+        align-items: start;
+      }
     }
   </style>
   <body>
@@ -299,8 +347,16 @@
       <p>Look back</p>
     </aside>
     <main>
-      <h1>Find your next pick.</h1>
-      <p class="muted">What you liked. What you had in mind.</p>
+      <header class="page-heading">
+        <div>
+          <h1>Find your next pick.</h1>
+          <p class="muted">What you liked. What you had in mind.</p>
+        </div>
+        <div class="pick-actions">
+          <button id="browse-button" hidden>See all matches</button>
+          <button class="selected" id="pick-button">Pick for me</button>
+        </div>
+      </header>
       <div class="filters">
         <input
           aria-label="Search your saved choices"
@@ -316,12 +372,15 @@
       <div class="tabs">
         <button class="selected">All saved</button><button>Want to try</button><button>Favorites</button>
       </div>
-      <p class="count muted">3 saved choices</p>
+      <p class="pick-hint" id="pick-hint" hidden>Pick from your Favorites and Want to try list.</p>
+      <h2 class="picks-heading">A few to consider.</h2>
+      <p class="count muted" id="choice-count">3 saved choices</p>
       <div class="cards">
         <article>
           <small>Books</small>
           <h2>The illustrated atlas</h2>
           <span class="badge favorite">Favorite</span>
+          <p class="pick-reason"><strong>Why this pick</strong>You marked this Favorite.</p>
           <p>Something light for a quiet afternoon.</p>
           <p class="open">Open item →</p>
         </article>
@@ -329,14 +388,23 @@
           <small>Places</small>
           <h2>The corner bookshop</h2>
           <span class="badge">Want to try</span>
+          <p class="pick-reason"><strong>Why this pick</strong>On your Want to try list.</p>
           <p>Saved for a rainy day.</p>
           <p class="open">Open item →</p>
         </article>
-        <article>
+        <article data-not-a-pick>
           <small>Skincare</small>
           <h2>Everyday moisturizer</h2>
           <span class="badge no">Not again</span>
           <p>A little too heavy for me.</p>
+          <p class="open">Open item →</p>
+        </article>
+        <article data-pick-only>
+          <small>Movies</small>
+          <h2>A quiet film</h2>
+          <span class="badge favorite">Favorite</span>
+          <p class="pick-reason"><strong>Why this pick</strong>You marked this Favorite.</p>
+          <p>For a slow evening.</p>
           <p class="open">Open item →</p>
         </article>
       </div>
@@ -373,6 +441,19 @@ Something light for a quiet afternoon.</textarea>
     </div>
     <script>
       document.body.dataset.screen = new URLSearchParams(location.search).get('screen') || 'choose';
+      function showPicks(picking) {
+        document.body.dataset.picking = String(picking);
+        document.getElementById('pick-button').textContent = picking ? 'Show other picks' : 'Pick for me';
+        document.getElementById('pick-button').disabled = picking;
+        document.getElementById('browse-button').hidden = !picking;
+        document.getElementById('pick-hint').hidden = !picking;
+        document.getElementById('choice-count').textContent = picking
+          ? '3 picks from 3 matching choices'
+          : '3 saved choices';
+      }
+      document.getElementById('pick-button').addEventListener('click', () => showPicks(true));
+      document.getElementById('browse-button').addEventListener('click', () => showPicks(false));
+      showPicks(document.body.dataset.screen === 'picks');
     </script>
   </body>
 </html>

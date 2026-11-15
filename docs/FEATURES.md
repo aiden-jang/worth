@@ -8,6 +8,11 @@
   Want to try and Favorites retain actual calls and notes. Search recorded names,
   types, notes, brands and labels with an optional flat collection filter.
   This uses existing private records without an outside catalog or paid AI.
+- Use **Pick for me** in Choose for up to three matching Favorites or Want to try
+  entries. Each pick explains the saved call or plan and any literal search match.
+  **Show other picks** prefers different eligible records; **See all matches**
+  returns to the same filters. Meh, Not again, archived and removed records stay
+  out of picks while remaining available in their existing browse views.
 - Keep routine targets separate from actual results, group exercise aliases without
   renaming history, and log explicit named measurements with their original units.
 - Import up to 100 records from CSV with mapped columns, exact previews and explicit

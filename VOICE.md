@@ -32,6 +32,11 @@ illustrated saved-item slips retain their existing dry captions.
 Choose uses All saved, Want to try and Favorites. Browse choices opens it from
 Home. Describe the content as saved choices; do not label literal search results
 as predictive or AI recommendations. Mood descriptions come from recorded words.
+Pick for me draws existing Favorites and Want to try entries. Show other picks
+requests another draw; See all matches returns to the same browse filters. Why
+this pick states You marked this Favorite. or On your Want to try list. A search
+match says Matches “…” in your saved details. These describe saved evidence,
+without claiming an inferred mood, predicted enjoyment or an outside recommendation.
 
 Keep account access, workouts, dates, errors, help, privacy, sharing and destructive
 confirmations direct. Visibility belongs beside sharing/export/upload decisions,

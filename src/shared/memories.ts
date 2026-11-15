@@ -38,8 +38,22 @@ export const memoryFilter = z
     brand: z.string().trim().max(240).default(''),
     archived: z.enum(['0', '1']).default('0'),
     offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
+    pick: z.enum(['', 'all', 'again', 'try']).default(''),
+    exclude: z
+      .string()
+      .max(110)
+      .refine(
+        (value) => !value || z.array(z.string().uuid()).max(3).safeParse(value.split(',')).success,
+        'Choose up to three saved records.',
+      )
+      .default(''),
   })
-  .refine((value) => !value.from || !value.to || value.from <= value.to, 'End date must follow start date.');
+  .refine((value) => !value.from || !value.to || value.from <= value.to, 'End date must follow start date.')
+  .refine(
+    (value) => !value.pick || (value.mode === 'saved' && value.archived === '0' && value.offset === 0),
+    'Picks use current saved records.',
+  )
+  .refine((value) => !value.exclude || !!value.pick, 'Only picks can set aside earlier choices.');
 export type MemoryFilter = z.infer<typeof memoryFilter>;
 export interface MemoryRecord {
   id: string;
