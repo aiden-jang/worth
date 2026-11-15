@@ -6914,3 +6914,56 @@ test('Home progress excludes future and old workouts and never invents a compari
     expect(await (await call('/home-progress', owner)).json()).toEqual({ progress: null });
   }
 });
+
+test('personal picks sample current owned saved records and preserve scope across another draw', async () => {
+  const owner = 'pickchoices';
+  const books = await archiveCollection(owner, 'Books');
+  const places = await archiveCollection(owner, 'Places');
+  const foreign = await archiveCollection('foreignpickchoices', 'Private');
+  const favorites: Item[] = [];
+  for (let i = 0; i < 6; i++) {
+    favorites.push(
+      await archiveItem(owner, i < 3 ? books.id : places.id, `Choice ${i}`, {
+        decision: 'favorite',
+        note: 'For a quiet afternoon.',
+      }),
+    );
+  }
+  const plan = await archiveItem(owner, places.id, 'A future outing', { wantToTry: true, note: 'Quiet' });
+  await archiveItem(owner, books.id, 'Neutral plan', { decision: 'meh', wantToTry: true });
+  await archiveItem(owner, places.id, 'Negative plan', { decision: 'would_not_again', wantToTry: true });
+  const other = await archiveItem('foreignpickchoices', foreign.id, 'Private favorite', {
+    decision: 'favorite',
+  });
+  const read = async (query: string, user = owner) => {
+    const response = await call('/memories?mode=saved&' + query, user);
+    expect(response.status).toBe(200);
+    return response.json() as Promise<MemoryPage>;
+  };
+  const first = await read('pick=again&q=quiet');
+  expect(first.total).toBe(6);
+  expect(first.records).toHaveLength(3);
+  expect(first.nextOffset).toBeNull();
+  const ids = first.records.map((record) => record.id);
+  const second = await read('pick=again&q=quiet&exclude=' + ids.join(','));
+  expect(second.records).toHaveLength(3);
+  expect(second.records.every((record) => !ids.includes(record.id))).toBe(true);
+  expect(new Set([...ids, ...second.records.map((record) => record.id)])).toEqual(
+    new Set(favorites.map((item) => item.id)),
+  );
+  const scoped = await read('pick=again&list=' + books.id);
+  expect(scoped.total).toBe(3);
+  expect(scoped.records.every((record) => record.listId === books.id)).toBe(true);
+  expect((await read('pick=try')).records.map((record) => record.id)).toEqual([plan.id]);
+  expect((await read('pick=all')).total).toBe(7);
+  expect((await read('pick=all', 'foreignpickchoices')).records.map((record) => record.id)).toEqual([
+    other.id,
+  ]);
+  expect((await call(`/memories?mode=saved&pick=all&list=${books.id}`, 'foreignpickchoices')).status).toBe(
+    404,
+  );
+  await call(`/lists/${books.id}`, owner, 'PATCH', { archived: true });
+  expect((await read('pick=again')).total).toBe(3);
+  await call(`/items/${favorites[3].id}`, owner, 'DELETE');
+  expect((await read('pick=again')).total).toBe(2);
+});
