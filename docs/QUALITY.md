@@ -29,6 +29,8 @@ The existing browser shards also set `WORTH_CHOICES_QA` and retain the compact
 Add and Choose captures as `worth-choice-review-1` / `worth-choice-review-2`
 artifacts for three days, including successful runs. Inspect those desktop and
 phone images against the maintained Save and choose reference before release.
+The same artifacts retain `picks-*` captures for Pick for me, with synthetic
+Favorites and Want to try examples and their visible reasons.
 Captures use only synthetic records and never enter Git or the production bundle.
 
 The populated-account journeys use 25 lists, 360 saved names, 694 dated entries,
@@ -151,6 +153,11 @@ optional organization, retained collapsed details, source metadata and frozen re
 payloads. The collection's inline Quick save retains its separate name-only contract.
 Choose checks cover cross-category source links, distinct plans/opinions, literal
 search, filter recovery, empty accounts and pagination retry without lost results.
+Pick journeys cover explicit requests, reasons, another draw, source/view/search
+scope, small pools, retry, cancellation, late results, reflow and read-only behavior.
+The production SQL tests cover full-archive sampling, literal words and wildcards,
+owner/Unfiled scope, archived/removed records, excluded calls, bounded previous
+IDs, invalid combinations and the separation of visit reactions from overall calls.
 The in-process SQLite route checks also exercise type, brand and label searches,
 literal wildcard characters and owner/archive scope. Reader checks
 repeat Escape, Close and backdrop dismissal across query refreshes, ensuring the

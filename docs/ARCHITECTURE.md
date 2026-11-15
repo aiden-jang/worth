@@ -985,6 +985,22 @@ The page uses the shared `patterns` invalidation prefix so capture, edits and
 filing refresh its evidence. Only the static `choose` page category enters
 analytics; names, search words and record identifiers remain private.
 
+Explicit Pick for me requests use the same `/memories` endpoint with `pick=all`,
+`again` or `try`, saved mode, current sources and offset zero. Validation rejects
+visit/archive/pagination combinations and bounds `exclude` to three UUIDs. The
+existing owner-scoped CTE and escaped literal search define the complete pool.
+A D1 read batch counts that pool and selects at most three rows, ordering previous
+IDs after unshown rows before random sampling. Counts precede that preference,
+and picks have no pagination. Overall Favorites and explicit plans are eligible;
+Meh and Not again never are. No storage, inference service or dependency is added.
+
+The page keeps each draw under a distinct `patterns` query key and current filter
+scope. Draws use a static cache entry: explicit clicks and retries fetch picks;
+window focus, reconnect and unrelated archive invalidation do not reshuffle them.
+Eligibility is checked on each request. Filter changes detach and abort the draw, so late results cannot
+replace another view. Result focus and a return to browsing preserve keyboard
+access. Account binding still requires a page reload after an account change.
+
 `src/shared/exercise-history.ts` derives complete weighted volume and exact
 rep-count records from saved sets; units and missing values remain explicit.
 `src/shared/workout-summary.ts` reuses that history ordering and comparison for Home

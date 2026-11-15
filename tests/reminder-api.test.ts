@@ -151,3 +151,88 @@ test('choice search matches recorded types, brands and labels while preserving l
   expect((await read('mode=saved&q=missing%25')).total).toBe(0);
   expect((await read('mode=saved&q=%27%20OR%201%3D1')).total).toBe(0);
 });
+
+test('picks use explicit overall calls and plans, excluding neutral, negative, archived and visit-only evidence', async () => {
+  db.exec(`INSERT INTO active_items VALUES
+    ('neutral','a','alice','Neutral plan','',1,'Book','{}','meh',1),
+    ('negative','a','alice','Negative plan','',1,'Book','{}','would_not_again',1),
+    ('uncalled','a','alice','A name only','',1,'Book','{}',NULL,0)`);
+  const mixed = await read('mode=saved&pick=all');
+  expect(mixed.total).toBe(3);
+  expect(mixed.nextOffset).toBeNull();
+  expect(mixed.records.map((record) => record.id).sort()).toEqual(['favorite', 'unfiled', 'wanted']);
+  expect((await read('mode=saved&pick=again')).records.map((record) => record.id)).toEqual(['favorite']);
+  expect((await read('mode=saved&pick=try')).records.map((record) => record.id).sort()).toEqual([
+    'unfiled',
+    'wanted',
+  ]);
+  expect((await read('mode=saved&pick=all&q=Neutral')).total).toBe(0);
+  expect((await read('mode=saved&q=Neutral')).total).toBe(1);
+  db.prepare('UPDATE active_items SET decision=? WHERE id=?').run('would_not_again', 'favorite');
+  expect((await read('mode=saved&pick=again')).total).toBe(0);
+  expect((await read('mode=saved&pick=all', 'bob')).records.map((record) => record.id)).toEqual(['foreign']);
+});
+
+test('picks search recorded descriptions literally and return only the requested source', async () => {
+  db.prepare('UPDATE active_items SET note=?,type=?,context_json=? WHERE id=?').run(
+    '100% calm_ reading',
+    'Illustrated book',
+    JSON.stringify({ labels: ['rainy day'], fields: [{ name: 'Brand', value: 'Harbor' }] }),
+    'favorite',
+  );
+  for (const q of ['calm', 'illustrated', 'rainy', 'Harb', '%25', '%5F']) {
+    const result = await read('mode=saved&pick=all&q=' + q);
+    expect(result.records.map((record) => record.id)).toEqual(['favorite']);
+    expect(result.total).toBe(1);
+  }
+  expect((await read('mode=saved&pick=all&q=%27%20OR%201%3D1')).total).toBe(0);
+  expect((await read('mode=saved&pick=all&list=inbox')).records.map((record) => record.id)).toEqual([
+    'unfiled',
+  ]);
+  expect((await read('mode=saved&pick=again&list=inbox')).total).toBe(0);
+});
+
+test('picks reach older eligible records beyond the first page and prefer unshown matches on another draw', async () => {
+  db.exec('DELETE FROM inbox_entries');
+  const insert = db.prepare('INSERT INTO inbox_entries VALUES(?,?,?,?,?)');
+  const candidates: string[] = Array.from({ length: 6 }, () => crypto.randomUUID());
+  for (const [index, id] of candidates.entries()) {
+    insert.run(id, 'alice', JSON.stringify({ title: `Saved choice ${index}`, wantToTry: true }), 1, null);
+  }
+  for (let i = 0; i < 60; i++)
+    insert.run(crypto.randomUUID(), 'alice', JSON.stringify({ title: `New name ${i}` }), 1000 + i, null);
+  insert.run(crypto.randomUUID(), 'alice', JSON.stringify({ title: 'Removed plan', wantToTry: true }), 2, 1);
+  insert.run(crypto.randomUUID(), 'bob', JSON.stringify({ title: 'Private plan', wantToTry: true }), 2, null);
+  const before = db.prepare('SELECT * FROM inbox_entries ORDER BY id').all();
+  expect(
+    (await read('mode=saved&list=inbox')).records.every((record) => record.title.startsWith('New name')),
+  ).toBe(true);
+  const first = await read('mode=saved&pick=try&list=inbox');
+  expect(first.records).toHaveLength(3);
+  expect(first.total).toBe(6);
+  expect(first.nextOffset).toBeNull();
+  const shown = first.records.map((record) => record.id);
+  expect(shown.every((id) => candidates.includes(id))).toBe(true);
+  const next = await read('mode=saved&pick=try&list=inbox&exclude=' + shown.join(','));
+  expect(next.total).toBe(6);
+  expect(next.records).toHaveLength(3);
+  expect(next.records.every((record) => !shown.includes(record.id))).toBe(true);
+  expect(new Set([...shown, ...next.records.map((record) => record.id)])).toEqual(new Set(candidates));
+  expect(db.prepare('SELECT * FROM inbox_entries ORDER BY id').all()).toEqual(before);
+});
+
+test('pick filters reject visit inference, archived scopes, pagination and invalid exclusion lists', async () => {
+  const ids = Array.from({ length: 4 }, () => crypto.randomUUID()).join(',');
+  for (const query of [
+    'pick=all',
+    'mode=saved&pick=unknown',
+    'mode=saved&pick=all&archived=1',
+    'mode=saved&pick=all&offset=1',
+    'mode=saved&exclude=' + crypto.randomUUID(),
+    'mode=saved&pick=all&exclude=unknown',
+    'mode=saved&pick=all&exclude=' + ids,
+  ]) {
+    const response = await app.request('/memories?' + query, { headers: { 'X-Test-Owner': 'alice' } }, env);
+    expect(response.status, query).toBe(400);
+  }
+});

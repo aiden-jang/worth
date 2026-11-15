@@ -153,6 +153,41 @@
 .choice-more {
   margin-top: 24px;
 }
+.choice-pick-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.choice-pick-actions .button {
+  min-height: 44px;
+  white-space: normal;
+}
+.choice-pick-hint {
+  margin: -4px 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.choice-results-head h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.choice-pick-reason {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.choice-pick-reason strong {
+  color: var(--paper);
+  font-weight: 500;
+}
 @media (max-width: 1180px) {
   .choice-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
