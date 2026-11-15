@@ -77,6 +77,24 @@ The grid has three columns on wide desktop, two at 1180px and one on phones at
 implying semantic mood recognition. Keep Unfiled, pagination, source-reader links,
 empty/loading/error states and retry intact. No sample records enter production.
 
+Choose's header uses Pick for me in place of its duplicate Add action; shared
+Add remains in the rail and phone bar. The existing tabs also scope picks:
+All saved combines eligible Favorites and plans, Favorites picks a Favorite
+without a pending plan, and Want to try uses explicit plans. Exclude Meh, Not again,
+archived, merged and removed sources. Draw at most three records from the full
+matching archive, including Unfiled. Each card adds a ruled, 13px reason block
+with a plain Why this pick label, its saved call/plan and the literal search term
+when present. Preserve the original source link, note, photo and call.
+
+Show other picks prefers records outside the previous draw, reusing eligible
+records only when fewer than three alternatives remain. Show actual pool counts;
+disable another draw when all matches are shown. See all matches restores browsing
+with the same criteria. Changing a word, collection or view immediately leaves
+picks and cancels its request. Explicit draws and retries alone start picks;
+focus the result region on success and return to Pick for me when browsing resumes.
+Loading, retry and empty states never widen a scope or invent suggestions.
+The Save and choose reference's `?screen=picks` composition owns this extension.
+
 The item editor is a 720px single column: name, details and note lead; optional
 plan and a compact dark call capsule follow. This replaces its oversized cream
 rating card while preserving the save footer. Save item creates, Save changes
