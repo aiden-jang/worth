@@ -56,7 +56,17 @@ async function within(save: Locator, top: number, height: number) {
   await expect
     .poll(async () => {
       const box = await save.boundingBox();
-      return !!box && box.height >= 44 && box.y >= top && box.y + box.height <= top + height;
+      const dialog = await save.evaluate((button) => {
+        const bounds = button.closest('dialog')?.getBoundingClientRect();
+        return bounds ? { top: bounds.top, bottom: bounds.bottom } : null;
+      });
+      return (
+        !!box &&
+        !!dialog &&
+        box.height >= 44 &&
+        box.y >= Math.max(top, dialog.top) &&
+        box.y + box.height <= Math.min(top + height, dialog.bottom)
+      );
     })
     .toBe(true);
 }
@@ -83,7 +93,19 @@ test('Add keeps Save and the focused field clear in a short visible viewport wit
   const save = dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ });
   await dialog.getByLabel('Name', { exact: true }).fill('The little lotion');
   await capture(page, 'name-only', info.project.name);
-  if (info.project.name === 'desktop') await within(save, 0, 900);
+  if (info.project.name === 'desktop') {
+    await page.setViewportSize({ width: 1440, height: 665 });
+    await within(save, 0, 665);
+    if (process.env.WORTH_CHOICES_QA) {
+      await mkdir(process.env.WORTH_CHOICES_QA, { recursive: true });
+      await page.screenshot({
+        path: `${process.env.WORTH_CHOICES_QA}/add-short-desktop.png`,
+        animations: 'disabled',
+      });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await within(save, 0, 900);
+  }
   await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Brand or maker', { exact: true }).fill('Harbor');
   const note = dialog.getByRole('textbox', { name: /^Note/ });
