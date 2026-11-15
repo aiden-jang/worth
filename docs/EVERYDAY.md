@@ -14,24 +14,20 @@ adding fields or changing the capture, storage or sharing contracts.
 
 ## Save first
 
-Choose **Add item**, enter a name and choose **Quick save**. Outside an open active list,
-**Save in** starts at **Unfiled**. Inside a list it visibly selects that list.
-There is no hidden last-used destination. A recovered draft keeps its own visible
-destination. Unfiled is the existing Inbox store with a clearer primary UI label.
+Choose **Add item**, enter a name and choose **Save**. The optional call, Want to
+try, short note and photo are accessible immediately. **More details** opens
+organization, source context, type/product details and **Record a dated
+experience**. Outside an open active list, **Save in** starts at **Unfiled**;
+inside a list it selects that list. No collection or detail is required, and
+there is no hidden last-used destination. Creating a collection keeps the draft.
+Collapsing More details preserves entered values. Recovered details reopen.
+Activity capture retains its explicit date and uses the same single Save action.
 
-Choose **Save with details** for optional context, notes, calls, **Want to try**,
-experiences and photos. No call is selected for a fresh name. **Name only** returns
-to quick capture; Quick save ignores optional draft fields. Detailed recovered
-drafts open their fields visibly. **New collection** preserves the name while
-creating and selecting a destination. Want to try parks a draft call and restores
-it when reversed; a plan adds no experience. **Record a dated experience** is
-explicit, with its own date and reaction. Activity quick saves keep their date.
-Use **Save item** or **Save entry** when ready to save the details.
-The experience reaction is labeled **This time**. An Unfiled find can keep its
-date, thought and photo before organization.
-An Unfiled find holds one optional experience; repeated visits belong to a
-collection record. The overall call stays separate when editing an existing find.
-Saving a name or photo alone never creates a visit.
+Want to try parks a draft call and restores it when reversed; a plan creates no
+experience. Recording an experience is explicit and labels its reaction **This
+time**, separately from an existing record's overall call. Saving a name, note
+or photo alone does not create a visit. An Unfiled find can keep one optional
+experience and photo; repeat visits belong to a collection record.
 
 Paste link, Photo text and Barcode work inside Add item. A link suggests a name
 from its address and retains the visible source; a photo supplies reviewed text
@@ -156,6 +152,22 @@ the invitation. With an active workout, **Resume workout** gets priority.
 experiences, bulk selection and saved filter views. Each
 menu closes on outside focus/pointer or Escape. No advanced capability or saved
 configuration is deleted.
+
+## Choose
+
+Home's **Browse choices**, **Want to try** and **Favorites** links open a common
+Choose page. It searches saved names, notes, types, brands and labels across
+collections and Unfiled. The collection filter is optional and flat. The three
+views keep actual opinions and plans separate, including Meh, Not again and
+no-call in All saved. Original notes and photos remain visible on each card;
+opening it leads to the existing read-first record dialog.
+
+Search is literal recorded text, including a person's own words for a mood or
+occasion. It does not invent descriptions, predict a preference, or query an
+outside product catalog. Empty archives offer Add; unmatched filters can clear.
+Results page through the entire matching archive and retain existing cards after
+a failed next page. Clear search restores focus, and load-more focuses the first
+new source link. Existing Look back and search routes remain available.
 
 ## Look back
 

@@ -115,7 +115,7 @@ test('inline collection creation retains the item and call through a failed crea
   const saved = vi.fn();
   setup(<QuickEntry lists={[]} initialListId="inbox" onClose={() => {}} onSaved={saved} />);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Cold brew' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Meh' }));
   fireEvent.click(screen.getByRole('button', { name: 'New collection' }));
   fireEvent.change(screen.getByLabelText('Collection name'), { target: { value: 'Drinks' } });
@@ -126,8 +126,10 @@ test('inline collection creation retains the item and call through a failed crea
   await waitFor(() => expect(screen.getByLabelText('Save in')).toHaveValue(list.id));
   expect(create).toHaveBeenCalledTimes(2);
   expect(screen.getByRole('button', { name: 'Meh' })).toHaveAttribute('aria-pressed', 'true');
-  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ }));
   await waitFor(() => expect(saved).toHaveBeenCalled());
   expect(save).toHaveBeenCalledWith(
     list.id,

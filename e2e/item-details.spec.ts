@@ -17,7 +17,7 @@ test('optional product details recover drafts, preserve free purchases, and rema
   let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toBeHidden();
   await dialog.getByLabel('Name', { exact: true }).fill('Daily lotion');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Type', { exact: true }).fill('Moisturizer');
   await dialog.getByLabel('Brand or maker', { exact: true }).fill('Harbor');
   await expect(dialog.locator('datalist option[value="Harbor"]')).toHaveCount(1);
@@ -111,7 +111,7 @@ test('place capture keeps location first and a name-only capture creates no expe
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('The corner cafe');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await expect(dialog.getByLabel('Brand or maker', { exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel('Price paid', { exact: true })).toHaveCount(0);
   await dialog.getByLabel('Location', { exact: true }).fill('Brooklyn');

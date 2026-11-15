@@ -18,14 +18,20 @@ collection tools. All items, Want to try and Tried are visible collection views;
 More filters holds specialized choices. Customize collection contains optional
 setup. More from your archive reveals extra Home material. The signed-out example retains Keep it.
 
-Quick save stores a name alone; Save with details opens optional capture fields.
-Name only returns to quick capture. Save item creates a record and Save changes
-updates it. Activity capture retains its explicit date and uses Save entry in
-details mode. Record a dated experience is an explicit choice; This time labels
-its reaction separately from the overall call. Move to Trash names recoverable
-delete actions. A name-only find is complete. Never imply that missing details
-are homework. The compact editor says No call selected. when its optional call
-is empty; illustrated saved-item slips retain their existing dry captions.
+Global Add uses one Save action, with the optional call, Want to try, note and
+photo accessible immediately. More details reveals organization, product context
+and an explicit dated experience; Fewer details collapses them without discarding
+values. The collection's inline shortcut retains Quick save for a name alone and
+Save with details for its existing full editor. Save item creates a record there;
+Save changes updates it. This time labels an explicit experience reaction
+separately from the overall call. Move to Trash names recoverable deletion.
+A name-only find is complete. Never imply that missing details are homework.
+The compact editor says No call selected. when its optional call is empty;
+illustrated saved-item slips retain their existing dry captions.
+
+Choose uses All saved, Want to try and Favorites. Browse choices opens it from
+Home. Describe the content as saved choices; do not label literal search results
+as predictive or AI recommendations. Mood descriptions come from recorded words.
 
 Keep account access, workouts, dates, errors, help, privacy, sharing and destructive
 confirmations direct. Visibility belongs beside sharing/export/upload decisions,

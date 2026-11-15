@@ -29,6 +29,10 @@ Home keeps its existing recent-record limit and collection limit; phones show al
 available preview cards rather than hiding a third example card as this mock does.
 The directory retains its real item, rank and Favorite counts.
 
+Home now adds a quiet Browse choices / Want to try / Favorites row after search,
+opening the [Choose composition](../choose-and-save/README.md). These direct links
+extend the existing Home composition without replacing its recent records or shelf.
+
 Home search continues to search the full archive, rather than filtering only the
 mock’s recent examples. Its clear action returns focus to the field. The memory
 panel retains supporting records, photos, original notes, dates and retry states;

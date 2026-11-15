@@ -19,7 +19,7 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
         : `SELECT g.id,i.id AS itemId,g.list_id AS listId,l.name AS listName,COALESCE(i.title,NULLIF(g.title,''),'Untitled visit') AS title,g.note,g.happened_on AS date,CASE WHEN l.kind='collection' THEN 'visit' ELSE 'activity' END AS kind,json_extract(g.context_json,'$.location') AS location,json_extract(g.context_json,'$.order') AS "order",json_extract(g.context_json,'$.reaction') AS reaction,EXISTS(SELECT 1 FROM log_photos p WHERE p.log_id=g.id) AS hasPhoto,COALESCE(i.want_to_try,0) AS wantToTry,COALESCE(i.type,'') AS type,COALESCE(i.context_json,'{}') AS context_json,g.created_at AS sortTime FROM active_logs g JOIN active_lists l ON l.id=g.list_id AND l.owner_id=g.owner_id LEFT JOIN record_items original ON original.id=g.item_id AND original.owner_id=g.owner_id LEFT JOIN active_items i ON i.id=COALESCE(original.merged_into_id,original.id) AND i.owner_id=g.owner_id AND i.list_id=g.list_id WHERE g.owner_id=? AND (?='1' OR l.archived=0)
           UNION ALL SELECT e.id,NULL AS itemId,NULL AS listId,'Unfiled' AS listName,json_extract(e.payload_json,'$.title') AS title,COALESCE(json_extract(e.payload_json,'$.note'),'') AS note,json_extract(e.payload_json,'$.memory.happenedOn') AS date,'unfiled-visit' AS kind,json_extract(e.payload_json,'$.context.location') AS location,'' AS "order",json_extract(e.payload_json,'$.memory.reaction') AS reaction,EXISTS(SELECT 1 FROM inbox_photos p WHERE p.inbox_id=e.id AND p.owner_id=e.owner_id AND p.removed_at IS NULL AND p.data IS NOT NULL) AS hasPhoto,COALESCE(json_extract(e.payload_json,'$.wantToTry'),0) AS wantToTry,COALESCE(json_extract(e.payload_json,'$.type'),'') AS type,COALESCE(json_extract(e.payload_json,'$.context'),'{}') AS context_json,e.created_at AS sortTime FROM inbox_entries e WHERE e.owner_id=? AND e.trashed_at IS NULL AND json_extract(e.payload_json,'$.memory.happenedOn') IS NOT NULL`;
     const pattern = `%${f.q.replace(/[\\%_]/g, '\\$&')}%`;
-    const sql = `WITH memories AS (${source}) SELECT * FROM memories WHERE (?='' OR listId=? OR (?='inbox' AND kind IN ('unfiled','unfiled-visit'))) AND (?='' OR date>=?) AND (?='' OR date<=?) AND (?='' OR type=?) AND (?='' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value=?)) AND (?='' OR ${itemBrandSql('context_json')}=? COLLATE NOCASE) AND (?='' OR title LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\' OR "order" LIKE ? ESCAPE '\\') AND (?='' OR reaction=?) AND (?='' OR wantToTry=CAST(? AS INTEGER)) AND (?='' OR id=?) AND (?='' OR kind IN ('visit','unfiled-visit'))`;
+    const sql = `WITH memories AS (${source}) SELECT * FROM memories WHERE (?='' OR listId=? OR (?='inbox' AND kind IN ('unfiled','unfiled-visit'))) AND (?='' OR date>=?) AND (?='' OR date<=?) AND (?='' OR type=?) AND (?='' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value=?)) AND (?='' OR ${itemBrandSql('context_json')}=? COLLATE NOCASE) AND (?='' OR title LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\' OR "order" LIKE ? ESCAPE '\\' OR type LIKE ? ESCAPE '\\' OR ${itemBrandSql('context_json')} LIKE ? ESCAPE '\\' OR EXISTS(SELECT 1 FROM json_each(context_json,'$.labels') WHERE value LIKE ? ESCAPE '\\')) AND (?='' OR reaction=?) AND (?='' OR wantToTry=CAST(? AS INTEGER)) AND (?='' OR id=?) AND (?='' OR kind IN ('visit','unfiled-visit'))`;
     const args = [
       owner,
       f.archived,
@@ -38,6 +38,9 @@ export function registerMemoryRoutes(api: Hono<AppEnv>) {
       f.brand,
       f.brand,
       f.q,
+      pattern,
+      pattern,
+      pattern,
       pattern,
       pattern,
       pattern,

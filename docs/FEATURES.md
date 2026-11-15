@@ -1,6 +1,13 @@
 # Worth capabilities
 
-- Capture one name or a batch; add context later. Drafts can recover on the same device.
+- Capture one name or a batch; add context later. Global Add has one Save action,
+  with optional calls, Want to try, note and photo accessible immediately.
+  Organization and product context disclose under More details. Drafts recover
+  on the same device without losing entered values or retry identities.
+- Browse saved choices across collections and Unfiled from Home. All saved,
+  Want to try and Favorites retain actual calls and notes. Search recorded names,
+  types, notes, brands and labels with an optional flat collection filter.
+  This uses existing private records without an outside catalog or paid AI.
 - Keep routine targets separate from actual results, group exercise aliases without
   renaming history, and log explicit named measurements with their original units.
 - Import up to 100 records from CSV with mapped columns, exact previews and explicit

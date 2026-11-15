@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { Blob as NodeBlob } from 'node:buffer';
 import { coverCollage, fitCollageFrame, type CollageFrame } from '../src/shared/cover-collage';
 const frame: CollageFrame = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -47,6 +48,8 @@ import { privateCollageImage } from '../src/shared/collage-export';
 const path = '/api/items/22222222-2222-4222-8222-222222222222/photos/33333333-3333-4333-8333-333333333333';
 afterEach(() => vi.unstubAllGlobals());
 test('collage image reads bind the account and refuse external or unbounded image sources', async () => {
+  // Node's fetch needs a byte-readable Blob; jsdom's Blob lacks arrayBuffer.
+  vi.stubGlobal('Blob', NodeBlob);
   const bytes = Uint8Array.from(
     atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pJ8AAAAASUVORK5CYII='),
     (c) => c.charCodeAt(0),

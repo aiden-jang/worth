@@ -1,3 +1,19 @@
+# Worth product constraints
+
+- Worth must operate at $0. Do not introduce paid APIs, paid model inference,
+  required subscriptions or paid infrastructure. Check free-tier quotas and
+  usage limits before adding a dependency; redesign or defer features that
+  cannot meet the $0 constraint. Prefer on-device processing and existing data.
+- Worth supports products, places, media, experiences and activity. Sake and
+  drinks are examples, not the app's domain or a required taxonomy. Capture,
+  recall and personal suggestions must work across categories.
+- Keep saving lightweight: organization and descriptive details are optional.
+  Do not require nested categories or category-specific questionnaires.
+- The user permits a complete redesign in service of these goals. Existing
+  screens, navigation and feature organization may change. Update the design
+  documents, contract and affected references together when adopting a redesign;
+  preserve private data, accessibility and clear save behavior.
+
 # Worth UI work
 
 Before changing a primary screen, read `DESIGN.md`, `art/ui-mocks/BUILD-CONTRACT.md`

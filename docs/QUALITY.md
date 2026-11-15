@@ -25,6 +25,12 @@ Browser APIs are intercepted with synthetic archives; offline tests additionally
 exercise the built Worker and service worker. These fixtures do not enter the
 production bundle and do not establish that production authentication works.
 
+The existing browser shards also set `WORTH_CHOICES_QA` and retain the compact
+Add and Choose captures as `worth-choice-review-1` / `worth-choice-review-2`
+artifacts for three days, including successful runs. Inspect those desktop and
+phone images against the maintained Save and choose reference before release.
+Captures use only synthetic records and never enter Git or the production bundle.
+
 The populated-account journeys use 25 lists, 360 saved names, 694 dated entries,
 97 workouts and 12 Unfiled finds. They cover name-only capture, older search
 pages and retry, workout draft recovery, individually reachable chart points,
@@ -140,8 +146,13 @@ an explicit separate-copy choice and collection creation followed by filing.
 
 Collection checks verify one visible saved-item call filter, search/view-scoped
 counts, Clear all and compatibility with older Favorites presets. Capture checks
-verify fresh name-only mode, explicit details mode, hidden fields disabled for
-quick saves, source metadata retention and frozen retry payloads. Reader checks
+verify the single global Save action, immediately accessible opinions/notes/photos,
+optional organization, retained collapsed details, source metadata and frozen retry
+payloads. The collection's inline Quick save retains its separate name-only contract.
+Choose checks cover cross-category source links, distinct plans/opinions, literal
+search, filter recovery, empty accounts and pagination retry without lost results.
+The in-process SQLite route checks also exercise type, brand and label searches,
+literal wildcard characters and owner/archive scope. Reader checks
 repeat Escape, Close and backdrop dismissal across query refreshes, ensuring the
 Unfiled URL clears and the reader stays closed. Shared feedback checks cover
 message replacement, Undo cleanup, six-second expiry and independent hover/focus

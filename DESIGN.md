@@ -4,6 +4,24 @@ Worth is a private place to remember what someone tried, did and liked. Capture
 should feel complete with a name alone. Notes, photos, dates, types, calls,
 rankings and workout measurements are optional context.
 
+## Product constraints
+
+Worth must operate at $0, including hosting, APIs and any model inference.
+Features must fit within free usage limits without requiring a paid subscription
+or metered paid service. Prefer on-device processing and the person's saved
+records; personal suggestions must not depend on paid AI calls.
+
+The product works across products, places, media, experiences and activity.
+Sake and drinks illustrate the choice-making use case; they do not define the
+app's categories or data requirements. Someone should be able to save a find,
+recall their own opinion and choose what to try or choose again across domains.
+Organization and descriptions stay optional, without required subcategory trees
+or specialized questionnaires.
+
+A complete redesign is permitted to serve this direction. The compositions
+below describe the current implementation; update them and their contract when
+adopting a replacement rather than treating the existing structure as permanent.
+
 ## Current references
 
 The [reference index](art/ui-mocks/README.md) identifies the maintained compositions.
@@ -41,19 +59,30 @@ Search invitations and no-match states use a small paper-and-magnifier illustrat
 empty Insights uses an archive folder. These static decorative vectors extend the
 existing quiet-state composition and palette without implying a saved photo or call.
 
-Add item opens a name-first composer with Quick save and Save with details.
-Quick save stores the name alone for a collection or Unfiled, with no call, plan,
-photo or experience. Save with details reveals the optional fields; Name only
-returns to quick capture, keeping the unfinished fields until an explicit save.
-Restored drafts with details open those fields visibly. Activity capture retains
-its explicit date in either mode. These two actions deliberately replace the
-reference's immediately visible rating controls, following the usability review.
-Want to try parks an unsaved call; reversing it restores that draft call. New
-collection creates and selects a destination without discarding the item draft.
-Use the current active list when open; otherwise use Unfiled. Dated experiences,
-reactions and private photos remain explicit. Applying a source suggestion opens
-details so its source and metadata are visible and retained. Successful capture
-restores focus; interrupted saves retain the exact request and account-scoped draft.
+Add item opens one compact composer with a single Save action. Name is required;
+the overall call, Want to try, short note and photo are immediately accessible
+and optional. A blank call remains distinct from Meh. More details discloses the
+visible destination, inline collection creation, type/product context and an
+explicit dated experience. Use the current active list when open; otherwise use
+Unfiled. Collapsing More details never drops entered information. A restored
+detailed draft opens its details visibly. Activity retains its explicit date.
+Want to try parks an unsaved call; reversing it restores that draft call. A plan
+creates no visit. A dated experience labels its reaction This time and never
+changes an existing record's overall call. Source suggestions expose their source
+and details for review. Successful saves restore focus; interrupted saves retain
+the exact payload, photo and account-scoped retry identity.
+
+Home links directly to Choose, Want to try and Favorites. Choose browses actual
+saved records across collections and Unfiled, using one optional flat collection
+filter and All saved / Want to try / Favorites tabs. Search matches names, notes,
+types, recorded brands and labels; people can search their own descriptive words.
+Cards show the actual call, plan, note and optional photo, with a link to the
+read-first saved record. Paginated results retain existing cards after a failed
+next page. Empty accounts receive a capture invitation, not invented suggestions.
+This first choice flow deliberately browses personal records; it does not claim
+predictive recommendations or require an external catalog or paid inference.
+The [Save and choose reference](art/ui-mocks/choose-and-save/README.md) owns these
+compositions; the existing Home reference gains a quiet row of direct choices.
 
 Paste link, Photo text and Barcode sit below Name inside Add item. Pasting a full
 http/https address into an empty or selected Name suggests a name from its path
@@ -156,7 +185,7 @@ Private uploaded covers take precedence over optional built-in artwork. Automati
 art uses exact starter-name matching or a monogram; explicit saved object/palette
 choices remain available. Artwork never implies a call, a rank or a memory.
 
-Optional capture fields sit under Save with details; editors group item details
+Optional product context sits under More details in Add; editors group item details
 in their own disclosure. Product starters offer brand,
 variant, size and price/currency; Places offers location. Other collections can
 explicitly add product details. Name-only capture stays complete. Brand and size

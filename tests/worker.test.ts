@@ -6284,6 +6284,13 @@ test('memory recall uses actual dates, literal search, pagination, archive scope
   expect((await read('q=Oat')).total).toBe(1);
   expect((await read('from=2026-01-01')).total).toBe(0);
   expect((await read('mode=saved&type=Coffee')).total).toBe(1);
+  await call(`/items/${first.item.id}`, owner, 'PATCH', {
+    context: { labels: ['rainy day'], fields: [{ name: 'Brand', value: 'Harbor' }] },
+  });
+  for (const query of ['Coff', 'Harb', 'rainy']) {
+    expect((await read(`mode=saved&q=${query}`)).total).toBe(1);
+    expect((await read(`mode=saved&q=${query}`, 'foreignmemory')).total).toBe(0);
+  }
   expect((await read('call=favorite')).total).toBe(1);
   expect((await read('call=meh')).total).toBe(0);
   expect((await read('mode=saved&call=favorite')).total).toBe(0);

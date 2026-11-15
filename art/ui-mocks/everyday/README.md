@@ -10,17 +10,18 @@ supersedes the earlier collections directory composition.
 The [October 30 app pass](../app-polish/README.md) supersedes shared heading,
 control and compact Home-card styling while preserving these interactions.
 
-| Flow           | Desktop                                       | Phone                                         |
-| -------------- | --------------------------------------------- | --------------------------------------------- |
-| Home           | [Reference](index.html?screen=home)           | [Reference](index.html?screen=home)           |
-| Add            | [Reference](add-desktop.png)                  | [Reference](add-phone.png)                    |
-| Unfiled memory | [Reference](index.html?screen=unfiled-memory) | [Reference](index.html?screen=unfiled-memory) |
-| Collection     | [Reference](index.html?screen=collection)     | [Reference](index.html?screen=collection)     |
-| Gym            | [Reference](index.html?screen=gym)            | [Reference](index.html?screen=gym)            |
+| Flow           | Desktop                                               | Phone                                                 |
+| -------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| Home           | [Reference](index.html?screen=home)                   | [Reference](index.html?screen=home)                   |
+| Add            | [Reference](../choose-and-save/index.html?screen=add) | [Reference](../choose-and-save/index.html?screen=add) |
+| Unfiled memory | [Reference](../choose-and-save/index.html?screen=add) | [Reference](../choose-and-save/index.html?screen=add) |
+| Collection     | [Reference](index.html?screen=collection)             | [Reference](index.html?screen=collection)             |
+| Gym            | [Reference](index.html?screen=gym)                    | [Reference](index.html?screen=gym)                    |
 
-The editable [HTML](index.html) selects a screen with `?screen=home`, `add`,
-`unfiled-memory`, `collection` or `gym`. The Unfiled-memory variant was authored
-and inspected before adding the optional details; the default Add remains name-only. Fixtures are explicitly synthetic and do not write data.
+The editable [HTML](index.html) selects `?screen=home`, `collection` or `gym`.
+Legacy Add and Unfiled-memory links open the current
+[Save and choose reference](../choose-and-save/README.md), which supersedes their
+older compositions. Fixtures are synthetic and do not write data.
 Desktop is 1440 × 900 and phone is 390 × 780 with natural page scrolling. A fixed
 phone navigation bar appears at the viewport edge in full-page captures; the
 running app includes content clearance and device safe areas.

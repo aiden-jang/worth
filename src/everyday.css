@@ -1362,11 +1362,11 @@
   border-radius: 16px;
   background: var(--panel);
 }
-.quick-entry-details .draft-photo {
+.quick-entry-form .draft-photo {
   border-top: 1px solid var(--line);
   margin: 14px 0;
 }
-.quick-entry-details .draft-photo img {
+.quick-entry-form .draft-photo img {
   max-height: 220px;
   object-fit: contain;
 }
@@ -1833,6 +1833,43 @@
 .quick-entry-call {
   display: grid;
   gap: 10px;
+}
+.quick-entry-organization {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.quick-entry-organization > span {
+  overflow-wrap: anywhere;
+}
+.quick-entry-more {
+  min-height: 44px;
+  padding: 8px 0 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+}
+.quick-entry-form > fieldset > .draft-photo {
+  margin: 0;
+}
+.quick-entry-form .draft-photo > summary {
+  min-height: 44px;
+}
+.quick-entry-dialog .dialog-save-footer {
+  display: grid;
+  position: sticky;
+  bottom: -26px;
+  padding-block: 12px;
+  margin-top: 4px;
+  background: var(--ink);
+  border-top: 1px solid var(--line);
+  z-index: 3;
 }
 .quick-entry-call .quick-entry-label,
 .quick-entry-call .quick-entry-helper {

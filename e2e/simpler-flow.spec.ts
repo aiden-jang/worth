@@ -10,8 +10,8 @@ test('create a collection while adding an item and save its call in the same flo
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('The little ramen place');
-  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toHaveCount(0);
-  await add.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toBeVisible();
+  await add.getByRole('button', { name: 'More details', exact: true }).click();
   await add.getByRole('button', { name: 'Favorite', exact: true }).click();
   await expect(add.locator('.quick-entry-details')).toBeVisible();
   await add.getByRole('button', { name: 'New collection', exact: true }).click();
@@ -369,6 +369,7 @@ test('Home mixes reminders while a save refresh keeps the current record', async
   await expect(page.getByRole('region', { name: 'Memory shelf', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
+  await add.getByRole('button', { name: 'More details', exact: true }).click();
   await add.getByLabel('Save in').selectOption(list.id);
   await add.getByLabel('Name', { exact: true }).fill('A new name');
   await add.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();

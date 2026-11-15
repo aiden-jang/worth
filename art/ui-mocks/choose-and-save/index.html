@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worth — save and choose reference</title>
+  <style>
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2');
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('../../../node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2');
+      font-weight: 500;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #181915;
+      color: #f0ecdf;
+      font:
+        15px/1.6 'DM Sans',
+        sans-serif;
+    }
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+    button {
+      cursor: pointer;
+    }
+    aside {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 192px;
+      padding: 28px 20px;
+      background: #12130f;
+      border-right: 1px solid #38392f;
+    }
+    aside strong {
+      display: block;
+      font-size: 40px;
+      letter-spacing: -2px;
+    }
+    aside p {
+      padding: 12px;
+      margin: 12px 0;
+      color: #aaa99b;
+    }
+    aside .active {
+      background: #292a23;
+      border-radius: 12px;
+      color: #f0ecdf;
+    }
+    main {
+      margin-left: 192px;
+      padding: 40px 36px 100px;
+    }
+    h1 {
+      font-size: 48px;
+      line-height: 1.1;
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    p {
+      margin: 0;
+    }
+    .muted,
+    small,
+    label span {
+      color: #aaa99b;
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 16px;
+      margin: 28px 0 20px;
+    }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: #181915;
+      border: 1px solid #737566;
+      border-radius: 12px;
+      color: #f0ecdf;
+      padding: 12px;
+      min-height: 46px;
+    }
+    input:focus {
+      outline: 2px solid #e8dc9d;
+      outline-offset: 3px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    button {
+      min-height: 44px;
+      padding: 10px 16px;
+      border: 1px solid #38392f;
+      border-radius: 12px;
+      color: #f0ecdf;
+      background: transparent;
+    }
+    button.selected,
+    .save {
+      background: #e8dc9d;
+      color: #181915;
+      border-color: #e8dc9d;
+    }
+    .count {
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    article {
+      border: 1px solid #38392f;
+      border-radius: 22px;
+      padding: 22px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      min-width: 0;
+    }
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 8px;
+      background: #292a23;
+      padding: 4px 8px;
+      font-size: 13px;
+    }
+    .badge.favorite {
+      color: #e8dc9d;
+    }
+    .badge.meh {
+      color: #d4dac3;
+    }
+    .badge.no {
+      color: #e3c2b5;
+    }
+    .open {
+      color: #e8dc9d;
+      margin-top: 10px;
+    }
+    footer {
+      margin-top: 28px;
+      color: #aaa99b;
+      font-size: 12px;
+    }
+    .shade {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0009;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .sheet {
+      width: 480px;
+      max-width: 100%;
+      max-height: calc(100dvh - 24px);
+      overflow: auto;
+      padding: 26px;
+      background: #181915;
+      border: 1px solid #737566;
+      border-radius: 22px;
+    }
+    .sheet header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .sheet header h2 {
+      font-size: 30px;
+    }
+    .sheet label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .sheet .fields {
+      display: grid;
+      gap: 16px;
+    }
+    .calls {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid #38392f;
+      border-radius: 12px;
+      background: #20211c;
+    }
+    .calls button {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 13px;
+    }
+    .plan {
+      display: flex !important;
+      align-items: center;
+      min-height: 44px;
+      gap: 10px !important;
+    }
+    .plan input {
+      width: 20px;
+      min-height: 20px;
+      accent-color: #e8dc9d;
+    }
+    .optional-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .optional-row button {
+      padding: 8px;
+      border: 0;
+    }
+    .save-footer {
+      position: sticky;
+      bottom: -26px;
+      background: #181915;
+      margin-top: 16px;
+      padding: 12px 0;
+      border-top: 1px solid #38392f;
+    }
+    .save {
+      width: 100%;
+      min-height: 48px;
+    }
+    body[data-screen='add'] .shade {
+      display: flex;
+    }
+    @media (max-width: 960px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 680px) {
+      aside {
+        position: static;
+        width: auto;
+        padding: 8px 20px;
+        border-bottom: 1px solid #38392f;
+      }
+      aside strong {
+        font-size: 30px;
+      }
+      aside p {
+        display: none;
+      }
+      main {
+        margin: 0;
+        padding: 24px 20px 100px;
+      }
+      h1 {
+        font-size: 36px;
+      }
+      .filters,
+      .cards {
+        grid-template-columns: 1fr;
+      }
+      .filters {
+        gap: 12px;
+        margin-top: 24px;
+      }
+      .sheet {
+        padding: 22px;
+      }
+      .save-footer {
+        bottom: -22px;
+      }
+    }
+  </style>
+  <body>
+    <aside>
+      <strong>worth</strong>
+      <p class="active">Home</p>
+      <p>Collections</p>
+      <p>Look back</p>
+    </aside>
+    <main>
+      <h1>Find your next pick.</h1>
+      <p class="muted">What you liked. What you had in mind.</p>
+      <div class="filters">
+        <input
+          aria-label="Search your saved choices"
+          placeholder="A name, a note, what you're in the mood for…"
+        /><select aria-label="Collection">
+          <option>All collections</option>
+          <option>Books</option>
+          <option>Places</option>
+          <option>Skincare</option>
+        </select>
+      </div>
+      <p class="muted">Search your own words, like “quiet,” “light” or “for a rainy day.”</p>
+      <div class="tabs">
+        <button class="selected">All saved</button><button>Want to try</button><button>Favorites</button>
+      </div>
+      <p class="count muted">3 saved choices</p>
+      <div class="cards">
+        <article>
+          <small>Books</small>
+          <h2>The illustrated atlas</h2>
+          <span class="badge favorite">Favorite</span>
+          <p>Something light for a quiet afternoon.</p>
+          <p class="open">Open item →</p>
+        </article>
+        <article>
+          <small>Places</small>
+          <h2>The corner bookshop</h2>
+          <span class="badge">Want to try</span>
+          <p>Saved for a rainy day.</p>
+          <p class="open">Open item →</p>
+        </article>
+        <article>
+          <small>Skincare</small>
+          <h2>Everyday moisturizer</h2>
+          <span class="badge no">Not again</span>
+          <p>A little too heavy for me.</p>
+          <p class="open">Open item →</p>
+        </article>
+      </div>
+      <footer>Design reference. Synthetic examples only; nothing is saved.</footer>
+    </main>
+    <div class="shade">
+      <section class="sheet" role="dialog" aria-label="Add item">
+        <header>
+          <h2>Add item</h2>
+          <button aria-label="Close Add">×</button>
+        </header>
+        <div class="fields">
+          <label>Name<input value="The illustrated atlas" /></label>
+          <div>
+            <label>Your call <span>optional</span></label>
+            <div class="calls">
+              <button class="selected">Favorite</button><button>Meh</button><button>Not again</button>
+            </div>
+          </div>
+          <label class="plan"><input type="checkbox" />Want to try</label>
+          <label
+            >Note <span>optional</span
+            ><textarea rows="2" placeholder="Anything worth remembering?">
+Something light for a quiet afternoon.</textarea>
+          </label>
+          <details>
+            <summary>Photo <small>optional</small></summary>
+            <button>Choose photo</button><button>Take photo</button>
+          </details>
+          <div class="optional-row"><small>Saving to Unfiled</small><button>More details</button></div>
+        </div>
+        <div class="save-footer"><button class="save">Save</button></div>
+      </section>
+    </div>
+    <script>
+      document.body.dataset.screen = new URLSearchParams(location.search).get('screen') || 'choose';
+    </script>
+  </body>
+</html>

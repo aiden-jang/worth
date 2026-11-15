@@ -104,29 +104,30 @@ function setup(children: ReactNode, path = '/') {
   };
 }
 
-test('global capture starts name-only and explicitly returning to quick save omits details', async () => {
+test('compact capture saves visible opinions and retains entered details when collapsed', async () => {
   const create = vi.spyOn(api, 'createInbox').mockImplementation(async (entry) => ({
     entry: { ...entry, id: '22222222-2222-4222-8222-222222222222', revision: 0, createdAt: 1, updatedAt: 1 },
   }));
   setup(<QuickEntry lists={[list]} initialListId="inbox" onClose={() => {}} onSaved={() => {}} />);
-  expect(screen.queryByRole('group', { name: 'Overall call' })).not.toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Overall call' })).toBeVisible();
+  expect(screen.getByLabelText('Type')).not.toBeVisible();
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Future tea' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Favorite' }));
-  fireEvent.change(screen.getByLabelText(/Note/), { target: { value: 'Optional draft note' } });
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Record a dated experience' }));
-  fireEvent.change(screen.getByLabelText('When'), { target: { value: '' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Name only' }));
-  expect(screen.getByLabelText('When')).toBeDisabled();
-  expect(screen.queryByRole('group', { name: 'This time' })).not.toBeInTheDocument();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Quick save' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Quick save' }));
+  fireEvent.change(screen.getByLabelText(/Note/), { target: { value: 'Light and fruity' } });
+  fireEvent.click(screen.getByRole('button', { name: 'More details' }));
+  fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'Green tea' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Fewer details' }));
+  expect(screen.getByLabelText('Type')).not.toBeVisible();
+  expect(screen.getByRole('group', { name: 'Overall call' })).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() =>
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Future tea',
-        note: '',
-        decision: null,
+        type: 'Green tea',
+        note: 'Light and fruity',
+        decision: 'favorite',
         wantToTry: false,
         memory: null,
       }),

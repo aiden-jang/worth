@@ -74,6 +74,9 @@ const ListPage = lazy(() => import('./pages/ListPage').then((module) => ({ defau
 const SearchPage = lazy(() =>
   import('./pages/SearchPage').then((module) => ({ default: module.SearchPage })),
 );
+const ChoosePage = lazy(() =>
+  import('./pages/ChoosePage').then((module) => ({ default: module.ChoosePage })),
+);
 const ShowPage = lazy(() => import('./pages/ShowPage').then((module) => ({ default: module.ShowPage })));
 const PublicSharePage = lazy(() =>
   import('./pages/PublicSharePage').then((module) => ({ default: module.PublicSharePage })),
@@ -180,6 +183,7 @@ function PrivateApp() {
           <Route path="/lists/:listId" element={<ListPage />} />
           <Route path="/lists/:listId/show" element={<ShowPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/choose" element={<ChoosePage />} />
           <Route path="/patterns" element={<PatternsPage />} />
           <Route path="/patterns/remember" element={<MemoryPage />} />
           <Route path="/patterns/boards" element={<BoardsPage />} />

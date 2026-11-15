@@ -197,7 +197,7 @@ test('collection experiences preserve overall calls and Undo reverses only the n
   const dialog = await openAdd(page);
   await expect(dialog.getByLabel('Save in')).toHaveValue(list.id);
   await dialog.getByLabel('Name', { exact: true }).fill('Ramen by the station');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Record a dated experience').check();
   await expect(dialog.getByLabel('When', { exact: true })).toHaveValue(today());
   await dialog.getByLabel('When', { exact: true }).fill('2025-04-12');
@@ -212,7 +212,7 @@ test('collection experiences preserve overall calls and Undo reverses only the n
   const savedId = archive.items.at(-1)!.id;
   const again = await openAdd(page);
   await again.getByLabel('Name', { exact: true }).fill('Ramen by the station');
-  await again.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await again.getByRole('button', { name: 'More details', exact: true }).click();
   await again.getByLabel('Record a dated experience').check();
   await again.getByRole('button', { name: 'Use saved Ramen by the station', exact: false }).click();
   await again.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
@@ -228,7 +228,7 @@ test('collection experiences preserve overall calls and Undo reverses only the n
   expect(archive.logs).toHaveLength(1);
   const newName = await openAdd(page);
   await newName.getByLabel('Name', { exact: true }).fill('Another noodle shop');
-  await newName.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await newName.getByRole('button', { name: 'More details', exact: true }).click();
   await newName.getByLabel('Record a dated experience').check();
   await newName.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();
   await expect(newName).toHaveCount(0);

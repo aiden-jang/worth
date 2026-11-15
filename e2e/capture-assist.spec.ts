@@ -35,7 +35,7 @@ test('Add accepts a link and photo text inside the same draft without a detour',
 }, info) => {
   await page.goto('/');
   const add = await openAdd(page);
-  await add.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await add.getByRole('button', { name: 'More details', exact: true }).click();
   await add.getByRole('button', { name: 'Meh', exact: true }).click();
   await add.getByRole('button', { name: 'Paste link', exact: true }).click();
   await add.getByLabel('Link', { exact: true }).fill('https://example.test/corner-ramen');
@@ -65,6 +65,7 @@ test('photo reading runs in the Add dialog and keeps its photo off the saved ite
   test.setTimeout(90_000);
   await page.goto('/');
   const add = await openAdd(page);
+  await add.getByRole('button', { name: 'More details', exact: true }).click();
   await add.getByRole('button', { name: 'Photo text', exact: true }).click();
   const encoded = await page.evaluate(() => {
     const canvas = document.createElement('canvas');
@@ -108,6 +109,7 @@ test('an ISBN only leaves the device after Look up and its reviewed details can 
   });
   await page.goto('/');
   const add = await openAdd(page);
+  await add.getByRole('button', { name: 'More details', exact: true }).click();
   await add.getByRole('button', { name: 'Barcode', exact: true }).click();
   await add.getByLabel('Barcode or ISBN', { exact: true }).fill('9780140328721');
   expect(lookups).toEqual([]);
