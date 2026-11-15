@@ -14,6 +14,7 @@ import { BlankSlips } from '../components/BlankSlips';
 import { MemoryShelf } from '../components/MemoryShelf';
 import { HomeSearch } from '../components/HomeSearch';
 import { HomeReminders } from '../components/HomeReminders';
+import '../choose.css';
 
 export function ArchivePage() {
   usePageTitle('Home');
@@ -77,6 +78,13 @@ export function ArchivePage() {
         </div>
       </header>
       <HomeSearch />
+      <nav className="home-choice-shortcuts" aria-label="Browse saved choices">
+        <Link to="/choose">
+          Browse choices <ArrowRight size={16} />
+        </Link>
+        <Link to="/choose?view=want">Want to try</Link>
+        <Link to="/choose?view=favorite">Favorites</Link>
+      </nav>
       {hasMemories && <HomeReminders />}
       <div className="home-columns">
         <section aria-labelledby="home-recent-heading" className="home-recent">

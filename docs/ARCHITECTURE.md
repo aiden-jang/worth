@@ -976,6 +976,15 @@ collection, collection/type or collection/label groups, exclude unreviewed rows 
 and provide filters to all supporting records. Repeat-visit counts remain
 independent of enjoyment. Results are not sent to traffic analytics or external AI.
 
+`ChoosePage` reuses the saved-record mode of that endpoint across collections and
+Unfiled. All saved, Want to try and Favorites translate to existing filters; no
+new storage or external recommendation service is introduced. Literal search
+also covers recorded type, brand and label text using bound, escaped patterns.
+Notes and actual calls remain attached to their original read-first record links.
+The page uses the shared `patterns` invalidation prefix so capture, edits and
+filing refresh its evidence. Only the static `choose` page category enters
+analytics; names, search words and record identifiers remain private.
+
 `src/shared/exercise-history.ts` derives complete weighted volume and exact
 rep-count records from saved sets; units and missing values remain explicit.
 `src/shared/workout-summary.ts` reuses that history ordering and comparison for Home

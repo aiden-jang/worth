@@ -113,3 +113,41 @@ test('exact reminder refreshes do not switch to another item or another account'
   const invalid = await app.request('/memories?want=2', undefined, env);
   expect(invalid.status).toBe(400);
 });
+
+test('choice search matches recorded types, brands and labels while preserving literal text and ownership', async () => {
+  const context = JSON.stringify({
+    labels: ['rainy day'],
+    fields: [{ name: 'Brand', value: 'Harbor' }],
+  });
+  db.prepare('UPDATE active_items SET type=?,context_json=?,note=?').run(
+    'Illustrated book',
+    context,
+    '100% calm_ reading',
+  );
+  for (const word of ['illustrated', 'Harb', 'rainy']) {
+    const result = await read(`mode=saved&q=${word}`);
+    expect(result.records.map((record) => record.id).sort()).toEqual(['favorite', 'wanted']);
+    expect(result.records.find((record) => record.id === 'favorite')?.reaction).toBe('favorite');
+    expect((await read(`mode=saved&q=${word}`, 'bob')).records.map((record) => record.id)).toEqual([
+      'foreign',
+    ]);
+  }
+  db.prepare('UPDATE inbox_entries SET payload_json=? WHERE id=?').run(
+    JSON.stringify({
+      title: 'Daily moisturizer',
+      type: 'Skincare',
+      note: 'Light',
+      wantToTry: true,
+      context: { labels: ['unscented'] },
+    }),
+    'unfiled',
+  );
+  expect((await read('mode=saved&q=unscented&want=1&list=inbox')).records.map((record) => record.id)).toEqual(
+    ['unfiled'],
+  );
+  expect((await read('mode=saved&q=skin')).records.map((record) => record.id)).toEqual(['unfiled']);
+  expect((await read('mode=saved&q=%25')).total).toBe(2);
+  expect((await read('mode=saved&q=%5F')).total).toBe(2);
+  expect((await read('mode=saved&q=missing%25')).total).toBe(0);
+  expect((await read('mode=saved&q=%27%20OR%201%3D1')).total).toBe(0);
+});

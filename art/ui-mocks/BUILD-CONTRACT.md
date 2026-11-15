@@ -54,20 +54,29 @@ Home, Collections and Look back are primary. Search, Unfiled and account navigat
 remain accessible utilities. Phones keep primary links and Add in a safe-area
 bottom bar. Content, status panels and dialogs must remain usable above it.
 
-Add opens a name-first native composer with an explicit destination: current
-active list when open, otherwise Unfiled. Do not silently use the previous list.
-A name is sufficient. Fresh Add item shows Quick save and Save with details, with
-optional fields hidden until requested. Quick save keeps only the name for a
-collection or Unfiled; no old optional draft rating, photo or experience is saved.
-Save with details reveals context, note, optional plan/call, explicit dated
-experience and photo. Name only returns to quick capture; a detailed recovered
-draft opens visibly. Activity quick capture still requires its explicit date.
-Source suggestions open details so their metadata stays visible and is retained.
-New collection creation preserves the draft and selects the destination. Want to
-try parks an unsaved call until reversed; saving a plan adds no call or visit.
-Never infer an experience from a name, image or save timestamp, or an overall call
-from a visit reaction. The split actions intentionally replace the older Add
-reference's immediately visible rating controls, as requested in the review.
+Add opens a compact name-first native composer with one Save action. The optional
+call, Want to try, two-row note and photo are accessible immediately. More details
+opens the destination, collection creation, product context and an explicit dated
+experience. Its destination is the current active list when open, otherwise
+Unfiled; never silently use a previous list. A name is sufficient. Closing More
+details preserves all entered values, and recovered details reopen visibly.
+Activity capture retains its explicit date. New collection creation keeps the
+draft. Want to try parks an unsaved call until reversed; saving a plan adds no
+call or visit. Never infer an experience from a name, image or save timestamp, or
+an overall call from a visit reaction. Source suggestions remain reviewed. The
+[Save and choose reference](choose-and-save/README.md) owns the composer and
+supersedes the older split Quick save / Save with details flow for global Add.
+Use the existing sticky, visible save footer on desktop and phone.
+
+Home adds quiet Browse choices / Want to try / Favorites links after search.
+Choose uses the shared page frame, a search input and optional collection filter,
+followed by All saved / Want to try / Favorites controls. Saved cards use 22px
+corners, 22px padding, 22px names, actual labeled calls and the original note/photo.
+The grid has three columns on wide desktop, two at 1180px and one on phones at
+680px. Inputs remain 16px on phones. Search uses recorded words rather than
+implying semantic mood recognition. Keep Unfiled, pagination, source-reader links,
+empty/loading/error states and retry intact. No sample records enter production.
+
 The item editor is a 720px single column: name, details and note lead; optional
 plan and a compact dark call capsule follow. This replaces its oversized cream
 rating card while preserving the save footer. Save item creates, Save changes

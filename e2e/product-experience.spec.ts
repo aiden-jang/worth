@@ -47,7 +47,7 @@ test('product details require an explicit switch before clearing and survive a l
   await page.getByRole('button', { name: 'Add item', exact: true }).click();
   let dialog = page.getByRole('dialog', { name: 'Add item', exact: true });
   await dialog.getByLabel('Name', { exact: true }).fill('Sample lotion');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Type', { exact: true }).fill('Moisturizer');
   await dialog.getByLabel('Brand or maker', { exact: true }).fill('Harbor');
   await dialog.getByRole('combobox', { name: 'Save in', exact: true }).selectOption(activityId);

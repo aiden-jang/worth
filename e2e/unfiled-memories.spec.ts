@@ -54,7 +54,7 @@ test('an outing can keep its date, thought and photo without a collection and op
   await page.goto('/');
   const dialog = await add(page);
   await dialog.getByLabel('Name', { exact: true }).fill('Noodles by the window');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Record a dated experience').check();
   await dialog.getByLabel('When', { exact: true }).fill('2025-02-11');
   await dialog
@@ -112,7 +112,7 @@ test('a lost photo reply restores its frozen capture and retries without duplica
   await page.goto('/');
   let dialog = await add(page);
   await dialog.getByLabel('Name', { exact: true }).fill('A little afternoon');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await dialog.getByLabel('Record a dated experience').check();
   await dialog.getByLabel('When', { exact: true }).fill('2026-10-20');
   await choosePhoto(page);
@@ -261,7 +261,7 @@ test('attaching a photo to a saved name never invents an experienced date', asyn
   await page.goto('/');
   const dialog = await add(page);
   await dialog.getByLabel('Name', { exact: true }).fill('Maybe next time');
-  await dialog.getByRole('button', { name: 'Save with details', exact: true }).click();
+  await dialog.getByRole('button', { name: 'More details', exact: true }).click();
   await expect(dialog.getByLabel('When', { exact: true })).toHaveCount(0);
   await choosePhoto(page);
   await dialog.getByRole('button', { name: /^(Quick save|Save item|Save entry|Save)$/ }).click();

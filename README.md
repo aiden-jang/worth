@@ -14,11 +14,14 @@ and never writes to a private archive.
 
 ## Everyday use
 
-- **Add** keeps a name in Unfiled, or an explicitly selected collection. Notes and
-  opinions are optional. Add details can keep a date and photo even in Unfiled.
-  Saving a name or photo alone does not create a visit.
-- **Home** puts search and recent entries first, including Unfiled finds. Collections
-  and activity shortcuts stay within reach, with a compact memory to rediscover.
+- **Add** uses one Save action. Keep just a name, or choose an optional call,
+  Want to try, short note and photo without opening a larger form. More details
+  holds optional organization, product context and an explicit dated experience.
+- **Home** puts search and direct choice shortcuts before recent records,
+  collections and a compact reminder.
+- **Choose** browses All saved, Want to try and Favorites across collections and
+  Unfiled. Search names, notes, types, brands and labels, optionally in one
+  collection. Original calls, notes and photos help with the next decision.
 - **Collections** open directly to names, quick capture, search and a browse/filter
   row. Choose an item for its optional call, an experience or editing. Phone item
   details open in a focused sheet. Collection and entry menus hold advanced tools.

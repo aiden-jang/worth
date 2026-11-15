@@ -177,8 +177,10 @@ test('pasting a link into Name fills a reviewed name and keeps the source in the
   });
   expect(screen.getByLabelText('Name')).toHaveValue('corner ramen');
   expect(screen.getByText('Source: https://example.test/places/corner-ramen')).toBeInTheDocument();
-  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ }));
   await waitFor(() => expect(saved).toHaveBeenCalled());
   expect(save).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -191,7 +193,7 @@ test('pasting a link into Name fills a reviewed name and keeps the source in the
 
 test('photo text can supply a name inside Add without changing its destination or rating', async () => {
   setup(<QuickEntry lists={[list]} initialListId={list.id} onClose={() => {}} onSaved={() => {}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Meh' }));
   fireEvent.click(screen.getByRole('button', { name: 'Photo text' }));
   fireEvent.change(screen.getByLabelText('Read or pasted text'), {
@@ -208,6 +210,7 @@ test('an unapplied capture source recovers with its account-scoped item draft', 
   const content = <QuickEntry lists={[list]} initialListId="inbox" onClose={() => {}} onSaved={() => {}} />;
   const first = setup(content);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'My unfinished item' } });
+  fireEvent.click(screen.getByRole('button', { name: 'More details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Paste link' }));
   fireEvent.change(screen.getByLabelText('Link'), { target: { value: 'https://example.test/corner-ramen' } });
   first.unmount();
@@ -228,7 +231,7 @@ test('ISBN lookup is explicit and supplied book details append to an existing no
     .spyOn(api, 'createInbox')
     .mockImplementation(async (payload) => ({ entry: { ...find, ...payload } }));
   setup(<QuickEntry lists={[list]} initialListId="inbox" onClose={() => {}} onSaved={() => {}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Save with details' }));
+  fireEvent.click(screen.getByRole('button', { name: 'More details' }));
   fireEvent.change(screen.getByLabelText(/Note/), { target: { value: 'My note' } });
   fireEvent.click(screen.getByRole('button', { name: 'Barcode' }));
   fireEvent.change(screen.getByLabelText('Barcode or ISBN'), { target: { value: '9780140328721' } });
@@ -238,8 +241,10 @@ test('ISBN lookup is explicit and supplied book details append to an existing no
   fireEvent.click(screen.getByRole('button', { name: 'Use book details' }));
   expect(screen.getByLabelText('Name')).toHaveValue('Matilda');
   expect(screen.getByLabelText(/Note/)).toHaveValue('My note\n\nAuthor: Roald Dahl\nPublished: 1988');
-  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ }));
   await waitFor(() => expect(save).toHaveBeenCalled());
   expect(save.mock.calls[0][0]).toMatchObject({
     type: 'Book',
@@ -273,14 +278,16 @@ test('an existing name offers a dated experience without changing the saved item
   setup(<QuickEntry lists={[list]} initialListId={list.id} onClose={() => {}} onSaved={() => {}} />);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: ' coffee ' } });
   await screen.findByRole('button', { name: 'Add another experience' });
-  expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Add another experience' }));
   expect(screen.getByLabelText('When')).toBeInTheDocument();
   fireEvent.click(
     within(screen.getByRole('group', { name: 'This time' })).getByRole('button', { name: 'Meh' }),
   );
-  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ }));
   await waitFor(() => expect(experience).toHaveBeenCalled());
   expect(experience.mock.calls[0][1]).toMatchObject({ itemId: coffee.id, context: { reaction: 'meh' } });
   expect(create).not.toHaveBeenCalled();
@@ -294,10 +301,12 @@ test('a duplicate is saved only after explicitly choosing a separate item', asyn
   setup(<QuickEntry lists={[list]} initialListId={list.id} onClose={() => {}} onSaved={() => {}} />);
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Coffee' } });
   await screen.findByRole('button', { name: 'Save as a separate item' });
-  expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Save as a separate item' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: /^(Quick save|Save item)$/ })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item)$/ }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ })).toBeEnabled(),
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^(Quick save|Save item|Save)$/ }));
   await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
 });
 

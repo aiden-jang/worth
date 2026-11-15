@@ -2,6 +2,9 @@
 
 Use these current authored sources in order:
 
+The [Save and choose reference](choose-and-save/README.md) owns the compact global
+Add sheet and Choose page. Home adds the direct choice links it describes.
+
 The [Home and collections polish](home-collections/README.md) owns the current
 Home and directory compositions. Use the following sources for their other named
 surfaces and shared behavior:
