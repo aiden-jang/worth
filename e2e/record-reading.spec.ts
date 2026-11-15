@@ -128,7 +128,7 @@ test('Unfiled opens a newly saved find on the same page and distinguishes View f
   await page.getByRole('main').getByRole('button', { name: 'Add item', exact: true }).click();
   const add = page.getByRole('dialog', { name: 'Add item', exact: true });
   await add.getByLabel('Name', { exact: true }).fill('A new find');
-  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toHaveCount(0);
+  await expect(add.getByRole('group', { name: 'Overall call', exact: true })).toBeVisible();
   await add.getByRole('button', { name: 'Save', exact: true }).click();
   const openSaved = page.locator('.entry-saved').getByRole('link', { name: 'Open', exact: true });
   await openSaved.click();

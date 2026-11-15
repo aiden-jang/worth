@@ -108,10 +108,10 @@ function ActionDialog({
     },
     onSuccess: () => {
       void client.invalidateQueries();
-      if (action === 'trash') announceTrash(items.map((i) => ({ kind: 'item', id: i.id })));
       onDone(
         `${items.length} ${items.length === 1 ? 'item' : 'items'} ${action === 'move' ? 'moved. They are unranked in the destination.' : action === 'merge' ? 'merged. Originals are available in Details.' : action === 'trash' ? 'moved to Trash.' : 'updated.'}`,
       );
+      if (action === 'trash') announceTrash(items.map((i) => ({ kind: 'item', id: i.id })));
     },
   });
   useEffect(() => {

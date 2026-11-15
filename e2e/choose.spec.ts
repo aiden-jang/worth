@@ -76,6 +76,11 @@ test('Home choices browse actual opinions and plans across categories with clear
     '/inbox?focus=place&view=1',
   );
   await page.getByRole('button', { name: 'All saved', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'All saved', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.locator('.choice-card')).toHaveCount(3);
   const search = page.getByRole('searchbox', { name: 'Search your saved choices' });
   await search.fill('quiet');
   await expect(page.locator('.choice-card')).toHaveCount(1);
