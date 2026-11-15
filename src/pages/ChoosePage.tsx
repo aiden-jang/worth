@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { ArrowRight, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { ArrowRight, MagnifyingGlass, X } from '@phosphor-icons/react';
 import { Link, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -25,6 +25,10 @@ export function ChoosePage() {
   const [term, setTerm] = useState(query.trim());
   const search = useRef<HTMLInputElement>(null);
   const resultSection = useRef<HTMLElement>(null);
+  const pickButton = useRef<HTMLButtonElement>(null);
+  const [draw, setDraw] = useState<{ id: string; scope: string; exclude: string } | null>(null);
+  const scope = JSON.stringify([view, query.trim(), params.get('list') ?? '']);
+  const picking = draw?.scope === scope;
   useEffect(() => {
     const timer = setTimeout(() => setTerm(query.trim()), 250);
     return () => clearTimeout(timer);
@@ -41,22 +45,61 @@ export function ChoosePage() {
   const records = useInfiniteQuery({
     queryKey: ['patterns', 'choices', filter],
     initialPageParam: 0,
-    enabled: parsed.success,
+    enabled: parsed.success && !picking,
     queryFn: ({ signal, pageParam }) => api.memories({ ...filter, offset: pageParam }, signal),
     getNextPageParam: (page) => page.nextOffset ?? undefined,
   });
+  const picks = useQuery({
+    queryKey: ['patterns', 'choice-picks', scope, draw?.id],
+    enabled: parsed.success && picking,
+    queryFn: ({ signal }) =>
+      api.memories(
+        {
+          ...filter,
+          q: query.trim(),
+          pick: view === 'favorite' ? 'again' : view === 'want' ? 'try' : 'all',
+          exclude: draw?.exclude ?? '',
+          offset: 0,
+        },
+        signal,
+      ),
+    staleTime: 'static',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
   const entries = parsed.success
-    ? [
-        ...new Map(
-          records.data?.pages
-            .flatMap((page) => page.records)
-            .map((record) => [`${record.kind}:${record.id}`, record]),
-        ).values(),
-      ]
+    ? picking
+      ? (picks.data?.records ?? [])
+      : [
+          ...new Map(
+            records.data?.pages
+              .flatMap((page) => page.records)
+              .map((record) => [`${record.kind}:${record.id}`, record]),
+          ).values(),
+        ]
     : [];
-  const total = records.data?.pages[0]?.total ?? 0;
+  const total = picking ? (picks.data?.total ?? 0) : (records.data?.pages[0]?.total ?? 0);
   const filtered = Boolean(query || filter.list || view !== 'all');
+  const pending = picking ? picks.isPending : records.isPending;
+  const failed = picking ? picks.isError : records.isError;
+  useEffect(() => {
+    if (picking && picks.isSuccess && !picks.isFetching)
+      resultSection.current?.focus({ preventScroll: true });
+  }, [picking, picks.isSuccess, picks.isFetching, picks.dataUpdatedAt]);
+  function pick() {
+    setDraw({
+      id: crypto.randomUUID(),
+      scope,
+      exclude: picking ? entries.map((record) => record.id).join(',') : '',
+    });
+  }
+  function browse() {
+    setDraw(null);
+    requestAnimationFrame(() => pickButton.current?.focus());
+  }
   function update(patch: Record<string, string>) {
+    setDraw(null);
     const next = new URLSearchParams(params);
     for (const [key, value] of Object.entries(patch)) {
       if (value && !(key === 'view' && value === 'all')) next.set(key, value);
@@ -65,6 +108,7 @@ export function ChoosePage() {
     setParams(next, { replace: true });
   }
   function clear() {
+    setDraw(null);
     setParams({}, { replace: true });
     search.current?.focus();
   }
@@ -91,12 +135,25 @@ export function ChoosePage() {
           <h1>Find your next pick.</h1>
           <p>What you liked. What you had in mind.</p>
         </div>
-        <button
-          className="button button-accent"
-          onClick={() => requestAddEntry({ listId: filter.list || 'inbox' })}
-        >
-          <Plus size={18} /> Add item
-        </button>
+        <div className="choice-pick-actions">
+          {picking && (
+            <button className="button button-outline" onClick={browse}>
+              See all matches
+            </button>
+          )}
+          <button
+            ref={pickButton}
+            className="button button-accent"
+            onClick={pick}
+            disabled={
+              !parsed.success ||
+              term !== query.trim() ||
+              (picking && (picks.isFetching || picks.isError || (picks.isSuccess && total <= entries.length)))
+            }
+          >
+            {picking ? (picks.isFetching ? 'Finding picks…' : 'Show other picks') : 'Pick for me'}
+          </button>
+        </div>
       </header>
       <div className="choice-filters">
         <div className="home-search">
@@ -154,101 +211,150 @@ export function ChoosePage() {
           </button>
         ))}
       </div>
-      {!parsed.success ? (
-        <div className="error-banner" role="alert">
-          This filter isn’t available. <button onClick={clear}>Clear filters</button>
-        </div>
-      ) : records.isError && !entries.length ? (
-        <div className="error-banner" role="alert">
-          Your saved choices couldn’t load. <button onClick={() => void records.refetch()}>Try again</button>
-          {filtered && <button onClick={clear}>Clear filters</button>}
-        </div>
-      ) : records.isPending ? (
-        <p role="status">Finding your saved choices…</p>
-      ) : entries.length ? (
-        <section
-          ref={resultSection}
-          data-filter={JSON.stringify(filter)}
-          aria-label="Your saved choices"
-          aria-busy={records.isFetching || term !== query.trim()}
-        >
-          <div className="choice-results-head">
-            <p role="status">
-              {records.hasNextPage ? `Showing ${entries.length} of ${total}` : total} saved{' '}
-              {total === 1 ? 'choice' : 'choices'}
-            </p>
-            {filtered && (
-              <button type="button" onClick={clear}>
-                Clear filters
+      {picking && (
+        <p className="choice-pick-hint">
+          {view === 'favorite'
+            ? 'Pick from your Favorites.'
+            : view === 'want'
+              ? 'Pick from your Want to try list.'
+              : 'Pick from your Favorites and Want to try list.'}
+        </p>
+      )}
+      <section
+        ref={resultSection}
+        data-filter={JSON.stringify(filter)}
+        tabIndex={picking ? -1 : undefined}
+        className="choice-results"
+        aria-label={picking ? 'Your picks' : 'Your saved choices'}
+        aria-busy={picking ? picks.isFetching : records.isFetching || term !== query.trim()}
+      >
+        {!parsed.success ? (
+          <div className="error-banner" role="alert">
+            This filter isn’t available. <button onClick={clear}>Clear filters</button>
+          </div>
+        ) : failed && !entries.length ? (
+          <div className="error-banner" role="alert">
+            {picking ? 'Your picks couldn’t load. ' : 'Your saved choices couldn’t load. '}
+            <button onClick={() => (picking ? void picks.refetch() : void records.refetch())}>
+              {picking ? 'Retry picks' : 'Try again'}
+            </button>
+            {filtered && <button onClick={clear}>Clear filters</button>}
+          </div>
+        ) : pending ? (
+          <p role="status">{picking ? 'Finding a few choices…' : 'Finding your saved choices…'}</p>
+        ) : entries.length ? (
+          <div>
+            <div className="choice-results-head">
+              <div>
+                {picking && <h2>A few to consider.</h2>}
+                <p role="status">
+                  {picking ? (
+                    `${entries.length} ${entries.length === 1 ? 'pick' : 'picks'} from ${total} matching ${total === 1 ? 'choice' : 'choices'}`
+                  ) : (
+                    <>
+                      {records.hasNextPage ? `Showing ${entries.length} of ${total}` : total} saved{' '}
+                      {total === 1 ? 'choice' : 'choices'}
+                    </>
+                  )}
+                </p>
+              </div>
+              {filtered && !picking && (
+                <button type="button" onClick={clear}>
+                  Clear filters
+                </button>
+              )}
+            </div>
+            <div className="choice-grid">
+              {entries.map((record) => (
+                <article key={`${record.kind}:${record.id}`} className="choice-card">
+                  {record.hasPhoto && (
+                    <img
+                      src={memoryPhotoHref(record)}
+                      alt={`Saved photo for ${record.title}`}
+                      loading="lazy"
+                    />
+                  )}
+                  <small>{record.listName}</small>
+                  <h2>
+                    <Link id={`choice-${record.kind}-${record.id}`} to={memorySourceHref(record)}>
+                      {record.title}
+                      <ArrowRight size={18} aria-hidden="true" />
+                    </Link>
+                  </h2>
+                  <div className="choice-calls">
+                    {record.reaction ? (
+                      <CallBadge value={record.reaction} />
+                    ) : (
+                      !record.wantToTry && <span className="choice-no-call">No call</span>
+                    )}
+                    {record.wantToTry && <span className="choice-plan">Want to try</span>}
+                  </div>
+                  {picking && (
+                    <p className="choice-pick-reason">
+                      <strong>Why this pick</strong>
+                      {record.wantToTry ? 'On your Want to try list.' : 'You marked this Favorite.'}
+                      {filter.q && <span>Matches “{filter.q}” in your saved details.</span>}
+                    </p>
+                  )}
+                  {record.note && <p className="choice-note">{record.note}</p>}
+                </article>
+              ))}
+            </div>
+            {!picking && records.isFetchNextPageError && (
+              <p className="form-error" role="alert">
+                More choices couldn’t load.{' '}
+                <button onClick={() => void showMore()}>Retry more choices</button>
+              </p>
+            )}
+            {!picking && records.isRefetchError && (
+              <p className="form-error" role="alert">
+                Your choices couldn’t refresh.{' '}
+                <button onClick={() => void records.refetch()}>Try again</button>
+              </p>
+            )}
+            {!picking && records.hasNextPage && !records.isFetchNextPageError && (
+              <button
+                className="button button-outline choice-more"
+                disabled={records.isFetchingNextPage}
+                onClick={() => void showMore()}
+              >
+                {records.isFetchingNextPage ? 'Loading…' : 'Show more choices'}
               </button>
             )}
           </div>
-          <div className="choice-grid">
-            {entries.map((record) => (
-              <article key={`${record.kind}:${record.id}`} className="choice-card">
-                {record.hasPhoto && (
-                  <img src={memoryPhotoHref(record)} alt={`Saved photo for ${record.title}`} loading="lazy" />
-                )}
-                <small>{record.listName}</small>
-                <h2>
-                  <Link id={`choice-${record.kind}-${record.id}`} to={memorySourceHref(record)}>
-                    {record.title}
-                    <ArrowRight size={18} aria-hidden="true" />
-                  </Link>
-                </h2>
-                <div className="choice-calls">
-                  {record.reaction ? (
-                    <CallBadge value={record.reaction} />
-                  ) : (
-                    !record.wantToTry && <span className="choice-no-call">No call</span>
-                  )}
-                  {record.wantToTry && <span className="choice-plan">Want to try</span>}
-                </div>
-                {record.note && <p className="choice-note">{record.note}</p>}
-              </article>
-            ))}
-          </div>
-          {records.isFetchNextPageError && (
-            <p className="form-error" role="alert">
-              More choices couldn’t load. <button onClick={() => void showMore()}>Retry more choices</button>
-            </p>
-          )}
-          {records.isRefetchError && (
-            <p className="form-error" role="alert">
-              Your choices couldn’t refresh. <button onClick={() => void records.refetch()}>Try again</button>
-            </p>
-          )}
-          {records.hasNextPage && !records.isFetchNextPageError && (
-            <button
-              className="button button-outline choice-more"
-              disabled={records.isFetchingNextPage}
-              onClick={() => void showMore()}
-            >
-              {records.isFetchingNextPage ? 'Loading…' : 'Show more choices'}
-            </button>
-          )}
-        </section>
-      ) : (
-        <CabinetEmptyState
-          art={<ArchiveIllustration kind="search" />}
-          title={filtered ? 'Nothing here yet.' : 'Your next pick starts here.'}
-          description={
-            filtered
-              ? 'Try another word or browse all your saved choices.'
-              : 'Save something you liked, or something you want to try. Your choices will be here.'
-          }
-        >
-          {filtered ? (
-            <button className="button button-outline" onClick={clear}>
-              Clear filters
-            </button>
-          ) : (
-            <button className="button button-accent" onClick={() => requestAddEntry()}>
-              Add your first item
-            </button>
-          )}
-        </CabinetEmptyState>
-      )}
+        ) : (
+          <CabinetEmptyState
+            art={<ArchiveIllustration kind="search" />}
+            title={
+              picking ? 'No picks here yet.' : filtered ? 'Nothing here yet.' : 'Your next pick starts here.'
+            }
+            description={
+              picking
+                ? query || filter.list
+                  ? 'Try another word or collection, or see all matches.'
+                  : view === 'favorite'
+                    ? 'Mark something Favorite to pick it again.'
+                    : view === 'want'
+                      ? 'Save something to Want to try. It can be a future pick.'
+                      : 'Picks come from your Favorites and things saved to Want to try.'
+                : filtered
+                  ? 'Try another word or browse all your saved choices.'
+                  : 'Save something you liked, or something you want to try. Your choices will be here.'
+            }
+          >
+            {!picking &&
+              (filtered ? (
+                <button className="button button-outline" onClick={clear}>
+                  Clear filters
+                </button>
+              ) : (
+                <button className="button button-accent" onClick={() => requestAddEntry()}>
+                  Add your first item
+                </button>
+              ))}
+          </CabinetEmptyState>
+        )}
+      </section>
     </main>
   );
 }
