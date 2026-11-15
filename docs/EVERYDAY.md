@@ -169,6 +169,23 @@ Results page through the entire matching archive and retain existing cards after
 a failed next page. Clear search restores focus, and load-more focuses the first
 new source link. Existing Look back and search routes remain available.
 
+**Pick for me** uses the current words, collection and view to draw up to three
+saved choices. All saved combines Favorites and Want to try; Favorites uses an
+overall Favorite without a pending plan, while Want to try uses explicit plans.
+Meh, Not again, archived, merged and removed records are excluded from picks.
+No call is eligible only with Want to try. A dated visit reaction never becomes
+an overall Favorite. Shared Add remains available in the rail and phone bar.
+
+Each pick states its saved call or plan and any literal search term. These are
+existing records, not predictions of enjoyment or recommendations from a catalog.
+**Show other picks** prefers records outside the previous draw, filling with
+still-eligible earlier picks only when fewer than three alternatives remain.
+Counts describe the full matching pool, including older saves and Unfiled; small
+pools disable another draw when all matches are shown. Draws run only on request.
+**See all matches** keeps the same filters and returns focus to Pick for me.
+Changing any filter immediately leaves picks and cancels the pending draw.
+Errors retry the same scope; empty pools receive an honest invitation.
+
 ## Look back
 
 **Look back → Memories** searches dated visits/activity or saved-name dates.
