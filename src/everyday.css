@@ -1991,6 +1991,7 @@
   text-align: center;
 }
 .everyday-shell .opinion-slip-placeholder {
+  --muted: #aaa99b;
   align-self: start;
   min-height: 0;
   padding: 20px;
